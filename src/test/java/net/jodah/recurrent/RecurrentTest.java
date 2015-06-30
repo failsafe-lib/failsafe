@@ -17,7 +17,6 @@ import net.jodah.recurrent.Testing.RecordingRunnable;
 @Test
 public class RecurrentTest {
   private ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-  private Scheduler scheduler = Schedulers.of(executor);
   private RetryPolicy retryTwice = new RetryPolicy().withMaxRetries(2);
   private Waiter waiter;
 
@@ -30,12 +29,12 @@ public class RecurrentTest {
     // Fail twice then succeed
     RuntimeException expectedFailure = new IllegalArgumentException();
     RecordingRunnable runnable = failNTimes(2, expectedFailure);
-    Recurrent.doWithRetries(runnable, new RetryPolicy());
+    Recurrent.withRetries(runnable, new RetryPolicy());
     assertEquals(runnable.failures, 2);
 
     // Fail three times
     final RecordingRunnable runnable2 = failAlways(expectedFailure);
-    shouldFail(() -> Recurrent.doWithRetries(runnable2, retryTwice), expectedFailure);
+    shouldFail(() -> Recurrent.withRetries(runnable2, retryTwice), expectedFailure);
     assertEquals(runnable2.failures, 3);
   }
 
@@ -45,7 +44,7 @@ public class RecurrentTest {
     // Fail twice then succeed
     waiter.expectResume();
     RecordingRunnable runnable = failNTimes(2, expectedFailure);
-    Recurrent.doWithRetries(runnable, new RetryPolicy(), scheduler).whenComplete((result, failure) -> {
+    Recurrent.withRetries(runnable, new RetryPolicy(), executor).whenComplete((result, failure) -> {
       waiter.resume();
     });
 
@@ -55,7 +54,7 @@ public class RecurrentTest {
     // Fail three times
     waiter.expectResume();
     runnable = failAlways(expectedFailure);
-    Recurrent.doWithRetries(runnable, retryTwice, scheduler).whenComplete((result, failure) -> {
+    Recurrent.withRetries(runnable, retryTwice, executor).whenComplete((result, failure) -> {
       waiter.assertEquals(expectedFailure, failure);
       waiter.resume();
     });

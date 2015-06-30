@@ -1,22 +1,22 @@
 # Recurrent
 
-*Sophisticated retries made simple.*
+*Simple, sophisticated retries.*
 
 ## Introduction
 
-Every developer has rolled their own retries.
-
-Recurrent is a simple yet sophisticated library for performing retries. It features:
+Recurrent is a simple, zero-dependency library for performing retries. It features:
 
 * Zero external dependencies
 * Synchronous and asynchronous retries
 * Transparent integration into existing APIs
-* Java 8 friendly functional interfaces
+* Java 6/7/8 supported with Java 8 friendly functional interfaces
 * Simple integration with asynchronous libraries
 
 ## Usage
 
-Create a RetryPolicy:
+#### Retry Policies
+
+Recurrent supports flexible retry policies that allow you to express the number of retries, delay between attempts, delay between attempts including backoff, and maximum duration:
 
 ```java
 RetryPolicy retryPolicy = new RetryPolicy()
@@ -24,29 +24,48 @@ RetryPolicy retryPolicy = new RetryPolicy()
 	.withMaxRetries(100);
 ```
 
-Make a call with retries according to your RetryPolicy:
+#### Synchronous Retries
 
-```
- Recurrent.doWithRetries(() -> connect(), retryPolicy, scheduler)
- 	.whenComplete((connection, failure) -> {
-       if (connect != null)
-		 log.info("Connection established", connection);
-	   else
-	     log.error("Connection attempt failed", failure);
- 	});
+Synchronous invocations are performed and retried in the calling thread until the invocation succeeds or the retry policy is exceeded:
+
+```java
+Connection connection = Recurrent.withRetries(() -> connect(), retryPolicy);
 ```
 
-## Integrations
+#### Asynchronous Retries
 
-Recurrent was designed to play nicely with asynchronous libraries. Here are some example integrations:
+Asynchronous invocations are performed and retried on a scheduled executor. When the invocation succeeds or the retry policy is exceeded, the resulting ListenableFuture is completed and any CompletionListeners registered against it are called:
 
-### Netty
+```java
+Recurrent.withRetries(() -> connect(), retryPolicy, executor)
+  .whenComplete((connection, failure) -> {
+    if (connection != null)
+      log.info("Connection established");
+    else
+      log.error("Connection attempts failed", failure);
+  });
+```
 
+#### Integrating with Asynchronous Code
 
+Asynchronous code often reports failures via callbacks rather than throwing an exception. Recurrent provides nice integration with asynchronous code by allowing you to manually trigger retries as necessary:
 
-### RxJava
+```java
+Recurrent.withRetries((invocation) -> {
+  someService.connect(host, port).addListener((connection, failure) -> {
+    if (connection != null)
+      log.info("Connection established");
+    else if (!invocation.retry())
+      log.error("Connection attempts failed", failure)
+    }
+  }, retryPolicy, eventLoopGroup));
+```
 
+## Notes
 
+#### On API Integration
+
+A great way to add support for retries to your project's public API is to subclass the RetryPolicy class. This can allow you to offer retry support and policies to your users while keeping Recurrent hidden.
 
 ## Docs
 

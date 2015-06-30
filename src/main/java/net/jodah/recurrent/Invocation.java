@@ -1,6 +1,7 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.util.Duration;
@@ -14,7 +15,7 @@ import net.jodah.recurrent.util.Duration;
 public class Invocation {
   private RetryPolicy retryPolicy;
   private Callable<?> callable;
-  private Scheduler scheduler;
+  private ScheduledExecutorService executor;
   private long startTime;
 
   /** count of failed attempts */
@@ -22,14 +23,14 @@ public class Invocation {
   /** wait time in nanoseconds */
   long waitTime;
 
-  Invocation(Callable<?> callable, RetryPolicy retryPolicy, Scheduler scheduler) {
-    initialize(callable, retryPolicy, scheduler);
+  Invocation(Callable<?> callable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
+    initialize(callable, retryPolicy, executor);
   }
 
-  void initialize(Callable<?> callable, RetryPolicy retryPolicy, Scheduler scheduler) {
+  void initialize(Callable<?> callable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
     this.callable = callable;
     this.retryPolicy = retryPolicy;
-    this.scheduler = scheduler;
+    this.executor = executor;
 
     waitTime = retryPolicy.getDelay().toNanos();
     startTime = System.nanoTime();
@@ -41,7 +42,7 @@ public class Invocation {
   public boolean retry() {
     recordFailedAttempt();
     if (!isPolicyExceeded()) {
-      scheduler.schedule(callable, waitTime, TimeUnit.NANOSECONDS);
+      executor.schedule(callable, waitTime, TimeUnit.NANOSECONDS);
       return true;
     }
     return false;

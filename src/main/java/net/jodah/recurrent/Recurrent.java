@@ -1,63 +1,11 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public final class Recurrent {
   private Recurrent() {
-  }
-
-  public static ListenableFuture<?> doScheduledWithRetries(RetryableRunnable runnable, RetryPolicy retryPolicy,
-      Scheduler scheduler) {
-    return call(ContextualCallable.of(runnable), retryPolicy, scheduler, true);
-  }
-
-  public static ListenableFuture<?> doScheduledWithRetries(Runnable runnable, RetryPolicy retryPolicy,
-      Scheduler scheduler) {
-    return call(ContextualCallable.of(retryable(runnable)), retryPolicy, scheduler, true);
-  }
-
-  public static ListenableFuture<?> doWithRetries(RetryableRunnable runnable, RetryPolicy retryPolicy,
-      Scheduler scheduler) {
-    return call(ContextualCallable.of(runnable), retryPolicy, scheduler, false);
-  }
-
-  /**
-   * Invokes the {@code runnable}, sleeping between invocation attempts according to the {@code retryPolicy}.
-   */
-  public static void doWithRetries(Runnable runnable, RetryPolicy retryPolicy) {
-    call(Callables.callable(runnable), retryPolicy);
-  }
-
-  /**
-   * Invokes the {@code runnable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
-   */
-  public static ListenableFuture<?> doWithRetries(Runnable runnable, RetryPolicy retryPolicy, Scheduler scheduler) {
-    return call(ContextualCallable.of(retryable(runnable)), retryPolicy, scheduler, false);
-  }
-
-  public static <T> ListenableFuture<T> getScheduledGetWithRetries(RetryableCallable<T> callable,
-      RetryPolicy retryPolicy, Scheduler scheduler) {
-    return call(ContextualCallable.of(callable), retryPolicy, scheduler, true);
-  }
-
-  public static <T> ListenableFuture<T> getScheduledWithRetries(Callable<T> callable, RetryPolicy retryPolicy,
-      Scheduler scheduler) {
-    return call(ContextualCallable.of(retryable(callable)), retryPolicy, scheduler, true);
-  }
-
-  public static <T> T getWithRetries(Callable<T> callable, RetryPolicy retryPolicy) {
-    return call(callable, retryPolicy);
-  }
-
-  public static <T> ListenableFuture<T> getWithRetries(Callable<T> callable, RetryPolicy retryPolicy,
-      Scheduler scheduler) {
-    return call(ContextualCallable.of(retryable(callable)), retryPolicy, scheduler, false);
-  }
-
-  public static <T> ListenableFuture<T> getWithRetries(RetryableCallable<T> callable, RetryPolicy retryPolicy,
-      Scheduler scheduler) {
-    return call(ContextualCallable.of(callable), retryPolicy, scheduler, false);
   }
 
   /**
@@ -82,6 +30,60 @@ public final class Recurrent {
         runnable.run();
       }
     };
+  }
+
+  public static <T> T withRetries(Callable<T> callable, RetryPolicy retryPolicy) {
+    return call(callable, retryPolicy);
+  }
+
+  public static <T> ListenableFuture<T> withRetries(Callable<T> callable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor) {
+    return call(ContextualCallable.of(retryable(callable)), retryPolicy, executor, false);
+  }
+
+  public static <T> ListenableFuture<T> withRetries(Callable<T> callable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor, boolean initialCallSynchronous) {
+    return call(ContextualCallable.of(retryable(callable)), retryPolicy, executor, true);
+  }
+
+  public static <T> ListenableFuture<T> withRetries(RetryableCallable<T> callable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor) {
+    return call(ContextualCallable.of(callable), retryPolicy, executor, false);
+  }
+
+  public static <T> ListenableFuture<T> withRetries(RetryableCallable<T> callable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor, boolean initialCallSynchronous) {
+    return call(ContextualCallable.of(callable), retryPolicy, executor, true);
+  }
+
+  public static ListenableFuture<?> withRetries(RetryableRunnable runnable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor) {
+    return call(ContextualCallable.of(runnable), retryPolicy, executor, false);
+  }
+
+  public static ListenableFuture<?> withRetries(RetryableRunnable runnable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor, boolean initialCallSynchronous) {
+    return call(ContextualCallable.of(runnable), retryPolicy, executor, true);
+  }
+
+  /**
+   * Invokes the {@code runnable}, sleeping between invocation attempts according to the {@code retryPolicy}.
+   */
+  public static void withRetries(Runnable runnable, RetryPolicy retryPolicy) {
+    call(Callables.callable(runnable), retryPolicy);
+  }
+
+  /**
+   * Invokes the {@code runnable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
+   */
+  public static ListenableFuture<?> withRetries(Runnable runnable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor) {
+    return call(ContextualCallable.of(retryable(runnable)), retryPolicy, executor, false);
+  }
+
+  public static ListenableFuture<?> withRetries(Runnable runnable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor, boolean initialCallSynchronous) {
+    return call(ContextualCallable.of(retryable(runnable)), retryPolicy, executor, true);
   }
 
   /**
@@ -111,12 +113,12 @@ public final class Recurrent {
   }
 
   /**
-   * Calls the {@code callable} via the {@code scheduler}, performing retries according to the {@code retryPolicy}.
+   * Calls the {@code callable} via the {@code executor}, performing retries according to the {@code retryPolicy}.
    */
   private static <T> ListenableFuture<T> call(final ContextualCallable<T> callable, final RetryPolicy retryPolicy,
-      final Scheduler scheduler, boolean scheduleInitialCall) {
-    final CompletableFuture<T> future = new CompletableFuture<T>(scheduler);
-    final Invocation invocation = new Invocation(callable, retryPolicy, scheduler);
+      final ScheduledExecutorService executor, boolean scheduleInitialCall) {
+    final CompletableFuture<T> future = new CompletableFuture<T>(executor);
+    final Invocation invocation = new Invocation(callable, retryPolicy, executor);
 
     callable.initialize(invocation, new CompletionListener<T>() {
       public void onCompletion(T result, Throwable failure) {
@@ -131,12 +133,12 @@ public final class Recurrent {
         if (invocation.isPolicyExceeded())
           future.complete(result, failure);
         else
-          future.setFuture(scheduler.schedule(callable, invocation.waitTime, TimeUnit.NANOSECONDS));
+          future.setFuture(executor.schedule(callable, invocation.waitTime, TimeUnit.NANOSECONDS));
       }
     });
 
     if (scheduleInitialCall) {
-      future.setFuture(scheduler.schedule(callable, invocation.waitTime, TimeUnit.NANOSECONDS));
+      future.setFuture(executor.schedule(callable, invocation.waitTime, TimeUnit.NANOSECONDS));
     } else {
       try {
         callable.call();
@@ -146,7 +148,7 @@ public final class Recurrent {
           future.complete(null, t);
 
         // Asynchronous retry
-        future.setFuture(scheduler.schedule(callable, invocation.waitTime, TimeUnit.NANOSECONDS));
+        future.setFuture(executor.schedule(callable, invocation.waitTime, TimeUnit.NANOSECONDS));
       }
     }
 

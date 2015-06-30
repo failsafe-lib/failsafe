@@ -2,6 +2,7 @@ package net.jodah.recurrent;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -11,7 +12,7 @@ import net.jodah.recurrent.internal.util.concurrent.InterruptableWaiter;
  * A future that is completable.
  */
 class CompletableFuture<T> implements ListenableFuture<T> {
-  private Scheduler scheduler;
+  private ScheduledExecutorService executor;
   private volatile Future<T> delegate;
   private volatile boolean done;
   private volatile CompletionListener<T> completionListener;
@@ -20,8 +21,8 @@ class CompletableFuture<T> implements ListenableFuture<T> {
   private volatile T result;
   private volatile Throwable failure;
 
-  CompletableFuture(Scheduler scheduler) {
-    this.scheduler = scheduler;
+  CompletableFuture(ScheduledExecutorService executor) {
+    this.executor = executor;
   }
 
   void setFuture(Future<T> delegate) {
@@ -36,7 +37,7 @@ class CompletableFuture<T> implements ListenableFuture<T> {
       waiter.interruptWaiters();
 
     if (asyncCompletionListener != null)
-      scheduler.schedule(Callables.callable(asyncCompletionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+      executor.schedule(Callables.callable(asyncCompletionListener, result, failure), 0, TimeUnit.MILLISECONDS);
     if (completionListener != null)
       completionListener.onCompletion(result, failure);
   }
@@ -98,19 +99,20 @@ class CompletableFuture<T> implements ListenableFuture<T> {
   @Override
   public ListenableFuture<T> whenCompleteAsync(CompletionListener<T> completionListener) {
     if (done)
-      scheduler.schedule(Callables.callable(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+      executor.schedule(Callables.callable(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
     else
       this.completionListener = completionListener;
     return this;
   }
 
   @Override
-  public ListenableFuture<T> whenCompleteAsync(CompletionListener<T> completionListener, Scheduler scheduler) {
+  public ListenableFuture<T> whenCompleteAsync(CompletionListener<T> completionListener,
+      ScheduledExecutorService executor) {
     if (done)
-      scheduler.schedule(Callables.callable(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+      executor.schedule(Callables.callable(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
     else {
       this.asyncCompletionListener = completionListener;
-      this.scheduler = scheduler;
+      this.executor = executor;
     }
     return this;
   }
