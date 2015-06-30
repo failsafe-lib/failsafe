@@ -1,4 +1,4 @@
-package net.jodah.recurrent;
+package net.jodah.recurrent.event;
 
 /**
  * Listens for an asynchronous invocation to complete.

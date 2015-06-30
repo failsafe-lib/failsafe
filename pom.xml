@@ -48,6 +48,12 @@
       <version>0.3.4-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
+      <version>1.0.12</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

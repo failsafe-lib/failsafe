@@ -38,12 +38,8 @@ Asynchronous invocations are performed and retried on a scheduled executor. When
 
 ```java
 Recurrent.withRetries(() -> connect(), retryPolicy, executor)
-  .whenComplete((connection, failure) -> {
-    if (connection != null)
-      log.info("Connection established");
-    else
-      log.error("Connection attempts failed", failure);
-  });
+  .whenSuccess((connection) -> log.info("Connection established to {}", connection)
+  .whenFailure((failure) -> log.error("Connection attempts failed", failure));
 ```
 
 #### Integrating with Asynchronous Code
@@ -52,13 +48,12 @@ Asynchronous code often reports failures via callbacks rather than throwing an e
 
 ```java
 Recurrent.withRetries((invocation) -> {
-  someService.connect(host, port).addListener((connection, failure) -> {
-    if (connection != null)
-      log.info("Connection established");
-    else if (!invocation.retry())
-      log.error("Connection attempts failed", failure)
+    someService.connect(host, port).addFailureListener((failure) -> {
+      // Manually retry invocation
+      if (!invocation.retry())
+        log.error("Connection attempts failed", failure)
     }
-  }, retryPolicy, eventLoopGroup));
+  }, retryPolicy, executor));
 ```
 
 ## Notes

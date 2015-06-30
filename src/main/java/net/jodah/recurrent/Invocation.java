@@ -10,7 +10,7 @@ import net.jodah.recurrent.util.Duration;
  * A retryable invocation.
  * 
  * @author Jonathan Halterman
- * @param <T> invocation result type
+ * @param <T> result type
  */
 class Invocation {
   private RetryPolicy retryPolicy;
@@ -24,10 +24,6 @@ class Invocation {
   long waitTime;
 
   Invocation(Callable<?> callable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
-    initialize(callable, retryPolicy, executor);
-  }
-
-  void initialize(Callable<?> callable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
     this.callable = callable;
     this.retryPolicy = retryPolicy;
     this.executor = executor;
@@ -49,7 +45,24 @@ class Invocation {
   }
 
   /**
-   * Records a failed attempt, incrementing the attempt count and time.
+   * Returns the wait time.
+   */
+  Duration getWaitTime() {
+    return new Duration(waitTime, TimeUnit.NANOSECONDS);
+  }
+
+  /**
+   * Returns true if the max retries or max duration for the retry policy have been exceeded, else false.
+   */
+  boolean isPolicyExceeded() {
+    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || attemptCount <= retryPolicy.getMaxRetries();
+    boolean withinMaxDuration = retryPolicy.getMaxDuration() == null
+        || System.nanoTime() - startTime < retryPolicy.getMaxDuration().toNanos();
+    return !withinMaxRetries || !withinMaxDuration;
+  }
+
+  /**
+   * Records a failed attempt and adjusts the wait time.
    */
   void recordFailedAttempt() {
     attemptCount++;
@@ -64,22 +77,5 @@ class Invocation {
       long maxRemainingWaitTime = retryPolicy.getMaxDuration().toNanos() - elapsedNanos;
       waitTime = Math.min(waitTime, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
     }
-  }
-
-  /**
-   * Returns the wait time.
-   */
-  Duration getWaitTime() {
-    return new Duration(waitTime, TimeUnit.NANOSECONDS);
-  }
-
-  /**
-   * Returns true if the max retries or max duration for the retry policy have been exceeded, else false.
-   */
-  public boolean isPolicyExceeded() {
-    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || attemptCount <= retryPolicy.getMaxRetries();
-    boolean withinMaxDuration = retryPolicy.getMaxDuration() == null
-        || System.nanoTime() - startTime < retryPolicy.getMaxDuration().toNanos();
-    return !withinMaxRetries || !withinMaxDuration;
   }
 }

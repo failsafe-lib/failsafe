@@ -2,13 +2,17 @@ package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
 
+import net.jodah.recurrent.event.CompletionListener;
+import net.jodah.recurrent.event.FailureListener;
+import net.jodah.recurrent.event.SuccessListener;
+
 /**
  * Utilities for creating callables.
  * 
  * @author Jonathan Halterman
  */
 final class Callables {
-  static <T> Callable<T> callable(CompletionListener<T> listener, final T result, final Throwable failure) {
+  static <T> Callable<T> of(CompletionListener<T> listener, final T result, final Throwable failure) {
     return new Callable<T>() {
       @Override
       public T call() {
@@ -18,11 +22,31 @@ final class Callables {
     };
   }
 
-  static Callable<?> callable(final Runnable runnable) {
+  static <T> Callable<T> of(FailureListener listener, final Throwable failure) {
+    return new Callable<T>() {
+      @Override
+      public T call() {
+        listener.onFailure(failure);
+        return null;
+      }
+    };
+  }
+
+  static Callable<?> of(final Runnable runnable) {
     return new Callable<Void>() {
       @Override
       public Void call() {
         runnable.run();
+        return null;
+      }
+    };
+  }
+
+  static <T> Callable<T> of(SuccessListener<T> listener, final T result) {
+    return new Callable<T>() {
+      @Override
+      public T call() {
+        listener.onSuccess(result);
         return null;
       }
     };

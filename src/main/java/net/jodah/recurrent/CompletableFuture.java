@@ -6,6 +6,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import net.jodah.recurrent.event.CompletionListener;
+import net.jodah.recurrent.event.FailureListener;
+import net.jodah.recurrent.event.SuccessListener;
 import net.jodah.recurrent.internal.util.concurrent.InterruptableWaiter;
 
 /**
@@ -17,6 +20,10 @@ class CompletableFuture<T> implements ListenableFuture<T> {
   private volatile boolean done;
   private volatile CompletionListener<T> completionListener;
   private volatile CompletionListener<T> asyncCompletionListener;
+  private volatile SuccessListener<T> successListener;
+  private volatile SuccessListener<T> asyncSuccessListener;
+  private volatile FailureListener failureListener;
+  private volatile FailureListener asyncFailureListener;
   private volatile InterruptableWaiter waiter;
   private volatile T result;
   private volatile Throwable failure;
@@ -36,10 +43,23 @@ class CompletableFuture<T> implements ListenableFuture<T> {
     if (waiter != null)
       waiter.interruptWaiters();
 
+    // Async callbacks
     if (asyncCompletionListener != null)
-      executor.schedule(Callables.callable(asyncCompletionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+      executor.schedule(Callables.of(asyncCompletionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+    if (failure == null) {
+      if (asyncSuccessListener != null)
+        executor.schedule(Callables.of(asyncSuccessListener, result), 0, TimeUnit.MILLISECONDS);
+    } else if (asyncFailureListener != null)
+      executor.schedule(Callables.of(asyncFailureListener, failure), 0, TimeUnit.MILLISECONDS);
+
+    // Sync callbacks
     if (completionListener != null)
       completionListener.onCompletion(result, failure);
+    if (failure == null) {
+      if (successListener != null)
+        successListener.onSuccess(result);
+    } else if (failureListener != null)
+      failureListener.onFailure(failure);
   }
 
   @Override
@@ -99,7 +119,7 @@ class CompletableFuture<T> implements ListenableFuture<T> {
   @Override
   public ListenableFuture<T> whenCompleteAsync(CompletionListener<T> completionListener) {
     if (done)
-      executor.schedule(Callables.callable(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+      executor.schedule(Callables.of(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
     else
       this.completionListener = completionListener;
     return this;
@@ -109,9 +129,67 @@ class CompletableFuture<T> implements ListenableFuture<T> {
   public ListenableFuture<T> whenCompleteAsync(CompletionListener<T> completionListener,
       ScheduledExecutorService executor) {
     if (done)
-      executor.schedule(Callables.callable(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
+      executor.schedule(Callables.of(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
     else {
       this.asyncCompletionListener = completionListener;
+      this.executor = executor;
+    }
+    return this;
+  }
+
+  @Override
+  public ListenableFuture<T> whenFailure(FailureListener failureListener) {
+    if (!done)
+      this.failureListener = failureListener;
+    else
+      failureListener.onFailure(failure);
+    return this;
+  }
+
+  @Override
+  public ListenableFuture<T> whenFailureAsync(FailureListener failureListener) {
+    if (done)
+      executor.schedule(Callables.of(failureListener, failure), 0, TimeUnit.MILLISECONDS);
+    else
+      this.failureListener = failureListener;
+    return this;
+  }
+
+  @Override
+  public ListenableFuture<T> whenFailureAsync(FailureListener failureListener, ScheduledExecutorService executor) {
+    if (done)
+      executor.schedule(Callables.of(failureListener, failure), 0, TimeUnit.MILLISECONDS);
+    else {
+      this.asyncFailureListener = failureListener;
+      this.executor = executor;
+    }
+    return this;
+  }
+
+  @Override
+  public ListenableFuture<T> whenSuccess(SuccessListener<T> successListener) {
+    if (!done)
+      this.successListener = successListener;
+    else
+      successListener.onSuccess(result);
+    return this;
+  }
+
+  @Override
+  public ListenableFuture<T> whenSuccessAsync(SuccessListener<T> successListener) {
+    if (done)
+      executor.schedule(Callables.of(successListener, result), 0, TimeUnit.MILLISECONDS);
+    else
+      this.successListener = successListener;
+    return this;
+  }
+
+  @Override
+  public ListenableFuture<T> whenSuccessAsync(SuccessListener<T> successListener, ScheduledExecutorService executor) {
+    if (done)
+      executor.schedule(Callables.of(successListener, result), 0, TimeUnit.MILLISECONDS);
+    else {
+      this.asyncSuccessListener = successListener;
       this.executor = executor;
     }
     return this;
