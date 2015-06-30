@@ -29,7 +29,7 @@ class CompletableFuture<T> implements ListenableFuture<T> {
     this.delegate = delegate;
   }
 
-  public void complete(T result, Throwable failure) {
+  void complete(T result, Throwable failure) {
     this.result = result;
     this.failure = failure;
     done = true;

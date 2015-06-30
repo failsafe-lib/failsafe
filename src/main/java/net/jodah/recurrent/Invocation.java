@@ -12,7 +12,7 @@ import net.jodah.recurrent.util.Duration;
  * @author Jonathan Halterman
  * @param <T> invocation result type
  */
-public class Invocation {
+class Invocation {
   private RetryPolicy retryPolicy;
   private Callable<?> callable;
   private ScheduledExecutorService executor;
