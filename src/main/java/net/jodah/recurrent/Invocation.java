@@ -1,7 +1,5 @@
 package net.jodah.recurrent;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.util.Duration;
@@ -12,33 +10,41 @@ import net.jodah.recurrent.util.Duration;
  * @author Jonathan Halterman
  * @param <T> result type
  */
-class Invocation {
+public class Invocation {
   private RetryPolicy retryPolicy;
-  private Callable<?> callable;
-  private ScheduledExecutorService executor;
   private long startTime;
 
-  /** count of failed attempts */
-  int attemptCount;
-  /** wait time in nanoseconds */
-  long waitTime;
+  /** Count of retry attempts */
+  volatile int retryCount;
+  /** Wait time in nanoseconds */
+  volatile long waitTime;
+  /** Indicates whether a retry has been requested */
+  volatile boolean retryRequested;
 
-  Invocation(Callable<?> callable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
-    this.callable = callable;
+  Invocation(RetryPolicy retryPolicy) {
     this.retryPolicy = retryPolicy;
-    this.executor = executor;
-
     waitTime = retryPolicy.getDelay().toNanos();
     startTime = System.nanoTime();
   }
 
   /**
+   * Gets the number of retries that have been attempted so far.
+   */
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  /**
    * Retries a failed invocation, returning true if the invocation's retry policy has not been exceeded, else false.
    */
-  public boolean retry() {
+  public boolean retry(Throwable failure) {
+    if (retryRequested)
+      return true;
+
+    // TODO validate failure against policy
     recordFailedAttempt();
     if (!isPolicyExceeded()) {
-      executor.schedule(callable, waitTime, TimeUnit.NANOSECONDS);
+      retryRequested = true;
       return true;
     }
     return false;
@@ -55,7 +61,7 @@ class Invocation {
    * Returns true if the max retries or max duration for the retry policy have been exceeded, else false.
    */
   boolean isPolicyExceeded() {
-    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || attemptCount <= retryPolicy.getMaxRetries();
+    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || retryCount <= retryPolicy.getMaxRetries();
     boolean withinMaxDuration = retryPolicy.getMaxDuration() == null
         || System.nanoTime() - startTime < retryPolicy.getMaxDuration().toNanos();
     return !withinMaxRetries || !withinMaxDuration;
@@ -65,17 +71,29 @@ class Invocation {
    * Records a failed attempt and adjusts the wait time.
    */
   void recordFailedAttempt() {
-    attemptCount++;
+    retryCount++;
+    adjustForBackoffs();
+    adjustForMaxDuration();
+  }
 
-    // Adjust wait time for backoff
+  /**
+   * Adjusts the wait time for backoffs.
+   */
+  void adjustForBackoffs() {
     if (retryPolicy.getMaxDelay() != null)
       waitTime = (long) Math.min(waitTime * retryPolicy.getDelayMultiplier(), retryPolicy.getMaxDelay().toNanos());
+  }
 
-    // Adjust wait time for max duration
+  /**
+   * Adjusts the wait time for max duration.
+   */
+  void adjustForMaxDuration() {
     if (retryPolicy.getMaxDuration() != null) {
       long elapsedNanos = System.nanoTime() - startTime;
       long maxRemainingWaitTime = retryPolicy.getMaxDuration().toNanos() - elapsedNanos;
       waitTime = Math.min(waitTime, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
+      if (waitTime < 0)
+        waitTime = 0;
     }
   }
 }

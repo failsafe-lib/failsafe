@@ -4,11 +4,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
- * A waiter where waiting threads can be interrupted (as opposed to awakened).
+ * A waiter where waiting threads can be awakened (as opposed to interrupted).
  * 
  * @author Jonathan Halterman
  */
-public class InterruptableWaiter {
+public class AwakableWaiter {
   private final Sync sync = new Sync();
 
   private static final class Sync extends AbstractQueuedSynchronizer {
@@ -22,10 +22,13 @@ public class InterruptableWaiter {
   }
 
   /**
-   * Waits forever, aborting if interrupted.
+   * Waits forever, unblocking once the waiter is awakened.
    */
-  public void await() throws InterruptedException {
-    sync.acquireSharedInterruptibly(0);
+  public void await() {
+    try {
+      sync.acquireSharedInterruptibly(0);
+    } catch (InterruptedException ignore) {
+    }
   }
 
   /**
@@ -39,7 +42,7 @@ public class InterruptableWaiter {
   /**
    * Interrupts waiting threads.
    */
-  public void interruptWaiters() {
+  public void awakenWaiters() {
     for (Thread t : sync.getSharedQueuedThreads())
       t.interrupt();
   }

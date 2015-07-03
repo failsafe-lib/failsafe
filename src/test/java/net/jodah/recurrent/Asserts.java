@@ -2,6 +2,8 @@ package net.jodah.recurrent;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import org.testng.Assert;
@@ -39,6 +41,26 @@ public class Asserts {
     });
   }
 
+  public static <T> T unexceptionally(Callable<T> callable) {
+    try {
+      return callable.call();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  public static Throwable getThrowable(ThrowableRunnable runnable) {
+    try {
+      runnable.run();
+    } catch (Throwable t) {
+      if (t instanceof ExecutionException || t instanceof RuntimeException)
+        return t.getCause();
+      return t;
+    }
+
+    return null;
+  }
+
   public static void assertThrows(Class<? extends Throwable> throwable, ThrowableRunnable runnable,
       Consumer<Throwable> exceptionConsumer) {
     boolean fail = false;
@@ -46,8 +68,12 @@ public class Asserts {
       runnable.run();
       fail = true;
     } catch (Throwable t) {
-      if (!throwable.isInstance(t))
-        Assert.fail("Bad exception type");
+      if (t instanceof ExecutionException || t instanceof RuntimeException)
+        t = t.getCause();
+      if (!throwable.isInstance(t)) {
+        t.printStackTrace();
+        Assert.fail(String.format("Bad exception type. Expected %s but was %s", throwable, t));
+      }
       exceptionConsumer.accept(t);
     }
 

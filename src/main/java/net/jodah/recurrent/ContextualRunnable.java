@@ -1,5 +1,5 @@
 package net.jodah.recurrent;
 
-public interface RetryableRunnable {
+public interface ContextualRunnable {
   void run(Invocation invocation);
 }

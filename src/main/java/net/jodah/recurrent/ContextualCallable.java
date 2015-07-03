@@ -1,5 +1,5 @@
 package net.jodah.recurrent;
 
-public interface RetryableCallable<T> {
+public interface ContextualCallable<T> {
   T call(Invocation invocation) throws Exception;
 }

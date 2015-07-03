@@ -1,18 +1,20 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
-
-import net.jodah.recurrent.event.CompletionListener;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 /**
- * A callable that performs async callbacks.
+ * An asynchronous callable with references to recurrent invocation information.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
  */
 abstract class AsyncCallable<T> implements Callable<T> {
   protected Invocation invocation;
-  protected CompletionListener<T> listener;
+  protected RecurrentFuture<T> future;
+  protected ScheduledExecutorService executor;
 
   static <T> AsyncCallable<T> of(final Callable<T> callable) {
     return new AsyncCallable<T>() {
@@ -20,41 +22,41 @@ abstract class AsyncCallable<T> implements Callable<T> {
       public T call() throws Exception {
         try {
           T result = callable.call();
-          listener.onCompletion(result, null);
+          recordResult(invocation, result, null);
           return result;
         } catch (Exception e) {
-          listener.onCompletion(null, e);
+          recordResult(invocation, null, e);
           return null;
         }
       }
     };
   }
 
-  static <T> AsyncCallable<T> of(final RetryableCallable<T> callable) {
+  static <T> AsyncCallable<T> of(final ContextualCallable<T> callable) {
     return new AsyncCallable<T>() {
       @Override
       public T call() throws Exception {
         try {
           T result = callable.call(invocation);
-          listener.onCompletion(result, null);
+          recordResult(invocation, result, null);
           return result;
         } catch (Exception e) {
-          listener.onCompletion(null, e);
+          recordResult(invocation, null, e);
           return null;
         }
       }
     };
   }
 
-  static AsyncCallable<?> of(final RetryableRunnable runnable) {
+  static AsyncCallable<?> of(final ContextualRunnable runnable) {
     return new AsyncCallable<Object>() {
       @Override
       public Void call() throws Exception {
         try {
           runnable.run(invocation);
-          listener.onCompletion(null, null);
+          recordResult(invocation, null, null);
         } catch (Exception e) {
-          listener.onCompletion(null, e);
+          recordResult(invocation, null, e);
         }
 
         return null;
@@ -68,9 +70,9 @@ abstract class AsyncCallable<T> implements Callable<T> {
       public Void call() throws Exception {
         try {
           runnable.run();
-          listener.onCompletion(null, null);
+          recordResult(invocation, null, null);
         } catch (Exception e) {
-          listener.onCompletion(null, e);
+          recordResult(invocation, null, e);
         }
 
         return null;
@@ -78,8 +80,48 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  void initialize(Invocation invocation, CompletionListener<T> listener) {
+  static <T> AsyncCallable<T> ofFuture(
+      final ContextualCallable<? extends java.util.concurrent.CompletableFuture<T>> callable) {
+    return new AsyncCallable<T>() {
+      @Override
+      public synchronized T call() throws Exception {
+        try {
+          callable.call(invocation).whenComplete(new BiConsumer<T, Throwable>() {
+            @Override
+            public void accept(T innerResult, Throwable failure) {
+              recordResult(invocation, innerResult, failure);
+            }
+          });
+        } catch (Exception e) {
+          recordResult(invocation, null, e);
+        }
+
+        return null;
+      }
+    };
+  }
+
+  void initialize(Invocation invocation, RecurrentFuture<T> future, ScheduledExecutorService executor) {
     this.invocation = invocation;
-    this.listener = listener;
+    this.future = future;
+    this.executor = executor;
+  }
+
+  void recordResult(Invocation invocation, T result, Throwable failure) {
+    // Handle manually requested retries
+    if (invocation.retryRequested) {
+      invocation.retryRequested = false;
+      invocation.adjustForMaxDuration();
+      future.setFuture(executor.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
+    } else if (failure != null) {
+      // TODO fail on specific exceptions
+      invocation.recordFailedAttempt();
+      if (invocation.isPolicyExceeded())
+        future.complete(null, failure);
+      else
+        future.setFuture(executor.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
+    } else {
+      future.complete(result, null);
+    }
   }
 }
