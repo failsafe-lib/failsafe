@@ -1,0 +1,23 @@
+-classpath
+'/Users/jonathan/dev/recurrent/target/classes'
+-encoding
+'UTF-8'
+-protected
+-sourcepath
+'/Users/jonathan/dev/recurrent/src/main/java'
+-bottom
+'Copyright &#169; 2015. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/Users/jonathan/dev/recurrent/target/docs/javadoc'
+-docencoding
+'UTF-8'
+-doctitle
+'Recurrent 0.1.2-SNAPSHOT API'
+-linkoffline
+'http://docs.oracle.com/javase/7/docs/api' '/Users/jonathan/dev/recurrent/target/javadoc-bundle-options'
+-use
+-version
+-windowtitle
+'Recurrent 0.1.2-SNAPSHOT API'
