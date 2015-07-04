@@ -38,7 +38,7 @@ Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 
 #### Asynchronous Retries
 
-Asynchronous invocations are performed and retried on a scheduled executor. When the invocation succeeds or the retry policy is exceeded, the resulting RecurrentFuture is completed and any CompletionListeners registered against it are called:
+Asynchronous invocations are performed and retried on a scheduled executor. When the invocation succeeds or the retry policy is exceeded, the resulting [RecurrentFuture] is completed and any CompletionListeners registered against it are called:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, executor)
@@ -48,7 +48,7 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
 
 #### Asynchronous Integration
 
-Asynchronous code reports failures via future callbacks rather than throwing an exception. Recurrent provides ContextualRunnable and ContextualCallable classes that allow you to manually trigger retries via callbacks:
+Asynchronous code reports failures via future callbacks rather than throwing an exception. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that allow you to manually trigger retries via callbacks:
 
 ```java
 Recurrent.get(invocation -> {
@@ -60,7 +60,7 @@ Recurrent.get(invocation -> {
 }, retryPolicy, executor));
 ```
 
-Java 8 users can also use Recurrent to retry CompletableFuture calls:
+Java 8 users can also use Recurrent to retry [CompletableFuture] calls:
 
 ```java
 Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
@@ -117,3 +117,8 @@ JavaDocs are available [here](https://jhalterman.github.com/recurrent/javadoc).
 ## License
 
 Copyright 2015 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+[RecurrentFuture]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RecurrentFuture.html
+[ContextualRunnable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualRunnable.html
+[ContextualCallable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualCallable.html
+[CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
