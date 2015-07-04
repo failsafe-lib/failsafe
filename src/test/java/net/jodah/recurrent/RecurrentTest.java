@@ -1,8 +1,6 @@
 package net.jodah.recurrent;
 
-import static net.jodah.recurrent.Asserts.assertMatches;
 import static net.jodah.recurrent.Asserts.assertThrows;
-import static net.jodah.recurrent.Testing.getThrowable;
 import static net.jodah.recurrent.Testing.ignoreExceptions;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -10,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.net.SocketException;
@@ -22,16 +21,19 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import net.jodah.concurrentunit.Waiter;
+
 @Test
 public class RecurrentTest {
   private ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
   private RetryPolicy retryTwice = new RetryPolicy().withMaxRetries(2);
   private RetryPolicy retryAlways = new RetryPolicy();
   private Service service = mock(Service.class);
+  private Waiter waiter;
 
   // Results from a synchronous Recurrent call
-  @SuppressWarnings("unchecked") Class<? extends Throwable>[] syncThrowables = new Class[] { RuntimeException.class,
-      SocketException.class };
+  @SuppressWarnings("unchecked") Class<? extends Throwable>[] syncThrowables = new Class[] {
+      RuntimeException.class, SocketException.class };
   // Results from a get against a future that wraps a synchronous Recurrent call
   @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureSyncThrowables = new Class[] {
       ExecutionException.class, RuntimeException.class, SocketException.class };
@@ -48,34 +50,16 @@ public class RecurrentTest {
   @BeforeMethod
   protected void beforeMethod() {
     reset(service);
+    waiter = new Waiter();
   }
 
   @SuppressWarnings("unchecked")
-  private <T> Class<? extends Exception>[] failures(int numFailures, Class<? extends Exception> failureType) {
+  private <T> Class<? extends Exception>[] failures(int numFailures,
+      Class<? extends Exception> failureType) {
     Class<? extends Exception>[] failures = new Class[numFailures];
     for (int i = 0; i < numFailures; i++)
       failures[i] = failureType;
     return failures;
-  }
-
-  private void assertRunWithExecutor(Object runnable) throws Throwable {
-    // Fail twice then succeed
-    when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
-    if (runnable instanceof Runnable)
-      Recurrent.run((Runnable) runnable, new RetryPolicy(), executor).get();
-    else
-      Recurrent.run((ContextualRunnable) runnable, new RetryPolicy(), executor).get();
-    verify(service, times(3)).connect();
-
-    // Fail three times
-    reset(service);
-    when(service.connect()).thenThrow(failures(10, SocketException.class)).thenReturn(true);
-    if (runnable instanceof Runnable)
-      assertThrows(() -> Recurrent.run((Runnable) runnable, retryTwice, executor).get(), futureAsyncThrowables);
-    else
-      assertThrows(() -> Recurrent.run((ContextualRunnable) runnable, retryTwice, executor).get(),
-          futureAsyncThrowables);
-    verify(service, times(3)).connect();
   }
 
   public void shouldRun() throws Throwable {
@@ -93,6 +77,47 @@ public class RecurrentTest {
     verify(service, times(3)).connect();
   }
 
+  private void assertRunWithExecutor(Object runnable) throws Throwable {
+    // Given - Fail twice then succeed
+    when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
+
+    // When
+    RecurrentFuture<?> future = runnable instanceof Runnable
+        ? Recurrent.run((Runnable) runnable, new RetryPolicy(), executor)
+        : Recurrent.run((ContextualRunnable) runnable, new RetryPolicy(), executor);
+
+    // Then
+    waiter.expectResume();
+    future.whenComplete((result, failure) -> {
+      waiter.assertNull(result);
+      waiter.assertNull(failure);
+      waiter.resume();
+    });
+    assertNull(future.get());
+    waiter.await();
+    verify(service, times(3)).connect();
+
+    // Given - Fail three times
+    reset(service);
+    when(service.connect()).thenThrow(failures(10, SocketException.class)).thenReturn(true);
+
+    // When
+    RecurrentFuture<?> future2 = runnable instanceof Runnable
+        ? Recurrent.run((Runnable) runnable, retryTwice, executor)
+        : Recurrent.run((ContextualRunnable) runnable, retryTwice, executor);
+
+    // Then
+    waiter.expectResume();
+    future2.whenComplete((result, failure) -> {
+      waiter.assertNull(result);
+      waiter.assertTrue(failure instanceof SocketException);
+      waiter.resume();
+    });
+    assertThrows(() -> future2.get(), futureAsyncThrowables);
+    waiter.await();
+    verify(service, times(3)).connect();
+  }
+
   public void shouldRunWithExecutor() throws Throwable {
     assertRunWithExecutor((Runnable) () -> service.connect());
   }
@@ -102,6 +127,7 @@ public class RecurrentTest {
       try {
         service.connect();
       } catch (Exception failure) {
+        // Alternate between automatic and manual retries
         if (ctx.getRetryCount() % 2 == 0)
           throw failure;
         if (!ctx.retry(failure))
@@ -127,21 +153,43 @@ public class RecurrentTest {
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private void assertGetWithExecutor(Object callable) throws Throwable {
-    // Fail twice then succeed
+    // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
-    boolean result = callable instanceof Callable
-        ? Recurrent.get((Callable<Boolean>) callable, new RetryPolicy(), executor).get()
-        : Recurrent.get((ContextualCallable<Boolean>) callable, new RetryPolicy(), executor).get();
-    assertEquals(result, true);
+
+    // When
+    RecurrentFuture<Boolean> future = callable instanceof Callable
+        ? Recurrent.get((Callable<Boolean>) callable, new RetryPolicy(), executor)
+        : Recurrent.get((ContextualCallable<Boolean>) callable, new RetryPolicy(), executor);
+
+    // Then
+    waiter.expectResume();
+    future.whenComplete((result, failure) -> {
+      waiter.assertTrue(result);
+      waiter.assertNull(failure);
+      waiter.resume();
+    });
+    assertTrue(future.get());
+    waiter.await();
     verify(service, times(3)).connect();
 
-    // Fail three times
+    // Given - Fail three times
     reset(service);
     when(service.connect()).thenThrow(failures(10, SocketException.class)).thenReturn(true);
-    Throwable failure = callable instanceof Callable
-        ? getThrowable(() -> Recurrent.get((Callable) callable, retryTwice, executor).get())
-        : getThrowable(() -> Recurrent.get((ContextualCallable) callable, retryTwice, executor).get());
-    assertMatches(failure, futureAsyncThrowables);
+
+    // When
+    RecurrentFuture<Boolean> future2 = callable instanceof Callable
+        ? Recurrent.get((Callable) callable, retryTwice, executor)
+        : Recurrent.get((ContextualCallable) callable, retryTwice, executor);
+
+    // Then
+    waiter.expectResume();
+    future2.whenComplete((result, failure) -> {
+      waiter.assertNull(result);
+      waiter.assertTrue(failure instanceof SocketException);
+      waiter.resume();
+    });
+    assertThrows(() -> future2.get(), futureAsyncThrowables);
+    waiter.await();
     verify(service, times(3)).connect();
   }
 
@@ -154,6 +202,7 @@ public class RecurrentTest {
       try {
         return service.connect();
       } catch (Exception failure) {
+        // Alternate between automatic and manual retries
         if (ctx.getRetryCount() % 2 == 0)
           throw failure;
         if (!ctx.retry(failure))
@@ -165,21 +214,43 @@ public class RecurrentTest {
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private void assertGetFuture(Object callable) throws Throwable {
-    // Fail twice then succeed
+    // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
-    boolean result = (boolean) (callable instanceof Callable
-        ? Recurrent.future((Callable) callable, new RetryPolicy(), executor).get()
-        : Recurrent.future((ContextualCallable) callable, new RetryPolicy(), executor).get());
-    assertEquals(result, true);
+
+    // When
+    CompletableFuture<Boolean> future = callable instanceof Callable
+        ? Recurrent.future((Callable) callable, new RetryPolicy(), executor)
+        : Recurrent.future((ContextualCallable) callable, new RetryPolicy(), executor);
+
+    // Then
+    waiter.expectResume();
+    future.whenComplete((result, failure) -> {
+      waiter.assertTrue(result);
+      waiter.assertNull(failure);
+      waiter.resume();
+    });
+    assertTrue(future.get());
+    waiter.await();
     verify(service, times(3)).connect();
 
-    // Fail three times
+    // Given - Fail three times
     reset(service);
     when(service.connect()).thenThrow(failures(10, SocketException.class)).thenReturn(true);
-    Throwable failure = callable instanceof Callable
-        ? getThrowable(() -> Recurrent.future((Callable) callable, retryTwice, executor).get())
-        : getThrowable(() -> Recurrent.future((ContextualCallable) callable, retryTwice, executor).get());
-    assertMatches(failure, futureAsyncThrowables);
+
+    // When
+    CompletableFuture<Boolean> future2 = callable instanceof Callable
+        ? Recurrent.future((Callable) callable, retryTwice, executor)
+        : Recurrent.future((ContextualCallable) callable, retryTwice, executor);
+
+    // Then
+    waiter.expectResume();
+    future2.whenComplete((result, failure) -> {
+      waiter.assertNull(result);
+      waiter.assertTrue(failure instanceof SocketException);
+      waiter.resume();
+    });
+    assertThrows(() -> future2.get(), futureAsyncThrowables);
+    waiter.await();
     verify(service, times(3)).connect();
   }
 
@@ -192,6 +263,7 @@ public class RecurrentTest {
       try {
         return service.connect();
       } catch (Exception failure) {
+        // Alternate between automatic and manual retries
         if (ctx.getRetryCount() % 2 == 0)
           throw failure;
         if (!ctx.retry(failure))
@@ -201,7 +273,7 @@ public class RecurrentTest {
     }));
   }
 
-  public void testFutureStages() throws Throwable {
+  public void testPerStageRetries() throws Throwable {
     // Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
     when(service.disconnect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
@@ -214,13 +286,16 @@ public class RecurrentTest {
     // Fail three times
     reset(service);
     when(service.connect()).thenThrow(failures(10, SocketException.class)).thenReturn(true);
-    assertThrows(() -> CompletableFuture.supplyAsync(() -> Recurrent.get(() -> service.connect(), retryTwice)).get(),
+    assertThrows(
+        () -> CompletableFuture
+            .supplyAsync(() -> Recurrent.get(() -> service.connect(), retryTwice)).get(),
         futureSyncThrowables);
     verify(service, times(3)).connect();
   }
 
   public void shouldCancelFuture() throws Throwable {
-    RecurrentFuture<?> future = Recurrent.run(() -> ignoreExceptions(() -> Thread.sleep(10000)), retryAlways, executor);
+    RecurrentFuture<?> future = Recurrent.run(() -> ignoreExceptions(() -> Thread.sleep(10000)),
+        retryAlways, executor);
     future.cancel(true);
     assertTrue(future.isCancelled());
   }

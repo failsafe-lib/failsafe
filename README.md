@@ -16,7 +16,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 #### Retry Policies
 
-Recurrent supports flexible retry policies that allow you to express the maximum number of retries, delay between retries including backoff, and maximum duration to retry for:
+Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express the maximum number of retries, delay between retries including backoff, and maximum duration to retry for:
 
 ```java
 RetryPolicy delayPolicy = new RetryPolicy()
@@ -118,6 +118,7 @@ JavaDocs are available [here](https://jhalterman.github.com/recurrent/javadoc).
 
 Copyright 2015 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
+[RetryPolicy]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RetryPolicy.html
 [RecurrentFuture]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RecurrentFuture.html
 [ContextualRunnable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualRunnable.html
 [ContextualCallable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualCallable.html

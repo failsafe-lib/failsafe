@@ -10,14 +10,14 @@ import java.util.concurrent.TimeoutException;
 import net.jodah.recurrent.event.CompletionListener;
 import net.jodah.recurrent.event.FailureListener;
 import net.jodah.recurrent.event.SuccessListener;
-import net.jodah.recurrent.internal.util.concurrent.AwakableWaiter;
+import net.jodah.recurrent.internal.util.concurrent.ReentrantCircuit;
 
 public class RecurrentFuture<T> implements Future<T> {
   private final ExecutorService executor;
   private volatile Future<T> delegate;
   private volatile boolean done;
   private volatile boolean cancelled;
-  private volatile AwakableWaiter waiter;
+  private volatile ReentrantCircuit circuit = new ReentrantCircuit();
   private volatile T result;
   private volatile Throwable failure;
 
@@ -34,25 +34,20 @@ public class RecurrentFuture<T> implements Future<T> {
 
   RecurrentFuture(ScheduledExecutorService executor) {
     this.executor = executor;
+    circuit.open();
   }
 
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
     boolean result = delegate.cancel(mayInterruptIfRunning);
     cancelled = true;
-    if (waiter != null)
-      waiter.awakenWaiters();
+    circuit.close();
     return result;
   }
 
   @Override
   public T get() throws InterruptedException, ExecutionException {
-    if (!done) {
-      if (waiter == null)
-        waiter = new AwakableWaiter();
-      waiter.await();
-    }
-
+    circuit.await();
     if (failure != null)
       throw new ExecutionException(failure);
     return result;
@@ -60,13 +55,8 @@ public class RecurrentFuture<T> implements Future<T> {
 
   @Override
   public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-    if (!done) {
-      if (waiter == null)
-        waiter = new AwakableWaiter();
-      if (!waiter.await(timeout, unit))
-        throw new TimeoutException();
-    }
-
+    if (!circuit.await(timeout, unit))
+      throw new TimeoutException();
     if (failure != null)
       throw new ExecutionException(failure);
     return result;
@@ -164,8 +154,7 @@ public class RecurrentFuture<T> implements Future<T> {
     this.result = result;
     this.failure = failure;
     done = true;
-    if (waiter != null)
-      waiter.awakenWaiters();
+    circuit.close();
 
     // Async callbacks
     if (asyncCompletionListener != null)
