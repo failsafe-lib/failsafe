@@ -24,7 +24,7 @@ public class Java8Example {
 
     // Create a retryable runnable Stream
     Recurrent.run(() -> Stream.of("foo")
-        .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
+        .map(value -> value + "bar")
         .forEach(System.out::println), retryPolicy);
         
     // Create a retryable callable Stream

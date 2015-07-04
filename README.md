@@ -80,25 +80,22 @@ Function<String, Connection> connect =
 We can retry streams:
 
 ```java
-Recurrent.get(() -> Stream.of("foo")
-  .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
-  .collect(Collectors.toList()), retryPolicy);  
+Recurrent.run(() -> Stream.of("foo")
+  .map(value -> value + "bar"), retryPolicy);
 ```
 
 Individual Stream operations:
 
 ```java
 Stream.of("foo")
-  .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
-  .forEach(System.out::println);
+  .map(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
 Or individual CompletableFuture stages:
 
 ```java
 CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
-  .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy))
-  .thenAccept(System.out::println);
+  .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
 ## Example Integrations
@@ -111,7 +108,7 @@ Recurrent was designed to integrate nicely with existing libraries, including 3r
 
 ## Public API Integration
 
-Recurrent is great for integrating into other libraries and public APIs. One approach for this is to subclass the RetryPolicy class and allow your users to specify retry policies for specific implementations. The rest of Recurrent, including the actual invocation, can be kept internal. Alternatively you can use a tool such as the Maven shade plugin to entirely repackage and distribute Recurrent with your library/project.
+Recurrent is great for integrating into libraries and public APIs, allowing your users to configure retry policies for different opererations. One integration approach is to subclass the RetryPolicy class, then expose that as part of your API while the rest of Recurrent remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to relocate Recurrent into your project's package structure as desired.
 
 ## Docs
 
