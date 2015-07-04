@@ -117,8 +117,6 @@ public final class Recurrent {
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy) {
     Invocation invocation = new Invocation(retryPolicy);
-    if (callable instanceof SyncCallable)
-      ((SyncCallable<T>) callable).initialize(invocation);
 
     while (true) {
       try {
