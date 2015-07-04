@@ -94,7 +94,7 @@
               <author>false</author>
               <protected>true</protected>
               <excludePackageNames>*.internal</excludePackageNames>
-              <reportOutputDirectory>docs</reportOutputDirectory>
+              <reportOutputDirectory>target/docs</reportOutputDirectory>
               <destDir>javadoc</destDir>
             </configuration>
           </plugin>

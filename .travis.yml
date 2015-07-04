@@ -1,0 +1,13 @@
+language: java
+install: mvn install -DskipTests=true -Dgpg.skip=true
+
+jdk:
+  - oraclejdk8
+
+notifications:
+  email: false
+
+# whitelist
+branches:
+  only:
+    - master

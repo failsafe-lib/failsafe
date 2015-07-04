@@ -22,38 +22,23 @@ public class Java8Example {
     // Create a retryable functional interface
     Function<String, String> bar = value -> Recurrent.get(() -> value + "bar", retryPolicy);
 
-    // Create a retryable terminating Stream
+    // Create a retryable runnable Stream
     Recurrent.run(() -> Stream.of("foo")
         .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
         .forEach(System.out::println), retryPolicy);
-    
-    // Create a retryable terminating Stream
-    Recurrent.run(() -> Stream.of("foo")
-        .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
-        .forEach(System.out::println), retryPolicy);
-    
-    // Create a retryable collecting Stream
+        
+    // Create a retryable callable Stream
     Recurrent.get(() -> Stream.of("foo")
         .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
         .collect(Collectors.toList()), retryPolicy);
 
-    
-    Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
-        .thenApplyAsync(value -> value + "bar")
-        .thenAccept(System.out::println), retryPolicy, executor);
-    
     // Create a individual retryable Stream operation
     Stream.of("foo")
         .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
         .forEach(System.out::println);
-
+    
     // Create a retryable CompletableFuture
-    Recurrent.run(() -> CompletableFuture.supplyAsync(() -> "foo")
-        .thenApplyAsync(value -> value + "bar")
-        .thenAccept(System.out::println), retryPolicy, executor);
-
-    // Create a contextual retryable CompletableFuture
-    Recurrent.get((invocation) -> CompletableFuture.supplyAsync(() -> "foo")
+    Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
         .thenApplyAsync(value -> value + "bar")
         .thenAccept(System.out::println), retryPolicy, executor);
 

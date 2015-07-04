@@ -5,6 +5,6 @@ import org.testng.annotations.Test;
 @Test
 public class RxJavaExample {
   public void example() throws Throwable {
-
+    
   }
 }

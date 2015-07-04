@@ -16,36 +16,12 @@ public final class Recurrent {
   }
 
   /**
-   * Returns a ContextualCallable for the {@code callable}.
-   */
-  public static <T> ContextualCallable<T> contextual(final Callable<T> callable) {
-    return new ContextualCallable<T>() {
-      @Override
-      public T call(Invocation invocation) throws Exception {
-        return callable.call();
-      }
-    };
-  }
-
-  /**
-   * Returns a ContextualRunnable for the {@code runnable}.
-   */
-  public static ContextualRunnable contextual(final Runnable runnable) {
-    return new ContextualRunnable() {
-      @Override
-      public void run(Invocation invocation) {
-        runnable.run();
-      }
-    };
-  }
-
-  /**
    * Invokes the {@code callable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
    */
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<? extends java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
-   return future(contextual(callable), retryPolicy, executor);
+    return future(contextual(callable), retryPolicy, executor);
   }
 
   /**
@@ -78,7 +54,7 @@ public final class Recurrent {
   public static <T> T get(Callable<T> callable, RetryPolicy retryPolicy) {
     return call(callable, retryPolicy);
   }
-  
+
   /**
    * Invokes the {@code callable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
    */
@@ -162,5 +138,17 @@ public final class Recurrent {
         }
       }
     }
+  }
+
+  /**
+   * Returns a ContextualCallable for the {@code callable}.
+   */
+  private static <T> ContextualCallable<T> contextual(final Callable<T> callable) {
+    return new ContextualCallable<T>() {
+      @Override
+      public T call(Invocation invocation) throws Exception {
+        return callable.call();
+      }
+    };
   }
 }

@@ -22,24 +22,22 @@ public class NettyExample {
 
   public void example() throws Throwable {
     EventLoopGroup group = new NioEventLoopGroup();
-
     Bootstrap bootstrap = createBootstrap(group);
     RetryPolicy retryPolicy = new RetryPolicy();
 
-    Recurrent
-        .get((invocation) -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
-          if (channelFuture.isSuccess())
-            System.out.println("Connected");
-          else if (!invocation.retry(channelFuture.cause()))
-            System.out.println("Connection attempts failed");
-        }), retryPolicy, group).whenComplete((future, failure) -> {
-          try {
-            future.sync();
-            future.channel().closeFuture().sync();
-          } catch (Exception ignore) {
-            group.shutdownGracefully();
-          }
-        });
+    Recurrent.get((invocation) -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
+      if (channelFuture.isSuccess())
+        System.out.println("Connected");
+      else if (!invocation.retry(channelFuture.cause()))
+        System.out.println("Connection attempts failed");
+    }), retryPolicy, group).whenComplete((channelFuture, failure) -> {
+      try {
+        channelFuture.sync();
+        channelFuture.channel().closeFuture().sync();
+      } catch (Exception ignore) {
+        group.shutdownGracefully();
+      }
+    });
   }
 
   Bootstrap createBootstrap(EventLoopGroup group) {

@@ -1,4 +1,5 @@
 # Recurrent
+[![Build Status](https://travis-ci.org/jhalterman/concurrentunit.svg)](https://travis-ci.org/jhalterman/concurrentunit)
 
 *Simple, sophisticated retries.*
 
@@ -47,7 +48,7 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
 
 #### Asynchronous Integration
 
-Asynchronous code reports failures via future callbacks rather than throwing an exception. Recurrent provides nice integration with asynchronous code by allowing you to manually trigger retries via a callback:
+Asynchronous code reports failures via future callbacks rather than throwing an exception. Recurrent provides ContextualRunnable and ContextualCallable classes that allow you to manually trigger retries via callbacks:
 
 ```java
 Recurrent.get(invocation -> {
@@ -100,10 +101,11 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
   .thenAccept(System.out::println);
 ```
 
-## 3rd Party Integrations
+## Example Integrations
 
 Recurrent was designed to integrate nicely with existing libraries, including 3rd party asynchronous libraries. Here are some example integrations:
 
+* [Java 8](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/Java8Example.java)
 * [Netty](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/NettyExample.java)
 * [RxJava](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java)
 

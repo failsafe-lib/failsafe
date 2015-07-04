@@ -107,21 +107,34 @@ abstract class AsyncCallable<T> implements Callable<T> {
     this.executor = executor;
   }
 
+  /**
+   * Records an invocation result if necessary, else scheduling a retry if necessary.
+   */
   void recordResult(Invocation invocation, T result, Throwable failure) {
     // Handle manually requested retries
     if (invocation.retryRequested) {
       invocation.retryRequested = false;
       invocation.adjustForMaxDuration();
-      future.setFuture(executor.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
+      scheduleRetry();
     } else if (failure != null) {
       // TODO fail on specific exceptions
       invocation.recordFailedAttempt();
-      if (invocation.isPolicyExceeded())
-        future.complete(null, failure);
+      if (!invocation.isPolicyExceeded())
+        scheduleRetry();
       else
-        future.setFuture(executor.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
+        future.complete(null, failure);
     } else {
       future.complete(result, null);
+    }
+  }
+
+  /**
+   * Schedules a retry if the future is not done or cancelled.
+   */
+  void scheduleRetry() {
+    synchronized (future) {
+      if (!future.isDone() && !future.isCancelled())
+        future.setFuture(executor.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
     }
   }
 }

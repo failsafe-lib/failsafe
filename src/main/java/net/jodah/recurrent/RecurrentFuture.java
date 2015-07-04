@@ -16,6 +16,12 @@ public class RecurrentFuture<T> implements Future<T> {
   private final ExecutorService executor;
   private volatile Future<T> delegate;
   private volatile boolean done;
+  private volatile boolean cancelled;
+  private volatile AwakableWaiter waiter;
+  private volatile T result;
+  private volatile Throwable failure;
+
+  // Listeners
   private volatile CompletionListener<T> completionListener;
   private volatile CompletionListener<T> asyncCompletionListener;
   private volatile ExecutorService completionExecutor;
@@ -25,17 +31,15 @@ public class RecurrentFuture<T> implements Future<T> {
   private volatile FailureListener failureListener;
   private volatile FailureListener asyncFailureListener;
   private volatile ExecutorService failureExecutor;
-  private volatile AwakableWaiter waiter;
-  private volatile T result;
-  private volatile Throwable failure;
 
   RecurrentFuture(ScheduledExecutorService executor) {
     this.executor = executor;
   }
 
   @Override
-  public boolean cancel(boolean mayInterruptIfRunning) {
+  public synchronized boolean cancel(boolean mayInterruptIfRunning) {
     boolean result = delegate.cancel(mayInterruptIfRunning);
+    cancelled = true;
     if (waiter != null)
       waiter.awakenWaiters();
     return result;
@@ -70,7 +74,7 @@ public class RecurrentFuture<T> implements Future<T> {
 
   @Override
   public boolean isCancelled() {
-    return delegate.isCancelled();
+    return cancelled;
   }
 
   @Override
@@ -156,7 +160,7 @@ public class RecurrentFuture<T> implements Future<T> {
     return this;
   }
 
-  void complete(T result, Throwable failure) {
+  synchronized void complete(T result, Throwable failure) {
     this.result = result;
     this.failure = failure;
     done = true;
