@@ -13,7 +13,7 @@ import net.jodah.recurrent.util.Duration;
  */
 public class Invocation {
   private RetryPolicy retryPolicy;
-  private RecurrentFuture<?> future;
+  private RecurrentFuture<Object> future;
   private long startTime;
 
   /** Count of retry attempts */
@@ -23,9 +23,10 @@ public class Invocation {
   /** Indicates whether a retry has been requested */
   volatile boolean retryRequested;
 
+  @SuppressWarnings("unchecked")
   Invocation(RetryPolicy retryPolicy, RecurrentFuture<?> future) {
     this.retryPolicy = retryPolicy;
-    this.future = future;
+    this.future = (RecurrentFuture<Object>) future;
     waitTime = retryPolicy.getDelay().toNanos();
     startTime = System.nanoTime();
   }
@@ -33,9 +34,15 @@ public class Invocation {
   /**
    * Completes the invocation.
    */
-  @SuppressWarnings("unchecked")
+  public void complete() {
+    future.complete(null, null);
+  }
+
+  /**
+   * Completes the invocation.
+   */
   public void complete(Object result) {
-    ((RecurrentFuture<Object>) future).complete(result, null);
+    future.complete(result, null);
   }
 
   /**
@@ -62,7 +69,6 @@ public class Invocation {
     return retryInternal(failure);
   }
 
-  @SuppressWarnings("unchecked")
   private boolean retryInternal(Throwable failure) {
     if (retryRequested)
       return true;
@@ -73,13 +79,13 @@ public class Invocation {
       retryRequested = true;
       return true;
     }
-    
+
     if (failure == null)
       failure = new RuntimeException("Retry invocations exceeded");
-    ((RecurrentFuture<Object>) future).complete(null, failure);
+    future.complete(null, failure);
     return false;
   }
-  
+
   /**
    * Returns the wait time.
    */

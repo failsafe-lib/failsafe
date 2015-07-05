@@ -56,7 +56,7 @@ Recurrent.get(invocation -> {
 	if (failure == null)
 	  invocation.complete(result);
 	else if (!invocation.retry(failure))
-      log.error("Connection attempts failed", failure)
+      log.error("Connection attempts failed", failure);
   }
 }, retryPolicy, executor));
 ```

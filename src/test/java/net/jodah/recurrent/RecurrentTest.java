@@ -88,7 +88,6 @@ public class RecurrentTest {
         : Recurrent.run((ContextualRunnable) runnable, new RetryPolicy(), executor);
 
     // Then
-    waiter.expectResume();
     future.whenComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertNull(failure);
@@ -107,7 +106,6 @@ public class RecurrentTest {
         : Recurrent.run((ContextualRunnable) runnable, retryTwice, executor);
 
     // Then
-    waiter.expectResume();
     future2.whenComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(failure instanceof SocketException);
@@ -162,7 +160,6 @@ public class RecurrentTest {
         : Recurrent.get((ContextualCallable<Boolean>) callable, new RetryPolicy(), executor);
 
     // Then
-    waiter.expectResume();
     future.whenComplete((result, failure) -> {
       waiter.assertTrue(result);
       waiter.assertNull(failure);
@@ -182,7 +179,6 @@ public class RecurrentTest {
         : Recurrent.get((ContextualCallable) callable, retryTwice, executor);
 
     // Then
-    waiter.expectResume();
     future2.whenComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(failure instanceof SocketException);
@@ -223,7 +219,6 @@ public class RecurrentTest {
         : Recurrent.future((ContextualCallable) callable, new RetryPolicy(), executor);
 
     // Then
-    waiter.expectResume();
     future.whenComplete((result, failure) -> {
       waiter.assertTrue(result);
       waiter.assertNull(failure);
@@ -243,7 +238,6 @@ public class RecurrentTest {
         : Recurrent.future((ContextualCallable) callable, retryTwice, executor);
 
     // Then
-    waiter.expectResume();
     future2.whenComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(matches(failure, CompletionException.class, SocketException.class));
@@ -296,14 +290,19 @@ public class RecurrentTest {
     future.cancel(true);
     assertTrue(future.isCancelled());
   }
-
+  
   public void shouldManuallyRetryAndComplete() throws Throwable {
     Recurrent.get((ctx) -> {
       if (ctx.getRetryCount() < 2)
         ctx.retry();
       else
         ctx.complete(true);
-      return null;
-    } , retryAlways, executor);
+      return true;
+    } , retryAlways, executor).whenComplete((result, failure) -> {
+      waiter.assertTrue(result);
+      waiter.assertNull(failure);
+      waiter.resume();
+    });
+    waiter.await(3000);
   }
 }
