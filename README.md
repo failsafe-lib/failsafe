@@ -24,8 +24,8 @@ RetryPolicy delayPolicy = new RetryPolicy()
   .withMaxRetries(100);
     
 RetryPolicy backoffPolicy = new RetryPolicy()
-    .withBackoff(1, 30, TimeUnit.SECONDS)
-    .withMaxDuration(5, TimeUnit.MINUTES);
+  .withBackoff(1, 30, TimeUnit.SECONDS)
+  .withMaxDuration(5, TimeUnit.MINUTES);
 ```
 
 #### Synchronous Retries
@@ -52,15 +52,18 @@ Asynchronous code reports failures via future callbacks rather than throwing an 
 
 ```java
 Recurrent.get(invocation -> {
-  someService.connect(host, port).onFailure((failure) -> {
-    // Manually retry invocation
-    if (!invocation.retry(failure))
+  someService.connect(host, port).whenComplete((result, failure) -> {
+	if (failure == null)
+	  invocation.complete(result);
+	else if (!invocation.retry(failure))
       log.error("Connection attempts failed", failure)
   }
 }, retryPolicy, executor));
 ```
 
-Java 8 users can also use Recurrent to retry [CompletableFuture] calls:
+#### CompletableFuture Integration
+
+Java 8 users can use Recurrent to retry [CompletableFuture] calls:
 
 ```java
 Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")

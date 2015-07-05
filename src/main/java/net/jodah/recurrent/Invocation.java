@@ -2,6 +2,7 @@ package net.jodah.recurrent;
 
 import java.util.concurrent.TimeUnit;
 
+import net.jodah.recurrent.internal.util.Assert;
 import net.jodah.recurrent.util.Duration;
 
 /**
@@ -12,6 +13,7 @@ import net.jodah.recurrent.util.Duration;
  */
 public class Invocation {
   private RetryPolicy retryPolicy;
+  private RecurrentFuture<?> future;
   private long startTime;
 
   /** Count of retry attempts */
@@ -21,10 +23,19 @@ public class Invocation {
   /** Indicates whether a retry has been requested */
   volatile boolean retryRequested;
 
-  Invocation(RetryPolicy retryPolicy) {
+  Invocation(RetryPolicy retryPolicy, RecurrentFuture<?> future) {
     this.retryPolicy = retryPolicy;
+    this.future = future;
     waitTime = retryPolicy.getDelay().toNanos();
     startTime = System.nanoTime();
+  }
+
+  /**
+   * Completes the invocation.
+   */
+  @SuppressWarnings("unchecked")
+  public void complete(Object result) {
+    ((RecurrentFuture<Object>) future).complete(result, null);
   }
 
   /**
@@ -37,19 +48,38 @@ public class Invocation {
   /**
    * Retries a failed invocation, returning true if the invocation's retry policy has not been exceeded, else false.
    */
+  public boolean retry() {
+    return retryInternal(null);
+  }
+
+  /**
+   * Retries a failed invocation, returning true if the invocation's retry policy has not been exceeded, else false.
+   * 
+   * @throws NullPointerException if {@code failure} is null
+   */
   public boolean retry(Throwable failure) {
+    Assert.notNull(failure, "failure");
+    return retryInternal(failure);
+  }
+
+  @SuppressWarnings("unchecked")
+  private boolean retryInternal(Throwable failure) {
     if (retryRequested)
       return true;
 
-    // TODO validate failure against policy
+    // TODO validate failure against policy if failure != null
     recordFailedAttempt();
     if (!isPolicyExceeded()) {
       retryRequested = true;
       return true;
     }
+    
+    if (failure == null)
+      failure = new RuntimeException("Retry invocations exceeded");
+    ((RecurrentFuture<Object>) future).complete(null, failure);
     return false;
   }
-
+  
   /**
    * Returns the wait time.
    */

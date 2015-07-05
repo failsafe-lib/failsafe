@@ -80,8 +80,7 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  static <T> AsyncCallable<T> ofFuture(
-      final ContextualCallable<? extends java.util.concurrent.CompletableFuture<T>> callable) {
+  static <T> AsyncCallable<T> ofFuture(final ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
     return new AsyncCallable<T>() {
       @Override
       public synchronized T call() throws Exception {

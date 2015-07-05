@@ -11,6 +11,17 @@ import net.jodah.recurrent.Testing.ThrowableRunnable;
 
 public class Asserts {
   @SafeVarargs
+  public static boolean matches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
+    Throwable current = actual;
+    for (Class<? extends Throwable> expected : throwableHierarchy) {
+      if (!expected.isInstance(current))
+        return false;
+      current = current.getCause();
+    }
+    return true;
+  }
+  
+  @SafeVarargs
   public static void assertMatches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
     Throwable current = actual;
     for (Class<? extends Throwable> expected : throwableHierarchy) {

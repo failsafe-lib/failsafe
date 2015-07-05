@@ -19,7 +19,7 @@ public final class Recurrent {
    * Invokes the {@code callable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
    */
   public static <T> java.util.concurrent.CompletableFuture<T> future(
-      Callable<? extends java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
+      Callable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
     return future(contextual(callable), retryPolicy, executor);
   }
@@ -28,7 +28,7 @@ public final class Recurrent {
    * Invokes the {@code callable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
    */
   public static <T> java.util.concurrent.CompletableFuture<T> future(
-      ContextualCallable<? extends java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
+      ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
     final java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
     RecurrentFuture<T> future = new RecurrentFuture<T>(executor).whenComplete(new CompletionListener<T>() {
@@ -103,7 +103,7 @@ public final class Recurrent {
       final ScheduledExecutorService executor, RecurrentFuture<T> future) {
     if (future == null)
       future = new RecurrentFuture<T>(executor);
-    final Invocation invocation = new Invocation(retryPolicy);
+    final Invocation invocation = new Invocation(retryPolicy, future);
     callable.initialize(invocation, future, executor);
     future.setFuture(executor.submit(callable));
     return future;
@@ -116,7 +116,7 @@ public final class Recurrent {
    *           wrapped in RuntimeException.
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy) {
-    Invocation invocation = new Invocation(retryPolicy);
+    Invocation invocation = new Invocation(retryPolicy, null);
 
     while (true) {
       try {
