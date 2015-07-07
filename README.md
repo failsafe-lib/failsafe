@@ -35,6 +35,10 @@ RetryPolicy backoffPolicy = new RetryPolicy()
 Synchronous invocations are performed and retried in the calling thread until the invocation succeeds or the retry policy is exceeded:
 
 ```java
+// Run with retries
+Recurrent.run(() -> doSomething(), retryPolicy);
+
+// Get with retries
 Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 ```
 
