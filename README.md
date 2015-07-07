@@ -9,7 +9,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 * Synchronous and asynchronous retries
 * Java 6+ support with seamless Java 8 integration
-* Integration with 3rd party asynchronous APIs
+* Simple integration with asynchronous APIs
 * Transparent integration into public APIs
 
 ## Usage

@@ -12,7 +12,7 @@ import net.jodah.recurrent.event.SuccessListener;
  * @author Jonathan Halterman
  */
 final class Callables {
-  static <T> Callable<T> of(CompletionListener<T> listener, final T result, final Throwable failure) {
+  static <T> Callable<T> of(final CompletionListener<T> listener, final T result, final Throwable failure) {
     return new Callable<T>() {
       @Override
       public T call() {
@@ -22,7 +22,7 @@ final class Callables {
     };
   }
 
-  static <T> Callable<T> of(FailureListener listener, final Throwable failure) {
+  static <T> Callable<T> of(final FailureListener listener, final Throwable failure) {
     return new Callable<T>() {
       @Override
       public T call() {
@@ -42,7 +42,7 @@ final class Callables {
     };
   }
 
-  static <T> Callable<T> of(SuccessListener<T> listener, final T result) {
+  static <T> Callable<T> of(final SuccessListener<T> listener, final T result) {
     return new Callable<T>() {
       @Override
       public T call() {

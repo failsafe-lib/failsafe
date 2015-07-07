@@ -14,6 +14,11 @@
   <name>Recurrent</name>
   <url>http://github.com/jhalterman/recurrent/</url>
 
+  <properties>
+    <devCompileVersion>1.8</devCompileVersion>
+    <releaseCompileVersion>1.6</releaseCompileVersion>
+  </properties>
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -75,8 +80,25 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.2</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>${devCompileVersion}</source>
+          <target>${devCompileVersion}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.3</version>
+        <configuration>
+          <author>false</author>
+          <protected>true</protected>
+          <excludePackageNames>*.internal</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <releaseProfiles>release</releaseProfiles>
+          <arguments>-Prelease</arguments>
         </configuration>
       </plugin>
     </plugins>
@@ -84,12 +106,36 @@
 
   <profiles>
     <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.2</version>
+            <executions>
+              <execution>
+                <id>default-compile</id>
+                <configuration>
+                  <compilerArguments>
+                    <source>${releaseCompileVersion}</source>
+                    <target>${releaseCompileVersion}</target>
+                  </compilerArguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>javadoc</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.10.3</version>
             <configuration>
               <author>false</author>
               <protected>true</protected>
