@@ -48,7 +48,7 @@ public class Invocation {
    * @throws IllegalStateException if complete or retry has already been called
    */
   public void completeExceptionally(Throwable failure) {
-    Assert.state(!completionRequested, "Retry has already been called");
+    Assert.state(!completionRequested, "Complete has already been called");
     Assert.state(!retryRequested, "Retry has already been called");
     completionRequested = true;
     this.failure = failure;
@@ -60,7 +60,7 @@ public class Invocation {
    * @throws IllegalStateException if complete or retry has already been called
    */
   public void complete(Object result) {
-    Assert.state(!completionRequested, "Retry has already been called");
+    Assert.state(!completionRequested, "Complete has already been called");
     Assert.state(!retryRequested, "Retry has already been called");
     completionRequested = true;
     this.result = result;
