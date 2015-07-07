@@ -22,10 +22,10 @@ abstract class AsyncCallable<T> implements Callable<T> {
       public T call() throws Exception {
         try {
           T result = callable.call();
-          recordResult(invocation, result, null);
+          recordResult(result, null);
           return result;
         } catch (Exception e) {
-          recordResult(invocation, null, e);
+          recordResult(null, e);
           return null;
         }
       }
@@ -38,10 +38,10 @@ abstract class AsyncCallable<T> implements Callable<T> {
       public T call() throws Exception {
         try {
           T result = callable.call(invocation);
-          recordResult(invocation, result, null);
+          recordResult(result, null);
           return result;
         } catch (Exception e) {
-          recordResult(invocation, null, e);
+          recordResult(null, e);
           return null;
         }
       }
@@ -54,9 +54,9 @@ abstract class AsyncCallable<T> implements Callable<T> {
       public Void call() throws Exception {
         try {
           runnable.run(invocation);
-          recordResult(invocation, null, null);
+          recordResult(null, null);
         } catch (Exception e) {
-          recordResult(invocation, null, e);
+          recordResult(null, e);
         }
 
         return null;
@@ -70,9 +70,9 @@ abstract class AsyncCallable<T> implements Callable<T> {
       public Void call() throws Exception {
         try {
           runnable.run();
-          recordResult(invocation, null, null);
+          recordResult(null, null);
         } catch (Exception e) {
-          recordResult(invocation, null, e);
+          recordResult(null, e);
         }
 
         return null;
@@ -88,11 +88,11 @@ abstract class AsyncCallable<T> implements Callable<T> {
           callable.call(invocation).whenComplete(new BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
-              recordResult(invocation, innerResult, failure);
+              recordResult(innerResult, failure);
             }
           });
         } catch (Exception e) {
-          recordResult(invocation, null, e);
+          recordResult(null, e);
         }
 
         return null;
@@ -110,7 +110,7 @@ abstract class AsyncCallable<T> implements Callable<T> {
    * Records an invocation result if necessary, else scheduling a retry if necessary.
    */
   @SuppressWarnings("unchecked")
-  void recordResult(Invocation invocation, T result, Throwable failure) {
+  void recordResult(T result, Throwable failure) {
     // Handle manually requested retries
     if (invocation.retryRequested) {
       invocation.retryRequested = false;
