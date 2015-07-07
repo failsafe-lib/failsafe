@@ -51,7 +51,7 @@
     <dependency>
       <groupId>net.jodah</groupId>
       <artifactId>concurrentunit</artifactId>
-      <version>0.3.6-SNAPSHOT</version>
+      <version>0.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>

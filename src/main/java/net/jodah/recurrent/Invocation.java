@@ -12,37 +12,59 @@ import net.jodah.recurrent.util.Duration;
  * @param <T> result type
  */
 public class Invocation {
-  private RetryPolicy retryPolicy;
-  private RecurrentFuture<Object> future;
-  private long startTime;
+  final RetryPolicy retryPolicy;
+  private final long startTime;
 
+  // Internal mutable state
   /** Count of retry attempts */
   volatile int retryCount;
   /** Wait time in nanoseconds */
   volatile long waitTime;
-  /** Indicates whether a retry has been requested */
-  volatile boolean retryRequested;
 
-  @SuppressWarnings("unchecked")
+  // User state
+  volatile boolean retryRequested;
+  volatile boolean completionRequested;
+  volatile Object result;
+  volatile Throwable failure;
+
   Invocation(RetryPolicy retryPolicy, RecurrentFuture<?> future) {
     this.retryPolicy = retryPolicy;
-    this.future = (RecurrentFuture<Object>) future;
     waitTime = retryPolicy.getDelay().toNanos();
     startTime = System.nanoTime();
   }
 
   /**
-   * Completes the invocation.
+   * Completes the invocation, allowing any futures waiting on the invocation to complete.
+   * 
+   * @throws IllegalStateException if complete or retry has already been called
    */
   public void complete() {
-    future.complete(null, null);
+    this.complete(null);
   }
 
   /**
-   * Completes the invocation.
+   * Completes the invocation with the given {@code failure}, allowing any futures waiting on the invocation to
+   * complete.
+   * 
+   * @throws IllegalStateException if complete or retry has already been called
+   */
+  public void completeExceptionally(Throwable failure) {
+    Assert.state(!completionRequested, "Retry has already been called");
+    Assert.state(!retryRequested, "Retry has already been called");
+    completionRequested = true;
+    this.failure = failure;
+  }
+
+  /**
+   * Completes the invocation with the {@code result}, allowing any futures waiting on the invocation to complete.
+   * 
+   * @throws IllegalStateException if complete or retry has already been called
    */
   public void complete(Object result) {
-    future.complete(result, null);
+    Assert.state(!completionRequested, "Retry has already been called");
+    Assert.state(!retryRequested, "Retry has already been called");
+    completionRequested = true;
+    this.result = result;
   }
 
   /**
@@ -54,6 +76,8 @@ public class Invocation {
 
   /**
    * Retries a failed invocation, returning true if the invocation's retry policy has not been exceeded, else false.
+   * 
+   * @throws IllegalStateException if retry or complete has already been called
    */
   public boolean retry() {
     return retryInternal(null);
@@ -63,6 +87,7 @@ public class Invocation {
    * Retries a failed invocation, returning true if the invocation's retry policy has not been exceeded, else false.
    * 
    * @throws NullPointerException if {@code failure} is null
+   * @throws IllegalStateException if retry or complete has already been called
    */
   public boolean retry(Throwable failure) {
     Assert.notNull(failure, "failure");
@@ -70,19 +95,18 @@ public class Invocation {
   }
 
   private boolean retryInternal(Throwable failure) {
-    if (retryRequested)
-      return true;
+    Assert.state(!retryRequested, "Retry has already been called");
+    Assert.state(!completionRequested, "Retry has already been called");
 
-    // TODO validate failure against policy if failure != null
     recordFailedAttempt();
-    if (!isPolicyExceeded()) {
+    if ((failure == null || retryPolicy.allowsRetriesFor(failure)) && !isPolicyExceeded()) {
       retryRequested = true;
       return true;
     }
 
     if (failure == null)
       failure = new RuntimeException("Retry invocations exceeded");
-    future.complete(null, failure);
+    completeExceptionally(failure);
     return false;
   }
 

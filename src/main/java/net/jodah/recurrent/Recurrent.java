@@ -7,7 +7,9 @@ import java.util.concurrent.TimeUnit;
 import net.jodah.recurrent.event.CompletionListener;
 
 /**
- * Performs invocations with synchronous or asynchronous retries according to a {@link RetryPolicy}.
+ * Performs invocations with synchronous or asynchronous retries according to a {@link RetryPolicy}. Asynchronous
+ * retries can optionally be performed on a {@link ContextualRunnable} or {@link ContextualCallable} which allow
+ * invocations to be manually retried or completed.
  * 
  * @author Jonathan Halterman
  */
@@ -48,8 +50,9 @@ public final class Recurrent {
   /**
    * Invokes the {@code callable}, sleeping between invocation attempts according to the {@code retryPolicy}.
    * 
-   * @throws RuntimeException if the {@code callable} fails and the retry policy is exceeded. Checked exceptions are
-   *           wrapped in RuntimeException.
+   * @throws RuntimeException if the {@code callable} fails and the retry policy is exceeded or if interrupted while
+   *           waiting to perform a retry. Checked exceptions, including InterruptedException, are wrapped in
+   *           RuntimeException.
    */
   public static <T> T get(Callable<T> callable, RetryPolicy retryPolicy) {
     return call(callable, retryPolicy);
@@ -82,8 +85,9 @@ public final class Recurrent {
   /**
    * Invokes the {@code runnable}, sleeping between invocation attempts according to the {@code retryPolicy}.
    * 
-   * @throws RuntimeException if the {@code callable} fails and the retry policy is exceeded. Checked exceptions are
-   *           wrapped in RuntimeException.
+   * @throws RuntimeException if the {@code callable} fails and the retry policy is exceeded or if interrupted while
+   *           waiting to perform a retry. Checked exceptions, including InterruptedException, are wrapped in
+   *           RuntimeException.
    */
   public static void run(Runnable runnable, RetryPolicy retryPolicy) {
     call(Callables.of(runnable), retryPolicy);
@@ -112,8 +116,9 @@ public final class Recurrent {
   /**
    * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
    * 
-   * @throws RuntimeException if the {@code callable} fails and the retry policy is exceeded. Checked exceptions are
-   *           wrapped in RuntimeException.
+   * @throws RuntimeException if the {@code callable} fails and the retry policy is exceeded or if interrupted while
+   *           waiting to perform a retry. Checked exceptions, including InterruptedException, are wrapped in
+   *           RuntimeException.
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy) {
     Invocation invocation = new Invocation(retryPolicy, null);
@@ -123,16 +128,15 @@ public final class Recurrent {
         return callable.call();
       } catch (Throwable t) {
         invocation.recordFailedAttempt();
-        // TODO fail on specific exceptions
-        if (invocation.isPolicyExceeded()) {
+        if (retryPolicy.allowsRetriesFor(t) && !invocation.isPolicyExceeded()) {
+          try {
+            Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
           RuntimeException re = t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
           throw re;
-        }
-
-        try {
-          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
-        } catch (InterruptedException e) {
-          throw new RuntimeException(e);
         }
       }
     }

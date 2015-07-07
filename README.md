@@ -9,7 +9,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 * Synchronous and asynchronous retries
 * Java 6+ support with seamless Java 8 integration
-* Simple integration with 3rd party asynchronous libraries
+* Integration with 3rd party asynchronous APIs
 * Transparent integration into public APIs
 
 ## Usage
@@ -38,7 +38,7 @@ Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 
 #### Asynchronous Retries
 
-Asynchronous invocations are performed and retried on a scheduled executor. When the invocation succeeds or the retry policy is exceeded, the resulting [RecurrentFuture] is completed and any CompletionListeners registered against it are called:
+Asynchronous invocations are performed and retried on a scheduled executor. When the invocation succeeds or the retry policy is exceeded, the resulting [RecurrentFuture] is completed and any [listeners](http://jodah.net/recurrent/javadoc/net/jodah/recurrent/event/package-summary.html) registered against it are called:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, executor)
@@ -46,9 +46,9 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
   .whenFailure(failure -> log.error("Connection attempts failed", failure));
 ```
 
-#### Asynchronous Integration
+#### Asynchronous API Integration
 
-Asynchronous code reports failures via future callbacks rather than throwing an exception. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that allow you to manually trigger retries via callbacks:
+Asynchronous code reports completion via callbacks rather than by throwing an exception. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used in a callback to manually perform retries or completion:
 
 ```java
 Recurrent.get(invocation -> {

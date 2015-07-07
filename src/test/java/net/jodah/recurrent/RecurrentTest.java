@@ -12,6 +12,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+import java.net.ConnectException;
 import java.net.SocketException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -268,18 +269,24 @@ public class RecurrentTest {
   }
 
   public void testPerStageRetries() throws Throwable {
-    // Fail twice then succeed
+    // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
     when(service.disconnect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
+
+    // When
     CompletableFuture.supplyAsync(() -> Recurrent.get(() -> service.connect(), retryAlways))
         .thenRun(() -> Recurrent.get(() -> service.disconnect(), retryAlways))
         .get();
+
+    // Then
     verify(service, times(3)).connect();
     verify(service, times(3)).disconnect();
 
-    // Fail three times
+    // Given - Fail three times
     reset(service);
     when(service.connect()).thenThrow(failures(10, SocketException.class)).thenReturn(true);
+
+    // When / Then
     assertThrows(() -> CompletableFuture.supplyAsync(() -> Recurrent.get(() -> service.connect(), retryTwice)).get(),
         futureSyncThrowables);
     verify(service, times(3)).connect();
@@ -290,7 +297,7 @@ public class RecurrentTest {
     future.cancel(true);
     assertTrue(future.isCancelled());
   }
-  
+
   public void shouldManuallyRetryAndComplete() throws Throwable {
     Recurrent.get((ctx) -> {
       if (ctx.getRetryCount() < 2)
@@ -304,5 +311,16 @@ public class RecurrentTest {
       waiter.resume();
     });
     waiter.await(3000);
+  }
+
+  @SuppressWarnings("unchecked")
+  public void shouldThrowOnNonRetriableFailure() throws Throwable {
+    // Given
+    when(service.connect()).thenThrow(ConnectException.class, ConnectException.class, IllegalStateException.class);
+    RetryPolicy retryPolicy = new RetryPolicy().retryOn(ConnectException.class);
+
+    // When / Then
+    assertThrows(() -> Recurrent.get(() -> service.connect(), retryPolicy), IllegalStateException.class);
+    verify(service, times(3)).connect();
   }
 }

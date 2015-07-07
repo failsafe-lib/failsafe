@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.internal.util.Assert;
 import net.jodah.recurrent.util.Duration;
+import net.jodah.recurrent.util.Predicate;
 
 /**
  * Policy that defines how retries should be performed.
@@ -16,6 +17,8 @@ public final class RetryPolicy {
   private Duration maxDelay;
   private Duration maxDuration;
   private int maxRetries;
+  private Class<? extends Throwable>[] retryOn;
+  private Predicate<Throwable> retryPredicate;
 
   /**
    * Creates a retry policy that retries forever with no delay between retries.
@@ -30,6 +33,25 @@ public final class RetryPolicy {
    */
   public boolean allowsRetries() {
     return (maxRetries == -1 || maxRetries > 0) && (maxDuration == null || maxDuration.length > 0);
+  }
+
+  /**
+   * Returns whether the policy will allow retries for the {@code failure}.
+   */
+  public boolean allowsRetriesFor(Throwable failure) {
+    boolean allowsRetries = allowsRetries();
+    if (!allowsRetries)
+      return false;
+
+    if (retryPredicate != null)
+      return retryPredicate.test(failure);
+    else if (retryOn != null) {
+      for (Class<? extends Throwable> retryType : retryOn)
+        if (failure.getClass().isAssignableFrom(retryType))
+          return true;
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -80,10 +102,35 @@ public final class RetryPolicy {
   }
 
   /**
+   * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
+   * 
+   * @throws NullPointerException if {@code failures} is null
+   * @throws IllegalArgumentException if failures is empty
+   */
+  @SuppressWarnings("unchecked")
+  public RetryPolicy retryOn(Class<? extends Throwable>... failures) {
+    Assert.notNull(failures, "failures");
+    Assert.isTrue(failures.length > 0, "Failures cannot be empty");
+    this.retryOn = failures;
+    return this;
+  }
+
+  /**
+   * Specifies when a retry should occur for a particular failure. Supercedes {@link #retryOn(Class...)}.
+   * 
+   * @throws NullPointerException if {@code failurePredicate} is null
+   */
+  public RetryPolicy retryWhen(Predicate<Throwable> retryPredicate) {
+    Assert.notNull(retryPredicate, "retryPredicate");
+    this.retryPredicate = retryPredicate;
+    return this;
+  }
+
+  /**
    * Sets the {@code delay} between retries, exponentially backing of to the {@code maxDelay} and multiplying successive
    * delays by a factor of 2.
    * 
-   * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
+   * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
    */
   public RetryPolicy withBackoff(long delay, long maxDelay, TimeUnit timeUnit) {
@@ -94,14 +141,13 @@ public final class RetryPolicy {
    * Sets the {@code delay} between retries, exponentially backing of to the {@code maxDelay} and multiplying successive
    * delays by the {@code delayMultiplier}.
    * 
-   * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
+   * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalStateException if {@code delay} is >= the maxDuration
    * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the
    *           {@code delayMultiplier} is <= 1
    */
   public RetryPolicy withBackoff(long delay, long maxDelay, TimeUnit timeUnit, double delayMultiplier) {
-    Assert.notNull(delay, "delay");
-    Assert.notNull(maxDelay, "maxDelay");
+    Assert.notNull(timeUnit, "timeUnit");
     this.delay = new Duration(delay, timeUnit);
     this.maxDelay = new Duration(maxDelay, timeUnit);
     this.delayMultiplier = delayMultiplier;
@@ -116,13 +162,13 @@ public final class RetryPolicy {
   /**
    * Sets the {@code delay} between retries.
    * 
-   * @throws NullPointerException if {@code delay} is null
+   * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
    * @throws IllegalStateException if {@code delay} is >= the maxDuration, or backoff delays have already been set via
    *           {@link #withBackoff(Duration, Duration)} or {@link #withBackoff(Duration, Duration, int)}
    */
   public RetryPolicy withDelay(long delay, TimeUnit timeUnit) {
-    Assert.notNull(delay, "delay");
+    Assert.notNull(timeUnit, "timeUnit");
     this.delay = new Duration(delay, timeUnit);
     Assert.isTrue(this.delay.toNanos() > 0, "The delay must be greater tha 0");
     if (maxDuration != null)
@@ -134,11 +180,11 @@ public final class RetryPolicy {
   /**
    * Sets the max duration to perform retries for.
    * 
-   * @throws NullPointerException if {@code maxDuration} is null
+   * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalStateException if {@code maxDuration} is <= the delay
    */
   public RetryPolicy withMaxDuration(long maxDuration, TimeUnit timeUnit) {
-    Assert.notNull(maxDuration, "maxDuration");
+    Assert.notNull(timeUnit, "timeUnit");
     this.maxDuration = new Duration(maxDuration, timeUnit);
     Assert.state(this.maxDuration.toNanos() > delay.toNanos(), "The maxDuration must be greater than the delay");
     return this;
