@@ -1,5 +1,6 @@
 # Recurrent
 [![Build Status](https://travis-ci.org/jhalterman/concurrentunit.svg)](https://travis-ci.org/jhalterman/concurrentunit)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.jodah/recurrent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.jodah/recurrent) 
 
 *Simple, sophisticated retries.*
 
@@ -16,10 +17,11 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 #### Retry Policies
 
-Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express the maximum number of retries, delay between retries including backoff, and maximum duration to retry for:
+Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express the maximum number of retries, delay between retries including backoff, failures to retry on, and maximum duration to retry for:
 
 ```java
 RetryPolicy delayPolicy = new RetryPolicy()
+  .retryOn(ConnectException.class)
   .withDelay(1, TimeUnit.SECONDS)
   .withMaxRetries(100);
     
@@ -38,7 +40,7 @@ Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 
 #### Asynchronous Retries
 
-Asynchronous invocations are performed and retried on a scheduled executor. When the invocation succeeds or the retry policy is exceeded, the resulting [RecurrentFuture] is completed and any [listeners](http://jodah.net/recurrent/javadoc/net/jodah/recurrent/event/package-summary.html) registered against it are called:
+Asynchronous invocations are performed and retried on a scheduled executor and return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any [listeners](http://jodah.net/recurrent/javadoc/net/jodah/recurrent/event/package-summary.html) registered against it are called:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, executor)
@@ -48,7 +50,7 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
 
 #### Asynchronous API Integration
 
-Asynchronous code reports completion via callbacks rather than by throwing an exception. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used in a callback to manually perform retries or completion:
+Asynchronous code reports completion via indirect callbacks. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used with a callback to manually perform retries or completion:
 
 ```java
 Recurrent.get(invocation -> {

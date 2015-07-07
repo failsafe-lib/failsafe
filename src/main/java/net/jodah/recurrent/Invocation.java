@@ -9,7 +9,6 @@ import net.jodah.recurrent.util.Duration;
  * A retryable invocation.
  * 
  * @author Jonathan Halterman
- * @param <T> result type
  */
 public class Invocation {
   final RetryPolicy retryPolicy;

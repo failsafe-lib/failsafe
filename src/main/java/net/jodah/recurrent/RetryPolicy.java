@@ -57,9 +57,9 @@ public final class RetryPolicy {
   /**
    * Returns the delay between retries. Defaults to {@link Duration#NONE}.
    * 
-   * @see #withDelay(Duration)
-   * @see #withBackoff(Duration, Duration)
-   * @see #withBackoff(Duration, Duration, int)
+   * @see #withDelay(long, TimeUnit)
+   * @see #withBackoff(long, long, TimeUnit)
+   * @see #withBackoff(long, long, TimeUnit, int)
    */
   public Duration getDelay() {
     return delay;
@@ -68,7 +68,7 @@ public final class RetryPolicy {
   /**
    * Returns the delay multiplier for backoff retries.
    * 
-   * @see #withBackoff(Duration, Duration, int)
+   * @see #withBackoff(long, long, TimeUnit, int)
    */
   public double getDelayMultiplier() {
     return delayMultiplier;
@@ -77,7 +77,7 @@ public final class RetryPolicy {
   /**
    * Returns the max delay between backoff retries.
    * 
-   * @see #withBackoff(Duration, Duration)
+   * @see #withBackoff(long, long, TimeUnit)
    */
   public Duration getMaxDelay() {
     return maxDelay;
@@ -86,7 +86,7 @@ public final class RetryPolicy {
   /**
    * Returns the max duration to perform retries for.
    * 
-   * @see #withMaxDuration(Duration)
+   * @see #withMaxDuration(long, TimeUnit)
    */
   public Duration getMaxDuration() {
     return maxDuration;
