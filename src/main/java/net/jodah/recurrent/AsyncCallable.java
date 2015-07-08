@@ -111,23 +111,24 @@ abstract class AsyncCallable<T> implements Callable<T> {
    */
   @SuppressWarnings("unchecked")
   void recordResult(T result, Throwable failure) {
-    // Handle manually requested retries
     if (invocation.retryRequested) {
-      invocation.retryRequested = false;
+      // Handle manually requested retry
+      invocation.resetUserState();
       invocation.adjustForMaxDuration();
       scheduleRetry();
     } else if (invocation.completionRequested) {
+      // Handle manually requested completion
       future.complete((T) invocation.result, invocation.failure);
-      invocation.completionRequested = false;
-      invocation.result = null;
-      invocation.failure = null;
+      invocation.resetUserState();
     } else if (failure != null) {
+      // Handle failed invocation
       invocation.recordFailedAttempt();
       if (invocation.retryPolicy.allowsRetriesFor(failure) && !invocation.isPolicyExceeded())
         scheduleRetry();
       else
         future.complete(null, failure);
     } else {
+      // Handle successful invocation
       future.complete(result, null);
     }
   }

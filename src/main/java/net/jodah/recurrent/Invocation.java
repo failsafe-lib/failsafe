@@ -26,7 +26,7 @@ public class Invocation {
   volatile Object result;
   volatile Throwable failure;
 
-  Invocation(RetryPolicy retryPolicy, RecurrentFuture<?> future) {
+  Invocation(RetryPolicy retryPolicy) {
     this.retryPolicy = retryPolicy;
     waitTime = retryPolicy.getDelay().toNanos();
     startTime = System.nanoTime();
@@ -154,5 +154,12 @@ public class Invocation {
       if (waitTime < 0)
         waitTime = 0;
     }
+  }
+
+  void resetUserState() {
+    retryRequested = false;
+    completionRequested = false;
+    result = null;
+    failure = null;
   }
 }

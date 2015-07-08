@@ -107,8 +107,7 @@ public final class Recurrent {
       final ScheduledExecutorService executor, RecurrentFuture<T> future) {
     if (future == null)
       future = new RecurrentFuture<T>(executor);
-    final Invocation invocation = new Invocation(retryPolicy, future);
-    callable.initialize(invocation, future, executor);
+    callable.initialize(new Invocation(retryPolicy), future, executor);
     future.setFuture(executor.submit(callable));
     return future;
   }
@@ -121,7 +120,7 @@ public final class Recurrent {
    *           RuntimeException.
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy) {
-    Invocation invocation = new Invocation(retryPolicy, null);
+    Invocation invocation = new Invocation(retryPolicy);
 
     while (true) {
       try {
