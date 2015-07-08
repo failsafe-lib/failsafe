@@ -126,8 +126,7 @@ public final class Recurrent {
       try {
         return callable.call();
       } catch (Throwable t) {
-        invocation.recordFailedAttempt();
-        if (retryPolicy.allowsRetriesFor(t) && !invocation.isPolicyExceeded()) {
+        if (invocation.canRetryOn(t)) {
           try {
             Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
           } catch (InterruptedException e) {

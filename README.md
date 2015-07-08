@@ -107,13 +107,27 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
   .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
+#### Retry Tracking
+
+In addition to automatically performing retries, Recurrent can also be used with APIs that have their own retry mechanism to track when a retry should be performed:
+
+```java
+RetryStats stats = new RetryStats(retryPolicy);
+
+// On failure
+if (stats.canRetryOn(someFailure))
+  service.scheduleRetry(stats.getWaitTime(), TimeUnit.NANOSECONDS);
+```
+
+See the [RxJava example][RxJava] for a more detailed scenario.
+
 ## Example Integrations
 
-Recurrent was designed to integrate nicely with existing libraries, including 3rd party asynchronous libraries. Here are some example integrations:
+Recurrent was designed to integrate nicely with existing libraries. Here are some example integrations:
 
 * [Java 8](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/Java8Example.java)
 * [Netty](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/NettyExample.java)
-* [RxJava](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java)
+* [RxJava]
 
 ## Public API Integration
 
@@ -132,3 +146,4 @@ Copyright 2015 Jonathan Halterman - Released under the [Apache 2.0 license](http
 [ContextualRunnable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualRunnable.html
 [ContextualCallable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualCallable.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
+[RxJava]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java
