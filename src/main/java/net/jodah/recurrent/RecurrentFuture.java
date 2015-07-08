@@ -3,7 +3,6 @@ package net.jodah.recurrent;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -32,7 +31,7 @@ public class RecurrentFuture<T> implements Future<T> {
   private volatile FailureListener asyncFailureListener;
   private volatile ExecutorService failureExecutor;
 
-  RecurrentFuture(ScheduledExecutorService executor) {
+  RecurrentFuture(ExecutorService executor) {
     this.executor = executor;
     circuit.open();
   }
@@ -114,7 +113,7 @@ public class RecurrentFuture<T> implements Future<T> {
     return this;
   }
 
-  public RecurrentFuture<T> whenFailureAsync(FailureListener failureListener, ScheduledExecutorService executor) {
+  public RecurrentFuture<T> whenFailureAsync(FailureListener failureListener, ExecutorService executor) {
     if (done)
       executor.submit(Callables.of(failureListener, failure));
     else {
@@ -140,7 +139,7 @@ public class RecurrentFuture<T> implements Future<T> {
     return this;
   }
 
-  public RecurrentFuture<T> whenSuccessAsync(SuccessListener<T> successListener, ScheduledExecutorService executor) {
+  public RecurrentFuture<T> whenSuccessAsync(SuccessListener<T> successListener, ExecutorService executor) {
     if (done)
       executor.submit(Callables.of(successListener, result));
     else {
