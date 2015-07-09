@@ -116,7 +116,8 @@ public final class RetryPolicy {
   }
 
   /**
-   * Specifies when a retry should occur for a particular failure. Supercedes {@link #retryOn(Class...)}.
+   * Specifies when a retry should occur for a particular failure. If the {@code retryPredicate} returns true then
+   * retries may be performed, else the failure will be rethrown. Supercedes {@link #retryOn(Class...)}.
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */

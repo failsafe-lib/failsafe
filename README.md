@@ -30,6 +30,14 @@ RetryPolicy backoffPolicy = new RetryPolicy()
   .withMaxDuration(5, TimeUnit.MINUTES);
 ```
 
+You can also specify a broader policy that defines when retries should be performed:
+
+```java
+retryPolicy.retryWhen(failure -> {
+  return failure instanceof ConnectException && service.isRunning();
+});
+```
+
 #### Synchronous Retries
 
 Synchronous invocations are performed and retried in the calling thread until the invocation succeeds or the retry policy is exceeded:
@@ -119,7 +127,7 @@ if (stats.canRetryOn(someFailure))
   service.scheduleRetry(stats.getWaitTime(), TimeUnit.NANOSECONDS);
 ```
 
-See the [RxJava example][RxJava] for a more detailed scenario.
+See the [RxJava example][RxJava] for a more details.
 
 ## Example Integrations
 
@@ -128,6 +136,7 @@ Recurrent was designed to integrate nicely with existing libraries. Here are som
 * [Java 8](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/Java8Example.java)
 * [Netty](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/NettyExample.java)
 * [RxJava]
+* [Vert.x](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/VertxExample.java)
 
 ## Public API Integration
 
