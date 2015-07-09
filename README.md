@@ -17,7 +17,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 #### Retry Policies
 
-Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express the maximum number of retries, delay between retries including backoff, failures to retry on, and maximum duration to retry for:
+Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express when retries should be performed, the delay between retries including optional backoff, the maximum number of retries, and maximum duration to retry for:
 
 ```java
 RetryPolicy delayPolicy = new RetryPolicy()
@@ -26,16 +26,9 @@ RetryPolicy delayPolicy = new RetryPolicy()
   .withMaxRetries(100);
     
 RetryPolicy backoffPolicy = new RetryPolicy()
+  .retryWhen(failure -> failure instanceof ConnectException)
   .withBackoff(1, 30, TimeUnit.SECONDS)
   .withMaxDuration(5, TimeUnit.MINUTES);
-```
-
-You can also specify a broader policy that defines when retries should be performed:
-
-```java
-retryPolicy.retryWhen(failure -> {
-  return failure instanceof ConnectException && service.isRunning();
-});
 ```
 
 #### Synchronous Retries
