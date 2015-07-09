@@ -2,7 +2,7 @@ package net.jodah.recurrent;
 
 import static net.jodah.recurrent.Asserts.assertThrows;
 import static net.jodah.recurrent.Asserts.matches;
-import static net.jodah.recurrent.Testing.ignoreExceptions;
+import static net.jodah.recurrent.Testing.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -54,14 +54,6 @@ public class RecurrentTest {
   protected void beforeMethod() {
     reset(service);
     waiter = new Waiter();
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T> Class<? extends Exception>[] failures(int numFailures, Class<? extends Exception> failureType) {
-    Class<? extends Exception>[] failures = new Class[numFailures];
-    for (int i = 0; i < numFailures; i++)
-      failures[i] = failureType;
-    return failures;
   }
 
   public void shouldRun() throws Throwable {

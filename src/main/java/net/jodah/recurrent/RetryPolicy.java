@@ -121,9 +121,10 @@ public final class RetryPolicy {
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */
-  public RetryPolicy retryWhen(Predicate<Throwable> retryPredicate) {
+  @SuppressWarnings("unchecked")
+  public RetryPolicy retryWhen(Predicate<? extends Throwable> retryPredicate) {
     Assert.notNull(retryPredicate, "retryPredicate");
-    this.retryPredicate = retryPredicate;
+    this.retryPredicate = (Predicate<Throwable>) retryPredicate;
     return this;
   }
 
