@@ -25,11 +25,20 @@ public class Testing {
       return null;
     }
   }
+  
 
   public static void ignoreExceptions(ThrowableRunnable runnable) {
     try {
       runnable.run();
     } catch (Throwable e) {
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static <T> Class<? extends Exception>[] failures(int numFailures, Class<? extends Exception> failureType) {
+    Class<? extends Exception>[] failures = new Class[numFailures];
+    for (int i = 0; i < numFailures; i++)
+      failures[i] = failureType;
+    return failures;
   }
 }
