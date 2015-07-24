@@ -12,10 +12,10 @@
 -docencoding
 'UTF-8'
 -doctitle
-'Recurrent 0.3.1-SNAPSHOT API'
+'Recurrent 0.3.2-SNAPSHOT API'
 -linkoffline
 'http://docs.oracle.com/javase/8/docs/api' '/Users/jonathan/dev/recurrent/target/javadoc-bundle-options'
 -use
 -version
 -windowtitle
-'Recurrent 0.3.1-SNAPSHOT API'
+'Recurrent 0.3.2-SNAPSHOT API'
