@@ -28,7 +28,7 @@ public class NettyExample {
     Recurrent.get(invocation -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
       if (channelFuture.isSuccess())
         invocation.complete(channelFuture);
-      else if (!invocation.retry(channelFuture.cause()))
+      else if (!invocation.retryOn(channelFuture.cause()))
         System.out.println("Connection attempts failed");
     }), retryPolicy, group).whenComplete((channelFuture, failure) -> {
       try {

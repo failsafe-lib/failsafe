@@ -17,23 +17,50 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 #### Retry Policies
 
-Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express when retries should be performed, the delay between retries including optional backoff, the maximum number of retries, and maximum duration to retry for:
+Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express when retries should be performed.
+
+A policy can retry on particular failures:
 
 ```java
-RetryPolicy delayPolicy = new RetryPolicy()
-  .retryOn(ConnectException.class)
-  .withDelay(1, TimeUnit.SECONDS)
-  .withMaxRetries(100);
-    
-RetryPolicy backoffPolicy = new RetryPolicy()
-  .retryWhen(failure -> failure instanceof ConnectException)
+new RetryPolicy().retryOn(ConnectException.class, SocketException.class);
+new RetryPolicy().retryOn(failure -> failure instanceof ConnectException);
+```
+
+Retry on particular results:
+
+```java
+new RetryPolicy().retryWhen(null);
+new RetryPolicy().retryWhen(result -> result == null);
+```  
+
+We can add a delay between retries including exponential backoff:
+
+```java
+new RetryPolicy().withDelay(1, TimeUnit.SECONDS);
+new RetryPolicy().withBackoff(1, 30, TimeUnit.SECONDS);
+```    
+
+Set a max number of retries or max retry duration:
+
+```java
+new RetryPolicy()
+  .withMaxRetries(100)
+  .withMaxDuration(5, TimeUnit.MINUTES);
+```
+
+And of course we can combine these things into a single policy:
+
+```java
+new RetryPolicy()
+  .retryOn(ConnectException.class, SocketException.class)
+  .retryWhen(null)
   .withBackoff(1, 30, TimeUnit.SECONDS)
   .withMaxDuration(5, TimeUnit.MINUTES);
 ```
 
 #### Synchronous Retries
 
-Synchronous invocations are performed and retried in the calling thread until the invocation succeeds or the retry policy is exceeded:
+Once we've defined a retry policy, we can perform retryable synchronous invocations:
 
 ```java
 // Run with retries
@@ -45,7 +72,7 @@ Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 
 #### Asynchronous Retries
 
-Asynchronous invocations are performed and retried on a scheduled executor and return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any [listeners](http://jodah.net/recurrent/javadoc/net/jodah/recurrent/event/package-summary.html) registered against it are called:
+Asynchronous invocations can be performed and retried on a scheduled executor, returning a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any [listeners](http://jodah.net/recurrent/javadoc/net/jodah/recurrent/event/package-summary.html) registered against it are called:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, executor)
@@ -62,7 +89,7 @@ Recurrent.get(invocation -> {
   someService.connect(host, port).whenComplete((result, failure) -> {
 	if (failure == null)
 	  invocation.complete(result);
-	else if (!invocation.retry(failure))
+	else if (!invocation.retryOn(failure))
       log.error("Connection attempts failed", failure);
   }
 }, retryPolicy, executor));

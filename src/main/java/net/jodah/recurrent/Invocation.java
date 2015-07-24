@@ -57,7 +57,7 @@ public class Invocation extends RetryStats {
    * @throws IllegalStateException if retry or complete has already been called
    */
   public boolean retry() {
-    return retryInternal(null);
+    return retryInternal(null, null, false);
   }
 
   /**
@@ -67,9 +67,31 @@ public class Invocation extends RetryStats {
    * @throws NullPointerException if {@code failure} is null
    * @throws IllegalStateException if retry or complete has already been called
    */
-  public boolean retry(Throwable failure) {
+  public boolean retryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
-    return retryInternal(failure);
+    return retryInternal(null, failure, true);
+  }
+
+  /**
+   * Retries a failed invocation, returning true if the retry can be attempted for the {@code result} else false if the
+   * retry policy has been exceeded.
+   * 
+   * @throws NullPointerException if {@code result} is null
+   * @throws IllegalStateException if retry or complete has already been called
+   */
+  public boolean retryWhen(Object result) {
+    Assert.notNull(result, "result");
+    return retryInternal(result, null, true);
+  }
+
+  /**
+   * Retries a failed invocation, returning true if the retry can be attempted for the {@code result} and
+   * {@code failure} else false if the retry policy has been exceeded.
+   * 
+   * @throws IllegalStateException if retry or complete has already been called
+   */
+  public boolean retryWhen(Object result, Throwable failure) {
+    return retryInternal(result, failure, true);
   }
 
   /**
@@ -82,11 +104,11 @@ public class Invocation extends RetryStats {
     failure = null;
   }
 
-  private boolean retryInternal(Throwable failure) {
+  private boolean retryInternal(Object result, Throwable failure, boolean forResultOrFailure) {
     Assert.state(!retryRequested, "Retry has already been called");
     Assert.state(!completionRequested, "Complete has already been called");
 
-    if (canRetryOn(failure)) {
+    if (forResultOrFailure ? canRetryWhen(result, failure) : canRetry()) {
       retryRequested = true;
       return true;
     }

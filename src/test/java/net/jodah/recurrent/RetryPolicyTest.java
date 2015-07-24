@@ -20,15 +20,46 @@ public class RetryPolicyTest {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public void shouldNotAllowRetriesFor() {
+  public void testAllowsRetriesForNull() {
     RetryPolicy policy = new RetryPolicy();
-    policy.retryOn(IllegalArgumentException.class, IOException.class);
-    assertTrue(policy.allowsRetriesFor(new IllegalArgumentException()));
-    assertTrue(policy.allowsRetriesFor(new RuntimeException()));
-    assertTrue(policy.allowsRetriesFor(new IOException()));
-    assertTrue(policy.allowsRetriesFor(new Exception()));
-    assertFalse(policy.allowsRetriesFor(new IllegalStateException()));
+    assertFalse(policy.allowsRetriesFor(null, null));
+  }
+
+  @SuppressWarnings("unchecked")
+  public void testAllowsRetriesForFailure() {
+    RetryPolicy policy = new RetryPolicy().retryOn(IllegalArgumentException.class, IOException.class);
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertTrue(policy.allowsRetriesFor(null, new RuntimeException()));
+    assertTrue(policy.allowsRetriesFor(null, new IOException()));
+    assertTrue(policy.allowsRetriesFor(null, new Exception()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
+  }
+
+  public void testAllowsRetriesForFailurePredicate() {
+    RetryPolicy policy = new RetryPolicy().retryOn(failure -> failure instanceof IllegalArgumentException);
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
+  }
+
+  public void testAllowsRetriesForResult() {
+    RetryPolicy policy = new RetryPolicy().retryWhen("test");
+    assertTrue(policy.allowsRetriesFor("test", null));
+    assertFalse(policy.allowsRetriesFor(0, null));
+  }
+
+  public void testAllowsRetriesForCompletionPredicate() {
+    RetryPolicy policy = new RetryPolicy()
+        .retryWhen((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
+    assertTrue(policy.allowsRetriesFor("test", null));
+    assertFalse(policy.allowsRetriesFor(0, null));
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
+  }
+
+  public void testAllowsRetriesForResultPredicate() {
+    RetryPolicy policy = new RetryPolicy().retryWhen((Integer result) -> result > 0);
+    assertTrue(policy.allowsRetriesFor(1, null));
+    assertFalse(policy.allowsRetriesFor(0, null));
   }
 
   public void shouldRequireValidBackoff() {

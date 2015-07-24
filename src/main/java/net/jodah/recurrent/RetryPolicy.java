@@ -3,22 +3,28 @@ package net.jodah.recurrent;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.internal.util.Assert;
+import net.jodah.recurrent.util.BiPredicate;
 import net.jodah.recurrent.util.Duration;
 import net.jodah.recurrent.util.Predicate;
 
 /**
- * Policy that defines how retries should be performed.
+ * Policy that defines when retries should be performed.
  * 
  * @author Jonathan Halterman
  */
 public final class RetryPolicy {
+  private static final Object RETRY_WHEN_DEFAULT = new Object();
+
   private Duration delay;
   private double delayMultiplier;
   private Duration maxDelay;
   private Duration maxDuration;
   private int maxRetries;
   private Class<? extends Throwable>[] retryOn;
-  private Predicate<Throwable> retryPredicate;
+  private Object retryWhen = RETRY_WHEN_DEFAULT;
+  private Predicate<Throwable> failurePredicate;
+  private Predicate<Object> resultPredicate;
+  private BiPredicate<Object, Throwable> completionPredicate;
 
   /**
    * Creates a retry policy that retries forever with no delay between retries.
@@ -36,22 +42,31 @@ public final class RetryPolicy {
   }
 
   /**
-   * Returns whether the policy will allow retries for the {@code failure}.
+   * Returns whether the policy will allow retries for the {@code failure}. Order of precedence follows
+   * {@link #allowsRetries()}, {@link #retryWhen(BiPredicate)}, {@link #retryOn(Predicate)}, {@link #retryOn(Class...)},
+   * {@link #retryWhen(Predicate)}, {@link #retryWhen(Object)}.
    */
-  public boolean allowsRetriesFor(Throwable failure) {
-    boolean allowsRetries = allowsRetries();
-    if (!allowsRetries)
+  public boolean allowsRetriesFor(Object result, Throwable failure) {
+    if (!allowsRetries())
       return false;
 
-    if (retryPredicate != null)
-      return retryPredicate.test(failure);
-    else if (retryOn != null) {
-      for (Class<? extends Throwable> retryType : retryOn)
-        if (failure.getClass().isAssignableFrom(retryType))
-          return true;
-      return false;
-    }
-    return true;
+    if (completionPredicate != null)
+      return completionPredicate.test(result, failure);
+    else if (failure != null) {
+      if (failurePredicate != null)
+        return failurePredicate.test(failure);
+      else if (retryOn != null) {
+        for (Class<? extends Throwable> retryType : retryOn)
+          if (failure.getClass().isAssignableFrom(retryType))
+            return true;
+        return false;
+      }
+      return true;
+    } else if (resultPredicate != null)
+      return resultPredicate.test(result);
+    else if (!RETRY_WHEN_DEFAULT.equals(retryWhen))
+      return retryWhen == null ? result == null : retryWhen.equals(result);
+    return false;
   }
 
   /**
@@ -117,14 +132,50 @@ public final class RetryPolicy {
 
   /**
    * Specifies when a retry should occur for a particular failure. If the {@code retryPredicate} returns true then
-   * retries may be performed, else the failure will be rethrown. Supercedes {@link #retryOn(Class...)}.
+   * retries may be performed, else the failure will be re-thrown. Supercedes {@link #retryOn(Class...)}.
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */
   @SuppressWarnings("unchecked")
-  public RetryPolicy retryWhen(Predicate<? extends Throwable> retryPredicate) {
-    Assert.notNull(retryPredicate, "retryPredicate");
-    this.retryPredicate = (Predicate<Throwable>) retryPredicate;
+  public RetryPolicy retryOn(Predicate<? extends Throwable> failurePredicate) {
+    Assert.notNull(failurePredicate, "failurePredicate");
+    this.failurePredicate = (Predicate<Throwable>) failurePredicate;
+    return this;
+  }
+
+  /**
+   * Specifies when a retry should occur for a particular result. If the result matches {@code result} then retries may
+   * be performed, else the result will be returned.
+   */
+  public <T> RetryPolicy retryWhen(T result) {
+    this.retryWhen = result;
+    return this;
+  }
+
+  /**
+   * Specifies when a retry should occur for a particular result. If the {@code resultPredicate} returns true then
+   * retries may be performed, else the result will be returned. Supercedes {@link #retryWhen(Object)}.
+   * 
+   * @throws NullPointerException if {@code failurePredicate} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> RetryPolicy retryWhen(Predicate<T> resultPredicate) {
+    Assert.notNull(resultPredicate, "resultPredicate");
+    this.resultPredicate = (Predicate<Object>) resultPredicate;
+    return this;
+  }
+
+  /**
+   * Specifies when a retry should occur for a particular result and failure. If the {@code completionPredicate} returns
+   * true then retries may be performed, else the failure will be re-thrown or the result returned. Supercedes all other
+   * {@code retryOn} and {@code retryWhen} methods.
+   * 
+   * @throws NullPointerException if {@code completionPredicate} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> RetryPolicy retryWhen(BiPredicate<T, ? extends Throwable> completionPredicate) {
+    Assert.notNull(completionPredicate, "completionPredicate");
+    this.completionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
     return this;
   }
 

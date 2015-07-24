@@ -21,11 +21,8 @@ public class RetryStats {
     startTime = System.nanoTime();
   }
 
-  /**
-   * Records a failed attempt, adjusts the wait time and returns whether a retry can be performed.
-   */
-  public boolean canRetry() {
-    return canRetryOn(null);
+  boolean canRetry() {
+    return retryPolicy.allowsRetries() && canRetryInternal();
   }
 
   /**
@@ -33,9 +30,26 @@ public class RetryStats {
    * {@code failure}.
    */
   public boolean canRetryOn(Throwable failure) {
-    if ((failure == null && !retryPolicy.allowsRetries()) || !retryPolicy.allowsRetriesFor(failure))
-      return false;
+    return retryPolicy.allowsRetriesFor(null, failure) && canRetryInternal();
+  }
 
+  /**
+   * Records a failed attempt, adjusts the wait time and returns whether a retry can be performed for the {@code result}
+   * .
+   */
+  public boolean canRetryWhen(Object result) {
+    return retryPolicy.allowsRetriesFor(result, null) && canRetryInternal();
+  }
+
+  /**
+   * Records a failed attempt, adjusts the wait time and returns whether a retry can be performed for the {@code result}
+   * and {@code failure}.
+   */
+  public boolean canRetryWhen(Object result, Throwable failure) {
+    return retryPolicy.allowsRetriesFor(result, failure) && canRetryInternal();
+  }
+
+  private boolean canRetryInternal() {
     retryCount++;
     adjustForBackoffs();
     adjustForMaxDuration();

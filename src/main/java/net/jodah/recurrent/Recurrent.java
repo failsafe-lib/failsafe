@@ -121,21 +121,29 @@ public final class Recurrent {
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy) {
     Invocation invocation = new Invocation(retryPolicy);
+    T result = null;
+    Throwable failure;
 
     while (true) {
       try {
-        return callable.call();
+        failure = null;
+        result = callable.call();
       } catch (Throwable t) {
-        if (invocation.canRetryOn(t)) {
-          try {
-            Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-          }
-        } else {
-          RuntimeException re = t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
-          throw re;
+        failure = t;
+      }
+
+      if (invocation.canRetryWhen(result, failure)) {
+        try {
+          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
         }
+      } else {
+        if (failure == null)
+          return result;
+        RuntimeException re = failure instanceof RuntimeException ? (RuntimeException) failure
+            : new RuntimeException(failure);
+        throw re;
       }
     }
   }

@@ -107,7 +107,7 @@ abstract class AsyncCallable<T> implements Callable<T> {
   }
 
   /**
-   * Records an invocation result if necessary, else scheduling a retry if necessary.
+   * Records an invocation result if necessary, else schedules a retry if necessary.
    */
   @SuppressWarnings("unchecked")
   void recordResult(T result, Throwable failure) {
@@ -118,13 +118,11 @@ abstract class AsyncCallable<T> implements Callable<T> {
     } else if (invocation.completionRequested) {
       future.complete((T) invocation.result, invocation.failure);
       invocation.reset();
-    } else if (failure != null) {
-      if (invocation.canRetryOn(failure))
+    } else {
+      if (invocation.canRetryWhen(result, failure))
         scheduleRetry();
       else
-        future.complete(null, failure);
-    } else {
-      future.complete(result, null);
+        future.complete(result,  failure);
     }
   }
 
