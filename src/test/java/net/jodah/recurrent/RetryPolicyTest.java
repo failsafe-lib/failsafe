@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.Test;
@@ -25,28 +26,6 @@ public class RetryPolicyTest {
     assertFalse(policy.allowsRetriesFor(null, null));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testAllowsRetriesForFailure() {
-    RetryPolicy policy = new RetryPolicy().retryOn(IllegalArgumentException.class, IOException.class);
-    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
-    assertTrue(policy.allowsRetriesFor(null, new RuntimeException()));
-    assertTrue(policy.allowsRetriesFor(null, new IOException()));
-    assertTrue(policy.allowsRetriesFor(null, new Exception()));
-    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
-  }
-
-  public void testAllowsRetriesForFailurePredicate() {
-    RetryPolicy policy = new RetryPolicy().retryOn(failure -> failure instanceof IllegalArgumentException);
-    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
-    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
-  }
-
-  public void testAllowsRetriesForResult() {
-    RetryPolicy policy = new RetryPolicy().retryWhen("test");
-    assertTrue(policy.allowsRetriesFor("test", null));
-    assertFalse(policy.allowsRetriesFor(0, null));
-  }
-
   public void testAllowsRetriesForCompletionPredicate() {
     RetryPolicy policy = new RetryPolicy()
         .retryWhen((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
@@ -56,10 +35,33 @@ public class RetryPolicyTest {
     assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
   }
 
-  public void testAllowsRetriesForResultPredicate() {
-    RetryPolicy policy = new RetryPolicy().retryWhen((Integer result) -> result > 0);
-    assertTrue(policy.allowsRetriesFor(1, null));
-    assertFalse(policy.allowsRetriesFor(0, null));
+  @SuppressWarnings("unchecked")
+  public void testAllowsRetriesForFailure() {
+    RetryPolicy policy = new RetryPolicy().retryOn(IllegalArgumentException.class, IOException.class)
+        .retryOn(failure -> failure instanceof ConnectException);
+
+    // Check failure types
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertTrue(policy.allowsRetriesFor(null, new RuntimeException()));
+    assertTrue(policy.allowsRetriesFor(null, new IOException()));
+    assertTrue(policy.allowsRetriesFor(null, new Exception()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
+
+    // Check failure predicate
+    assertTrue(policy.allowsRetriesFor(null, new ConnectException()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
+  }
+
+  public void testAllowsRetriesForResult() {
+    RetryPolicy policy = new RetryPolicy().retryWhen(10).retryWhen((Integer result) -> result > 100);
+
+    // Check result value
+    assertTrue(policy.allowsRetriesFor(10, null));
+    assertFalse(policy.allowsRetriesFor(5, null));
+
+    // Check result predicate
+    assertTrue(policy.allowsRetriesFor(110, null));
+    assertFalse(policy.allowsRetriesFor(50, null));
   }
 
   public void shouldRequireValidBackoff() {

@@ -8,21 +8,26 @@ import net.jodah.recurrent.util.Duration;
 import net.jodah.recurrent.util.Predicate;
 
 /**
- * Policy that defines when retries should be performed.
+ * A policy that defines when retries should be performed.
+ * 
+ * <p>
+ * The {@code retryOn} methods describe when a retry should be performed for a particular failure. The {@code retryWhen}
+ * methods describe when a retry should be performed for a particular result. If multiple {@code retryOn} or
+ * {@code retryWhen} conditions are specified, any matching condition can allow a retry.
  * 
  * @author Jonathan Halterman
  */
 public final class RetryPolicy {
-  private static final Object RETRY_WHEN_DEFAULT = new Object();
+  private static final Object DEFAULT_RESULT_VALUE = new Object();
 
   private Duration delay;
   private double delayMultiplier;
   private Duration maxDelay;
   private Duration maxDuration;
   private int maxRetries;
-  private Class<? extends Throwable>[] retryOn;
-  private Object retryWhen = RETRY_WHEN_DEFAULT;
+  private Class<? extends Throwable>[] failureTypes;
   private Predicate<Throwable> failurePredicate;
+  private Object resultValue = DEFAULT_RESULT_VALUE;
   private Predicate<Object> resultPredicate;
   private BiPredicate<Object, Throwable> completionPredicate;
 
@@ -43,8 +48,8 @@ public final class RetryPolicy {
     this.maxDelay = rp.maxDelay;
     this.maxDuration = rp.maxDuration;
     this.maxRetries = rp.maxRetries;
-    this.retryOn = rp.retryOn;
-    this.retryWhen = rp.retryWhen;
+    this.failureTypes = rp.failureTypes;
+    this.resultValue = rp.resultValue;
     this.failurePredicate = rp.failurePredicate;
     this.resultPredicate = rp.resultPredicate;
     this.completionPredicate = rp.completionPredicate;
@@ -58,30 +63,35 @@ public final class RetryPolicy {
   }
 
   /**
-   * Returns whether the policy will allow retries for the {@code failure}. Order of precedence follows
-   * {@link #allowsRetries()}, {@link #retryWhen(BiPredicate)}, {@link #retryOn(Predicate)}, {@link #retryOn(Class...)},
-   * {@link #retryWhen(Predicate)}, {@link #retryWhen(Object)}.
+   * Returns whether the policy will allow retries for the {@code failure}.
    */
   public boolean allowsRetriesFor(Object result, Throwable failure) {
     if (!allowsRetries())
       return false;
 
-    if (completionPredicate != null)
-      return completionPredicate.test(result, failure);
-    else if (failure != null) {
-      if (failurePredicate != null)
-        return failurePredicate.test(failure);
-      else if (retryOn != null) {
-        for (Class<? extends Throwable> retryType : retryOn)
-          if (failure.getClass().isAssignableFrom(retryType))
-            return true;
-        return false;
-      }
+    // Check completion condition
+    if (completionPredicate != null && completionPredicate.test(result, failure))
       return true;
-    } else if (resultPredicate != null)
-      return resultPredicate.test(result);
-    else if (!RETRY_WHEN_DEFAULT.equals(retryWhen))
-      return retryWhen == null ? result == null : retryWhen.equals(result);
+
+    // Check failure condition(s)
+    if (failure != null) {
+      if (failurePredicate != null && failurePredicate.test(failure))
+        return true;
+      if (failureTypes != null)
+        for (Class<? extends Throwable> failureType : failureTypes)
+          if (failure.getClass().isAssignableFrom(failureType))
+            return true;
+
+      // Retry if failure was not checked
+      return completionPredicate == null && failurePredicate == null && failureTypes == null;
+    }
+
+    // Check result condition(s)
+    if (resultPredicate != null && resultPredicate.test(result))
+      return true;
+    if (!DEFAULT_RESULT_VALUE.equals(resultValue))
+      return resultValue == null ? result == null : resultValue.equals(result);
+
     return false;
   }
 
@@ -149,13 +159,13 @@ public final class RetryPolicy {
   public RetryPolicy retryOn(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "Failures cannot be empty");
-    this.retryOn = failures;
+    this.failureTypes = failures;
     return this;
   }
 
   /**
    * Specifies when a retry should occur for a particular failure. If the {@code retryPredicate} returns true then
-   * retries may be performed, else the failure will be re-thrown. Supercedes {@link #retryOn(Class...)}.
+   * retries may be performed, else the failure will be re-thrown.
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */
@@ -168,8 +178,7 @@ public final class RetryPolicy {
 
   /**
    * Specifies when a retry should occur for a particular result and failure. If the {@code completionPredicate} returns
-   * true then retries may be performed, else the failure will be re-thrown or the result returned. Supercedes all other
-   * {@code retryOn} and {@code retryWhen} methods.
+   * true then retries may be performed, else the failure will be re-thrown or the result returned.
    * 
    * @throws NullPointerException if {@code completionPredicate} is null
    */
@@ -182,7 +191,7 @@ public final class RetryPolicy {
 
   /**
    * Specifies when a retry should occur for a particular result. If the {@code resultPredicate} returns true then
-   * retries may be performed, else the result will be returned. Supercedes {@link #retryWhen(Object)}.
+   * retries may be performed, else the result will be returned.
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */
@@ -198,7 +207,7 @@ public final class RetryPolicy {
    * be performed, else the result will be returned.
    */
   public <T> RetryPolicy retryWhen(T result) {
-    this.retryWhen = result;
+    this.resultValue = result;
     return this;
   }
 
