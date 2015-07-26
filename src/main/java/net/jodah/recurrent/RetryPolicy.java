@@ -35,6 +35,22 @@ public final class RetryPolicy {
   }
 
   /**
+   * Copy constructor.
+   */
+  public RetryPolicy(RetryPolicy rp) {
+    this.delay = rp.delay;
+    this.delayMultiplier = rp.delayMultiplier;
+    this.maxDelay = rp.maxDelay;
+    this.maxDuration = rp.maxDuration;
+    this.maxRetries = rp.maxRetries;
+    this.retryOn = rp.retryOn;
+    this.retryWhen = rp.retryWhen;
+    this.failurePredicate = rp.failurePredicate;
+    this.resultPredicate = rp.resultPredicate;
+    this.completionPredicate = rp.completionPredicate;
+  }
+
+  /**
    * Returns whether the policy allows any retries based on the configured maxRetries and maxDuration.
    */
   public boolean allowsRetries() {
@@ -67,6 +83,13 @@ public final class RetryPolicy {
     else if (!RETRY_WHEN_DEFAULT.equals(retryWhen))
       return retryWhen == null ? result == null : retryWhen.equals(result);
     return false;
+  }
+
+  /**
+   * Returns a copy of this RetryPolicy.
+   */
+  public RetryPolicy copy() {
+    return new RetryPolicy(this);
   }
 
   /**
@@ -144,11 +167,16 @@ public final class RetryPolicy {
   }
 
   /**
-   * Specifies when a retry should occur for a particular result. If the result matches {@code result} then retries may
-   * be performed, else the result will be returned.
+   * Specifies when a retry should occur for a particular result and failure. If the {@code completionPredicate} returns
+   * true then retries may be performed, else the failure will be re-thrown or the result returned. Supercedes all other
+   * {@code retryOn} and {@code retryWhen} methods.
+   * 
+   * @throws NullPointerException if {@code completionPredicate} is null
    */
-  public <T> RetryPolicy retryWhen(T result) {
-    this.retryWhen = result;
+  @SuppressWarnings("unchecked")
+  public <T> RetryPolicy retryWhen(BiPredicate<T, ? extends Throwable> completionPredicate) {
+    Assert.notNull(completionPredicate, "completionPredicate");
+    this.completionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
     return this;
   }
 
@@ -166,16 +194,11 @@ public final class RetryPolicy {
   }
 
   /**
-   * Specifies when a retry should occur for a particular result and failure. If the {@code completionPredicate} returns
-   * true then retries may be performed, else the failure will be re-thrown or the result returned. Supercedes all other
-   * {@code retryOn} and {@code retryWhen} methods.
-   * 
-   * @throws NullPointerException if {@code completionPredicate} is null
+   * Specifies when a retry should occur for a particular result. If the result matches {@code result} then retries may
+   * be performed, else the result will be returned.
    */
-  @SuppressWarnings("unchecked")
-  public <T> RetryPolicy retryWhen(BiPredicate<T, ? extends Throwable> completionPredicate) {
-    Assert.notNull(completionPredicate, "completionPredicate");
-    this.completionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
+  public <T> RetryPolicy retryWhen(T result) {
+    this.retryWhen = result;
     return this;
   }
 
