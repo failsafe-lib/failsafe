@@ -1,5 +1,6 @@
 package net.jodah.recurrent;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -11,8 +12,14 @@ import net.jodah.recurrent.event.FailureListener;
 import net.jodah.recurrent.event.SuccessListener;
 import net.jodah.recurrent.internal.util.concurrent.ReentrantCircuit;
 
+/**
+ * A future result of an asynchronous operation.
+ * 
+ * @author Jonathan Halterman
+ * @param <T> result type
+ */
 public class RecurrentFuture<T> implements Future<T> {
-  private final ExecutorService executor;
+  private final Scheduler scheduler;
   private volatile Future<T> delegate;
   private volatile boolean done;
   private volatile boolean cancelled;
@@ -31,8 +38,8 @@ public class RecurrentFuture<T> implements Future<T> {
   private volatile FailureListener asyncFailureListener;
   private volatile ExecutorService failureExecutor;
 
-  RecurrentFuture(ExecutorService executor) {
-    this.executor = executor;
+  RecurrentFuture(Scheduler scheduler) {
+    this.scheduler = scheduler;
     circuit.open();
   }
 
@@ -72,16 +79,16 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   public RecurrentFuture<T> whenComplete(CompletionListener<T> completionListener) {
-    if (!done)
-      this.completionListener = completionListener;
-    else
+    if (done)
       completionListener.onCompletion(result, failure);
+    else
+      this.completionListener = completionListener;
     return this;
   }
 
   public RecurrentFuture<T> whenCompleteAsync(CompletionListener<T> completionListener) {
     if (done)
-      executor.submit(Callables.of(completionListener, result, failure));
+      scheduler.schedule(Callables.of(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
     else
       this.completionListener = completionListener;
     return this;
@@ -98,16 +105,16 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   public RecurrentFuture<T> whenFailure(FailureListener failureListener) {
-    if (!done)
-      this.failureListener = failureListener;
-    else
+    if (done)
       failureListener.onFailure(failure);
+    else
+      this.failureListener = failureListener;
     return this;
   }
 
   public RecurrentFuture<T> whenFailureAsync(FailureListener failureListener) {
     if (done)
-      executor.submit(Callables.of(failureListener, failure));
+      scheduler.schedule(Callables.of(failureListener, failure), 0, TimeUnit.MILLISECONDS);
     else
       this.failureListener = failureListener;
     return this;
@@ -124,16 +131,16 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   public RecurrentFuture<T> whenSuccess(SuccessListener<T> successListener) {
-    if (!done)
-      this.successListener = successListener;
-    else
+    if (done)
       successListener.onSuccess(result);
+    else
+      this.successListener = successListener;
     return this;
   }
 
   public RecurrentFuture<T> whenSuccessAsync(SuccessListener<T> successListener) {
     if (done)
-      executor.submit(Callables.of(successListener, result));
+      scheduler.schedule(Callables.of(successListener, result), 0, TimeUnit.MILLISECONDS);
     else
       this.successListener = successListener;
     return this;
@@ -157,13 +164,12 @@ public class RecurrentFuture<T> implements Future<T> {
 
     // Async callbacks
     if (asyncCompletionListener != null)
-      (completionExecutor == null ? executor : completionExecutor)
-          .submit(Callables.of(asyncCompletionListener, result, failure));
+      performAsyncCallback(Callables.of(asyncCompletionListener, result, failure), completionExecutor);
     if (failure == null) {
       if (asyncSuccessListener != null)
-        (successExecutor == null ? executor : successExecutor).submit(Callables.of(asyncSuccessListener, result));
+        performAsyncCallback(Callables.of(asyncSuccessListener, result), successExecutor);
     } else if (asyncFailureListener != null)
-      (failureExecutor == null ? executor : failureExecutor).submit(Callables.of(asyncFailureListener, failure));
+      performAsyncCallback(Callables.of(asyncFailureListener, failure), failureExecutor);
 
     // Sync callbacks
     if (completionListener != null)
@@ -177,5 +183,12 @@ public class RecurrentFuture<T> implements Future<T> {
 
   void setFuture(Future<T> delegate) {
     this.delegate = delegate;
+  }
+
+  private void performAsyncCallback(Callable<T> callable, ExecutorService executor) {
+    if (executor != null)
+      executor.submit(callable);
+    else
+      scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
   }
 }

@@ -1,6 +1,7 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -23,7 +24,15 @@ public final class Recurrent {
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
-    return future(contextual(callable), retryPolicy, executor);
+    return future(contextual(callable), retryPolicy, Schedulers.of(executor));
+  }
+
+  /**
+   * Invokes the {@code callable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   */
+  public static <T> java.util.concurrent.CompletableFuture<T> future(
+      Callable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy, Scheduler scheduler) {
+    return future(contextual(callable), retryPolicy, scheduler);
   }
 
   /**
@@ -32,8 +41,17 @@ public final class Recurrent {
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
+    return future(callable, retryPolicy, Schedulers.of(executor));
+  }
+
+  /**
+   * Invokes the {@code callable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   */
+  public static <T> java.util.concurrent.CompletableFuture<T> future(
+      ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
+      Scheduler scheduler) {
     final java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    RecurrentFuture<T> future = new RecurrentFuture<T>(executor).whenComplete(new CompletionListener<T>() {
+    RecurrentFuture<T> future = new RecurrentFuture<T>(scheduler).whenComplete(new CompletionListener<T>() {
       @Override
       public void onCompletion(T result, Throwable failure) {
         if (failure == null)
@@ -43,7 +61,7 @@ public final class Recurrent {
       }
     });
 
-    call(AsyncCallable.ofFuture(callable), retryPolicy, executor, future);
+    call(AsyncCallable.ofFuture(callable), retryPolicy, scheduler, future);
     return response;
   }
 
@@ -63,7 +81,14 @@ public final class Recurrent {
    */
   public static <T> RecurrentFuture<T> get(Callable<T> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
-    return call(AsyncCallable.of(callable), retryPolicy, executor, null);
+    return call(AsyncCallable.of(callable), retryPolicy, Schedulers.of(executor), null);
+  }
+
+  /**
+   * Invokes the {@code callable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   */
+  public static <T> RecurrentFuture<T> get(Callable<T> callable, RetryPolicy retryPolicy, Scheduler scheduler) {
+    return call(AsyncCallable.of(callable), retryPolicy, scheduler, null);
   }
 
   /**
@@ -71,7 +96,15 @@ public final class Recurrent {
    */
   public static <T> RecurrentFuture<T> get(ContextualCallable<T> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
-    return call(AsyncCallable.of(callable), retryPolicy, executor, null);
+    return call(AsyncCallable.of(callable), retryPolicy, Schedulers.of(executor), null);
+  }
+
+  /**
+   * Invokes the {@code callable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   */
+  public static <T> RecurrentFuture<T> get(ContextualCallable<T> callable, RetryPolicy retryPolicy,
+      Scheduler scheduler) {
+    return call(AsyncCallable.of(callable), retryPolicy, scheduler, null);
   }
 
   /**
@@ -79,7 +112,14 @@ public final class Recurrent {
    */
   public static RecurrentFuture<?> run(ContextualRunnable runnable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
-    return call(AsyncCallable.of(runnable), retryPolicy, executor, null);
+    return call(AsyncCallable.of(runnable), retryPolicy, Schedulers.of(executor), null);
+  }
+
+  /**
+   * Invokes the {@code runnable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   */
+  public static RecurrentFuture<?> run(ContextualRunnable runnable, RetryPolicy retryPolicy, Scheduler scheduler) {
+    return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null);
   }
 
   /**
@@ -97,18 +137,26 @@ public final class Recurrent {
    * Invokes the {@code runnable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
    */
   public static RecurrentFuture<?> run(Runnable runnable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
-    return call(AsyncCallable.of(runnable), retryPolicy, executor, null);
+    return call(AsyncCallable.of(runnable), retryPolicy, Schedulers.of(executor), null);
+  }
+
+  /**
+   * Invokes the {@code runnable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   */
+  public static RecurrentFuture<?> run(Runnable runnable, RetryPolicy retryPolicy, Scheduler scheduler) {
+    return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null);
   }
 
   /**
    * Calls the {@code callable} via the {@code executor}, performing retries according to the {@code retryPolicy}.
    */
+  @SuppressWarnings("unchecked")
   private static <T> RecurrentFuture<T> call(final AsyncCallable<T> callable, final RetryPolicy retryPolicy,
-      final ScheduledExecutorService executor, RecurrentFuture<T> future) {
+      Scheduler scheduler, RecurrentFuture<T> future) {
     if (future == null)
-      future = new RecurrentFuture<T>(executor);
-    callable.initialize(new Invocation(retryPolicy), future, executor);
-    future.setFuture(executor.submit(callable));
+      future = new RecurrentFuture<T>(scheduler);
+    callable.initialize(new Invocation(retryPolicy), future, scheduler);
+    future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     return future;
   }
 

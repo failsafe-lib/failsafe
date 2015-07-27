@@ -1,7 +1,7 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 abstract class AsyncCallable<T> implements Callable<T> {
   protected Invocation invocation;
   protected RecurrentFuture<T> future;
-  protected ScheduledExecutorService executor;
+  protected Scheduler scheduler;
 
   static <T> AsyncCallable<T> of(final Callable<T> callable) {
     return new AsyncCallable<T>() {
@@ -100,10 +100,10 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  void initialize(Invocation invocation, RecurrentFuture<T> future, ScheduledExecutorService executor) {
+  void initialize(Invocation invocation, RecurrentFuture<T> future, Scheduler scheduler) {
     this.invocation = invocation;
     this.future = future;
-    this.executor = executor;
+    this.scheduler = scheduler;
   }
 
   /**
@@ -122,17 +122,18 @@ abstract class AsyncCallable<T> implements Callable<T> {
       if (invocation.canRetryWhen(result, failure))
         scheduleRetry();
       else
-        future.complete(result,  failure);
+        future.complete(result, failure);
     }
   }
 
   /**
    * Schedules a retry if the future is not done or cancelled.
    */
+  @SuppressWarnings("unchecked")
   void scheduleRetry() {
     synchronized (future) {
       if (!future.isDone() && !future.isCancelled())
-        future.setFuture(executor.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
+        future.setFuture((Future<T>) scheduler.schedule(this, invocation.waitTime, TimeUnit.NANOSECONDS));
     }
   }
 }
