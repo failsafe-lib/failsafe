@@ -43,6 +43,18 @@ public class RecurrentFuture<T> implements Future<T> {
     circuit.open();
   }
 
+  static <T> RecurrentFuture<T> of(final java.util.concurrent.CompletableFuture<T> future, Scheduler scheduler) {
+    return new RecurrentFuture<T>(scheduler).whenComplete(new CompletionListener<T>() {
+      @Override
+      public void onCompletion(T result, Throwable failure) {
+        if (failure == null)
+          future.complete(result);
+        else
+          future.completeExceptionally(failure);
+      }
+    });
+  }
+
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
     boolean result = delegate.cancel(mayInterruptIfRunning);
@@ -169,7 +181,7 @@ public class RecurrentFuture<T> implements Future<T> {
       if (asyncSuccessListener != null)
         performAsyncCallback(Callables.of(asyncSuccessListener, result), successExecutor);
     } else if (asyncFailureListener != null)
-      performAsyncCallback(Callables.of(asyncFailureListener, failure), failureExecutor);
+      performAsyncCallback(Callables.<T>of(asyncFailureListener, failure), failureExecutor);
 
     // Sync callbacks
     if (completionListener != null)

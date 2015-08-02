@@ -3,8 +3,6 @@ package net.jodah.recurrent.examples;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.testng.annotations.Test;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
@@ -13,31 +11,44 @@ import net.jodah.recurrent.RetryPolicy;
 import net.jodah.recurrent.Scheduler;
 import net.jodah.recurrent.util.concurrent.AbstractScheduledFuture;
 
-@Test
 public class VertxExample {
-  private Vertx vertx = Vertx.vertx();
+  static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  private RetryPolicy retryPolicy = new RetryPolicy()
+  static RetryPolicy retryPolicy = new RetryPolicy()
       .retryOn((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
           || ReplyFailure.TIMEOUT.equals(failure.failureType()));
 
   /** Adapt Vert.x timer to a Recurrent Scheduler */
-  private Scheduler scheduler = (callable, delay, unit) -> new AbstractScheduledFuture<Object>() {
-    long timerId = vertx.setTimer(unit.toMillis(delay), tid -> {
+  static Scheduler scheduler = (callable, delay, unit) -> {
+    Runnable runnable = () -> {
       try {
         callable.call();
       } catch (Exception ignore) {
       }
-    });
+    };
 
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-      return vertx.cancelTimer(timerId);
+    return new AbstractScheduledFuture<Object>() {
+      long timerId;
+
+      {
+        if (delay == 0)
+          vertx.getOrCreateContext().runOnContext(e -> runnable.run());
+        else
+          timerId = vertx.setTimer(unit.toMillis(delay), tid -> runnable.run());
+      }
+
+      @Override
+      public boolean cancel(boolean mayInterruptIfRunning) {
+        return delay == 0 ? false : vertx.cancelTimer(timerId);
+      };
     };
   };
 
-  public void example() throws Throwable {
+  /**
+   * A Vert.x sender and retryable receiver example.
+   */
+  public static void main(String... args) throws Throwable {
     // Receiver that fails 3 times then succeeds
     AtomicInteger failures = new AtomicInteger();
     vertx.eventBus().consumer("ping-address", message -> {

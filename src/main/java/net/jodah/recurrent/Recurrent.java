@@ -5,8 +5,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.jodah.recurrent.event.CompletionListener;
-
 /**
  * Performs invocations with synchronous or asynchronous retries according to a {@link RetryPolicy}. Asynchronous
  * retries can optionally be performed on a {@link ContextualRunnable} or {@link ContextualCallable} which allow
@@ -24,7 +22,7 @@ public final class Recurrent {
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
-    return future(contextual(callable), retryPolicy, Schedulers.of(executor));
+    return future(callable, retryPolicy, Schedulers.of(executor));
   }
 
   /**
@@ -32,11 +30,22 @@ public final class Recurrent {
    */
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy, Scheduler scheduler) {
-    return future(contextual(callable), retryPolicy, scheduler);
+    final java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncCallable.ofFuture(callable), retryPolicy, scheduler, RecurrentFuture.of(response, scheduler));
+    return response;
   }
 
   /**
    * Invokes the {@code callable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
+   * Allows asynchronous invocations to manually perform retries or completion via the {@code callable}'s
+   * {@link Invocation} reference.
+   * <p>
+   * If the {@code callable} throws an exception or its resulting future is completed with an exception, the invocation
+   * will be retried automatically, else if the {@code retryPolicy} has been exceeded the resulting future will be
+   * completed exceptionally.
+   * <p>
+   * For non-exceptional results, retries or completion can be performed manually via the {@code callable}'s
+   * {@link Invocation} reference.
    */
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
@@ -46,22 +55,21 @@ public final class Recurrent {
 
   /**
    * Invokes the {@code callable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   * Allows asynchronous invocations to manually perform retries or completion via the {@code callable}'s
+   * {@link Invocation} reference.
+   * <p>
+   * If the {@code callable} throws an exception or its resulting future is completed with an exception, the invocation
+   * will be retried automatically, else if the {@code retryPolicy} has been exceeded the resulting future will be
+   * completed exceptionally.
+   * <p>
+   * For non-exceptional results, retries or completion can be performed manually via the {@code callable}'s
+   * {@link Invocation} reference.
    */
   public static <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable, RetryPolicy retryPolicy,
       Scheduler scheduler) {
     final java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    RecurrentFuture<T> future = new RecurrentFuture<T>(scheduler).whenComplete(new CompletionListener<T>() {
-      @Override
-      public void onCompletion(T result, Throwable failure) {
-        if (failure == null)
-          response.complete(result);
-        else
-          response.completeExceptionally(failure);
-      }
-    });
-
-    call(AsyncCallable.ofFuture(callable), retryPolicy, scheduler, future);
+    call(AsyncCallable.ofFuture(callable), retryPolicy, scheduler, RecurrentFuture.of(response, scheduler));
     return response;
   }
 
@@ -93,6 +101,14 @@ public final class Recurrent {
 
   /**
    * Invokes the {@code callable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
+   * Allows asynchronous invocations to manually perform retries or completion via the {@code callable}'s
+   * {@link Invocation} reference.
+   * <p>
+   * If the {@code callable} throws an exception, the invocation will be retried automatically, else if the
+   * {@code retryPolicy} has been exceeded the resulting future will be completed exceptionally.
+   * <p>
+   * For non-exceptional results, retries or completion can be performed manually via the {@code callable}'s
+   * {@link Invocation} reference.
    */
   public static <T> RecurrentFuture<T> get(ContextualCallable<T> callable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
@@ -101,6 +117,14 @@ public final class Recurrent {
 
   /**
    * Invokes the {@code callable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   * Allows asynchronous invocations to manually perform retries or completion via the {@code callable}'s
+   * {@link Invocation} reference.
+   * <p>
+   * If the {@code callable} throws an exception, the invocation will be retried automatically, else if the
+   * {@code retryPolicy} has been exceeded the resulting future will be completed exceptionally.
+   * <p>
+   * For non-exceptional results, retries or completion can be performed manually via the {@code callable}'s
+   * {@link Invocation} reference.
    */
   public static <T> RecurrentFuture<T> get(ContextualCallable<T> callable, RetryPolicy retryPolicy,
       Scheduler scheduler) {
@@ -109,6 +133,14 @@ public final class Recurrent {
 
   /**
    * Invokes the {@code runnable}, scheduling retries with the {@code executor} according to the {@code retryPolicy}.
+   * Allows asynchronous invocations to manually perform retries or completion via the {@code runnable}'s
+   * {@link Invocation} reference.
+   * <p>
+   * If the {@code runnable} throws an exception, the invocation will be retried automatically, else if the
+   * {@code retryPolicy} has been exceeded the resulting future will be completed exceptionally.
+   * <p>
+   * For non-exceptional results, retries or completion can be performed manually via the {@code runnable}'s
+   * {@link Invocation} reference.
    */
   public static RecurrentFuture<?> run(ContextualRunnable runnable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor) {
@@ -117,6 +149,14 @@ public final class Recurrent {
 
   /**
    * Invokes the {@code runnable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
+   * Allows asynchronous invocations to manually perform retries or completion via the {@code runnable}'s
+   * {@link Invocation} reference.
+   * <p>
+   * If the {@code runnable} throws an exception, the invocation will be retried automatically, else if the
+   * {@code retryPolicy} has been exceeded the resulting future will be completed exceptionally.
+   * <p>
+   * For non-exceptional results, retries or completion can be performed manually via the {@code runnable}'s
+   * {@link Invocation} reference.
    */
   public static RecurrentFuture<?> run(ContextualRunnable runnable, RetryPolicy retryPolicy, Scheduler scheduler) {
     return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null);
@@ -155,7 +195,7 @@ public final class Recurrent {
       Scheduler scheduler, RecurrentFuture<T> future) {
     if (future == null)
       future = new RecurrentFuture<T>(scheduler);
-    callable.initialize(new Invocation(retryPolicy), future, scheduler);
+    callable.initialize(new Invocation(callable, retryPolicy, scheduler, future));
     future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     return future;
   }
@@ -168,7 +208,7 @@ public final class Recurrent {
    *           RuntimeException.
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy) {
-    Invocation invocation = new Invocation(retryPolicy);
+    RetryStats stats = new RetryStats(retryPolicy);
     T result = null;
     Throwable failure;
 
@@ -180,9 +220,9 @@ public final class Recurrent {
         failure = t;
       }
 
-      if (invocation.canRetryWhen(result, failure)) {
+      if (stats.canRetryWhen(result, failure)) {
         try {
-          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
+          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(stats.waitTime));
         } catch (InterruptedException e) {
           throw new RuntimeException(e);
         }
@@ -194,17 +234,5 @@ public final class Recurrent {
         throw re;
       }
     }
-  }
-
-  /**
-   * Returns a ContextualCallable for the {@code callable}.
-   */
-  private static <T> ContextualCallable<T> contextual(final Callable<T> callable) {
-    return new ContextualCallable<T>() {
-      @Override
-      public T call(Invocation invocation) throws Exception {
-        return callable.call();
-      }
-    };
   }
 }

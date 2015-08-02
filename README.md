@@ -83,14 +83,14 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
 Asynchronous code reports completion via indirect callbacks. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used with a callback to manually perform retries or completion:
 
 ```java
-Recurrent.get(invocation -> {
-  someService.connect(host, port).whenComplete((result, failure) -> {
-	if (failure == null)
-	  invocation.complete(result);
+Recurrent.get(invocation -> 
+  service.connect().whenComplete((result, failure) -> {
+	if (invocation.complete(result, failure))
+      log.info("Connected");
 	else if (!invocation.retryOn(failure))
       log.error("Connection attempts failed", failure);
   }
-}, retryPolicy, executor));
+), retryPolicy, executor);
 ```
 
 #### CompletableFuture Integration
@@ -115,15 +115,13 @@ Function<String, Connection> connect =
 We can retry streams:
 
 ```java
-Recurrent.run(() -> Stream.of("foo")
-  .map(value -> value + "bar"), retryPolicy);
+Recurrent.run(() -> Stream.of("foo").map(value -> value + "bar"), retryPolicy);
 ```
 
 Individual Stream operations:
 
 ```java
-Stream.of("foo")
-  .map(value -> Recurrent.get(() -> value + "bar", retryPolicy));
+Stream.of("foo").map(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
 Or individual CompletableFuture stages:

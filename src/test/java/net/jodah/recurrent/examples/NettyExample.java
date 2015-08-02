@@ -1,5 +1,7 @@
 package net.jodah.recurrent.examples;
 
+import java.util.concurrent.TimeUnit;
+
 import org.testng.annotations.Test;
 
 import io.netty.bootstrap.Bootstrap;
@@ -23,21 +25,22 @@ public class NettyExample {
   public void example() throws Throwable {
     EventLoopGroup group = new NioEventLoopGroup();
     Bootstrap bootstrap = createBootstrap(group);
-    RetryPolicy retryPolicy = new RetryPolicy();
+    RetryPolicy retryPolicy = new RetryPolicy().withDelay(1, TimeUnit.SECONDS);
 
-    Recurrent.get(invocation -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
-      if (channelFuture.isSuccess())
-        invocation.complete(channelFuture);
-      else if (!invocation.retryOn(channelFuture.cause()))
+    Recurrent.run(invocation -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
+      if (channelFuture.isSuccess()) {
+        System.out.println("Connected!");
+        try {
+          channelFuture.sync();
+          channelFuture.channel().closeFuture().sync();
+        } catch (Exception ignore) {
+          group.shutdownGracefully();
+        }
+      } else if (!invocation.retryOn(channelFuture.cause()))
         System.out.println("Connection attempts failed");
-    }), retryPolicy, group).whenComplete((channelFuture, failure) -> {
-      try {
-        channelFuture.sync();
-        channelFuture.channel().closeFuture().sync();
-      } catch (Exception ignore) {
-        group.shutdownGracefully();
-      }
-    });
+    }), retryPolicy, group);
+    
+    Thread.sleep(5000);
   }
 
   Bootstrap createBootstrap(EventLoopGroup group) {

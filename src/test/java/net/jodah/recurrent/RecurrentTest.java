@@ -20,6 +20,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -123,6 +124,7 @@ public class RecurrentTest {
     assertRunWithExecutor((ContextualRunnable) (ctx) -> {
       try {
         service.connect();
+        ctx.complete();
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
         if (ctx.getRetryCount() % 2 == 0)
@@ -200,7 +202,10 @@ public class RecurrentTest {
   public void shouldGetContextualWithExecutor() throws Throwable {
     assertGetWithExecutor((ContextualCallable<?>) (ctx) -> {
       try {
-        return service.connect();
+        boolean result = service.connect();
+        if (!ctx.complete(result))
+          ctx.retryWhen(result);
+        return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
         if (ctx.getRetryCount() % 2 == 0)
@@ -259,8 +264,11 @@ public class RecurrentTest {
 
   public void testFutureContextual() throws Throwable {
     assertGetFuture((ContextualCallable<?>) (ctx) -> CompletableFuture.supplyAsync(() -> {
-      try {
-        return service.connect();
+      try {        
+        boolean result = service.connect();
+        if (!ctx.complete(result))
+          ctx.retryWhen(result);
+        return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
         if (ctx.getRetryCount() % 2 == 0)
@@ -343,5 +351,22 @@ public class RecurrentTest {
     // When / Then
     assertEquals(Recurrent.get(() -> service.connect(), retryNever), Boolean.FALSE);
     verify(service).connect();
+  }
+
+  /**
+   * Asserts that asynchronous completion via an invocation is supported.
+   */
+  public void shouldCompleteAsync() throws Throwable {
+    Waiter waiter = new Waiter();
+    Recurrent.run(ctx -> executor.schedule(() -> {
+      try {
+        ctx.complete();
+        waiter.resume();
+      } catch (Exception e) {
+        waiter.fail(e);
+      }
+    } , 100, TimeUnit.MILLISECONDS), retryAlways, executor);
+
+    waiter.await(5000);
   }
 }
