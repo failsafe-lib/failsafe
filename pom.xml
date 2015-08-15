@@ -97,20 +97,6 @@
           <arguments>-Prelease</arguments>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.7</version>
-        <configuration>
-          <author>false</author>
-          <protected>true</protected>
-          <excludePackageNames>*.internal:*.internal.*</excludePackageNames>
-          <additionalparam>
-            -Xdoclint:none
-            -link http://docs.oracle.com/javase/8/docs/api/
-          </additionalparam>
-        </configuration>
-      </plugin>
 
       <!-- Coverage -->
       <plugin>
@@ -168,6 +154,32 @@
               </execution>
             </executions>
           </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.7</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+                <configuration>
+                  <additionalparam>
+                    -Xdoclint:none
+                    -link http://docs.oracle.com/javase/8/docs/api/
+                  </additionalparam>
+                </configuration>
+              </execution>
+            </executions>
+            <configuration>
+              <author>false</author>
+              <protected>true</protected>
+              <excludePackageNames>*.internal</excludePackageNames>
+            </configuration>
+          </plugin>
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
