@@ -53,7 +53,7 @@ public class RetryPolicyTest {
   }
 
   public void testAllowsRetriesForResult() {
-    RetryPolicy policy = new RetryPolicy().retryWhen(10).retryWhen((Integer result) -> result > 100);
+    RetryPolicy policy = new RetryPolicy().retryFor(10).retryWhen((Integer result) -> result > 100);
 
     // Check result value
     assertTrue(policy.allowsRetriesFor(10, null));

@@ -32,7 +32,7 @@ public final class RetryPolicy {
   private BiPredicate<Object, Throwable> completionPredicate;
 
   /**
-   * Creates a retry policy that retries forever with no delay between retries.
+   * Creates a retry policy that always retries with no delay.
    */
   public RetryPolicy() {
     delay = Duration.NONE;
@@ -107,7 +107,7 @@ public final class RetryPolicy {
    * 
    * @see #withDelay(long, TimeUnit)
    * @see #withBackoff(long, long, TimeUnit)
-   * @see #withBackoff(long, long, TimeUnit, int)
+   * @see #withBackoff(long, long, TimeUnit, double)
    */
   public Duration getDelay() {
     return delay;
@@ -116,7 +116,7 @@ public final class RetryPolicy {
   /**
    * Returns the delay multiplier for backoff retries.
    * 
-   * @see #withBackoff(long, long, TimeUnit, int)
+   * @see #withBackoff(long, long, TimeUnit, double)
    */
   public double getDelayMultiplier() {
     return delayMultiplier;
@@ -206,7 +206,7 @@ public final class RetryPolicy {
    * Specifies when a retry should occur for a particular result. If the result matches {@code result} then retries may
    * be performed, else the result will be returned.
    */
-  public <T> RetryPolicy retryWhen(T result) {
+  public RetryPolicy retryFor(Object result) {
     this.resultValue = result;
     return this;
   }
@@ -249,8 +249,7 @@ public final class RetryPolicy {
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
-   * @throws IllegalStateException if {@code delay} is >= the maxDuration, or backoff delays have already been set via
-   *           {@link #withBackoff(Duration, Duration)} or {@link #withBackoff(Duration, Duration, int)}
+   * @throws IllegalStateException if {@code delay} is >= the maxDuration
    */
   public RetryPolicy withDelay(long delay, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");

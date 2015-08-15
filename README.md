@@ -6,12 +6,14 @@
 
 ## Introduction
 
-Recurrent is a simple, zero-dependency library for performing retries. It features:
+Recurrent is a simple, zero-dependency library for performing retries on Java 1.6+. It features:
 
-* Synchronous and asynchronous retries
-* Java 6+ support with seamless Java 8 integration
-* Simple integration with asynchronous APIs
-* Transparent integration into public APIs
+* [Flexible retry policies](#retry-policies)
+* [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
+* [Asynchronous API integration](#asynchronous-api-integration)
+* [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
+* [Invocation Tracking](#invocation-tracking)
+* [Public API integration](#public-api-integration)
 
 ## Usage
 
@@ -19,7 +21,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express when retries should be performed.
 
-A policy can allow retries for particular failures:
+A policy can allow retries on particular failures:
 
 ```java
 RetryPolicy retryPolicy = new RetryPolicy()
@@ -27,11 +29,11 @@ RetryPolicy retryPolicy = new RetryPolicy()
   .retryOn(failure -> failure instanceof ConnectException);
 ```
 
-And for particular results:
+And for particular results or conditions:
 
 ```java
 retryPolicy
-  .retryWhen(null);
+  .retryFor(null);
   .retryWhen(result -> result == null);
 ```  
 
@@ -87,7 +89,7 @@ Recurrent.get(invocation ->
   service.connect().whenComplete((result, failure) -> {
 	if (invocation.complete(result, failure))
       log.info("Connected");
-	else if (!invocation.retryOn(failure))
+	else if (!invocation.retry())
       log.error("Connection attempts failed", failure);
   }
 ), retryPolicy, executor);
@@ -131,19 +133,33 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
   .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
-#### Retry Tracking
+#### Invocation Tracking
 
-In addition to automatically performing retries, Recurrent can also be used with APIs that have their own retry mechanism to track when a retry should be performed:
+In addition to automatically performing retries, Recurrent can be used to track invocations for you, allowing you to manually retry as needed:
 
 ```java
-RetryStats stats = new RetryStats(retryPolicy);
-
-// On failure
-if (stats.canRetryOn(someFailure))
-  service.scheduleRetry(stats.getWaitTime(), TimeUnit.NANOSECONDS);
+Invocation invocation = new Invocation(retryPolicy);
+while (!invocation.isComplete()) {
+  try {
+	doSomething();
+    invocation.complete()
+  } catch (ConnectException e) {
+    invocation.recordFailure(e);
+  }
+}
 ```
 
-See the [RxJava example][RxJava] for a more details.
+Invocation tracking is also useful for integrating with APIs that have their own retry mechanism:
+
+```java
+Invocation invocation = new Invocation(retryPolicy);
+
+// On failure
+if (invocation.canRetryOn(someFailure))
+  service.scheduleRetry(invocation.getWaitTime(), TimeUnit.NANOSECONDS);
+```
+
+See the [RxJava example][RxJava] for a more detailed implementation.
 
 ## Example Integrations
 

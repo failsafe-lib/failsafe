@@ -37,7 +37,7 @@ public class AsyncExample {
     Recurrent.get(invocation -> service.connect().whenComplete((result, failure) -> {
       if (invocation.complete(result, failure))
         System.out.println("Success");
-      else if (!invocation.retryOn(failure))
+      else if (!invocation.retry())
         System.out.println("Connection attempts failed");
     }), retryPolicy, executor);
 

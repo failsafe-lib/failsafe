@@ -121,15 +121,15 @@ public class RecurrentTest {
   }
 
   public void shouldRunContextualWithExecutor() throws Throwable {
-    assertRunWithExecutor((ContextualRunnable) (ctx) -> {
+    assertRunWithExecutor((ContextualRunnable) inv -> {
       try {
         service.connect();
-        ctx.complete();
+        inv.complete();
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (ctx.getRetryCount() % 2 == 0)
+        if (inv.getAttemptCount() % 2 == 0)
           throw failure;
-        if (!ctx.retryOn(failure))
+        if (!inv.retryOn(failure))
           throw failure;
       }
     });
@@ -140,7 +140,7 @@ public class RecurrentTest {
 
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
 
     assertEquals(Recurrent.get(callable, retryPolicy), Boolean.TRUE);
     verify(service, times(5)).connect();
@@ -158,7 +158,7 @@ public class RecurrentTest {
   private void assertGetWithExecutor(Object callable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
 
     // When
     RecurrentFuture<Boolean> future = callable instanceof Callable
@@ -200,17 +200,17 @@ public class RecurrentTest {
   }
 
   public void shouldGetContextualWithExecutor() throws Throwable {
-    assertGetWithExecutor((ContextualCallable<?>) (ctx) -> {
+    assertGetWithExecutor((ContextualCallable<?>) inv -> {
       try {
         boolean result = service.connect();
-        if (!ctx.complete(result))
-          ctx.retryWhen(result);
+        if (!inv.complete(result))
+          inv.retryFor(result);
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (ctx.getRetryCount() % 2 == 0)
+        if (inv.getAttemptCount() % 2 == 0)
           throw failure;
-        if (!ctx.retryOn(failure))
+        if (!inv.retryOn(failure))
           throw failure;
         return null;
       }
@@ -221,7 +221,7 @@ public class RecurrentTest {
   private void assertGetFuture(Object callable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
 
     // When
     CompletableFuture<Boolean> future = callable instanceof Callable
@@ -263,17 +263,17 @@ public class RecurrentTest {
   }
 
   public void testFutureContextual() throws Throwable {
-    assertGetFuture((ContextualCallable<?>) (ctx) -> CompletableFuture.supplyAsync(() -> {
-      try {        
+    assertGetFuture((ContextualCallable<?>) inv -> CompletableFuture.supplyAsync(() -> {
+      try {
         boolean result = service.connect();
-        if (!ctx.complete(result))
-          ctx.retryWhen(result);
+        if (!inv.complete(result))
+          inv.retryFor(result);
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (ctx.getRetryCount() % 2 == 0)
+        if (inv.getAttemptCount() % 2 == 0)
           throw failure;
-        if (!ctx.retryOn(failure))
+        if (!inv.retryOn(failure))
           throw failure;
         return null;
       }
@@ -284,7 +284,7 @@ public class RecurrentTest {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, true);
     when(service.disconnect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
 
     // When
     CompletableFuture.supplyAsync(() -> Recurrent.get(() -> service.connect(), retryPolicy))
@@ -312,11 +312,11 @@ public class RecurrentTest {
   }
 
   public void shouldManuallyRetryAndComplete() throws Throwable {
-    Recurrent.get((ctx) -> {
-      if (ctx.getRetryCount() < 2)
-        ctx.retry();
+    Recurrent.get(inv -> {
+      if (inv.getAttemptCount() < 2)
+        inv.retryOn(new ConnectException());
       else
-        ctx.complete(true);
+        inv.complete(true);
       return true;
     } , retryAlways, executor).whenComplete((result, failure) -> {
       waiter.assertTrue(result);
@@ -358,9 +358,9 @@ public class RecurrentTest {
    */
   public void shouldCompleteAsync() throws Throwable {
     Waiter waiter = new Waiter();
-    Recurrent.run(ctx -> executor.schedule(() -> {
+    Recurrent.run(inv -> executor.schedule(() -> {
       try {
-        ctx.complete();
+        inv.complete();
         waiter.resume();
       } catch (Exception e) {
         waiter.fail(e);

@@ -6,5 +6,5 @@ package net.jodah.recurrent;
  * @author Jonathan Halterman
  */
 public interface ContextualRunnable {
-  void run(Invocation invocation) throws Exception;
+  void run(AsyncInvocation invocation) throws Exception;
 }

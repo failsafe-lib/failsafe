@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
  * @param <T> result type
  */
 abstract class AsyncCallable<T> implements Callable<T> {
-  protected Invocation invocation;
+  protected AsyncInvocation invocation;
 
   static <T> AsyncCallable<T> of(final Callable<T> callable) {
     return new AsyncCallable<T>() {
@@ -117,7 +117,7 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  void initialize(Invocation invocation) {
+  void initialize(AsyncInvocation invocation) {
     this.invocation = invocation;
   }
 }

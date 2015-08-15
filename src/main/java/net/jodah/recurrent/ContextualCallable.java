@@ -7,5 +7,5 @@ package net.jodah.recurrent;
  * @param <T> result type
  */
 public interface ContextualCallable<T> {
-  T call(Invocation invocation) throws Exception;
+  T call(AsyncInvocation invocation) throws Exception;
 }

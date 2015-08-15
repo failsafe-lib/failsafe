@@ -1,167 +1,187 @@
 package net.jodah.recurrent;
 
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * An invocation that accepts retry and completion requests.
+ * Tracks invocations and determines when an invocation can be performed for a {@link RetryPolicy}.
  * 
  * @author Jonathan Halterman
  */
-public class Invocation extends RetryStats {
-  private final AsyncCallable<Object> callable;
-  private final RecurrentFuture<Object> future;
-  private final Scheduler scheduler;
-  volatile boolean retried;
-  volatile boolean completed;
+public class Invocation {
+  final RetryPolicy retryPolicy;
+  private final long startTime;
 
-  @SuppressWarnings("unchecked")
-  <T> Invocation(AsyncCallable<T> callable, RetryPolicy retryPolicy, Scheduler scheduler, RecurrentFuture<T> future) {
-    super(retryPolicy);
-    this.callable = (AsyncCallable<Object>) callable;
-    this.scheduler = scheduler;
-    this.future = (RecurrentFuture<Object>) future;
+  // Mutable state
+  protected volatile Object lastResult;
+  protected volatile Throwable lastFailure;
+  protected volatile boolean completed;
+  /** Number of attempts */
+  volatile int attempts;
+  /** Wait time in nanoseconds */
+  volatile long waitTime;
+
+  public Invocation(RetryPolicy retryPolicy) {
+    this.retryPolicy = retryPolicy;
+    waitTime = retryPolicy.getDelay().toNanos();
+    startTime = System.nanoTime();
   }
 
   /**
-   * Completes the associated {@code RecurrentFuture}.
-   *
-   * @throws IllegalStateException if a complete method has already been called
+   * Returns true if a retry can be performed for the {@code result}, else returns false and completes the invocation.
+   * 
+   * @throws IllegalStateException if the invocation is already complete
+   */
+  public boolean canRetryFor(Object result) {
+    return canRetryFor(result, null);
+  }
+
+  /**
+   * Returns true if a retry can be performed for the {@code result} or {@code failure}, else returns false and
+   * completes the invocation.
+   * 
+   * @throws IllegalStateException if the invocation is already complete
+   */
+  public boolean canRetryFor(Object result, Throwable failure) {
+    lastResult = result;
+    lastFailure = failure;
+    if (complete(result, failure, true))
+      return false;
+    incrementAttempts();
+    return !(completed = isPolicyExceeded());
+  }
+
+  /**
+   * Returns true if a retry can be performed for the {@code failure}, else returns false and completes the invocation.
+   * 
+   * @throws IllegalStateException if the invocation is already complete
+   */
+  public boolean canRetryOn(Throwable failure) {
+    return canRetryFor(null, failure);
+  }
+
+  /**
+   * Completes the invocation.
+   * 
+   * @throws IllegalStateException if the invocation is already complete
    */
   public void complete() {
     complete(null, null, false);
   }
 
   /**
-   * Completes the associated {@code RecurrentFuture} with the {@code result}. Returns true on success, else false if
-   * completion failed and should be retried via {@link #retryWhen(Object)}.
+   * Returns true if a retry can be performed for the {@code result} or {@code failure}, else returns false and records
+   * and completes the invocation.
    *
-   * @throws IllegalStateException if a complete method has already been called
+   * @throws IllegalStateException if the invocation is already complete
    */
   public boolean complete(Object result) {
     return complete(result, null, true);
   }
 
   /**
-   * Completes the associated {@code RecurrentFuture} with the {@code failure}. Returns true on success, else false if
-   * completion failed and should be retried via {@link #canRetryOn(Throwable)}.
-   *
-   * @throws IllegalStateException if a complete method has already been called
+   * Gets the number of invocation attempts so far. Invocation attempts are recorded when {@code canRetry} is called or
+   * when the invocation is completed successfully.
    */
-  public boolean completeExceptionally(Throwable failure) {
-    return complete(null, failure, true);
+  public int getAttemptCount() {
+    return attempts;
   }
 
   /**
-   * Completes the associated {@code RecurrentFuture} with the {@code result} and {@code failure}. Returns true on
-   * success, else false if completion failed and should be retried via {@link #canRetryWhen(Object, Throwable)}.
-   *
-   * @throws IllegalStateException if a complete method has already been called
-   */
-  public boolean complete(Object result, Throwable failure) {
-    return complete(result, failure, true);
-  }
-
-  /**
-   * Retries a failed invocation. Returns true if the retry can be attempted, else returns false and completes the
-   * associated {@code RecurrentFuture} exceptionally if the retry policy has been exceeded.
-   *
-   * @throws IllegalStateException if a retry method has already been called
-   */
-  public boolean retry() {
-    return retryOrFail(null, null, false);
-  }
-
-  /**
-   * Retries a failed invocation. Returns true if the retry can be attempted for the {@code failure}, else returns false
-   * and completes the associated {@code RecurrentFuture} exceptionally if the retry policy has been exceeded.
-   *
-   * @throws NullPointerException if {@code failure} is null
-   * @throws IllegalStateException if a retry method has already been called
-   */
-  public boolean retryOn(Throwable failure) {
-    Assert.notNull(failure, "failure");
-    return retryOrFail(null, failure, true);
-  }
-
-  /**
-   * Retries a failed invocation. Returns true if the retry can be attempted for the {@code result}, else returns false
-   * and completes the associated {@code RecurrentFuture} exceptionally if the retry policy has been exceeded.
-   *
-   * @throws NullPointerException if {@code result} is null
-   * @throws IllegalStateException if a retry method has already been called
-   */
-  public boolean retryWhen(Object result) {
-    Assert.notNull(result, "result");
-    return retryOrFail(result, null, true);
-  }
-
-  /**
-   * Retries a failed invocation. Returns true if the retry can be attempted for the {@code result} and {@code failure},
-   * else returns false and completes the associated {@code RecurrentFuture} exceptionally if the retry policy has been
-   * exceeded.
+   * Returns the last failure that was recorded.
    * 
-   * @throws IllegalArgumentException if {@code result} and {@code failure} are both null
-   * @throws IllegalStateException if a retry method has already been called
+   * @see #recordFailure(Throwable)
    */
-  public boolean retryWhen(Object result, Throwable failure) {
-    Assert.isTrue(result != null || failure != null, "result or failure must not be null");
-    return retryOrFail(result, failure, true);
+  @SuppressWarnings("unchecked")
+  public <T extends Throwable> T getLastFailure() {
+    return (T) lastFailure;
   }
 
   /**
-   * Resets retry and complete requests.
+   * Returns the last result that was recorded.
+   * 
+   * @see #complete()
+   * @see #complete(Object)
    */
-  void reset() {
-    retried = false;
-    completed = false;
+  @SuppressWarnings("unchecked")
+  public <T> T getLastResult() {
+    return (T) lastResult;
   }
 
   /**
-   * Retries the invocation if necessary else completes it.
+   * Returns the wait time in nanoseconds.
    */
-  void retryOrComplete(Object result, Throwable failure) {
-    if (retry(result, failure, true))
-      return;
-
-    future.complete(result, failure);
+  public long getWaitTime() {
+    return waitTime;
   }
 
-  private boolean complete(Object result, Throwable failure, boolean checkArgs) {
-    Assert.state(!completed, "Complete has already been called");
-    completed = true;
+  /**
+   * Returns whether the invocation is complete.
+   * 
+   * @see #complete()
+   * @see #complete(Object)
+   * @see #recordFailure(Throwable)
+   */
+  public boolean isComplete() {
+    return completed;
+  }
 
-    // Checks if a retry is required
-    if (checkArgs && canRetryWhen(result, failure))
+  /**
+   * Records a failed invocation attempt and returns true if a retry can be performed for the {@code failure}, else
+   * returns false and completes the invocation.
+   * 
+   * <p>
+   * Alias of {@link #canRetryOn(Throwable)}
+   * 
+   * @throws IllegalStateException if the invocation is already complete
+   */
+  public boolean recordFailure(Throwable failure) {
+    return canRetryFor(null, failure);
+  }
+
+  boolean complete(Object result, Throwable failure, boolean checkArgs) {
+    Assert.state(!completed, "Invocation has already been completed");
+    lastResult = result;
+    lastFailure = failure;
+    if (checkArgs && retryPolicy.allowsRetriesFor(result, failure))
       return false;
-
-    future.complete(result, failure);
-    return true;
+    incrementAttempts();
+    return completed = true;
   }
 
-  private boolean retryOrFail(Object result, Throwable failure, boolean checkArgs) {
-    Assert.state(!retried, "Retry has already been called");
-    retried = true;
-
-    // Check if a retry has been scheduled
-    if (retry(result, failure, checkArgs))
-      return true;
-
-    completed = true;
-    future.complete(result, failure == null ? new RuntimeException("Retry invocations exceeded") : failure);
-    return false;
+  /**
+   * Adjusts the wait time for backoffs.
+   */
+  private void adjustForBackoffs() {
+    if (retryPolicy.getMaxDelay() != null)
+      waitTime = (long) Math.min(waitTime * retryPolicy.getDelayMultiplier(), retryPolicy.getMaxDelay().toNanos());
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  private boolean retry(Object result, Throwable failure, boolean checkArgs) {
-    if (checkArgs ? canRetryWhen(result, failure) : canRetry()) {
-      if (!future.isDone() && !future.isCancelled())
-        future.setFuture((Future) scheduler.schedule(callable, waitTime, TimeUnit.NANOSECONDS));
-      return true;
+  /**
+   * Adjusts the wait time for max duration.
+   */
+  private void adjustForMaxDuration() {
+    if (retryPolicy.getMaxDuration() != null) {
+      long elapsedNanos = System.nanoTime() - startTime;
+      long maxRemainingWaitTime = retryPolicy.getMaxDuration().toNanos() - elapsedNanos;
+      waitTime = Math.min(waitTime, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
+      if (waitTime < 0)
+        waitTime = 0;
     }
+  }
 
-    return false;
+  private void incrementAttempts() {
+    attempts++;
+    adjustForBackoffs();
+    adjustForMaxDuration();
+  }
+
+  /**
+   * Returns true if the max retries or max duration for the retry policy have been exceeded, else false.
+   */
+  private boolean isPolicyExceeded() {
+    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || attempts <= retryPolicy.getMaxRetries();
+    boolean withinMaxDuration = retryPolicy.getMaxDuration() == null
+        || System.nanoTime() - startTime < retryPolicy.getMaxDuration().toNanos();
+    return !withinMaxRetries || !withinMaxDuration;
   }
 }
