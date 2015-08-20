@@ -6,7 +6,13 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class AbstractScheduledFuture<T> implements ScheduledFuture<T> {
+/**
+ * A default ScheduledFuture implementation.
+ * 
+ * @author Jonathan Halterman
+ * @param <T> result type
+ */
+public class DefaultScheduledFuture<T> implements ScheduledFuture<T> {
   @Override
   public long getDelay(TimeUnit unit) {
     return 0;

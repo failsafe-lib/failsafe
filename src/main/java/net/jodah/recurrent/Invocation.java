@@ -1,5 +1,7 @@
 package net.jodah.recurrent;
 
+import java.util.concurrent.TimeUnit;
+
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
@@ -7,7 +9,7 @@ import net.jodah.recurrent.internal.util.Assert;
  * 
  * @author Jonathan Halterman
  */
-public class Invocation {
+public class Invocation implements InvocationStats {
   final RetryPolicy retryPolicy;
   private final long startTime;
 
@@ -20,10 +22,15 @@ public class Invocation {
   /** Wait time in nanoseconds */
   volatile long waitTime;
 
+  /**
+   * Creates a new Invocation for the {@code retryPolicy}.
+   * 
+   * @throws NullPointerException if {@code retryPolicy} is null
+   */
   public Invocation(RetryPolicy retryPolicy) {
-    this.retryPolicy = retryPolicy;
-    waitTime = retryPolicy.getDelay().toNanos();
+    this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
     startTime = System.nanoTime();
+    waitTime = retryPolicy.getDelay().toNanos();
   }
 
   /**
@@ -42,20 +49,19 @@ public class Invocation {
    * @throws IllegalStateException if the invocation is already complete
    */
   public boolean canRetryFor(Object result, Throwable failure) {
-    lastResult = result;
-    lastFailure = failure;
     if (complete(result, failure, true))
       return false;
-    incrementAttempts();
-    return !(completed = isPolicyExceeded());
+    return canRetryForInternal(result, failure);
   }
 
   /**
    * Returns true if a retry can be performed for the {@code failure}, else returns false and completes the invocation.
    * 
+   * @throws NullPointerException if {@code failure} is null
    * @throws IllegalStateException if the invocation is already complete
    */
   public boolean canRetryOn(Throwable failure) {
+    Assert.notNull(failure, "failure");
     return canRetryFor(null, failure);
   }
 
@@ -69,8 +75,8 @@ public class Invocation {
   }
 
   /**
-   * Returns true if a retry can be performed for the {@code result} or {@code failure}, else returns false and records
-   * and completes the invocation.
+   * Attempts to complete the invocation with the {@code result}. Returns true on success, else false if completion
+   * failed and should be retried.
    *
    * @throws IllegalStateException if the invocation is already complete
    */
@@ -82,8 +88,25 @@ public class Invocation {
    * Gets the number of invocation attempts so far. Invocation attempts are recorded when {@code canRetry} is called or
    * when the invocation is completed successfully.
    */
+  @Override
   public int getAttemptCount() {
     return attempts;
+  }
+
+  /**
+   * Returns the elapsed time in milliseconds.
+   */
+  @Override
+  public long getElapsedMillis() {
+    return TimeUnit.NANOSECONDS.toMillis(getElapsedNanos());
+  }
+
+  /**
+   * Returns the elapsed time in nanoseconds.
+   */
+  @Override
+  public long getElapsedNanos() {
+    return System.nanoTime() - startTime;
   }
 
   /**
@@ -108,9 +131,32 @@ public class Invocation {
   }
 
   /**
+   * Returns the start time in milliseconds.
+   */
+  @Override
+  public long getStartMillis() {
+    return TimeUnit.NANOSECONDS.toMillis(startTime);
+  }
+
+  /**
+   * Returns the start time in nanoseconds.
+   */
+  @Override
+  public long getStartNanos() {
+    return startTime;
+  }
+
+  /**
+   * Returns the wait time in milliseconds.
+   */
+  public long getWaitMillis() {
+    return TimeUnit.NANOSECONDS.toMillis(waitTime);
+  }
+
+  /**
    * Returns the wait time in nanoseconds.
    */
-  public long getWaitTime() {
+  public long getWaitNanos() {
     return waitTime;
   }
 
@@ -138,6 +184,16 @@ public class Invocation {
     return canRetryFor(null, failure);
   }
 
+  /**
+   * Increments attempt counts and returns whether the policy has been exceeded.
+   */
+  boolean canRetryForInternal(Object result, Throwable failure) {
+    lastResult = result;
+    lastFailure = failure;
+    incrementAttempts();
+    return !(completed = isPolicyExceeded());
+  }
+
   boolean complete(Object result, Throwable failure, boolean checkArgs) {
     Assert.state(!completed, "Invocation has already been completed");
     lastResult = result;
@@ -161,7 +217,7 @@ public class Invocation {
    */
   private void adjustForMaxDuration() {
     if (retryPolicy.getMaxDuration() != null) {
-      long elapsedNanos = System.nanoTime() - startTime;
+      long elapsedNanos = getElapsedNanos();
       long maxRemainingWaitTime = retryPolicy.getMaxDuration().toNanos() - elapsedNanos;
       waitTime = Math.min(waitTime, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
       if (waitTime < 0)

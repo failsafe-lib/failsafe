@@ -6,7 +6,7 @@
 
 ## Introduction
 
-Recurrent is a simple, zero-dependency library for performing retries on Java 1.6+. It features:
+Recurrent is a simple, zero-dependency library for performing retries. It features:
 
 * [Flexible retry policies](#retry-policies)
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
@@ -14,6 +14,8 @@ Recurrent is a simple, zero-dependency library for performing retries on Java 1.
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
 * [Invocation Tracking](#invocation-tracking)
 * [Public API integration](#public-api-integration)
+
+Supports Java 6+ though the documentation uses lambdas for simplicity.
 
 ## Usage
 
@@ -77,7 +79,7 @@ Asynchronous invocations can be performed and retried on a scheduled executor an
 ```java
 Recurrent.get(() -> connect(), retryPolicy, executor)
   .whenSuccess(connection -> log.info("Connected to {}", connection))
-  .whenFailure(failure -> log.error("Connection attempts failed", failure));
+  .whenFailure((result, failure) -> log.error("Connection attempts failed", failure));
 ```
 
 #### Asynchronous API Integration

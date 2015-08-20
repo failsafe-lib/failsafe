@@ -2,9 +2,9 @@ package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
 
-import net.jodah.recurrent.event.CompletionListener;
-import net.jodah.recurrent.event.FailureListener;
-import net.jodah.recurrent.event.SuccessListener;
+import net.jodah.recurrent.event.ContextualResultListener;
+import net.jodah.recurrent.event.ResultListener;
+import net.jodah.recurrent.internal.util.Assert;
 
 /**
  * Utilities for creating callables.
@@ -12,41 +12,33 @@ import net.jodah.recurrent.event.SuccessListener;
  * @author Jonathan Halterman
  */
 final class Callables {
-  static <T> Callable<T> of(final CompletionListener<T> listener, final T result, final Throwable failure) {
+  static <T> Callable<T> of(final ContextualResultListener<T, Throwable> listener, final T result,
+      final Throwable failure, final InvocationStats stats) {
     return new Callable<T>() {
       @Override
       public T call() {
-        listener.onCompletion(result, failure);
+        listener.onResult(result, failure, stats);
         return null;
       }
     };
   }
 
-  static <T> Callable<T> of(final FailureListener listener, final Throwable failure) {
+  static <T> Callable<T> of(final ResultListener<T, Throwable> listener, final T result, final Throwable failure) {
     return new Callable<T>() {
       @Override
       public T call() {
-        listener.onFailure(failure);
+        listener.onResult(result, failure);
         return null;
       }
     };
   }
 
-  static Callable<?> of(final Runnable runnable) {
-    return new Callable<Void>() {
+  static Callable<Object> of(final Runnable runnable) {
+    Assert.notNull(runnable, "runnable");
+    return new Callable<Object>() {
       @Override
       public Void call() {
         runnable.run();
-        return null;
-      }
-    };
-  }
-
-  static <T> Callable<T> of(final SuccessListener<T> listener, final T result) {
-    return new Callable<T>() {
-      @Override
-      public T call() {
-        listener.onSuccess(result);
         return null;
       }
     };

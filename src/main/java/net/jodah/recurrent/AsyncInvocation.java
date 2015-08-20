@@ -13,16 +13,19 @@ import net.jodah.recurrent.internal.util.Assert;
 public class AsyncInvocation extends Invocation {
   private final AsyncCallable<Object> callable;
   private final RecurrentFuture<Object> future;
+  private final AsyncListeners<Object> listeners;
   private final Scheduler scheduler;
-  volatile boolean retried;
+  volatile boolean completeCalled;
+  volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
   <T> AsyncInvocation(AsyncCallable<T> callable, RetryPolicy retryPolicy, Scheduler scheduler,
-      RecurrentFuture<T> future) {
+      RecurrentFuture<T> future, AsyncListeners<T> listeners) {
     super(retryPolicy);
     this.callable = (AsyncCallable<Object>) callable;
     this.scheduler = scheduler;
     this.future = (RecurrentFuture<Object>) future;
+    this.listeners = (AsyncListeners<Object>) listeners;
   }
 
   /**
@@ -49,6 +52,9 @@ public class AsyncInvocation extends Invocation {
    * Attempts to complete the invocation and the associated {@code RecurrentFuture} with the {@code result} and
    * {@code failure}. Returns true on success, else false if completion failed and should be retried via
    * {@link #retry()}.
+   * <p>
+   * Note: the invocation may be completed even when the {@code failure} is not {@code null}, such as when the
+   * RetryPolicy does not allow retries for the {@code failure}.
    *
    * @throws IllegalStateException if the invocation is already complete
    */
@@ -63,7 +69,9 @@ public class AsyncInvocation extends Invocation {
    * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
    */
   public boolean retry() {
-    return retryInternal(lastResult, lastFailure);
+    Assert.state(!retryCalled, "Retry has already been called");
+    retryCalled = true;
+    return completeOrRetry(lastResult, lastFailure);
   }
 
   /**
@@ -73,7 +81,7 @@ public class AsyncInvocation extends Invocation {
    * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
    */
   public boolean retryFor(Object result) {
-    return retryInternal(result, null);
+    return retryFor(result, null);
   }
 
   /**
@@ -83,7 +91,9 @@ public class AsyncInvocation extends Invocation {
    * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
    */
   public boolean retryFor(Object result, Throwable failure) {
-    return retryInternal(result, failure);
+    Assert.state(!retryCalled, "Retry has already been called");
+    retryCalled = true;
+    return completeOrRetry(result, failure);
   }
 
   /**
@@ -95,45 +105,72 @@ public class AsyncInvocation extends Invocation {
    */
   public boolean retryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
-    return retryInternal(null, failure);
+    return retryFor(null, failure);
   }
 
   /**
    * Resets the retry flag.
    */
   void reset() {
-    retried = false;
+    completeCalled = false;
+    retryCalled = false;
   }
 
   /**
-   * Retries the invocation if necessary else completes it.
+   * Attempts to complete the parent invocation followed by the future.
+   * 
+   * @throws IllegalStateException if the invocation is already complete
    */
-  void retryOrComplete(Object result, Throwable failure) {
-    if (!retry(result, failure))
-      future.complete(result, failure);
-  }
-
   private boolean completeInternal(Object result, Throwable failure, boolean checkArgs) {
-    boolean complete = super.complete(result, failure, checkArgs);
-    if (complete)
-      future.complete(result, failure);
-    return complete;
+    boolean completed = super.complete(result, failure, checkArgs);
+    boolean success = completed && failure == null;
+
+    // Handle failure
+    if (!success && !completeCalled && listeners != null)
+      listeners.handleFailedAttempt(result, failure, this, scheduler);
+
+    // Handle completed
+    if (completed) {
+      if (listeners != null)
+        listeners.complete(result, failure, this, success);
+      future.complete(result, failure, success);
+    }
+
+    completeCalled = true;
+    return completed;
   }
 
+  /**
+   * Attempts to complete the invocation else schedule a retry.
+   * 
+   * @throws IllegalStateException if the invocation is already complete
+   */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  private boolean retry(Object result, Throwable failure) {
-    boolean canRetry = canRetryFor(result, failure);
-    if (canRetry && !future.isDone() && !future.isCancelled())
-      future.setFuture((Future) scheduler.schedule(callable, waitTime, TimeUnit.NANOSECONDS));
-    return canRetry;
-  }
+  boolean completeOrRetry(Object result, Throwable failure) {
+    boolean completed = super.complete(result, failure, true);
+    boolean success = completed && failure == null;
+    boolean shouldRetry = completed ? false
+        : canRetryForInternal(result, failure) && !future.isDone() && !future.isCancelled();
 
-  private boolean retryInternal(Object result, Throwable failure) {
-    Assert.state(!retried, "Retry has already been called");
-    retried = true;
-    boolean retrying = retry(result, failure);
-    if (!retrying)
-      future.complete(result, failure);
-    return retrying;
+    // Handle failure
+    if (!success && !completeCalled && listeners != null)
+      listeners.handleFailedAttempt(result, failure, this, scheduler);
+
+    // Handle retry needed
+    if (shouldRetry) {
+      if (listeners != null)
+        listeners.handleRetry(result, failure, this, scheduler);
+      future.setFuture((Future) scheduler.schedule(callable, waitTime, TimeUnit.NANOSECONDS));
+    }
+
+    // Handle completed
+    if (completed || !shouldRetry) {
+      if (listeners != null)
+        listeners.complete(result, failure, this, success);
+      future.complete(result, failure, success);
+    }
+
+    completeCalled = true;
+    return shouldRetry;
   }
 }

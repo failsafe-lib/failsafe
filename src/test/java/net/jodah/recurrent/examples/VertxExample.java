@@ -9,7 +9,7 @@ import io.vertx.core.eventbus.ReplyFailure;
 import net.jodah.recurrent.Recurrent;
 import net.jodah.recurrent.RetryPolicy;
 import net.jodah.recurrent.Scheduler;
-import net.jodah.recurrent.util.concurrent.AbstractScheduledFuture;
+import net.jodah.recurrent.util.concurrent.DefaultScheduledFuture;
 
 public class VertxExample {
   static Vertx vertx = Vertx.vertx();
@@ -28,7 +28,7 @@ public class VertxExample {
       }
     };
 
-    return new AbstractScheduledFuture<Object>() {
+    return new DefaultScheduledFuture<Object>() {
       long timerId;
 
       {

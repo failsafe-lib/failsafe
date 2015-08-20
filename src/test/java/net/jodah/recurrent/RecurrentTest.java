@@ -2,7 +2,8 @@ package net.jodah.recurrent;
 
 import static net.jodah.recurrent.Asserts.assertThrows;
 import static net.jodah.recurrent.Asserts.matches;
-import static net.jodah.recurrent.Testing.*;
+import static net.jodah.recurrent.Testing.failures;
+import static net.jodah.recurrent.Testing.ignoreExceptions;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;

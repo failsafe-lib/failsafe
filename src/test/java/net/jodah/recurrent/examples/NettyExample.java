@@ -39,7 +39,7 @@ public class NettyExample {
       } else if (!invocation.retryOn(channelFuture.cause()))
         System.out.println("Connection attempts failed");
     }), retryPolicy, group);
-    
+
     Thread.sleep(5000);
   }
 

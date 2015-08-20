@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
  * Schedules invocations.
  * 
  * @author Jonathan Halterman
+ * @see Schedulers
+ * @see net.jodah.recurrent.util.concurrent.DefaultScheduledFuture
  */
 public interface Scheduler {
   /**

@@ -27,7 +27,7 @@ public class RxJavaExample {
       return attempts.flatMap(failure -> {
         System.out.println("Failure detected");
         if (stats.canRetryOn(failure))
-          return Observable.timer(stats.getWaitTime(), TimeUnit.NANOSECONDS);
+          return Observable.timer(stats.getWaitNanos(), TimeUnit.NANOSECONDS);
         else
           return Observable.error(failure);
       });

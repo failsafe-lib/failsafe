@@ -1,14 +1,14 @@
 package net.jodah.recurrent.event;
 
 /**
- * Listens for an asynchronous invocation to succeed.
+ * Listens for an invocation success.
  * 
  * @author Jonathan Halterman
- * @param <T> result type
+ * @param <R> result type
  */
-public interface SuccessListener<T> {
+public interface SuccessListener<R> {
   /**
    * Handles the successful completion of a call.
    */
-  void onSuccess(T result);
+  void onSuccess(R result);
 }

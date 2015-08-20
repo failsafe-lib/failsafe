@@ -1,5 +1,7 @@
 package net.jodah.recurrent;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.internal.util.Assert;
@@ -25,7 +27,7 @@ public final class RetryPolicy {
   private Duration maxDelay;
   private Duration maxDuration;
   private int maxRetries;
-  private Class<? extends Throwable>[] failureTypes;
+  private List<Class<? extends Throwable>> failureTypes;
   private Predicate<Throwable> failurePredicate;
   private Object resultValue = DEFAULT_RESULT_VALUE;
   private Predicate<Object> resultPredicate;
@@ -159,10 +161,23 @@ public final class RetryPolicy {
   public RetryPolicy retryOn(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "Failures cannot be empty");
-    this.failureTypes = failures;
+    this.failureTypes = Arrays.asList(failures);
     return this;
   }
 
+  /**
+   * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
+   * 
+   * @throws NullPointerException if {@code failures} is null
+   * @throws IllegalArgumentException if failures is empty
+   */
+  public RetryPolicy retryOn(List<Class<? extends Throwable>> failures) {
+    Assert.notNull(failures, "failures");
+    Assert.isTrue(!failures.isEmpty(), "Failures cannot be empty");
+    this.failureTypes = failures;
+    return this;
+  }
+  
   /**
    * Specifies when a retry should occur for a particular failure. If the {@code retryPredicate} returns true then
    * retries may be performed, else the failure will be re-thrown.

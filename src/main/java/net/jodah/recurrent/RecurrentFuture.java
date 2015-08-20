@@ -1,15 +1,18 @@
 package net.jodah.recurrent;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.jodah.recurrent.event.CompletionListener;
-import net.jodah.recurrent.event.FailureListener;
+import net.jodah.recurrent.AsyncListeners.AsyncCtxResultListener;
+import net.jodah.recurrent.AsyncListeners.AsyncResultListener;
+import net.jodah.recurrent.event.ContextualResultListener;
+import net.jodah.recurrent.event.ContextualSuccessListener;
+import net.jodah.recurrent.event.ResultListener;
 import net.jodah.recurrent.event.SuccessListener;
+import net.jodah.recurrent.internal.util.Assert;
 import net.jodah.recurrent.internal.util.concurrent.ReentrantCircuit;
 
 /**
@@ -19,34 +22,38 @@ import net.jodah.recurrent.internal.util.concurrent.ReentrantCircuit;
  * @param <T> result type
  */
 public class RecurrentFuture<T> implements Future<T> {
+  private final ReentrantCircuit circuit = new ReentrantCircuit();
   private final Scheduler scheduler;
+  private final AsyncListeners<T> listeners;
+  private InvocationStats stats;
   private volatile Future<T> delegate;
   private volatile boolean done;
   private volatile boolean cancelled;
-  private volatile ReentrantCircuit circuit = new ReentrantCircuit();
+  private volatile boolean success;
   private volatile T result;
   private volatile Throwable failure;
 
   // Listeners
-  private volatile CompletionListener<T> completionListener;
-  private volatile CompletionListener<T> asyncCompletionListener;
-  private volatile ExecutorService completionExecutor;
-  private volatile SuccessListener<T> successListener;
-  private volatile SuccessListener<T> asyncSuccessListener;
-  private volatile ExecutorService successExecutor;
-  private volatile FailureListener failureListener;
-  private volatile FailureListener asyncFailureListener;
-  private volatile ExecutorService failureExecutor;
+  private volatile AsyncResultListener<T> asyncCompleteListener;
+  private volatile AsyncCtxResultListener<T> asyncCtxCompleteListener;
+  private volatile AsyncResultListener<T> asyncFailureListener;
+  private volatile AsyncCtxResultListener<T> asyncCtxFailureListener;
+  private volatile AsyncResultListener<T> asyncSuccessListener;
+  private volatile AsyncCtxResultListener<T> asyncCtxSuccessListener;
 
-  RecurrentFuture(Scheduler scheduler) {
+  RecurrentFuture(Scheduler scheduler, AsyncListeners<T> listeners) {
     this.scheduler = scheduler;
+    this.listeners = listeners == null ? new AsyncListeners<T>() : listeners;
     circuit.open();
   }
 
-  static <T> RecurrentFuture<T> of(final java.util.concurrent.CompletableFuture<T> future, Scheduler scheduler) {
-    return new RecurrentFuture<T>(scheduler).whenComplete(new CompletionListener<T>() {
+  static <T> RecurrentFuture<T> of(final java.util.concurrent.CompletableFuture<T> future, Scheduler scheduler,
+      AsyncListeners<T> listeners) {
+    Assert.notNull(future, "future");
+    Assert.notNull(scheduler, "scheduler");
+    return new RecurrentFuture<T>(scheduler, listeners).whenComplete(new ResultListener<T, Throwable>() {
       @Override
-      public void onCompletion(T result, Throwable failure) {
+      public void onResult(T result, Throwable failure) {
         if (failure == null)
           future.complete(result);
         else
@@ -73,7 +80,7 @@ public class RecurrentFuture<T> implements Future<T> {
 
   @Override
   public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-    if (!circuit.await(timeout, unit))
+    if (!circuit.await(timeout, Assert.notNull(unit, "unit")))
       throw new TimeoutException();
     if (failure != null)
       throw new ExecutionException(failure);
@@ -90,117 +97,144 @@ public class RecurrentFuture<T> implements Future<T> {
     return done;
   }
 
-  public RecurrentFuture<T> whenComplete(CompletionListener<T> completionListener) {
+  public RecurrentFuture<T> whenComplete(ContextualResultListener<? super T, ? extends Throwable> listener) {
+    listeners.whenComplete(listener);
     if (done)
-      completionListener.onCompletion(result, failure);
-    else
-      this.completionListener = completionListener;
+      listeners.handleComplete(result, failure, stats);
     return this;
   }
 
-  public RecurrentFuture<T> whenCompleteAsync(CompletionListener<T> completionListener) {
+  public RecurrentFuture<T> whenComplete(ResultListener<? super T, ? extends Throwable> listener) {
+    listeners.whenComplete(listener);
     if (done)
-      scheduler.schedule(Callables.of(completionListener, result, failure), 0, TimeUnit.MILLISECONDS);
-    else
-      this.completionListener = completionListener;
+      listeners.handleComplete(result, failure);
     return this;
   }
 
-  public RecurrentFuture<T> whenCompleteAsync(CompletionListener<T> completionListener, ExecutorService executor) {
-    if (done)
-      executor.submit(Callables.of(completionListener, result, failure));
-    else {
-      this.asyncCompletionListener = completionListener;
-      this.completionExecutor = executor;
-    }
+  public RecurrentFuture<T> whenCompleteAsync(ContextualResultListener<? super T, ? extends Throwable> listener) {
+    call(done, asyncCtxCompleteListener = new AsyncCtxResultListener<T>(listener));
     return this;
   }
 
-  public RecurrentFuture<T> whenFailure(FailureListener failureListener) {
-    if (done)
-      failureListener.onFailure(failure);
-    else
-      this.failureListener = failureListener;
+  public RecurrentFuture<T> whenCompleteAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
+      ExecutorService executor) {
+    call(done, asyncCtxCompleteListener = new AsyncCtxResultListener<T>(listener, executor));
     return this;
   }
 
-  public RecurrentFuture<T> whenFailureAsync(FailureListener failureListener) {
-    if (done)
-      scheduler.schedule(Callables.of(failureListener, failure), 0, TimeUnit.MILLISECONDS);
-    else
-      this.failureListener = failureListener;
+  public RecurrentFuture<T> whenCompleteAsync(ResultListener<? super T, ? extends Throwable> listener) {
+    call(done, asyncCompleteListener = new AsyncResultListener<T>(listener));
     return this;
   }
 
-  public RecurrentFuture<T> whenFailureAsync(FailureListener failureListener, ExecutorService executor) {
-    if (done)
-      executor.submit(Callables.of(failureListener, failure));
-    else {
-      this.asyncFailureListener = failureListener;
-      this.failureExecutor = executor;
-    }
+  public RecurrentFuture<T> whenCompleteAsync(ResultListener<? super T, ? extends Throwable> listener,
+      ExecutorService executor) {
+    call(done, asyncCompleteListener = new AsyncResultListener<T>(listener, executor));
     return this;
   }
 
-  public RecurrentFuture<T> whenSuccess(SuccessListener<T> successListener) {
-    if (done)
-      successListener.onSuccess(result);
-    else
-      this.successListener = successListener;
+  public RecurrentFuture<T> whenFailure(ContextualResultListener<? super T, ? extends Throwable> listener) {
+    listeners.whenFailure(listener);
+    if (done && !success)
+      listeners.handleFailure(result, failure, stats);
     return this;
   }
 
-  public RecurrentFuture<T> whenSuccessAsync(SuccessListener<T> successListener) {
-    if (done)
-      scheduler.schedule(Callables.of(successListener, result), 0, TimeUnit.MILLISECONDS);
-    else
-      this.successListener = successListener;
+  public RecurrentFuture<T> whenFailure(ResultListener<? super T, ? extends Throwable> listener) {
+    listeners.whenFailure(listener);
+    if (done && !success)
+      listeners.handleFailure(result, failure);
     return this;
   }
 
-  public RecurrentFuture<T> whenSuccessAsync(SuccessListener<T> successListener, ExecutorService executor) {
-    if (done)
-      executor.submit(Callables.of(successListener, result));
-    else {
-      this.asyncSuccessListener = successListener;
-      this.successExecutor = executor;
-    }
+  public RecurrentFuture<T> whenFailureAsync(ContextualResultListener<? super T, ? extends Throwable> listener) {
+    call(done && !success, asyncCtxFailureListener = new AsyncCtxResultListener<T>(listener));
     return this;
   }
 
-  synchronized void complete(T result, Throwable failure) {
+  public RecurrentFuture<T> whenFailureAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
+      ExecutorService executor) {
+    call(done && !success, asyncCtxFailureListener = new AsyncCtxResultListener<T>(listener, executor));
+    return this;
+  }
+
+  public RecurrentFuture<T> whenFailureAsync(ResultListener<? super T, ? extends Throwable> listener) {
+    call(done && !success, asyncFailureListener = new AsyncResultListener<T>(listener));
+    return this;
+  }
+
+  public RecurrentFuture<T> whenFailureAsync(ResultListener<? super T, ? extends Throwable> listener,
+      ExecutorService executor) {
+    call(done && !success, asyncFailureListener = new AsyncResultListener<T>(listener, executor));
+    return this;
+  }
+
+  public RecurrentFuture<T> whenSuccess(ContextualSuccessListener<? super T> listener) {
+    listeners.whenSuccess(listener);
+    if (done && success)
+      listeners.handleSuccess(result, stats);
+    return this;
+  }
+
+  public RecurrentFuture<T> whenSuccess(SuccessListener<? super T> listener) {
+    listeners.whenSuccess(listener);
+    if (done && success)
+      listeners.handleSuccess(result);
+    return this;
+  }
+
+  public RecurrentFuture<T> whenSuccessAsync(ContextualSuccessListener<? super T> listener) {
+    call(done && success,
+        asyncCtxSuccessListener = new AsyncCtxResultListener<T>(Listeners.resultListenerOf(listener)));
+    return this;
+  }
+
+  public RecurrentFuture<T> whenSuccessAsync(ContextualSuccessListener<? super T> listener, ExecutorService executor) {
+    call(done && success,
+        asyncCtxSuccessListener = new AsyncCtxResultListener<T>(Listeners.resultListenerOf(listener), executor));
+    return this;
+  }
+
+  public RecurrentFuture<T> whenSuccessAsync(SuccessListener<? super T> listener) {
+    call(done && success, asyncSuccessListener = new AsyncResultListener<T>(Listeners.resultListenerOf(listener)));
+    return this;
+  }
+
+  public RecurrentFuture<T> whenSuccessAsync(SuccessListener<? super T> listener, ExecutorService executor) {
+    call(done && success,
+        asyncSuccessListener = new AsyncResultListener<T>(Listeners.resultListenerOf(listener), executor));
+    return this;
+  }
+
+  synchronized void complete(T result, Throwable failure, boolean success) {
     this.result = result;
     this.failure = failure;
+    this.success = success;
     done = true;
+    if (success)
+      AsyncListeners.call(asyncSuccessListener, asyncCtxSuccessListener, result, failure, stats, scheduler);
+    else
+      AsyncListeners.call(asyncFailureListener, asyncCtxFailureListener, result, failure, stats, scheduler);
+    AsyncListeners.call(asyncCompleteListener, asyncCtxCompleteListener, result, failure, stats, scheduler);
+    listeners.complete(result, failure, stats, success);
     circuit.close();
+  }
 
-    // Async callbacks
-    if (asyncCompletionListener != null)
-      performAsyncCallback(Callables.of(asyncCompletionListener, result, failure), completionExecutor);
-    if (failure == null) {
-      if (asyncSuccessListener != null)
-        performAsyncCallback(Callables.of(asyncSuccessListener, result), successExecutor);
-    } else if (asyncFailureListener != null)
-      performAsyncCallback(Callables.<T>of(asyncFailureListener, failure), failureExecutor);
-
-    // Sync callbacks
-    if (completionListener != null)
-      completionListener.onCompletion(result, failure);
-    if (failure == null) {
-      if (successListener != null)
-        successListener.onSuccess(result);
-    } else if (failureListener != null)
-      failureListener.onFailure(failure);
+  void initialize(InvocationStats stats) {
+    this.stats = stats;
   }
 
   void setFuture(Future<T> delegate) {
     this.delegate = delegate;
   }
 
-  private void performAsyncCallback(Callable<T> callable, ExecutorService executor) {
-    if (executor != null)
-      executor.submit(callable);
-    else
-      scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
+  private void call(boolean condition, AsyncCtxResultListener<T> listener) {
+    if (condition)
+      AsyncListeners.call(listener, result, failure, stats, scheduler);
+  }
+
+  private void call(boolean condition, AsyncResultListener<T> listener) {
+    if (condition)
+      AsyncListeners.call(listener, result, failure, stats, scheduler);
   }
 }

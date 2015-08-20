@@ -37,7 +37,7 @@ public class RetryLoopExample {
         invocation.recordFailure(e);
 
         // Wait before retrying
-        Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.getWaitTime()));
+        Thread.sleep(invocation.getWaitMillis());
       }
     }
 

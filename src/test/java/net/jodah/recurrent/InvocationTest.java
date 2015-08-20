@@ -168,17 +168,17 @@ public class InvocationTest {
 
   public void shouldAdjustWaitTimeForBackoff() {
     Invocation inv = new Invocation(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS));
-    assertEquals(inv.getWaitTime(), 1);
+    assertEquals(inv.getWaitNanos(), 1);
     inv.recordFailure(e);
-    assertEquals(inv.getWaitTime(), 2);
+    assertEquals(inv.getWaitNanos(), 2);
     inv.recordFailure(e);
-    assertEquals(inv.getWaitTime(), 4);
+    assertEquals(inv.getWaitNanos(), 4);
     inv.recordFailure(e);
-    assertEquals(inv.getWaitTime(), 8);
+    assertEquals(inv.getWaitNanos(), 8);
     inv.recordFailure(e);
-    assertEquals(inv.getWaitTime(), 10);
+    assertEquals(inv.getWaitNanos(), 10);
     inv.recordFailure(e);
-    assertEquals(inv.getWaitTime(), 10);
+    assertEquals(inv.getWaitNanos(), 10);
   }
 
   public void shouldAdjustWaitTimeForMaxDuration() throws Throwable {
@@ -186,7 +186,7 @@ public class InvocationTest {
         new RetryPolicy().withDelay(49, TimeUnit.MILLISECONDS).withMaxDuration(50, TimeUnit.MILLISECONDS));
     Thread.sleep(10);
     assertTrue(inv.canRetryOn(e));
-    assertTrue(inv.getWaitTime() < TimeUnit.MILLISECONDS.toNanos(50) && inv.getWaitTime() > 0);
+    assertTrue(inv.getWaitNanos() < TimeUnit.MILLISECONDS.toNanos(50) && inv.getWaitNanos() > 0);
   }
 
   public void shouldSupportMaxDuration() throws Exception {
