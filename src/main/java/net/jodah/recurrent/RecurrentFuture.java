@@ -24,7 +24,6 @@ import net.jodah.recurrent.internal.util.concurrent.ReentrantCircuit;
 public class RecurrentFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
   private final Scheduler scheduler;
-  private final AsyncListeners<T> listeners;
   private InvocationStats stats;
   private volatile Future<T> delegate;
   private volatile boolean done;
@@ -34,6 +33,7 @@ public class RecurrentFuture<T> implements Future<T> {
   private volatile Throwable failure;
 
   // Listeners
+  private final Listeners<T> listeners;
   private volatile AsyncResultListener<T> asyncCompleteListener;
   private volatile AsyncCtxResultListener<T> asyncCtxCompleteListener;
   private volatile AsyncResultListener<T> asyncFailureListener;
@@ -41,14 +41,14 @@ public class RecurrentFuture<T> implements Future<T> {
   private volatile AsyncResultListener<T> asyncSuccessListener;
   private volatile AsyncCtxResultListener<T> asyncCtxSuccessListener;
 
-  RecurrentFuture(Scheduler scheduler, AsyncListeners<T> listeners) {
+  RecurrentFuture(Scheduler scheduler, Listeners<T> listeners) {
     this.scheduler = scheduler;
-    this.listeners = listeners == null ? new AsyncListeners<T>() : listeners;
+    this.listeners = listeners == null ? new Listeners<T>() : listeners;
     circuit.open();
   }
 
   static <T> RecurrentFuture<T> of(final java.util.concurrent.CompletableFuture<T> future, Scheduler scheduler,
-      AsyncListeners<T> listeners) {
+      Listeners<T> listeners) {
     Assert.notNull(future, "future");
     Assert.notNull(scheduler, "scheduler");
     return new RecurrentFuture<T>(scheduler, listeners).whenComplete(new ResultListener<T, Throwable>() {
