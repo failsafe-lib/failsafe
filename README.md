@@ -165,33 +165,33 @@ See the [RxJava example][RxJava] for a more detailed implementation.
 
 #### Event Listeners
 
-Recurrent supports event listeners that can be notified when retries are performed and when invocations complete. Java 8 users can implement listeners using lambdas:
-
-```java
-Recurrent.get(() -> connect(), retryPolicy, new Listeners()
-  .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
-  .whenSuccess(cxn -> log.info("Connected to {}", cxn))
-  .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure)));
-```
-
-Java 6/7 users can override the [Listeners] class to implement multiple listeners together:
+Recurrent supports event listeners that can be notified when retries are performed and when invocations complete:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
-  public void onRetry(Connection result, Throwable failure, InvocationStats stats) {
-    log.warn("Failed attempt #{} with {}. Retrying.", stats.getAttemptCount(), failure);
+  public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
+    log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
   }
   
-  public void onComplete(Connection result, Throwable failure) {
-    if (failure == null)
-  	  log.info("Connected to {}", connection);
-    else
+  public void onComplete(Connection cxn, Throwable failure) {
+    if (failure != null)
       log.error("Connection attempts failed", failure);
+    else
+  	  log.info("Connected to {}", cxn);
   }
 });
 ```
 
-Additional events are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
+Java 8 users can register individual listeners using lambdas:
+
+```java
+Recurrent.get(() -> connect(), retryPolicy, new Listeners()
+  .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
+  .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure)))
+  .whenSuccess(cxn -> log.info("Connected to {}", cxn)));
+```
+
+Additional listeners are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
 
 ## Example Integrations
 
