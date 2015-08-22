@@ -39,16 +39,16 @@ public class AsyncListenersTest {
       failedAttemptAsync.incrementAndGet();
       waiter.resume();
     });
-    listeners.whenFailedAttemptAsync((c, r, f) -> {
-      failedAttemptStatsAsync.incrementAndGet();
+    listeners.whenFailedAttemptAsync((r, f, s) -> {
+      waiter.assertEquals(failedAttemptStatsAsync.incrementAndGet(), s.getAttemptCount());
       waiter.resume();
     });
     listeners.whenRetryAsync((r, f) -> {
       retryAsync.incrementAndGet();
       waiter.resume();
     });
-    listeners.whenRetryAsync((c, r, f) -> {
-      retryStatsAsync.incrementAndGet();
+    listeners.whenRetryAsync((r, f, s) -> {
+      waiter.assertEquals(retryStatsAsync.incrementAndGet(), s.getAttemptCount());
       waiter.resume();
     });
   }

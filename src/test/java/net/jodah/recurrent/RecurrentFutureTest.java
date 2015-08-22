@@ -62,7 +62,7 @@ public class RecurrentFutureTest {
       complete.incrementAndGet();
       waiter.resume();
     });
-    future.whenComplete((c, r, f) -> {
+    future.whenComplete((r, f, s) -> {
       completeStats.incrementAndGet();
       waiter.resume();
     });
@@ -70,27 +70,27 @@ public class RecurrentFutureTest {
       completeAsync.incrementAndGet();
       waiter.resume();
     });
-    future.whenCompleteAsync((c, r, f) -> {
+    future.whenCompleteAsync((r, f, s) -> {
       completeStatsAsync.incrementAndGet();
       waiter.resume();
     });
     future.whenFailure((r, f) -> failure.incrementAndGet());
-    future.whenFailure((c, r, f) -> failureStats.incrementAndGet());
+    future.whenFailure((r, f, s) -> failureStats.incrementAndGet());
     future.whenFailureAsync((r, f) -> {
       failureAsync.incrementAndGet();
       waiter.resume();
     });
-    future.whenFailureAsync((c, r, f) -> {
+    future.whenFailureAsync((r, f, s) -> {
       failureStatsAsync.incrementAndGet();
       waiter.resume();
     });
     future.whenSuccess((r) -> success.incrementAndGet());
-    future.whenSuccess((c, r) -> successStats.incrementAndGet());
+    future.whenSuccess((r, s) -> successStats.incrementAndGet());
     future.whenSuccessAsync((r) -> {
       successAsync.incrementAndGet();
       waiter.resume();
     });
-    future.whenSuccessAsync((c, r) -> {
+    future.whenSuccessAsync((r, s) -> {
       successStatsAsync.incrementAndGet();
       waiter.resume();
     });

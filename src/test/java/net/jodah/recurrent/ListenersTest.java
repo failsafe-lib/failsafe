@@ -55,7 +55,7 @@ public class ListenersTest {
       }
 
       public void onFailedAttempt(Boolean result, Throwable failure, InvocationStats stats) {
-        failedAttemptStats.incrementAndGet();
+        assertEquals(failedAttemptStats.incrementAndGet(), stats.getAttemptCount());
       }
 
       public void onFailedAttempt(Boolean result, Throwable failure) {
@@ -71,7 +71,7 @@ public class ListenersTest {
       }
 
       public void onRetry(Boolean result, Throwable failure, InvocationStats stats) {
-        retryStats.incrementAndGet();
+        assertEquals(retryStats.incrementAndGet(), stats.getAttemptCount());
       }
 
       public void onRetry(Boolean result, Throwable failure) {

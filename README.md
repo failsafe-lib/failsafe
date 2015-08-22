@@ -13,7 +13,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
 * [Invocation Tracking](#invocation-tracking)
-* [Public API integration](#public-api-integration)
+* [Event Listeners](#event-listeners)
 
 Supports Java 6+ though the documentation uses lambdas for simplicity.
 
@@ -74,7 +74,7 @@ Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 
 #### Asynchronous Retries
 
-Asynchronous invocations can be performed and retried on a scheduled executor and return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any [listeners](http://jodah.net/recurrent/javadoc/net/jodah/recurrent/event/package-summary.html) registered against it are called:
+Asynchronous invocations can be performed and retried on a scheduled executor and return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, executor)
@@ -158,10 +158,40 @@ Invocation invocation = new Invocation(retryPolicy);
 
 // On failure
 if (invocation.canRetryOn(someFailure))
-  service.scheduleRetry(invocation.getWaitTime(), TimeUnit.NANOSECONDS);
+  service.scheduleRetry(invocation.getWaitMillis(), TimeUnit.MILLISECONDS);
 ```
 
 See the [RxJava example][RxJava] for a more detailed implementation.
+
+#### Event Listeners
+
+Recurrent supports event listeners that can be notified when retries are performed and when invocations complete. Java 8 users can implement listeners using lambdas:
+
+```java
+Recurrent.get(() -> connect(), retryPolicy, new Listeners()
+  .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
+  .whenSuccess(cxn -> log.info("Connected to {}", cxn))
+  .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure)));
+```
+
+Java 6/7 users can override the [Listeners] class to implement multiple listeners together:
+
+```java
+Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
+  public void onRetry(Connection result, Throwable failure, InvocationStats stats) {
+    log.warn("Failed attempt #{} with {}. Retrying.", stats.getAttemptCount(), failure);
+  }
+  
+  public void onComplete(Connection result, Throwable failure) {
+    if (failure == null)
+  	  log.info("Connected to {}", connection);
+    else
+      log.error("Connection attempts failed", failure);
+  }
+});
+```
+
+Additional events are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
 
 ## Example Integrations
 
@@ -174,7 +204,7 @@ Recurrent was designed to integrate nicely with existing libraries. Here are som
 
 ## Public API Integration
 
-Recurrent is great for integrating into libraries and public APIs, allowing your users to configure retry policies for different opererations. One integration approach is to subclass the RetryPolicy class, then expose that as part of your API while the rest of Recurrent remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to relocate Recurrent into your project's package structure as desired.
+For library developers, Recurrent integrates nicely into public APIs, allowing your users to configure retry policies for different opererations. One integration approach is to subclass the RetryPolicy class, then expose that as part of your API while the rest of Recurrent remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to relocate Recurrent into your project's package structure as desired.
 
 ## Docs
 
@@ -184,6 +214,8 @@ JavaDocs are available [here](https://jhalterman.github.com/recurrent/javadoc).
 
 Copyright 2015 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
+[Listeners]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Listeners.html
+[AsyncListeners]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncListeners.html
 [RetryPolicy]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RetryPolicy.html
 [RecurrentFuture]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RecurrentFuture.html
 [ContextualRunnable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualRunnable.html
