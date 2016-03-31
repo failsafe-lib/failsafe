@@ -137,20 +137,4 @@ public class ListenersTest {
     assertEquals(success.get(), 0);
     assertEquals(successStats.get(), 0);
   }
-  
-  public String connect() {
-    return "asdf";
-  }
-  
-  public void test() {
-    Callable<Boolean> callable = () -> service.connect();
-
-    // Given - Fail twice then succeed
-    when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    
-    Recurrent.get(callable, new RetryPolicy().retryFor(false).withMaxRetries(2), new Listeners<Boolean>()
-        .whenRetry((c, f, stats) -> System.out.println("Failure #{}. Retrying."+ stats.getAttemptCount()))
-        .whenFailure((cxn, failure) -> System.out.println("Connection attempts failed"+ failure))
-        .whenSuccess(cxn -> System.out.println("Connected to {}" + cxn)));
-  }
 }
