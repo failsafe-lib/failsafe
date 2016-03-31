@@ -18,17 +18,20 @@ public class Issue5 {
    */
   public void test() throws Throwable {
     Waiter waiter = new Waiter();
-    Exception failureToThrow = new RuntimeException();
 
     RetryPolicy retryPolicy = new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(2, TimeUnit.SECONDS)
-        .withMaxRetries(3);
+        .withMaxRetries(3)
+        .retryFor(null);
+
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     RecurrentFuture<?> run = Recurrent.get(() -> {
-      throw failureToThrow;
+      return null;
     } , retryPolicy, executor);
+
     run.whenFailure((result, failure) -> {
-      waiter.assertEquals(failureToThrow, failure);
+      waiter.assertNull(result);
+      waiter.assertNull(failure);
       waiter.resume();
     });
 
