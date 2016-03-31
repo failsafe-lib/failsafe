@@ -123,7 +123,7 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
 
 #### Event Listeners
 
-Recurrent supports event listeners that can be notified when retries are performed and when invocations complete:
+Recurrent supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
@@ -153,7 +153,7 @@ Additional listeners are available via the [Listeners] and [AsyncListeners] clas
 
 #### Asynchronous API Integration
 
-Asynchronous code reports completion via indirect callbacks. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used with a callback to manually perform retries or completion:
+Recurrent can be integrated with asynchronous code that reports completion via callbacks. The [ContextualRunnable] and [ContextualCallable] interfaces provide an [Invocation] reference that can be used to manually perform retries or completion:
 
 ```java
 Recurrent.get(invocation -> 
@@ -227,3 +227,4 @@ Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license]
 [ContextualCallable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualCallable.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [RxJava]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java
+[Invocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Invocation.html
