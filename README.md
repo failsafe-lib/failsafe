@@ -209,6 +209,10 @@ For library developers, Recurrent integrates nicely into public APIs, allowing y
 
 JavaDocs are available [here](https://jhalterman.github.com/recurrent/javadoc).
 
+## Contribute
+
+Recurrent is a volunteer effort. If you use it and you like it, you can help by spreading the word!
+
 ## License
 
 Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
