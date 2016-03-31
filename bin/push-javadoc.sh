@@ -1,9 +1,17 @@
 #!/bin/sh
 # run from top level dir
+
+PROJECT=recurrent
+
+mvn javadoc:javadoc -Djv=$apiVersion
 rm -rf target/docs
-git clone git@github.com:jhalterman/recurrent.git target/docs -b gh-pages
-mvn -Pjavadoc javadoc:javadoc
+git clone git@github.com:jhalterman/$PROJECT.git target/docs -b gh-pages
 cd target/docs
-git add -A
+git rm -rf javadoc
+mkdir -p javadoc
+mv -v ../site/apidocs/* javadoc
+git add -A -f javadoc
 git commit -m "Updated JavaDocs"
-git push origin gh-pages
+git push -fq origin gh-pages > /dev/null
+
+echo "Published JavaDocs"
