@@ -322,7 +322,7 @@ public class Recurrent {
    */
   public static <T> RecurrentFuture<T> run(ContextualRunnable runnable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor, AsyncListeners<T> listeners) {
-    return call(AsyncCallable.of(runnable), retryPolicy, Schedulers.of(executor), null,
+    return call(AsyncCallable.<T>of(runnable), retryPolicy, Schedulers.of(executor), null,
         Assert.notNull(listeners, "listeners"));
   }
 
@@ -358,7 +358,7 @@ public class Recurrent {
    */
   public static <T> RecurrentFuture<T> run(ContextualRunnable runnable, RetryPolicy retryPolicy, Scheduler scheduler,
       AsyncListeners<T> listeners) {
-    return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null, Assert.notNull(listeners, "listeners"));
+    return call(AsyncCallable.<T>of(runnable), retryPolicy, scheduler, null, Assert.notNull(listeners, "listeners"));
   }
 
   /**
@@ -402,7 +402,7 @@ public class Recurrent {
    */
   public static <T> RecurrentFuture<T> run(CheckedRunnable runnable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor, AsyncListeners<T> listeners) {
-    return call(AsyncCallable.of(runnable), retryPolicy, Schedulers.of(executor), null,
+    return call(AsyncCallable.<T>of(runnable), retryPolicy, Schedulers.of(executor), null,
         Assert.notNull(listeners, "listeners"));
   }
 
@@ -424,7 +424,7 @@ public class Recurrent {
    */
   public static <T> RecurrentFuture<T> run(CheckedRunnable runnable, RetryPolicy retryPolicy, Scheduler scheduler,
       AsyncListeners<T> listeners) {
-    return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null, Assert.notNull(listeners, "listeners"));
+    return call(AsyncCallable.<T>of(runnable), retryPolicy, scheduler, null, Assert.notNull(listeners, "listeners"));
   }
 
   /**
