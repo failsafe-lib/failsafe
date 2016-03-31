@@ -112,8 +112,7 @@ Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
 Recurrent can be used to create retryable Java 8 functional interfaces:
 
 ```java
-Function<String, Connection> connect =
-  address -> Recurrent.get(() -> connect(address), retryPolicy);
+Function<String, Connection> connect = address -> Recurrent.get(() -> connect(address), retryPolicy);
 ```
 
 We can retry streams:
@@ -154,7 +153,7 @@ Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
 });
 ```
 
-Java 8 users can register individual listeners using lambdas:
+You can also register individual event listeners:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>()
