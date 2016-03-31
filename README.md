@@ -10,9 +10,9 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 * [Flexible retry policies](#retry-policies)
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
-* [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
 * [Event Listeners](#event-listeners)
+* [Asynchronous API integration](#asynchronous-api-integration)
 * [Invocation Tracking](#invocation-tracking)
 
 Supports Java 6+ though the documentation uses lambdas for simplicity.
@@ -82,21 +82,6 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
   .whenFailure((result, failure) -> log.error("Connection attempts failed", failure));
 ```
 
-#### Asynchronous API Integration
-
-Asynchronous code reports completion via indirect callbacks. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used with a callback to manually perform retries or completion:
-
-```java
-Recurrent.get(invocation -> 
-  service.connect().whenComplete((result, failure) -> {
-	if (invocation.complete(result, failure))
-      log.info("Connected");
-	else if (!invocation.retry())
-      log.error("Connection attempts failed", failure);
-  }
-), retryPolicy, executor);
-```
-
 #### CompletableFuture Integration
 
 Java 8 users can use Recurrent to retry [CompletableFuture] calls:
@@ -164,6 +149,21 @@ Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>()
 
 Additional listeners are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
 
+#### Asynchronous API Integration
+
+Asynchronous code reports completion via indirect callbacks. Recurrent provides [ContextualRunnable] and [ContextualCallable] classes that can be used with a callback to manually perform retries or completion:
+
+```java
+Recurrent.get(invocation -> 
+  service.connect().whenComplete((result, failure) -> {
+	if (invocation.complete(result, failure))
+      log.info("Connected");
+	else if (!invocation.retry())
+      log.error("Connection attempts failed", failure);
+  }
+), retryPolicy, executor);
+```
+
 #### Invocation Tracking
 
 In addition to automatically performing retries, Recurrent can be used to track invocations for you, allowing you to manually retry as needed:
@@ -211,7 +211,7 @@ JavaDocs are available [here](https://jhalterman.github.com/recurrent/javadoc).
 
 ## License
 
-Copyright 2015 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
+Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 [Listeners]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Listeners.html
 [AsyncListeners]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncListeners.html
