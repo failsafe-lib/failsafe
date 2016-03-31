@@ -43,4 +43,19 @@ final class Callables {
       }
     };
   }
+  
+  static Callable<Object> of(final CheckedRunnable runnable) {
+    Assert.notNull(runnable, "runnable");
+    return new Callable<Object>() {
+      @Override
+      public Void call() {
+        try {
+          runnable.run();
+          return null;
+        } catch (Exception e) {
+          throw new RecurrentException(e);
+        }
+      }
+    };
+  }
 }

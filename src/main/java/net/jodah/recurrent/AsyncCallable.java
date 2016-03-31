@@ -82,6 +82,24 @@ abstract class AsyncCallable<T> implements Callable<T> {
       }
     };
   }
+  
+  static <T> AsyncCallable<T> of(final CheckedRunnable runnable) {
+    Assert.notNull(runnable, "runnable");
+    return new AsyncCallable<T>() {
+      @Override
+      public T call() throws Exception {
+        try {
+          invocation.reset();
+          runnable.run();
+          invocation.completeOrRetry(null, null);
+        } catch (Exception e) {
+          invocation.completeOrRetry(null, e);
+        }
+
+        return null;
+      }
+    };
+  }
 
   static <T> AsyncCallable<T> ofFuture(final Callable<java.util.concurrent.CompletableFuture<T>> callable) {
     Assert.notNull(callable, "callable");

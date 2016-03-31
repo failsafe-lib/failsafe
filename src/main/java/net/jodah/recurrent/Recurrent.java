@@ -14,8 +14,8 @@ import net.jodah.recurrent.internal.util.Assert;
  * 
  * @author Jonathan Halterman
  */
-public final class Recurrent {
-  private Recurrent() {
+public class Recurrent {
+  Recurrent() {
   }
 
   /**
@@ -157,9 +157,8 @@ public final class Recurrent {
    * Invokes the {@code callable}, sleeping between invocation attempts according to the {@code retryPolicy}.
    * 
    * @throws NullPointerException if any argument is null
-   * @throws RuntimeException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
-   *           interrupted while waiting to perform a retry. Checked exceptions, including InterruptedException, are
-   *           wrapped in RuntimeException.
+   * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
+   *           interrupted while waiting to perform a retry.
    */
   public static <T> T get(Callable<T> callable, RetryPolicy retryPolicy) {
     return call(callable, retryPolicy, null);
@@ -170,9 +169,8 @@ public final class Recurrent {
    * calling the {@code listeners} on recurrent events.
    * 
    * @throws NullPointerException if any argument is null
-   * @throws RuntimeException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
-   *           interrupted while waiting to perform a retry. Checked exceptions, including InterruptedException, are
-   *           wrapped in RuntimeException.
+   * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
+   *           interrupted while waiting to perform a retry.
    */
   public static <T> T get(Callable<T> callable, RetryPolicy retryPolicy, Listeners<T> listeners) {
     return call(callable, retryPolicy, Assert.notNull(listeners, "listeners"));
@@ -367,11 +365,10 @@ public final class Recurrent {
    * Invokes the {@code runnable}, sleeping between invocation attempts according to the {@code retryPolicy}.
    * 
    * @throws NullPointerException if any argument is null
-   * @throws RuntimeException if the {@code runnable} fails with a Throwable and the retry policy is exceeded or if
-   *           interrupted while waiting to perform a retry. Checked exceptions, including InterruptedException, are
-   *           wrapped in RuntimeException.
+   * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
+   *           interrupted while waiting to perform a retry.
    */
-  public static void run(Runnable runnable, RetryPolicy retryPolicy) {
+  public static void run(CheckedRunnable runnable, RetryPolicy retryPolicy) {
     call(Callables.of(runnable), retryPolicy, null);
   }
 
@@ -380,12 +377,11 @@ public final class Recurrent {
    * calling the {@code listeners} on recurrent events.
    * 
    * @throws NullPointerException if any argument is null
-   * @throws RuntimeException if the {@code runnable} fails with a Throwable and the retry policy is exceeded or if
-   *           interrupted while waiting to perform a retry. Checked exceptions, including InterruptedException, are
-   *           wrapped in RuntimeException.
+   * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
+   *           interrupted while waiting to perform a retry.
    */
   @SuppressWarnings("unchecked")
-  public static void run(Runnable runnable, RetryPolicy retryPolicy, Listeners<?> listeners) {
+  public static void run(CheckedRunnable runnable, RetryPolicy retryPolicy, Listeners<?> listeners) {
     call(Callables.of(runnable), retryPolicy, (Listeners<Object>) Assert.notNull(listeners, "listeners"));
   }
 
@@ -394,7 +390,8 @@ public final class Recurrent {
    * 
    * @throws NullPointerException if any argument is null
    */
-  public static RecurrentFuture<?> run(Runnable runnable, RetryPolicy retryPolicy, ScheduledExecutorService executor) {
+  public static RecurrentFuture<?> run(CheckedRunnable runnable, RetryPolicy retryPolicy,
+      ScheduledExecutorService executor) {
     return call(AsyncCallable.of(runnable), retryPolicy, Schedulers.of(executor), null, null);
   }
 
@@ -403,7 +400,7 @@ public final class Recurrent {
    * 
    * @throws NullPointerException if any argument is null
    */
-  public static <T> RecurrentFuture<T> run(Runnable runnable, RetryPolicy retryPolicy,
+  public static <T> RecurrentFuture<T> run(CheckedRunnable runnable, RetryPolicy retryPolicy,
       ScheduledExecutorService executor, AsyncListeners<T> listeners) {
     return call(AsyncCallable.of(runnable), retryPolicy, Schedulers.of(executor), null,
         Assert.notNull(listeners, "listeners"));
@@ -414,7 +411,7 @@ public final class Recurrent {
    * 
    * @throws NullPointerException if any argument is null
    */
-  public static RecurrentFuture<?> run(Runnable runnable, RetryPolicy retryPolicy, Scheduler scheduler) {
+  public static RecurrentFuture<?> run(CheckedRunnable runnable, RetryPolicy retryPolicy, Scheduler scheduler) {
     return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null, null);
   }
 
@@ -422,8 +419,10 @@ public final class Recurrent {
    * Invokes the {@code runnable}, scheduling retries with the {@code scheduler} according to the {@code retryPolicy}.
    * 
    * @throws NullPointerException if any argument is null
+   * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
+   *           interrupted while waiting to perform a retry.
    */
-  public static <T> RecurrentFuture<T> run(Runnable runnable, RetryPolicy retryPolicy, Scheduler scheduler,
+  public static <T> RecurrentFuture<T> run(CheckedRunnable runnable, RetryPolicy retryPolicy, Scheduler scheduler,
       AsyncListeners<T> listeners) {
     return call(AsyncCallable.of(runnable), retryPolicy, scheduler, null, Assert.notNull(listeners, "listeners"));
   }
@@ -452,9 +451,8 @@ public final class Recurrent {
   /**
    * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
    * 
-   * @throws RuntimeException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
-   *           interrupted while waiting to perform a retry. Checked exceptions, including InterruptedException, are
-   *           wrapped in RuntimeException.
+   * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
+   *           interrupted while waiting to perform a retry.
    */
   private static <T> T call(Callable<T> callable, RetryPolicy retryPolicy, Listeners<T> listeners) {
     Assert.notNull(callable, "callable");
@@ -482,13 +480,14 @@ public final class Recurrent {
 
       // Handle retry needed
       if (shouldRetry) {
-        if (listeners != null)
-          listeners.handleRetry(result, failure, invocation);
         try {
           Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
         } catch (InterruptedException e) {
-          throw new RuntimeException(e);
+          throw new RecurrentException(e);
         }
+        
+        if (listeners != null)
+          listeners.handleRetry(result, failure, invocation);
       }
 
       // Handle completion
@@ -497,8 +496,8 @@ public final class Recurrent {
           listeners.complete(result, failure, invocation, success);
         if (success || failure == null)
           return result;
-        RuntimeException re = failure instanceof RuntimeException ? (RuntimeException) failure
-            : new RuntimeException(failure);
+        RecurrentException re = failure instanceof RecurrentException ? (RecurrentException) failure
+            : new RecurrentException(failure);
         throw re;
       }
     }

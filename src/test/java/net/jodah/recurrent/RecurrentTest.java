@@ -38,11 +38,11 @@ public class RecurrentTest {
   private Waiter waiter;
 
   // Results from a synchronous Recurrent call
-  @SuppressWarnings("unchecked") Class<? extends Throwable>[] syncThrowables = new Class[] { RuntimeException.class,
+  @SuppressWarnings("unchecked") Class<? extends Throwable>[] syncThrowables = new Class[] { RecurrentException.class,
       SocketException.class };
   // Results from a get against a future that wraps a synchronous Recurrent call
   @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureSyncThrowables = new Class[] {
-      ExecutionException.class, RuntimeException.class, SocketException.class };
+      ExecutionException.class, RecurrentException.class, SocketException.class };
   // Results from a get against a future that wraps an asynchronous Recurrent call
   @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureAsyncThrowables = new Class[] {
       ExecutionException.class, SocketException.class };
@@ -60,7 +60,7 @@ public class RecurrentTest {
   }
 
   public void shouldRun() throws Throwable {
-    Runnable runnable = () -> service.connect();
+    CheckedRunnable runnable = () -> service.connect();
 
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
@@ -85,7 +85,7 @@ public class RecurrentTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
 
     // When
-    RecurrentFuture<?> future = runnable instanceof Runnable ? Recurrent.run((Runnable) runnable, retryAlways, executor)
+    RecurrentFuture<?> future = runnable instanceof CheckedRunnable ? Recurrent.run((CheckedRunnable) runnable, retryAlways, executor)
         : Recurrent.run((ContextualRunnable) runnable, retryAlways, executor);
 
     // Then
@@ -103,7 +103,7 @@ public class RecurrentTest {
     when(service.connect()).thenThrow(failures(10, SocketException.class));
 
     // When
-    RecurrentFuture<?> future2 = runnable instanceof Runnable ? Recurrent.run((Runnable) runnable, retryTwice, executor)
+    RecurrentFuture<?> future2 = runnable instanceof CheckedRunnable ? Recurrent.run((CheckedRunnable) runnable, retryTwice, executor)
         : Recurrent.run((ContextualRunnable) runnable, retryTwice, executor);
 
     // Then
@@ -118,7 +118,7 @@ public class RecurrentTest {
   }
 
   public void shouldRunWithExecutor() throws Throwable {
-    assertRunWithExecutor((Runnable) () -> service.connect());
+    assertRunWithExecutor((CheckedRunnable) () -> service.connect());
   }
 
   public void shouldRunContextualWithExecutor() throws Throwable {
@@ -337,7 +337,7 @@ public class RecurrentTest {
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(ConnectException.class);
 
     // When / Then
-    assertThrows(() -> Recurrent.get(() -> service.connect(), retryPolicy), IllegalStateException.class);
+    assertThrows(() -> Recurrent.get(() -> service.connect(), retryPolicy), RecurrentException.class, IllegalStateException.class);
     verify(service, times(3)).connect();
   }
 

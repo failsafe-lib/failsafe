@@ -35,11 +35,11 @@ public class AsyncListenersTest {
 
   @BeforeClass
   void beforeClass() {
-    listeners.whenFailedAttemptAsync((r, f) -> {
+    listeners.whenFailedAttempt((r, f) -> {
       failedAttemptAsync.incrementAndGet();
       waiter.resume();
     });
-    listeners.whenFailedAttemptAsync((r, f, s) -> {
+    listeners.whenFailedAttempt((r, f, s) -> {
       waiter.assertEquals(failedAttemptStatsAsync.incrementAndGet(), s.getAttemptCount());
       waiter.resume();
     });

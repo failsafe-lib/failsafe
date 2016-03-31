@@ -25,7 +25,7 @@ public class Asserts {
   public static void assertMatches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
     Throwable current = actual;
     for (Class<? extends Throwable> expected : throwableHierarchy) {
-      if (!expected.isInstance(current))
+      if (!expected.equals(current.getClass()))
         Assert.fail(
             String.format("Bad exception type. Expected %s but was %s", Arrays.toString(throwableHierarchy), actual));
       current = current.getCause();

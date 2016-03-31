@@ -12,8 +12,8 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
-* [Invocation Tracking](#invocation-tracking)
 * [Event Listeners](#event-listeners)
+* [Invocation Tracking](#invocation-tracking)
 
 Supports Java 6+ though the documentation uses lambdas for simplicity.
 
@@ -135,6 +135,36 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
   .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
+#### Event Listeners
+
+Recurrent supports event listeners that can be notified when retries are performed and when invocations complete:
+
+```java
+Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
+  public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
+    log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
+  }
+  
+  public void onComplete(Connection cxn, Throwable failure) {
+    if (failure != null)
+      log.error("Connection attempts failed", failure);
+    else
+  	  log.info("Connected to {}", cxn);
+  }
+});
+```
+
+Java 8 users can register individual listeners using lambdas:
+
+```java
+Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>()
+  .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
+  .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
+  .whenSuccess(cxn -> log.info("Connected to {}", cxn)));
+```
+
+Additional listeners are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
+
 #### Invocation Tracking
 
 In addition to automatically performing retries, Recurrent can be used to track invocations for you, allowing you to manually retry as needed:
@@ -162,36 +192,6 @@ if (invocation.canRetryOn(someFailure))
 ```
 
 See the [RxJava example][RxJava] for a more detailed implementation.
-
-#### Event Listeners
-
-Recurrent supports event listeners that can be notified when retries are performed and when invocations complete:
-
-```java
-Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
-  public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
-    log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
-  }
-  
-  public void onComplete(Connection cxn, Throwable failure) {
-    if (failure != null)
-      log.error("Connection attempts failed", failure);
-    else
-  	  log.info("Connected to {}", cxn);
-  }
-});
-```
-
-Java 8 users can register individual listeners using lambdas:
-
-```java
-Recurrent.get(() -> connect(), retryPolicy, new Listeners()
-  .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
-  .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure)))
-  .whenSuccess(cxn -> log.info("Connected to {}", cxn)));
-```
-
-Additional listeners are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
 
 ## Example Integrations
 

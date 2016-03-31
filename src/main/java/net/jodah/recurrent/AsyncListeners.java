@@ -2,6 +2,7 @@ package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.event.ContextualResultListener;
@@ -9,8 +10,8 @@ import net.jodah.recurrent.event.ResultListener;
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * Recurrent event listeners that are called asynchronously. To handle completion events asynchronously, see
- * {@link RecurrentFuture}.
+ * Recurrent event listeners that are called asynchronously on the {@link Scheduler} or {@link ScheduledExecutorService}
+ * associated with the Recurrent call. To handle completion events asynchronously, see {@link RecurrentFuture}.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
@@ -81,44 +82,72 @@ public class AsyncListeners<T> extends Listeners<T> {
       scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   */
   public AsyncListeners<T> whenFailedAttemptAsync(ContextualResultListener<? super T, ? extends Throwable> listener) {
     asyncCtxFailedAttemptListener = new AsyncCtxResultListener<T>(listener);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   */
   public AsyncListeners<T> whenFailedAttemptAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
     asyncCtxFailedAttemptListener = new AsyncCtxResultListener<T>(listener, executor);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   */
   public AsyncListeners<T> whenFailedAttemptAsync(ResultListener<? super T, ? extends Throwable> listener) {
     asyncFailedAttemptListener = new AsyncResultListener<T>(listener);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   */
   public AsyncListeners<T> whenFailedAttemptAsync(ResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
     asyncFailedAttemptListener = new AsyncResultListener<T>(listener, executor);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
+   * failure.
+   */
   public AsyncListeners<T> whenRetryAsync(ContextualResultListener<? super T, ? extends Throwable> listener) {
     asyncCtxRetryListener = new AsyncCtxResultListener<T>(listener);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
+   * failure.
+   */
   public AsyncListeners<T> whenRetryAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
     asyncCtxRetryListener = new AsyncCtxResultListener<T>(listener, executor);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
+   * failure.
+   */
   public AsyncListeners<T> whenRetryAsync(ResultListener<? super T, ? extends Throwable> listener) {
     asyncRetryListener = new AsyncResultListener<T>(listener);
     return this;
   }
 
+  /**
+   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
+   * failure.
+   */
   public AsyncListeners<T> whenRetryAsync(ResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
     asyncRetryListener = new AsyncResultListener<T>(listener, executor);
