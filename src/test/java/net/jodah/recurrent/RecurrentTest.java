@@ -141,7 +141,7 @@ public class RecurrentTest {
 
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
 
     assertEquals(Recurrent.get(callable, retryPolicy), Boolean.TRUE);
     verify(service, times(5)).connect();
@@ -159,7 +159,7 @@ public class RecurrentTest {
   private void assertGetWithExecutor(Object callable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
 
     // When
     RecurrentFuture<Boolean> future = callable instanceof Callable
@@ -222,7 +222,7 @@ public class RecurrentTest {
   private void assertGetFuture(Object callable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
 
     // When
     CompletableFuture<Boolean> future = callable instanceof Callable
@@ -285,7 +285,7 @@ public class RecurrentTest {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, true);
     when(service.disconnect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryFor(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
 
     // When
     CompletableFuture.supplyAsync(() -> Recurrent.get(() -> service.connect(), retryPolicy))

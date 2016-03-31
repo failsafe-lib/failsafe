@@ -47,7 +47,7 @@ public class AsyncInvocationTest {
 
   public void testCompleteForResult() {
     // Given
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryFor(null), scheduler, future, null);
+    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -71,7 +71,7 @@ public class AsyncInvocationTest {
 
   public void testRetryForResult() {
     // Given retry for null
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryFor(null), scheduler, future, null);
+    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -88,7 +88,7 @@ public class AsyncInvocationTest {
     verify(future).complete(1, null, true);
 
     // Given 2 max retries
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryFor(null).withMaxRetries(1), scheduler, future, null);
+    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null).withMaxRetries(1), scheduler, future, null);
 
     // When / Then
     resetMocks();
@@ -109,7 +109,7 @@ public class AsyncInvocationTest {
 
   public void testRetryForResultAndThrowable() {
     // Given retry for null
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryFor(null), scheduler, future, null);
+    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -128,7 +128,7 @@ public class AsyncInvocationTest {
     verify(future).complete(1, null, true);
 
     // Given 2 max retries
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryFor(null).withMaxRetries(1), scheduler, future, null);
+    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null).withMaxRetries(1), scheduler, future, null);
 
     // When / Then
     resetMocks();

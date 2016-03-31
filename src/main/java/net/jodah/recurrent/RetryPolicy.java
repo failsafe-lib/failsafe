@@ -177,10 +177,10 @@ public final class RetryPolicy {
     this.failureTypes = failures;
     return this;
   }
-  
+
   /**
-   * Specifies when a retry should occur for a particular failure. If the {@code retryPredicate} returns true then
-   * retries may be performed, else the failure will be re-thrown.
+   * Specifies that a retry should occur if the {@code failurePredicate} matches the failure and the retry policy is not
+   * exceeded.
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */
@@ -192,36 +192,36 @@ public final class RetryPolicy {
   }
 
   /**
-   * Specifies when a retry should occur for a particular result and failure. If the {@code completionPredicate} returns
-   * true then retries may be performed, else the failure will be re-thrown or the result returned.
+   * Specifies that a retry should occur if the {@code completionPredicate} matches the completion result and the retry
+   * policy is not exceeded.
    * 
    * @throws NullPointerException if {@code completionPredicate} is null
    */
   @SuppressWarnings("unchecked")
-  public <T> RetryPolicy retryWhen(BiPredicate<T, ? extends Throwable> completionPredicate) {
+  public <T> RetryPolicy retryIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
     this.completionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
     return this;
   }
 
   /**
-   * Specifies when a retry should occur for a particular result. If the {@code resultPredicate} returns true then
-   * retries may be performed, else the result will be returned.
+   * Specifies that a retry should occur if the {@code resultPredicate} matches the result and the retry policy is not
+   * exceeded.
    * 
-   * @throws NullPointerException if {@code failurePredicate} is null
+   * @throws NullPointerException if {@code resultPredicate} is null
    */
   @SuppressWarnings("unchecked")
-  public <T> RetryPolicy retryWhen(Predicate<T> resultPredicate) {
+  public <T> RetryPolicy retryIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
     this.resultPredicate = (Predicate<Object>) resultPredicate;
     return this;
   }
 
   /**
-   * Specifies when a retry should occur for a particular result. If the result matches {@code result} then retries may
-   * be performed, else the result will be returned.
+   * Specifies that a retry should occur if the invocation result matches the {@code result} and the retry policy is not
+   * exceeded.
    */
-  public RetryPolicy retryFor(Object result) {
+  public RetryPolicy retryWhen(Object result) {
     this.resultValue = result;
     return this;
   }

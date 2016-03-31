@@ -23,7 +23,7 @@ public class InvocationTest {
 
   public void testCanRetryForResult() {
     // Given retry for null
-    Invocation inv = new Invocation(new RetryPolicy().retryFor(null));
+    Invocation inv = new Invocation(new RetryPolicy().retryWhen(null));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -37,7 +37,7 @@ public class InvocationTest {
     assertNull(inv.getLastFailure());
 
     // Given 2 max retries
-    inv = new Invocation(new RetryPolicy().retryFor(null).withMaxRetries(2));
+    inv = new Invocation(new RetryPolicy().retryWhen(null).withMaxRetries(2));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -54,7 +54,7 @@ public class InvocationTest {
 
   public void testCanRetryForResultAndThrowable() {
     // Given retry for null
-    Invocation inv = new Invocation(new RetryPolicy().retryFor(null));
+    Invocation inv = new Invocation(new RetryPolicy().retryWhen(null));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -67,7 +67,7 @@ public class InvocationTest {
     assertTrue(inv.isComplete());
 
     // Given 2 max retries
-    inv = new Invocation(new RetryPolicy().retryFor(null).withMaxRetries(2));
+    inv = new Invocation(new RetryPolicy().retryWhen(null).withMaxRetries(2));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -126,7 +126,7 @@ public class InvocationTest {
 
   public void testCompleteForResult() {
     // Given
-    Invocation inv = new Invocation(new RetryPolicy().retryFor(null));
+    Invocation inv = new Invocation(new RetryPolicy().retryWhen(null));
 
     // When / Then
     assertFalse(inv.complete(null));

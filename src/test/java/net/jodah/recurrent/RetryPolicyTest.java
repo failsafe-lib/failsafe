@@ -28,7 +28,7 @@ public class RetryPolicyTest {
 
   public void testAllowsRetriesForCompletionPredicate() {
     RetryPolicy policy = new RetryPolicy()
-        .retryWhen((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
+        .retryIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.allowsRetriesFor("test", null));
     assertFalse(policy.allowsRetriesFor(0, null));
     assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
@@ -53,7 +53,7 @@ public class RetryPolicyTest {
   }
 
   public void testAllowsRetriesForResult() {
-    RetryPolicy policy = new RetryPolicy().retryFor(10).retryWhen((Integer result) -> result > 100);
+    RetryPolicy policy = new RetryPolicy().retryWhen(10).retryIf((Integer result) -> result > 100);
 
     // Check result value
     assertTrue(policy.allowsRetriesFor(10, null));

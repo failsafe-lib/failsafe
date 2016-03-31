@@ -37,8 +37,8 @@ And for particular results or conditions:
 
 ```java
 retryPolicy
-  .retryFor(null);
-  .retryWhen(result -> result == null);
+  .retryWhen(null);
+  .retryIf(result -> result == null);  
 ```  
 
 We can add a fixed delay between retries:

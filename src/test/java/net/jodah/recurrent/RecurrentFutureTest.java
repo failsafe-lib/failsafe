@@ -106,7 +106,7 @@ public class RecurrentFutureTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    registerListeners(Recurrent.get(callable, new RetryPolicy().retryFor(false), executor));
+    registerListeners(Recurrent.get(callable, new RetryPolicy().retryWhen(false), executor));
     waiter.await(1000, 6);
 
     // Then
@@ -134,7 +134,7 @@ public class RecurrentFutureTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    registerListeners(Recurrent.get(callable, new RetryPolicy().retryFor(false).withMaxRetries(3), executor));
+    registerListeners(Recurrent.get(callable, new RetryPolicy().retryWhen(false).withMaxRetries(3), executor));
     waiter.await(1000, 6);
 
     // Then

@@ -1,3 +1,10 @@
+# 0.5.1
+
+### API Changes
+
+* `RetryPolicy.retryWhen` was renamed to `retryIf` for retrying if a `Predicate` is matched.
+* `RetryPolicy.retryFor` was renamed to `retryWhen` for retrying when a result is matched.
+
 # 0.5.0
 
 ### New Features

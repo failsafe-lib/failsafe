@@ -22,7 +22,7 @@ public class Issue5 {
     RetryPolicy retryPolicy = new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(2, TimeUnit.SECONDS)
         .withMaxRetries(3)
-        .retryFor(null);
+        .retryWhen(null);
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     RecurrentFuture<?> run = Recurrent.get(() -> {
