@@ -1,6 +1,8 @@
 # Recurrent
 [![Build Status](https://travis-ci.org/jhalterman/recurrent.svg)](https://travis-ci.org/jhalterman/recurrent)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.jodah/recurrent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.jodah/recurrent) 
+[![JavaDoc](http://javadoc-badge.appspot.com/net.jodah/recurrent.svg?label=javadoc)](https://jhalterman.github.com/recurrent/javadoc)
+[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 *Simple, sophisticated retries.*
 
