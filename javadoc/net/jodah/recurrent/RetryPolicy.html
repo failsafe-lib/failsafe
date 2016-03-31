@@ -209,39 +209,43 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </td>
 </tr>
 <tr id="i8" class="altColor">
-<td class="colFirst"><code><a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryFor-java.lang.Object-">retryFor</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
-<div class="block">Specifies when a retry should occur for a particular result.</div>
+<td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryIf-net.jodah.recurrent.util.BiPredicate-">retryIf</a></span>(<a href="../../../net/jodah/recurrent/util/BiPredicate.html" title="interface in net.jodah.recurrent.util">BiPredicate</a>&lt;T,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;completionPredicate)</code>
+<div class="block">Specifies that a retry should occur if the <code>completionPredicate</code> matches the completion result and the retry
+ policy is not exceeded.</div>
 </td>
 </tr>
 <tr id="i9" class="rowColor">
+<td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryIf-net.jodah.recurrent.util.Predicate-">retryIf</a></span>(<a href="../../../net/jodah/recurrent/util/Predicate.html" title="interface in net.jodah.recurrent.util">Predicate</a>&lt;T&gt;&nbsp;resultPredicate)</code>
+<div class="block">Specifies that a retry should occur if the <code>resultPredicate</code> matches the result and the retry policy is not
+ exceeded.</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryOn-java.lang.Class...-">retryOn</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</a>&lt;? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;...&nbsp;failures)</code>
 <div class="block">Specifies the failures to retry on.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryOn-java.util.List-">retryOn</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</a>&lt;? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&gt;&nbsp;failures)</code>
 <div class="block">Specifies the failures to retry on.</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryOn-net.jodah.recurrent.util.Predicate-">retryOn</a></span>(<a href="../../../net/jodah/recurrent/util/Predicate.html" title="interface in net.jodah.recurrent.util">Predicate</a>&lt;? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;failurePredicate)</code>
-<div class="block">Specifies when a retry should occur for a particular failure.</div>
-</td>
-</tr>
-<tr id="i12" class="altColor">
-<td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryWhen-net.jodah.recurrent.util.BiPredicate-">retryWhen</a></span>(<a href="../../../net/jodah/recurrent/util/BiPredicate.html" title="interface in net.jodah.recurrent.util">BiPredicate</a>&lt;T,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;completionPredicate)</code>
-<div class="block">Specifies when a retry should occur for a particular result and failure.</div>
+<div class="block">Specifies that a retry should occur if the <code>failurePredicate</code> matches the failure and the retry policy is not
+ exceeded.</div>
 </td>
 </tr>
 <tr id="i13" class="rowColor">
-<td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryWhen-net.jodah.recurrent.util.Predicate-">retryWhen</a></span>(<a href="../../../net/jodah/recurrent/util/Predicate.html" title="interface in net.jodah.recurrent.util">Predicate</a>&lt;T&gt;&nbsp;resultPredicate)</code>
-<div class="block">Specifies when a retry should occur for a particular result.</div>
+<td class="colFirst"><code><a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/RetryPolicy.html#retryWhen-java.lang.Object-">retryWhen</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
+<div class="block">Specifies that a retry should occur if the invocation result matches the <code>result</code> and the retry policy is not
+ exceeded.</div>
 </td>
 </tr>
 <tr id="i14" class="altColor">
@@ -473,53 +477,53 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <li class="blockList">
 <h4>retryOn</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryOn(<a href="../../../net/jodah/recurrent/util/Predicate.html" title="interface in net.jodah.recurrent.util">Predicate</a>&lt;? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;failurePredicate)</pre>
-<div class="block">Specifies when a retry should occur for a particular failure. If the <code>retryPredicate</code> returns true then
- retries may be performed, else the failure will be re-thrown.</div>
+<div class="block">Specifies that a retry should occur if the <code>failurePredicate</code> matches the failure and the retry policy is not
+ exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>failurePredicate</code> is null</dd>
 </dl>
 </li>
 </ul>
-<a name="retryWhen-net.jodah.recurrent.util.BiPredicate-">
+<a name="retryIf-net.jodah.recurrent.util.BiPredicate-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>retryWhen</h4>
-<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryWhen(<a href="../../../net/jodah/recurrent/util/BiPredicate.html" title="interface in net.jodah.recurrent.util">BiPredicate</a>&lt;T,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;completionPredicate)</pre>
-<div class="block">Specifies when a retry should occur for a particular result and failure. If the <code>completionPredicate</code> returns
- true then retries may be performed, else the failure will be re-thrown or the result returned.</div>
+<h4>retryIf</h4>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryIf(<a href="../../../net/jodah/recurrent/util/BiPredicate.html" title="interface in net.jodah.recurrent.util">BiPredicate</a>&lt;T,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;completionPredicate)</pre>
+<div class="block">Specifies that a retry should occur if the <code>completionPredicate</code> matches the completion result and the retry
+ policy is not exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>completionPredicate</code> is null</dd>
 </dl>
 </li>
 </ul>
-<a name="retryWhen-net.jodah.recurrent.util.Predicate-">
+<a name="retryIf-net.jodah.recurrent.util.Predicate-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>retryIf</h4>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryIf(<a href="../../../net/jodah/recurrent/util/Predicate.html" title="interface in net.jodah.recurrent.util">Predicate</a>&lt;T&gt;&nbsp;resultPredicate)</pre>
+<div class="block">Specifies that a retry should occur if the <code>resultPredicate</code> matches the result and the retry policy is not
+ exceeded.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>resultPredicate</code> is null</dd>
+</dl>
+</li>
+</ul>
+<a name="retryWhen-java.lang.Object-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>retryWhen</h4>
-<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryWhen(<a href="../../../net/jodah/recurrent/util/Predicate.html" title="interface in net.jodah.recurrent.util">Predicate</a>&lt;T&gt;&nbsp;resultPredicate)</pre>
-<div class="block">Specifies when a retry should occur for a particular result. If the <code>resultPredicate</code> returns true then
- retries may be performed, else the result will be returned.</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>failurePredicate</code> is null</dd>
-</dl>
-</li>
-</ul>
-<a name="retryFor-java.lang.Object-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>retryFor</h4>
-<pre>public&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryFor(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</pre>
-<div class="block">Specifies when a retry should occur for a particular result. If the result matches <code>result</code> then retries may
- be performed, else the result will be returned.</div>
+<pre>public&nbsp;<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryWhen(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</pre>
+<div class="block">Specifies that a retry should occur if the invocation result matches the <code>result</code> and the retry policy is not
+ exceeded.</div>
 </li>
 </ul>
 <a name="withBackoff-long-long-java.util.concurrent.TimeUnit-">

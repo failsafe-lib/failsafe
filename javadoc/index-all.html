@@ -577,9 +577,15 @@
 <dd>
 <div class="block">Attempts to retry a failed invocation.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryFor-java.lang.Object-">retryFor(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryIf-net.jodah.recurrent.util.BiPredicate-">retryIf(BiPredicate&lt;T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
-<div class="block">Specifies when a retry should occur for a particular result.</div>
+<div class="block">Specifies that a retry should occur if the <code>completionPredicate</code> matches the completion result and the retry
+ policy is not exceeded.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryIf-net.jodah.recurrent.util.Predicate-">retryIf(Predicate&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
+<dd>
+<div class="block">Specifies that a retry should occur if the <code>resultPredicate</code> matches the result and the retry policy is not
+ exceeded.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#retryOn-java.lang.Throwable-">retryOn(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
 <dd>
@@ -595,7 +601,8 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryOn-net.jodah.recurrent.util.Predicate-">retryOn(Predicate&lt;? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
-<div class="block">Specifies when a retry should occur for a particular failure.</div>
+<div class="block">Specifies that a retry should occur if the <code>failurePredicate</code> matches the failure and the retry policy is not
+ exceeded.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><span class="typeNameLink">RetryPolicy</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
@@ -609,13 +616,10 @@
 <dd>
 <div class="block">Copy constructor.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryWhen-net.jodah.recurrent.util.BiPredicate-">retryWhen(BiPredicate&lt;T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryWhen-java.lang.Object-">retryWhen(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
-<div class="block">Specifies when a retry should occur for a particular result and failure.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryWhen-net.jodah.recurrent.util.Predicate-">retryWhen(Predicate&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
-<dd>
-<div class="block">Specifies when a retry should occur for a particular result.</div>
+<div class="block">Specifies that a retry should occur if the invocation result matches the <code>result</code> and the retry policy is not
+ exceeded.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/CheckedRunnable.html#run--">run()</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a></dt>
 <dd>&nbsp;</dd>
