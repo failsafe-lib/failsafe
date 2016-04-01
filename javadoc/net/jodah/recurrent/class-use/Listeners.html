@@ -105,8 +105,71 @@
 <tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;</span></code>
-<div class="block">Recurrent event listeners that are called asynchronously on the <a href="../../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent"><code>Scheduler</code></a> or <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html?is-external=true" title="class or interface in java.util.concurrent"><code>ScheduledExecutorService</code></a>
+<div class="block">Recurrent event listeners that are called asynchronously on the <a href="../../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent"><code>Scheduler</code></a> or <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html?is-external=true" title="class or interface in java.util.concurrent"><code>ScheduledExecutorService</code></a>
  associated with the Recurrent call.</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a> with type parameters of type <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ContextualResultListener-">whenComplete</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ResultListener-">whenComplete</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttempt</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called after a failed invocation attempt.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ResultListener-">whenFailedAttempt</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called after a failed invocation attempt.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ContextualResultListener-">whenFailure</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called after an invocation attempt fails.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ResultListener-">whenFailure</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called when the retry policy is exceeded and the result is a failure.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ContextualResultListener-">whenRetry</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called when the retry policy is exceeded and the result is a failure.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ResultListener-">whenRetry</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called before a retry is attempted.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
+<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualSuccessListener.html" title="interface in net.jodah.recurrent.event">ContextualSuccessListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
 </td>
 </tr>
 </tbody>
@@ -119,60 +182,6 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ContextualResultListener-">whenComplete</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ResultListener-">whenComplete</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttempt</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called after a failed invocation attempt.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ResultListener-">whenFailedAttempt</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called after a failed invocation attempt.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ContextualResultListener-">whenFailure</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called after an invocation attempt fails.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ResultListener-">whenFailure</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when the retry policy is exceeded and the result is a failure.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ContextualResultListener-">whenRetry</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when the retry policy is exceeded and the result is a failure.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ResultListener-">whenRetry</a></span>(<a href="../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called before a retry is attempted.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualSuccessListener.html" title="interface in net.jodah.recurrent.event">ContextualSuccessListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
-</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.SuccessListener-">whenSuccess</a></span>(<a href="../../../../net/jodah/recurrent/event/SuccessListener.html" title="interface in net.jodah.recurrent.event">SuccessListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>

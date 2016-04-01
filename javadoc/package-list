@@ -1,6 +1,4 @@
 net.jodah.recurrent
 net.jodah.recurrent.event
-net.jodah.recurrent.internal.util
-net.jodah.recurrent.internal.util.concurrent
 net.jodah.recurrent.util
 net.jodah.recurrent.util.concurrent

@@ -104,6 +104,12 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
+<td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/recurrent/RetryPolicy.html#abortIf-net.jodah.recurrent.util.BiPredicate-">abortIf</a></span>(<a href="../../../../../net/jodah/recurrent/util/BiPredicate.html" title="interface in net.jodah.recurrent.util">BiPredicate</a>&lt;T,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;completionPredicate)</code>
+<div class="block">Specifies that retries should be aborted if the <code>completionPredicate</code> matches the completion result.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="../../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
 <td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/recurrent/RetryPolicy.html#retryIf-net.jodah.recurrent.util.BiPredicate-">retryIf</a></span>(<a href="../../../../../net/jodah/recurrent/util/BiPredicate.html" title="interface in net.jodah.recurrent.util">BiPredicate</a>&lt;T,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;completionPredicate)</code>
 <div class="block">Specifies that a retry should occur if the <code>completionPredicate</code> matches the completion result and the retry
  policy is not exceeded.</div>

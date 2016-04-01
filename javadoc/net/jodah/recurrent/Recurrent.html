@@ -151,17 +151,17 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">future</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">future</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
       <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-      <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</code>
+      <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">future</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">future</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
       <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-      <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+      <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
       <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
@@ -185,17 +185,17 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">future</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">future</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
       <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-      <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</code>
+      <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">future</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">future</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
       <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-      <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+      <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
       <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
@@ -235,17 +235,17 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </tr>
 <tr id="i12" class="altColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">get</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">get</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</code>
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i13" class="rowColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">get</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">get</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
    <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
@@ -269,17 +269,17 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </tr>
 <tr id="i16" class="altColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">get</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">get</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</code>
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i17" class="rowColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">get</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">get</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
    <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</code>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
@@ -319,17 +319,17 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </tr>
 <tr id="i22" class="altColor">
 <td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;?&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">run</a></span>(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">run</a></span>(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</code>
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i23" class="rowColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">run</a></span>(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">run</a></span>(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
    <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</code>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
@@ -353,17 +353,17 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </tr>
 <tr id="i26" class="altColor">
 <td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;?&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">run</a></span>(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">run</a></span>(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</code>
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i27" class="rowColor">
 <td class="colFirst"><code>static &lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">run</a></span>(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">run</a></span>(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable,
    <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
    <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</code>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
@@ -423,7 +423,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">
+<a name="future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -431,7 +431,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>future</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
                                               <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                              <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</pre>
+                                              <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -439,7 +439,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
+<a name="future-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -447,7 +447,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>future</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
                                               <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                              <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+                                              <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
                                               <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 <dl>
@@ -507,7 +507,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">
+<a name="future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -515,7 +515,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>future</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
                                               <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                              <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</pre>
+                                              <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.
  Allows asynchronous invocations to manually perform retries or completion via the <code>callable</code>'s
  <a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent"><code>AsyncInvocation</code></a> reference.
@@ -532,7 +532,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
+<a name="future-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -540,7 +540,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>future</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable,
                                               <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                              <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+                                              <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
                                               <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.
  Allows asynchronous invocations to manually perform retries or completion via the <code>callable</code>'s
@@ -627,7 +627,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">
+<a name="get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -635,7 +635,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>get</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
                                          <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                         <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</pre>
+                                         <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -643,7 +643,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
+<a name="get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -651,7 +651,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>get</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
                                          <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                         <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+                                         <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
                                          <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 <dl>
@@ -709,7 +709,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">
+<a name="get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -717,7 +717,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>get</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable,
                                          <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                         <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</pre>
+                                         <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.
  Allows asynchronous invocations to manually perform retries or completion via the <code>callable</code>'s
  <a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent"><code>AsyncInvocation</code></a> reference.
@@ -733,7 +733,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
+<a name="get-net.jodah.recurrent.ContextualCallable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -741,7 +741,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>get</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable,
                                          <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                         <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+                                         <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
                                          <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</pre>
 <div class="block">Invokes the <code>callable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.
  Allows asynchronous invocations to manually perform retries or completion via the <code>callable</code>'s
@@ -807,7 +807,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">
+<a name="run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -815,7 +815,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>run</h4>
 <pre>public static&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;?&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable,
                                      <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                     <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</pre>
+                                     <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.
  Allows asynchronous invocations to manually perform retries or completion via the <code>runnable</code>'s
  <a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent"><code>AsyncInvocation</code></a> reference.
@@ -831,7 +831,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
+<a name="run-net.jodah.recurrent.ContextualRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -839,7 +839,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>run</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable,
                                          <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                         <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+                                         <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
                                          <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</pre>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.
  Allows asynchronous invocations to manually perform retries or completion via the <code>runnable</code>'s
@@ -925,7 +925,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-">
+<a name="run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -933,7 +933,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>run</h4>
 <pre>public static&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;?&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
                                      <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                     <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler)</pre>
+                                     <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -941,7 +941,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 </dl>
 </li>
 </ul>
-<a name="run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
+<a name="run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-net.jodah.recurrent.AsyncListeners-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -949,7 +949,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <h4>run</h4>
 <pre>public static&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
                                          <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-                                         <a href="../../../net/jodah/recurrent/Scheduler.html" title="interface in net.jodah.recurrent">Scheduler</a>&nbsp;scheduler,
+                                         <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler,
                                          <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;T&gt;&nbsp;listeners)</pre>
 <div class="block">Invokes the <code>runnable</code>, scheduling retries with the <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 <dl>
