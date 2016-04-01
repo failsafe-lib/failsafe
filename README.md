@@ -46,6 +46,7 @@ We can add a fixed delay between retries:
 ```java
 retryPolicy.withDelay(1, TimeUnit.SECONDS);
 ```
+
 Or a delay that backs off exponentially:
 
 ```java
@@ -58,6 +59,15 @@ We can add a max number of retries and a max retry duration:
 retryPolicy
   .withMaxRetries(100)
   .withMaxDuration(5, TimeUnit.MINUTES);
+```
+
+We can also specify which results, failures or conditions we should abort retries on:
+
+```java
+retryPolicy
+  .abortWhen(true)
+  .abortOn(NoRouteToHostException.class)
+  .abortIf(result -> result == true)
 ```
 
 And of course we can combine these things into a single policy.

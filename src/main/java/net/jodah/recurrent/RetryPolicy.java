@@ -14,24 +14,30 @@ import net.jodah.recurrent.util.Predicate;
  * 
  * <p>
  * The {@code retryOn} methods describe when a retry should be performed for a particular failure. The {@code retryWhen}
- * methods describe when a retry should be performed for a particular result. If multiple {@code retryOn} or
- * {@code retryWhen} conditions are specified, any matching condition can allow a retry.
+ * method describes when a retry should be performed for a particular result. If multiple {@code retryOn} or
+ * {@code retryWhen} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
+ * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
  * 
  * @author Jonathan Halterman
  */
 public final class RetryPolicy {
-  private static final Object DEFAULT_RESULT_VALUE = new Object();
+  private static final Object DEFAULT_VALUE = new Object();
 
   private Duration delay;
   private double delayMultiplier;
   private Duration maxDelay;
   private Duration maxDuration;
   private int maxRetries;
-  private List<Class<? extends Throwable>> failureTypes;
-  private Predicate<Throwable> failurePredicate;
-  private Object resultValue = DEFAULT_RESULT_VALUE;
-  private Predicate<Object> resultPredicate;
-  private BiPredicate<Object, Throwable> completionPredicate;
+  private List<Class<? extends Throwable>> retryableFailures;
+  private List<Class<? extends Throwable>> abortableFailures;
+  private Predicate<Throwable> retryableFailurePredicate;
+  private Predicate<Throwable> abortableFailurePredicate;
+  private Object retryableValue = DEFAULT_VALUE;
+  private Object abortableValue = DEFAULT_VALUE;
+  private Predicate<Object> retryableResultPredicate;
+  private Predicate<Object> abortableResultPredicate;
+  private BiPredicate<Object, Throwable> retryableCompletionPredicate;
+  private BiPredicate<Object, Throwable> abortableCompletionPredicate;
 
   /**
    * Creates a retry policy that always retries with no delay.
@@ -50,11 +56,16 @@ public final class RetryPolicy {
     this.maxDelay = rp.maxDelay;
     this.maxDuration = rp.maxDuration;
     this.maxRetries = rp.maxRetries;
-    this.failureTypes = rp.failureTypes;
-    this.resultValue = rp.resultValue;
-    this.failurePredicate = rp.failurePredicate;
-    this.resultPredicate = rp.resultPredicate;
-    this.completionPredicate = rp.completionPredicate;
+    this.retryableFailures = rp.retryableFailures;
+    this.abortableFailures = rp.abortableFailures;
+    this.retryableValue = rp.retryableValue;
+    this.abortableValue = rp.abortableValue;
+    this.retryableFailurePredicate = rp.retryableFailurePredicate;
+    this.abortableFailurePredicate = rp.abortableFailurePredicate;
+    this.retryableResultPredicate = rp.retryableResultPredicate;
+    this.abortableResultPredicate = rp.abortableResultPredicate;
+    this.retryableCompletionPredicate = rp.retryableCompletionPredicate;
+    this.abortableCompletionPredicate = rp.abortableCompletionPredicate;
   }
 
   /**
@@ -71,28 +82,40 @@ public final class RetryPolicy {
     if (!allowsRetries())
       return false;
 
-    // Check completion condition
-    if (completionPredicate != null && completionPredicate.test(result, failure))
+    // Check completion conditions
+    if (abortableCompletionPredicate != null && abortableCompletionPredicate.test(result, failure))
+      return false;
+    if (retryableCompletionPredicate != null && retryableCompletionPredicate.test(result, failure))
       return true;
 
     // Check failure condition(s)
     if (failure != null) {
-      if (failurePredicate != null && failurePredicate.test(failure))
+      if (abortableFailurePredicate != null && abortableFailurePredicate.test(failure))
+        return false;
+      if (retryableFailurePredicate != null && retryableFailurePredicate.test(failure))
         return true;
-      if (failureTypes != null)
-        for (Class<? extends Throwable> failureType : failureTypes)
+      if (abortableFailures != null)
+        for (Class<? extends Throwable> failureType : abortableFailures)
+          if (failure.getClass().isAssignableFrom(failureType))
+            return false;
+      if (retryableFailures != null)
+        for (Class<? extends Throwable> failureType : retryableFailures)
           if (failure.getClass().isAssignableFrom(failureType))
             return true;
 
-      // Retry if failure was not checked
-      return completionPredicate == null && failurePredicate == null && failureTypes == null;
+      // Retry if the failure was not examined
+      return retryableCompletionPredicate == null && retryableFailurePredicate == null && retryableFailures == null;
     }
 
     // Check result condition(s)
-    if (resultPredicate != null && resultPredicate.test(result))
+    if (abortableResultPredicate != null && abortableResultPredicate.test(result))
+      return false;
+    if (retryableResultPredicate != null && retryableResultPredicate.test(result))
       return true;
-    if (!DEFAULT_RESULT_VALUE.equals(resultValue))
-      return resultValue == null ? result == null : resultValue.equals(result);
+    if (!DEFAULT_VALUE.equals(abortableValue) && abortableValue == null ? result == null : abortableValue.equals(result))
+      return false;
+    if (!DEFAULT_VALUE.equals(retryableValue))
+      return retryableValue == null ? result == null : retryableValue.equals(result);
 
     return false;
   }
@@ -152,6 +175,79 @@ public final class RetryPolicy {
   }
 
   /**
+   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failures} will be result
+   * in retries being aborted.
+   * 
+   * @throws NullPointerException if {@code failures} is null
+   * @throws IllegalArgumentException if failures is empty
+   */
+  @SuppressWarnings("unchecked")
+  public RetryPolicy abortOn(Class<? extends Throwable>... failures) {
+    Assert.notNull(failures, "failures");
+    Assert.isTrue(failures.length > 0, "Failures cannot be empty");
+    this.abortableFailures = Arrays.asList(failures);
+    return this;
+  }
+
+  /**
+   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failures} will be result
+   * in retries being aborted.
+   * 
+   * @throws NullPointerException if {@code failures} is null
+   * @throws IllegalArgumentException if failures is empty
+   */
+  public RetryPolicy abortOn(List<Class<? extends Throwable>> failures) {
+    Assert.notNull(failures, "failures");
+    Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
+    this.abortableFailures = failures;
+    return this;
+  }
+
+  /**
+   * Specifies that retries should be aborted if the {@code failurePredicate} matches the failure.
+   * 
+   * @throws NullPointerException if {@code failurePredicate} is null
+   */
+  @SuppressWarnings("unchecked")
+  public RetryPolicy abortOn(Predicate<? extends Throwable> failurePredicate) {
+    Assert.notNull(failurePredicate, "failurePredicate");
+    this.abortableFailurePredicate = (Predicate<Throwable>) failurePredicate;
+    return this;
+  }
+
+  /**
+   * Specifies that retries should be aborted if the {@code completionPredicate} matches the completion result.
+   * 
+   * @throws NullPointerException if {@code completionPredicate} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> RetryPolicy abortIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
+    Assert.notNull(completionPredicate, "completionPredicate");
+    this.abortableCompletionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
+    return this;
+  }
+
+  /**
+   * Specifies that retries should be aborted if the {@code resultPredicate} matches the result.
+   * 
+   * @throws NullPointerException if {@code resultPredicate} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> RetryPolicy abortIf(Predicate<T> resultPredicate) {
+    Assert.notNull(resultPredicate, "resultPredicate");
+    this.abortableResultPredicate = (Predicate<Object>) resultPredicate;
+    return this;
+  }
+
+  /**
+   * Specifies that retries should be aborted if the invocation result matches the {@code result}.
+   */
+  public RetryPolicy abortWhen(Object result) {
+    this.abortableValue = result;
+    return this;
+  }
+
+  /**
    * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
    * 
    * @throws NullPointerException if {@code failures} is null
@@ -161,7 +257,7 @@ public final class RetryPolicy {
   public RetryPolicy retryOn(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "Failures cannot be empty");
-    this.failureTypes = Arrays.asList(failures);
+    this.retryableFailures = Arrays.asList(failures);
     return this;
   }
 
@@ -173,8 +269,8 @@ public final class RetryPolicy {
    */
   public RetryPolicy retryOn(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
-    Assert.isTrue(!failures.isEmpty(), "Failures cannot be empty");
-    this.failureTypes = failures;
+    Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
+    this.retryableFailures = failures;
     return this;
   }
 
@@ -187,7 +283,7 @@ public final class RetryPolicy {
   @SuppressWarnings("unchecked")
   public RetryPolicy retryOn(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    this.failurePredicate = (Predicate<Throwable>) failurePredicate;
+    this.retryableFailurePredicate = (Predicate<Throwable>) failurePredicate;
     return this;
   }
 
@@ -200,7 +296,7 @@ public final class RetryPolicy {
   @SuppressWarnings("unchecked")
   public <T> RetryPolicy retryIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
-    this.completionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
+    this.retryableCompletionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
     return this;
   }
 
@@ -213,7 +309,7 @@ public final class RetryPolicy {
   @SuppressWarnings("unchecked")
   public <T> RetryPolicy retryIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    this.resultPredicate = (Predicate<Object>) resultPredicate;
+    this.retryableResultPredicate = (Predicate<Object>) resultPredicate;
     return this;
   }
 
@@ -222,7 +318,7 @@ public final class RetryPolicy {
    * exceeded.
    */
   public RetryPolicy retryWhen(Object result) {
-    this.resultValue = result;
+    this.retryableValue = result;
     return this;
   }
 
