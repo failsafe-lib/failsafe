@@ -39,7 +39,7 @@ And for particular results or conditions:
 retryPolicy
   .retryWhen(null);
   .retryIf(result -> result == null);  
-```  
+```
 
 We can add a fixed delay between retries:
 
@@ -61,7 +61,7 @@ retryPolicy
   .withMaxDuration(5, TimeUnit.MINUTES);
 ```
 
-We can also specify which results, failures or conditions we should abort retries on:
+We can also specify which results, failures or conditions to abort retries on:
 
 ```java
 retryPolicy
