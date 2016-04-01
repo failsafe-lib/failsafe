@@ -14,6 +14,7 @@ import net.jodah.recurrent.event.ResultListener;
 import net.jodah.recurrent.event.SuccessListener;
 import net.jodah.recurrent.internal.util.Assert;
 import net.jodah.recurrent.internal.util.concurrent.ReentrantCircuit;
+import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
  * A future result of an asynchronous operation.

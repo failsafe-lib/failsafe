@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import net.jodah.recurrent.event.ContextualResultListener;
 import net.jodah.recurrent.event.ResultListener;
 import net.jodah.recurrent.internal.util.Assert;
+import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
  * Recurrent event listeners that are called asynchronously on the {@link Scheduler} or {@link ScheduledExecutorService}

@@ -4,6 +4,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.internal.util.Assert;
+import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
  * Tracks asynchronous invocations and allows retries to be scheduled according to a {@link RetryPolicy}.

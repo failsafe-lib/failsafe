@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import net.jodah.recurrent.util.concurrent.Scheduler;
+
 @Test
 public class AsyncInvocationTest {
   ConnectException e = new ConnectException();

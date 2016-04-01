@@ -8,8 +8,8 @@ import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
 import net.jodah.recurrent.Recurrent;
 import net.jodah.recurrent.RetryPolicy;
-import net.jodah.recurrent.Scheduler;
 import net.jodah.recurrent.util.concurrent.DefaultScheduledFuture;
+import net.jodah.recurrent.util.concurrent.Scheduler;
 
 public class VertxExample {
   static Vertx vertx = Vertx.vertx();

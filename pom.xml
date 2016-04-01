@@ -112,6 +112,7 @@
         <configuration>
           <author>false</author>
           <show>public</show>
+          <excludePackageNames>*.internal</excludePackageNames>
           <additionalparam>
             -Xdoclint:none
             -notimestamp

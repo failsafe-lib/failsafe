@@ -1,9 +1,14 @@
 # 0.5.1
 
+### New Features
+
+* Added `RetryPolicy.abortOn`, `abortWhen` and `abortIf` methods to abort retries when matched.
+
 ### API Changes
 
 * `RetryPolicy.retryWhen` was renamed to `retryIf` for retrying if a `Predicate` is matched.
 * `RetryPolicy.retryFor` was renamed to `retryWhen` for retrying when a result is matched.
+* `Scheduler` and `Schedulers` were moved to `net.jodah.recurrent.util.concurrent`.
 
 # 0.5.0
 

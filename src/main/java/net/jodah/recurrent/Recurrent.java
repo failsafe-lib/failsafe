@@ -6,6 +6,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.recurrent.internal.util.Assert;
+import net.jodah.recurrent.util.concurrent.Scheduler;
+import net.jodah.recurrent.util.concurrent.Schedulers;
 
 /**
  * Performs invocations with synchronous or asynchronous retries according to a {@link RetryPolicy}. Asynchronous

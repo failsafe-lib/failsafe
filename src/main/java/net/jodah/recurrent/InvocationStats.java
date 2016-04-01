@@ -1,7 +1,7 @@
 package net.jodah.recurrent;
 
 /**
- * Retry statistics.
+ * Invocation statistics.
  * 
  * @author Jonathan Halterman
  */

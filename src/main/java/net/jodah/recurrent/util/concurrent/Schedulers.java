@@ -1,4 +1,4 @@
-package net.jodah.recurrent;
+package net.jodah.recurrent.util.concurrent;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
