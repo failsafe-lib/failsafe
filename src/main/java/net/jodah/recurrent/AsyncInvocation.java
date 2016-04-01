@@ -130,11 +130,8 @@ public class AsyncInvocation extends Invocation {
       listeners.handleFailedAttempt(result, failure, this, scheduler);
 
     // Handle completed
-    if (completed) {
-      if (listeners != null)
-        listeners.complete(result, failure, this, success);
+    if (completed)
       future.complete(result, failure, success);
-    }
 
     completeCalled = true;
     return completed;
@@ -164,11 +161,8 @@ public class AsyncInvocation extends Invocation {
     }
 
     // Handle completed
-    if (completed || !shouldRetry) {
-      if (listeners != null)
-        listeners.complete(result, failure, this, success);
+    if (completed || !shouldRetry)
       future.complete(result, failure, success);
-    }
 
     completeCalled = true;
     return shouldRetry;
