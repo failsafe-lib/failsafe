@@ -128,81 +128,82 @@ public class Listeners<T> {
    * Registers the {@code listener} to be called when an invocation is completed.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenComplete(ContextualResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenComplete(ContextualResultListener<? super T, ? extends Throwable> listener) {
     ctxCompleteListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called when an invocation is completed.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenComplete(ResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenComplete(ResultListener<? super T, ? extends Throwable> listener) {
     completeListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called after a failed invocation attempt.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenFailedAttempt(ContextualResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenFailedAttempt(
+      ContextualResultListener<? super T, ? extends Throwable> listener) {
     ctxFailedAttemptListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called after a failed invocation attempt.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenFailedAttempt(ResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenFailedAttempt(ResultListener<? super T, ? extends Throwable> listener) {
     failedAttemptListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called after an invocation attempt fails.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenFailure(ContextualResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenFailure(ContextualResultListener<? super T, ? extends Throwable> listener) {
     ctxFailureListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenFailure(ResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenFailure(ResultListener<? super T, ? extends Throwable> listener) {
     failureListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenRetry(ContextualResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenRetry(ContextualResultListener<? super T, ? extends Throwable> listener) {
     ctxRetryListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called before a retry is attempted.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenRetry(ResultListener<? super T, ? extends Throwable> listener) {
+  public <L extends Listeners<T>> L whenRetry(ResultListener<? super T, ? extends Throwable> listener) {
     retryListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
    * Registers the {@code listener} to be called after a successful invocation.
    */
   @SuppressWarnings("unchecked")
-  public Listeners<T> whenSuccess(ContextualSuccessListener<? super T> listener) {
+  public <L extends Listeners<T>> L whenSuccess(ContextualSuccessListener<? super T> listener) {
     ctxSuccessListener = (ContextualSuccessListener<T>) Assert.notNull(listener, "listener");
-    return this;
+    return (L) this;
   }
 
   /**
