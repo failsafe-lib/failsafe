@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -80,13 +81,26 @@ public class RecurrentTest {
     verify(service, times(3)).connect();
   }
 
+  public void shouldRunContextual() throws Throwable {
+    // Given - Fail twice then succeed
+    when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
+
+    // When
+    AtomicInteger counter = new AtomicInteger();
+    Recurrent.run(stats -> {
+      assertEquals(stats.getAttemptCount(), counter.getAndIncrement());
+      service.connect();
+    } , retryAlways);
+  }
+
   private void assertRunWithExecutor(Object runnable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
 
     // When
-    RecurrentFuture<?> future = runnable instanceof CheckedRunnable ? Recurrent.run((CheckedRunnable) runnable, retryAlways, executor)
-        : Recurrent.run((ContextualRunnable) runnable, retryAlways, executor);
+    RecurrentFuture<?> future = runnable instanceof CheckedRunnable
+        ? Recurrent.run((CheckedRunnable) runnable, retryAlways, executor)
+        : Recurrent.run((AsyncContextualRunnable) runnable, retryAlways, executor);
 
     // Then
     future.whenComplete((result, failure) -> {
@@ -103,8 +117,9 @@ public class RecurrentTest {
     when(service.connect()).thenThrow(failures(10, SocketException.class));
 
     // When
-    RecurrentFuture<?> future2 = runnable instanceof CheckedRunnable ? Recurrent.run((CheckedRunnable) runnable, retryTwice, executor)
-        : Recurrent.run((ContextualRunnable) runnable, retryTwice, executor);
+    RecurrentFuture<?> future2 = runnable instanceof CheckedRunnable
+        ? Recurrent.run((CheckedRunnable) runnable, retryTwice, executor)
+        : Recurrent.run((AsyncContextualRunnable) runnable, retryTwice, executor);
 
     // Then
     future2.whenComplete((result, failure) -> {
@@ -122,7 +137,7 @@ public class RecurrentTest {
   }
 
   public void shouldRunContextualWithExecutor() throws Throwable {
-    assertRunWithExecutor((ContextualRunnable) inv -> {
+    assertRunWithExecutor((AsyncContextualRunnable) inv -> {
       try {
         service.connect();
         inv.complete();
@@ -155,6 +170,18 @@ public class RecurrentTest {
     verify(service, times(3)).connect();
   }
 
+  public void shouldGetContextual() throws Throwable {
+    // Given - Fail twice then succeed
+    when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(true);
+
+    // When
+    AtomicInteger counter = new AtomicInteger();
+    assertEquals(Recurrent.get(stats -> {
+      assertEquals(stats.getAttemptCount(), counter.getAndIncrement());
+      return service.connect();
+    } , retryAlways), Boolean.TRUE);
+  }
+
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private void assertGetWithExecutor(Object callable) throws Throwable {
     // Given - Fail twice then succeed
@@ -164,7 +191,7 @@ public class RecurrentTest {
     // When
     RecurrentFuture<Boolean> future = callable instanceof Callable
         ? Recurrent.get((Callable<Boolean>) callable, retryPolicy, executor)
-        : Recurrent.get((ContextualCallable<Boolean>) callable, retryPolicy, executor);
+        : Recurrent.get((AsyncContextualCallable<Boolean>) callable, retryPolicy, executor);
 
     // Then
     future.whenComplete((result, failure) -> {
@@ -183,7 +210,7 @@ public class RecurrentTest {
     // When
     RecurrentFuture<Boolean> future2 = callable instanceof Callable
         ? Recurrent.get((Callable) callable, retryTwice, executor)
-        : Recurrent.get((ContextualCallable) callable, retryTwice, executor);
+        : Recurrent.get((AsyncContextualCallable) callable, retryTwice, executor);
 
     // Then
     future2.whenComplete((result, failure) -> {
@@ -201,7 +228,7 @@ public class RecurrentTest {
   }
 
   public void shouldGetContextualWithExecutor() throws Throwable {
-    assertGetWithExecutor((ContextualCallable<?>) inv -> {
+    assertGetWithExecutor((AsyncContextualCallable<?>) inv -> {
       try {
         boolean result = service.connect();
         if (!inv.complete(result))
@@ -227,7 +254,7 @@ public class RecurrentTest {
     // When
     CompletableFuture<Boolean> future = callable instanceof Callable
         ? Recurrent.future((Callable) callable, retryPolicy, executor)
-        : Recurrent.future((ContextualCallable) callable, retryPolicy, executor);
+        : Recurrent.future((AsyncContextualCallable) callable, retryPolicy, executor);
 
     // Then
     future.whenComplete((result, failure) -> {
@@ -246,7 +273,7 @@ public class RecurrentTest {
     // When
     CompletableFuture<Boolean> future2 = callable instanceof Callable
         ? Recurrent.future((Callable) callable, retryTwice, executor)
-        : Recurrent.future((ContextualCallable) callable, retryTwice, executor);
+        : Recurrent.future((AsyncContextualCallable) callable, retryTwice, executor);
 
     // Then
     future2.whenComplete((result, failure) -> {
@@ -264,7 +291,7 @@ public class RecurrentTest {
   }
 
   public void testFutureContextual() throws Throwable {
-    assertGetFuture((ContextualCallable<?>) inv -> CompletableFuture.supplyAsync(() -> {
+    assertGetFuture((AsyncContextualCallable<?>) inv -> CompletableFuture.supplyAsync(() -> {
       try {
         boolean result = service.connect();
         if (!inv.complete(result))
@@ -337,7 +364,8 @@ public class RecurrentTest {
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(ConnectException.class);
 
     // When / Then
-    assertThrows(() -> Recurrent.get(() -> service.connect(), retryPolicy), RecurrentException.class, IllegalStateException.class);
+    assertThrows(() -> Recurrent.get(() -> service.connect(), retryPolicy), RecurrentException.class,
+        IllegalStateException.class);
     verify(service, times(3)).connect();
   }
 

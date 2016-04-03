@@ -1,8 +1,8 @@
 # Recurrent
 [![Build Status](https://travis-ci.org/jhalterman/recurrent.svg)](https://travis-ci.org/jhalterman/recurrent)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.jodah/recurrent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.jodah/recurrent) 
-[![JavaDoc](http://javadoc-badge.appspot.com/net.jodah/recurrent.svg?label=javadoc)](https://jhalterman.github.com/recurrent/javadoc)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![JavaDoc](http://javadoc-badge.appspot.com/net.jodah/recurrent.svg?label=javadoc)](https://jhalterman.github.com/recurrent/javadoc)
 
 *Simple, sophisticated retries.*
 
@@ -13,6 +13,7 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 * [Flexible retry policies](#retry-policies)
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
+* [Invocation Statistics](#invocation-statistics)
 * [Event Listeners](#event-listeners)
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [Invocation Tracking](#invocation-tracking)
@@ -131,9 +132,20 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
   .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
+#### Invocation Statistics
+
+Recurrent exposes [InvocationStats] that provide the number of invocation attempts as well as start and elapsed times:
+
+```java
+Recurrent.get(stats -> {
+  log.debug("Connection attempt #{}", stats.getAttemptCount());
+  return connect();
+});
+```
+
 #### Event Listeners
 
-Recurrent supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
+Recurrent also supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
@@ -163,7 +175,7 @@ Additional listeners are available via the [Listeners] and [AsyncListeners] clas
 
 #### Asynchronous API Integration
 
-Recurrent can be integrated with asynchronous code that reports completion via callbacks. The [ContextualRunnable] and [ContextualCallable] interfaces provide an [Invocation] reference that can be used to manually perform retries or completion:
+Recurrent can be integrated with asynchronous code that reports completion via callbacks. The [ContextualRunnable] and [ContextualCallable] interfaces provide an [AsyncInvocation] reference that can be used to manually perform retries or completion:
 
 ```java
 Recurrent.get(invocation -> 
@@ -237,4 +249,6 @@ Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license]
 [ContextualCallable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualCallable.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [RxJava]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java
+[InvocationStats]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/InvocationStats.html
 [Invocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Invocation.html
+[AsyncInvocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncInvocation.html

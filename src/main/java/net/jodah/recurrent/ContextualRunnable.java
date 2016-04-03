@@ -1,10 +1,10 @@
 package net.jodah.recurrent;
 
 /**
- * A runnable that can manually trigger retries or completion for an invocation.
+ * A runnable that provides contextual invocation statistics.
  * 
  * @author Jonathan Halterman
  */
 public interface ContextualRunnable {
-  void run(AsyncInvocation invocation) throws Exception;
+  void run(InvocationStats stats) throws Exception;
 }

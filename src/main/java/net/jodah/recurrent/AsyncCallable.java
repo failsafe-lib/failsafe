@@ -6,13 +6,17 @@ import java.util.function.BiConsumer;
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * An asynchronous callable with references to recurrent invocation information.
+ * An asynchronous callable with a reference to recurrent invocation information.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
  */
 abstract class AsyncCallable<T> implements Callable<T> {
   protected AsyncInvocation invocation;
+
+  void initialize(AsyncInvocation invocation) {
+    this.invocation = invocation;
+  }
 
   static <T> AsyncCallable<T> of(final Callable<T> callable) {
     Assert.notNull(callable, "callable");
@@ -32,7 +36,7 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  static <T> AsyncCallable<T> of(final ContextualCallable<T> callable) {
+  static <T> AsyncCallable<T> of(final AsyncContextualCallable<T> callable) {
     Assert.notNull(callable, "callable");
     return new AsyncCallable<T>() {
       @Override
@@ -48,7 +52,7 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  static <T> AsyncCallable<T> of(final ContextualRunnable runnable) {
+  static <T> AsyncCallable<T> of(final AsyncContextualRunnable runnable) {
     Assert.notNull(runnable, "runnable");
     return new AsyncCallable<T>() {
       @Override
@@ -65,24 +69,6 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  static <T> AsyncCallable<T> of(final Runnable runnable) {
-    Assert.notNull(runnable, "runnable");
-    return new AsyncCallable<T>() {
-      @Override
-      public T call() throws Exception {
-        try {
-          invocation.reset();
-          runnable.run();
-          invocation.completeOrRetry(null, null);
-        } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
-        }
-
-        return null;
-      }
-    };
-  }
-  
   static <T> AsyncCallable<T> of(final CheckedRunnable runnable) {
     Assert.notNull(runnable, "runnable");
     return new AsyncCallable<T>() {
@@ -123,7 +109,8 @@ abstract class AsyncCallable<T> implements Callable<T> {
     };
   }
 
-  static <T> AsyncCallable<T> ofFuture(final ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+  static <T> AsyncCallable<T> ofFuture(
+      final AsyncContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
     Assert.notNull(callable, "callable");
     return new AsyncCallable<T>() {
       @Override
@@ -144,9 +131,5 @@ abstract class AsyncCallable<T> implements Callable<T> {
         return null;
       }
     };
-  }
-
-  void initialize(AsyncInvocation invocation) {
-    this.invocation = invocation;
   }
 }
