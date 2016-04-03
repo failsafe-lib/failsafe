@@ -12,11 +12,11 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 * [Flexible retry policies](#retry-policies)
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
+* [Invocation statistics](#invocation-statistics)
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
-* [Invocation Statistics](#invocation-statistics)
-* [Event Listeners](#event-listeners)
+* [Event listeners](#event-listeners)
 * [Asynchronous API integration](#asynchronous-api-integration)
-* [Invocation Tracking](#invocation-tracking)
+* [Invocation tracking](#invocation-tracking)
 
 Supports Java 6+ though the documentation uses lambdas for simplicity.
 
@@ -95,6 +95,17 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
   .whenFailure((result, failure) -> log.error("Connection attempts failed", failure));
 ```
 
+#### Invocation Statistics
+
+Recurrent exposes [InvocationStats] that provide the number of invocation attempts as well as start and elapsed times:
+
+```java
+Recurrent.get(stats -> {
+  log.debug("Connection attempt #{}", stats.getAttemptCount());
+  return connect();
+});
+```
+
 #### CompletableFuture Integration
 
 Java 8 users can use Recurrent to retry [CompletableFuture] calls:
@@ -132,20 +143,9 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
   .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
 ```
 
-#### Invocation Statistics
-
-Recurrent exposes [InvocationStats] that provide the number of invocation attempts as well as start and elapsed times:
-
-```java
-Recurrent.get(stats -> {
-  log.debug("Connection attempt #{}", stats.getAttemptCount());
-  return connect();
-});
-```
-
 #### Event Listeners
 
-Recurrent also supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
+Recurrent supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
 
 ```java
 Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {

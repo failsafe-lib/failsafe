@@ -1,3 +1,7 @@
+# 0.6.1
+
+* Added contextual synchronous callable and runnable support
+
 # 0.6.0
 
 ### New Features
