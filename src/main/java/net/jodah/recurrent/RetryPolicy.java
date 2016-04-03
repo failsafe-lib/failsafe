@@ -347,7 +347,7 @@ public final class RetryPolicy {
     this.delay = new Duration(delay, timeUnit);
     this.maxDelay = new Duration(maxDelay, timeUnit);
     this.delayMultiplier = delayMultiplier;
-    Assert.isTrue(this.delay.toNanos() > 0, "The delay must be greater tha 0");
+    Assert.isTrue(this.delay.toNanos() > 0, "The delay must be greater than 0");
     if (maxDuration != null)
       Assert.state(this.delay.toNanos() < this.maxDuration.toNanos(), "The delay must be less than the maxDuration");
     Assert.isTrue(this.delay.toNanos() < this.maxDelay.toNanos(), "The delay must be less than the maxDelay");
