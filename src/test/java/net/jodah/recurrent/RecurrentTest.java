@@ -398,4 +398,24 @@ public class RecurrentTest {
 
     waiter.await(5000);
   }
+  
+  public void shouldThrowWhenInterruptedDuringSynchronousDelay() throws Throwable {
+    Thread mainThread = Thread.currentThread();
+    new Thread(() -> {
+      try {
+        Thread.sleep(100);
+        mainThread.interrupt();
+      } catch (Exception e) {
+      }
+    }).start();
+
+    try {
+      Recurrent.run(() -> {
+        throw new Exception();
+      } , new RetryPolicy().withDelay(5, TimeUnit.SECONDS));
+    } catch (Exception e) {
+      assertTrue(e instanceof RecurrentException);
+      assertTrue(e.getCause() instanceof InterruptedException);
+    }
+  }
 }

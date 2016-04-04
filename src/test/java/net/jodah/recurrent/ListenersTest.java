@@ -45,47 +45,18 @@ public class ListenersTest {
     retryStats = new AtomicInteger();
     success = new AtomicInteger();
     successStats = new AtomicInteger();
-    listeners = new Listeners<Boolean>() {
-      public void onComplete(Boolean result, Throwable failure, InvocationStats stats) {
-        completeStats.incrementAndGet();
-      }
-
-      public void onComplete(Boolean result, Throwable failure) {
-        complete.incrementAndGet();
-      }
-
-      public void onFailedAttempt(Boolean result, Throwable failure, InvocationStats stats) {
-        assertEquals(failedAttemptStats.incrementAndGet(), stats.getAttemptCount());
-      }
-
-      public void onFailedAttempt(Boolean result, Throwable failure) {
-        failedAttempt.incrementAndGet();
-      }
-
-      public void onFailure(Boolean result, Throwable f, InvocationStats stats) {
-        failureStats.incrementAndGet();
-      }
-
-      public void onFailure(Boolean result, Throwable f) {
-        failure.incrementAndGet();
-      }
-
-      public void onRetry(Boolean result, Throwable failure, InvocationStats stats) {
-        assertEquals(retryStats.incrementAndGet(), stats.getAttemptCount());
-      }
-
-      public void onRetry(Boolean result, Throwable failure) {
-        retry.incrementAndGet();
-      }
-
-      public void onSuccess(Boolean result, InvocationStats stats) {
-        successStats.incrementAndGet();
-      }
-
-      public void onSuccess(Boolean result) {
-        success.incrementAndGet();
-      }
-    };
+    
+    listeners = new Listeners<Boolean>();
+    listeners.whenComplete((r, f, s) -> completeStats.incrementAndGet());
+    listeners.whenComplete((r, f) -> complete.incrementAndGet());
+    listeners.whenFailedAttempt((r, f, s) -> assertEquals(failedAttemptStats.incrementAndGet(), s.getAttemptCount()));
+    listeners.whenFailedAttempt((r, f) -> failedAttempt.incrementAndGet());
+    listeners.whenFailure((r, f, s) -> failureStats.incrementAndGet());
+    listeners.whenFailure((r, f) -> failure.incrementAndGet());
+    listeners.whenRetry((r, f, s) -> assertEquals(retryStats.incrementAndGet(), s.getAttemptCount()));
+    listeners.whenRetry((r, f) -> retry.incrementAndGet());
+    listeners.whenSuccess((r, s) -> successStats.incrementAndGet());
+    listeners.whenSuccess((r) -> success.incrementAndGet());
   }
 
   /**

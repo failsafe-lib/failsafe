@@ -60,7 +60,6 @@ public class AsyncListenersTest {
     failedAttemptStatsAsync = new AtomicInteger();
     retryAsync = new AtomicInteger();
     retryStatsAsync = new AtomicInteger();
-    
     listeners = new AsyncListeners<Boolean>() {
       public void onComplete(Boolean result, Throwable failure, InvocationStats stats) {
         completeStats.incrementAndGet();
@@ -106,15 +105,19 @@ public class AsyncListenersTest {
     };
     listeners.whenFailedAttemptAsync((r, f) -> {
       failedAttemptAsync.incrementAndGet();
+      waiter.resume();
     });
     listeners.whenFailedAttemptAsync((r, f, s) -> {
       waiter.assertEquals(failedAttemptStatsAsync.incrementAndGet(), s.getAttemptCount());
+      waiter.resume();
     });
     listeners.whenRetryAsync((r, f) -> {
       retryAsync.incrementAndGet();
+      waiter.resume();
     });
     listeners.whenRetryAsync((r, f, s) -> {
       waiter.assertEquals(retryStatsAsync.incrementAndGet(), s.getAttemptCount());
+      waiter.resume();
     });
   }
 
@@ -129,7 +132,7 @@ public class AsyncListenersTest {
 
     // When
     Recurrent.get(callable, new RetryPolicy().retryWhen(false), executor, listeners);
-    waiter.await(1000, 2);
+    waiter.await(1000, 18);
 
     // Then
     assertEquals(complete.get(), 1);
@@ -160,7 +163,7 @@ public class AsyncListenersTest {
 
     // When
     Recurrent.get(callable, new RetryPolicy().retryWhen(false).withMaxRetries(3), executor, listeners);
-    waiter.await(1000, 2);
+    waiter.await(1000, 16);
 
     // Then
     assertEquals(complete.get(), 1);
@@ -173,7 +176,7 @@ public class AsyncListenersTest {
     assertEquals(retryStats.get(), 3);
     assertEquals(success.get(), 0);
     assertEquals(successStats.get(), 0);
-    
+
     assertEquals(failedAttemptAsync.get(), 4);
     assertEquals(failedAttemptStatsAsync.get(), 4);
     assertEquals(retryAsync.get(), 3);

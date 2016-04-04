@@ -146,6 +146,13 @@ public class InvocationTest {
     assertEquals(inv.getAttemptCount(), 2);
   }
 
+  public void testGetElapsedMillis() throws Throwable {
+    Invocation inv = new Invocation(new RetryPolicy());
+    assertTrue(inv.getElapsedMillis() < 100);
+    Thread.sleep(150);
+    assertTrue(inv.getElapsedMillis() > 100);
+  }
+
   @SuppressWarnings("unchecked")
   public void testIsComplete() {
     List<Object> list = mock(List.class);
@@ -207,13 +214,25 @@ public class InvocationTest {
     assertTrue(inv.isComplete());
   }
 
+  public void shouldGetWaitMillis() throws Throwable {
+    Invocation inv = new Invocation(new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
+        .withMaxDuration(101, TimeUnit.MILLISECONDS)
+        .retryWhen(null));
+    assertEquals(inv.getWaitMillis(), 100);
+    inv.canRetryFor(null);
+    assertTrue(inv.getWaitMillis() <= 100);
+    Thread.sleep(150);
+    assertFalse(inv.canRetryFor(null));
+    assertEquals(inv.getWaitMillis(), 0);
+  }
+
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnMultipleCompletes() {
     Invocation inv = new Invocation(new RetryPolicy());
     inv.complete();
     inv.complete();
   }
-  
+
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnCanRetryWhenAlreadyComplete() {
     Invocation inv = new Invocation(new RetryPolicy());
