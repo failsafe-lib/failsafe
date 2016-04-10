@@ -33,11 +33,11 @@ final class Callables {
     };
   }
 
-  static Callable<Object> of(final CheckedRunnable runnable) {
+  static <T> Callable<T> of(final CheckedRunnable runnable) {
     Assert.notNull(runnable, "runnable");
-    return new Callable<Object>() {
+    return new Callable<T>() {
       @Override
-      public Void call() throws Exception {
+      public T call() throws Exception {
         runnable.run();
         return null;
       }

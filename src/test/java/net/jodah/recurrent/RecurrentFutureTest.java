@@ -102,11 +102,11 @@ public class RecurrentFutureTest {
   public void testListenersForSuccessfulCompletion() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
-    // Given - Fail twice then succeed
+    // Given - Fail twice, return false twice, then true
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    registerListeners(Recurrent.get(callable, new RetryPolicy().retryWhen(false), executor));
+    registerListeners(Recurrent.with(new RetryPolicy().retryWhen(false), executor).get(callable));
     waiter.await(1000, 6);
 
     // Then
@@ -130,11 +130,12 @@ public class RecurrentFutureTest {
   public void testListenersForFailureCompletion() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
-    // Given - Fail twice then succeed
+    // Given - Fail twice, return false twice, then true
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    registerListeners(Recurrent.get(callable, new RetryPolicy().retryWhen(false).withMaxRetries(3), executor));
+    registerListeners(
+        Recurrent.with(new RetryPolicy().retryWhen(false).withMaxRetries(3), executor).get(callable));
     waiter.await(1000, 6);
 
     // Then

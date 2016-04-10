@@ -5,6 +5,7 @@ import net.jodah.recurrent.event.ContextualSuccessListener;
 import net.jodah.recurrent.event.ResultListener;
 import net.jodah.recurrent.event.SuccessListener;
 import net.jodah.recurrent.internal.util.Assert;
+import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
  * Recurrent event listeners.
@@ -241,7 +242,7 @@ public class Listeners<T> {
     }
   }
 
-  void handleFailedAttempt(T result, Throwable failure, InvocationStats stats) {
+  void handleFailedAttempt(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
     try {
       onFailedAttempt(result, failure);
     } catch (Exception ignore) {
@@ -266,7 +267,7 @@ public class Listeners<T> {
     }
   }
 
-  void handleRetry(T result, Throwable failure, InvocationStats stats) {
+  void handleRetry(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
     try {
       onRetry(result, failure);
     } catch (Exception ignore) {

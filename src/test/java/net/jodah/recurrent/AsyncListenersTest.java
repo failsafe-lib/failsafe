@@ -131,7 +131,7 @@ public class AsyncListenersTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    Recurrent.get(callable, new RetryPolicy().retryWhen(false), executor, listeners);
+    Recurrent.with(new RetryPolicy().retryWhen(false), executor).with(listeners).get(callable);
     waiter.await(1000, 18);
 
     // Then
@@ -162,7 +162,7 @@ public class AsyncListenersTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    Recurrent.get(callable, new RetryPolicy().retryWhen(false).withMaxRetries(3), executor, listeners);
+    Recurrent.with(new RetryPolicy().retryWhen(false).withMaxRetries(3), executor).with(listeners).get(callable);
     waiter.await(1000, 16);
 
     // Then

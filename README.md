@@ -79,10 +79,10 @@ Once we've defined a retry policy, we can perform a retryable synchronous invoca
 
 ```java
 // Run with retries
-Recurrent.run(() -> doSomething(), retryPolicy);
+Recurrent.with(retryPolicy).run(() -> doSomething());
 
 // Get with retries
-Connection connection = Recurrent.get(() -> connect(), retryPolicy);
+Connection connection = Recurrent.with(retryPolicy).get(() -> connect());
 ```
 
 #### Asynchronous Retries
@@ -90,7 +90,8 @@ Connection connection = Recurrent.get(() -> connect(), retryPolicy);
 Asynchronous invocations can be performed and retried on a scheduled executor and return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
 
 ```java
-Recurrent.get(() -> connect(), retryPolicy, executor)
+Recurrent.with(retryPolicy, executor)
+  .get(() -> connect())
   .whenSuccess(connection -> log.info("Connected to {}", connection))
   .whenFailure((result, failure) -> log.error("Connection attempts failed", failure));
 ```
@@ -100,7 +101,7 @@ Recurrent.get(() -> connect(), retryPolicy, executor)
 Recurrent exposes [InvocationStats] that provide the number of invocation attempts as well as start and elapsed times:
 
 ```java
-Recurrent.get(stats -> {
+Recurrent.with(retryPolicy).get(stats -> {
   log.debug("Connection attempt #{}", stats.getAttemptCount());
   return connect();
 });
@@ -111,9 +112,10 @@ Recurrent.get(stats -> {
 Java 8 users can use Recurrent to retry [CompletableFuture] calls:
 
 ```java
-Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
+Recurrent.with(retryPolicy, executor)
+  .future(() -> CompletableFuture.supplyAsync(() -> "foo")
   .thenApplyAsync(value -> value + "bar")
-  .thenAccept(System.out::println), retryPolicy, executor);
+  .thenAccept(System.out::println));
 ```
 
 #### Java 8 Functional Interfaces
@@ -121,26 +123,26 @@ Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
 Recurrent can be used to create retryable Java 8 functional interfaces:
 
 ```java
-Function<String, Connection> connect = address -> Recurrent.get(() -> connect(address), retryPolicy);
+Function<String, Connection> connect = address -> Recurrent.with(retryPolicy).get(() -> connect(address));
 ```
 
 We can retry streams:
 
 ```java
-Recurrent.run(() -> Stream.of("foo").map(value -> value + "bar"), retryPolicy);
+Recurrent.with(retryPolicy).run(() -> Stream.of("foo").map(value -> value + "bar"));
 ```
 
 Individual Stream operations:
 
 ```java
-Stream.of("foo").map(value -> Recurrent.get(() -> value + "bar", retryPolicy));
+Stream.of("foo").map(value -> Recurrent.with(retryPolicy).get(() -> value + "bar"));
 ```
 
 Or individual CompletableFuture stages:
 
 ```java
-CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
-  .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy));
+CompletableFuture.supplyAsync(() -> Recurrent.with(retryPolicy).get(() -> "foo"))
+  .thenApplyAsync(value -> Recurrent.with(retryPolicy).get(() -> value + "bar"));
 ```
 
 #### Event Listeners
@@ -148,44 +150,46 @@ CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
 Recurrent supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
 
 ```java
-Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>() {
-  public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
-    log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
-  }
+Recurrent.with(retryPolicy)
+  .with(new Listeners<Connection>() {
+    public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
+      log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
+    }
   
-  public void onComplete(Connection cxn, Throwable failure) {
-    if (failure != null)
-      log.error("Connection attempts failed", failure);
-    else
-  	  log.info("Connected to {}", cxn);
-  }
-});
+    public void onComplete(Connection cxn, Throwable failure) {
+      if (failure != null)
+        log.error("Connection attempts failed", failure);
+      else
+        log.info("Connected to {}", cxn);
+    }
+  }).get(() -> connect());
 ```
 
 You can also register individual event listeners:
 
 ```java
-Recurrent.get(() -> connect(), retryPolicy, new Listeners<Connection>()
-  .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
-  .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
-  .whenSuccess(cxn -> log.info("Connected to {}", cxn)));
+Recurrent.with(retryPolicy)
+  .with(new Listeners<Connection>()
+    .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
+    .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
+    .whenSuccess(cxn -> log.info("Connected to {}", cxn)))
+  .get(() -> connect());
 ```
 
-Additional listeners are available via the [Listeners] and [AsyncListeners] classes. Asynchronous completion listeners can be registered via [RecurrentFuture].
+For asynchronous Recurrent invocations, [AsyncListeners] can also be used to receive asynchronous callbacks for failed attempt and retry events. Asynchronous completion and failure listeners can be registered via [RecurrentFuture]:
 
 #### Asynchronous API Integration
 
-Recurrent can be integrated with asynchronous code that reports completion via callbacks. The [ContextualRunnable] and [ContextualCallable] interfaces provide an [AsyncInvocation] reference that can be used to manually perform retries or completion:
+Recurrent can be integrated with asynchronous code that reports completion via callbacks. The `runAsync`, `getAsync` and `futureAsync` methods provide an [AsyncInvocation] reference that can be used to manually perform retries or completion inside asynchronous callbacks:
 
 ```java
-Recurrent.get(invocation -> 
-  service.connect().whenComplete((result, failure) -> {
-	if (invocation.complete(result, failure))
+Recurrent.with(retryPolicy, executor)
+  .getAsync(invocation -> service.connect().whenComplete((result, failure) -> {
+    if (invocation.complete(result, failure))
       log.info("Connected");
-	else if (!invocation.retry())
+    else if (!invocation.retry())
       log.error("Connection attempts failed", failure);
-  }
-), retryPolicy, executor);
+  }));
 ```
 
 #### Invocation Tracking
@@ -197,7 +201,7 @@ Invocation invocation = new Invocation(retryPolicy);
 while (!invocation.isComplete()) {
   try {
 	doSomething();
-    invocation.complete()
+    invocation.complete();
   } catch (ConnectException e) {
     invocation.recordFailure(e);
   }
@@ -245,8 +249,6 @@ Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license]
 [AsyncListeners]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncListeners.html
 [RetryPolicy]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RetryPolicy.html
 [RecurrentFuture]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RecurrentFuture.html
-[ContextualRunnable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualRunnable.html
-[ContextualCallable]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ContextualCallable.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [RxJava]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java
 [InvocationStats]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/InvocationStats.html

@@ -25,9 +25,9 @@ public class Issue5 {
         .retryWhen(null);
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    RecurrentFuture<?> run = Recurrent.get(() -> {
+    RecurrentFuture<?> run = Recurrent.with(retryPolicy, executor).get(() -> {
       return null;
-    } , retryPolicy, executor);
+    });
 
     run.whenFailure((result, failure) -> {
       waiter.assertNull(result);

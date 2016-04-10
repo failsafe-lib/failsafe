@@ -7,6 +7,8 @@ package net.jodah.recurrent;
  * @author Jonathan Halterman
  */
 public class RecurrentException extends RuntimeException {
+  private static final long serialVersionUID = 1L;
+
   RecurrentException(Throwable t) {
     super(t);
   }

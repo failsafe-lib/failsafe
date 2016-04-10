@@ -12,7 +12,7 @@ import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
  * Recurrent event listeners that are called asynchronously on the {@link Scheduler} or {@link ScheduledExecutorService}
- * associated with the Recurrent call. To handle completion events asynchronously, see {@link RecurrentFuture}.
+ * associated with the Recurrent call. To handle completion and failure events, see {@link RecurrentFuture}.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
@@ -155,13 +155,15 @@ public class AsyncListeners<T> extends Listeners<T> {
     return this;
   }
 
+  @Override
   void handleFailedAttempt(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
     call(asyncFailedAttemptListener, asyncCtxFailedAttemptListener, result, failure, stats, scheduler);
-    super.handleFailedAttempt(result, failure, stats);
+    super.handleFailedAttempt(result, failure, stats, scheduler);
   }
 
+  @Override
   void handleRetry(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
     call(asyncRetryListener, asyncCtxRetryListener, result, failure, stats, scheduler);
-    super.handleRetry(result, failure, stats);
+    super.handleRetry(result, failure, stats, scheduler);
   }
 }

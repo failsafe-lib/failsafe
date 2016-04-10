@@ -60,12 +60,13 @@ public class VertxExample {
     });
 
     // Retryable sender
-    Recurrent.run(invocation -> vertx.eventBus().send("ping-address", "ping!", reply -> {
-      if (reply.succeeded())
-        System.out.println("Received reply " + reply.result().body());
-      else if (!invocation.retryOn(reply.cause()))
-        System.out.println("Invocation and retries failed");
-    }), retryPolicy.copy().withDelay(1, TimeUnit.SECONDS), scheduler);
+    Recurrent.with(retryPolicy.copy().withDelay(1, TimeUnit.SECONDS), scheduler)
+        .runAsync(invocation -> vertx.eventBus().send("ping-address", "ping!", reply -> {
+          if (reply.succeeded())
+            System.out.println("Received reply " + reply.result().body());
+          else if (!invocation.retryOn(reply.cause()))
+            System.out.println("Invocation and retries failed");
+        }));
 
     Thread.sleep(5000);
   }

@@ -34,12 +34,13 @@ public class AsyncExample {
   }
 
   public void example() throws Throwable {
-    Recurrent.get(invocation -> service.connect().whenComplete((result, failure) -> {
-      if (invocation.complete(result, failure))
-        System.out.println("Success");
-      else if (!invocation.retry())
-        System.out.println("Connection attempts failed");
-    }), retryPolicy, executor);
+    Recurrent.with(retryPolicy, executor)
+        .getAsync(invocation -> service.connect().whenComplete((result, failure) -> {
+          if (invocation.complete(result, failure))
+            System.out.println("Success");
+          else if (!invocation.retry())
+            System.out.println("Connection attempts failed");
+        }));
 
     Thread.sleep(3000);
   }

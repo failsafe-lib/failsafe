@@ -20,31 +20,31 @@ public class Java8Example {
     RetryPolicy retryPolicy = new RetryPolicy();
 
     // Create a retryable functional interface
-    Function<String, String> bar = value -> Recurrent.get(() -> value + "bar", retryPolicy);
+    Function<String, String> bar = value -> Recurrent.with(retryPolicy).get(() -> value + "bar");
 
     // Create a retryable runnable Stream
-    Recurrent.run(() -> Stream.of("foo")
+    Recurrent.with(retryPolicy).run(() -> Stream.of("foo")
         .map(value -> value + "bar")
-        .forEach(System.out::println), retryPolicy);
+        .forEach(System.out::println));
         
     // Create a retryable callable Stream
-    Recurrent.get(() -> Stream.of("foo")
-        .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
-        .collect(Collectors.toList()), retryPolicy);
+    Recurrent.with(retryPolicy).get(() -> Stream.of("foo")
+        .map(value -> Recurrent.with(retryPolicy).get(() -> value + "bar"))
+        .collect(Collectors.toList()));
 
     // Create a individual retryable Stream operation
     Stream.of("foo")
-        .map(value -> Recurrent.get(() -> value + "bar", retryPolicy))
+        .map(value -> Recurrent.with(retryPolicy).get(() -> value + "bar"))
         .forEach(System.out::println);
     
     // Create a retryable CompletableFuture
-    Recurrent.future(() -> CompletableFuture.supplyAsync(() -> "foo")
+    Recurrent.with(retryPolicy, executor).future(() -> CompletableFuture.supplyAsync(() -> "foo")
         .thenApplyAsync(value -> value + "bar")
-        .thenAccept(System.out::println), retryPolicy, executor);
+        .thenAccept(System.out::println));
 
     // Create an individual retryable CompletableFuture stages
-    CompletableFuture.supplyAsync(() -> Recurrent.get(() -> "foo", retryPolicy))
-        .thenApplyAsync(value -> Recurrent.get(() -> value + "bar", retryPolicy))
+    CompletableFuture.supplyAsync(() -> Recurrent.with(retryPolicy).get(() -> "foo"))
+        .thenApplyAsync(value -> Recurrent.with(retryPolicy).get(() -> value + "bar"))
         .thenAccept(System.out::println);
   }
 }

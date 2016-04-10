@@ -21,7 +21,7 @@ public class AsyncInvocationTest {
   ConnectException e = new ConnectException();
   AsyncInvocation inv;
   RecurrentFuture<Object> future;
-  AsyncCallable<Object> callable;
+  AsyncContextualCallable<Object> callable;
   Scheduler scheduler;
 
   @BeforeMethod
@@ -29,7 +29,7 @@ public class AsyncInvocationTest {
   void beforeMethod() {
     scheduler = mock(Scheduler.class);
     future = mock(RecurrentFuture.class);
-    callable = mock(AsyncCallable.class);
+    callable = mock(AsyncContextualCallable.class);
   }
 
   public void testComplete() {
@@ -66,7 +66,7 @@ public class AsyncInvocationTest {
   public void testGetAttemptCount() {
     inv = new AsyncInvocation(callable, new RetryPolicy(), scheduler, future, null);
     inv.retryOn(e);
-    inv.reset();
+    inv.prepare();
     inv.retryOn(e);
     assertEquals(inv.getAttemptCount(), 2);
   }
@@ -78,7 +78,7 @@ public class AsyncInvocationTest {
     // When / Then
     assertFalse(inv.complete(null));
     assertTrue(inv.retryFor(null));
-    inv.reset();
+    inv.prepare();
     assertFalse(inv.retryFor(1));
 
     // Then
@@ -95,9 +95,9 @@ public class AsyncInvocationTest {
     // When / Then
     resetMocks();
     assertFalse(inv.complete(null));
-    inv.reset();
+    inv.prepare();
     assertTrue(inv.retryFor(null));
-    inv.reset();
+    inv.prepare();
     assertFalse(inv.retryFor(null));
 
     // Then
@@ -116,9 +116,9 @@ public class AsyncInvocationTest {
     // When / Then
     assertFalse(inv.complete(null));
     assertTrue(inv.retryFor(null, null));
-    inv.reset();
+    inv.prepare();
     assertTrue(inv.retryFor(1, new IllegalArgumentException()));
-    inv.reset();
+    inv.prepare();
     assertFalse(inv.retryFor(1, null));
 
     // Then
@@ -136,7 +136,7 @@ public class AsyncInvocationTest {
     resetMocks();
     assertFalse(inv.complete(null));
     assertTrue(inv.retryFor(null, e));
-    inv.reset();
+    inv.prepare();
     assertFalse(inv.retryFor(null, e));
 
     // Then
@@ -156,7 +156,7 @@ public class AsyncInvocationTest {
 
     // When / Then
     assertTrue(inv.retryOn(new IllegalArgumentException()));
-    inv.reset();
+    inv.prepare();
     assertFalse(inv.retryOn(e));
 
     // Then
@@ -173,7 +173,7 @@ public class AsyncInvocationTest {
     // When / Then
     resetMocks();
     assertTrue(inv.retryOn(e));
-    inv.reset();
+    inv.prepare();
     assertFalse(inv.retryOn(e));
 
     // Then

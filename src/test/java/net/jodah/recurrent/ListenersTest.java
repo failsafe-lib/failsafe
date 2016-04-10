@@ -69,7 +69,7 @@ public class ListenersTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    Recurrent.get(callable, new RetryPolicy().retryWhen(false), listeners);
+    Recurrent.with(new RetryPolicy().retryWhen(false)).with(listeners).get(callable);
 
     // Then
     assertEquals(complete.get(), 1);
@@ -94,7 +94,7 @@ public class ListenersTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    Recurrent.get(callable, new RetryPolicy().retryWhen(false).withMaxRetries(3), listeners);
+    Recurrent.with(new RetryPolicy().retryWhen(false).withMaxRetries(3)).with(listeners).get(callable);
 
     // Then
     assertEquals(complete.get(), 1);
