@@ -87,7 +87,7 @@ Connection connection = Recurrent.with(retryPolicy).get(() -> connect());
 
 #### Asynchronous Retries
 
-Asynchronous invocations can be performed and retried on a scheduled executor and return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
+Asynchronous invocations are performed and retried on a [ScheduledExecutorService] and they return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
 
 ```java
 Recurrent.with(retryPolicy, executor)
@@ -192,6 +192,8 @@ Recurrent.with(retryPolicy, executor)
   }));
 ```
 
+Recurrent can also perform asynchronous invocations and retries on 3rd party schedulers via the [Scheduler] interface. See the [Vert.x example][Vert.x] for a more detailed implementation.
+
 #### Invocation Tracking
 
 In addition to automatically performing retries, Recurrent can be used to track invocations for you, allowing you to manually retry as needed:
@@ -227,7 +229,8 @@ Recurrent was designed to integrate nicely with existing libraries. Here are som
 * [Java 8](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/Java8Example.java)
 * [Netty](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/NettyExample.java)
 * [RxJava]
-* [Vert.x](https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/VertxExample.java)
+* [Vert.x]
+
 
 ## Public API Integration
 
@@ -251,6 +254,9 @@ Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license]
 [RecurrentFuture]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/RecurrentFuture.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [RxJava]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java
+[Vert.x]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/VertxExample.java
 [InvocationStats]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/InvocationStats.html
 [Invocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Invocation.html
 [AsyncInvocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncInvocation.html
+[ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
+[Scheduler]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/util/concurrent/Scheduler.html
