@@ -70,17 +70,17 @@ public class Recurrent<T> {
 
     @Override
     public RecurrentFuture<Void> run(CheckedRunnable runnable) {
-      return call(AsyncContextualCallable.of(runnable), null);
+      return call(AsyncContextualCallable.<Void>of(runnable), null);
     }
 
     @Override
     public RecurrentFuture<Void> run(ContextualRunnable runnable) {
-      return call(AsyncContextualCallable.of(runnable), null);
+      return call(AsyncContextualCallable.<Void>of(runnable), null);
     }
 
     @Override
     public RecurrentFuture<Void> runAsync(AsyncRunnable runnable) {
-      return call(AsyncContextualCallable.of(runnable), null);
+      return call(AsyncContextualCallable.<Void>of(runnable), null);
     }
 
     @Override
