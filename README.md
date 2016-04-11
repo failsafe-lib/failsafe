@@ -151,6 +151,17 @@ Recurrent supports [event listeners][listeners] that can be notified of various 
 
 ```java
 Recurrent.with(retryPolicy)
+  .with(new Listeners<Connection>()
+    .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
+    .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
+    .whenSuccess(cxn -> log.info("Connected to {}", cxn)))
+  .get(() -> connect());
+```
+
+You can also implement listeners by extending the `Listeners` class and overriding individual event handlers:
+
+```java
+Recurrent.with(retryPolicy)
   .with(new Listeners<Connection>() {
     public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
       log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
@@ -163,17 +174,6 @@ Recurrent.with(retryPolicy)
         log.info("Connected to {}", cxn);
     }
   }).get(() -> connect());
-```
-
-You can also register individual event listeners:
-
-```java
-Recurrent.with(retryPolicy)
-  .with(new Listeners<Connection>()
-    .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
-    .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
-    .whenSuccess(cxn -> log.info("Connected to {}", cxn)))
-  .get(() -> connect());
 ```
 
 For asynchronous Recurrent invocations, [AsyncListeners] can also be used to receive asynchronous callbacks for failed attempt and retry events. Asynchronous completion and failure listeners can be registered via [RecurrentFuture].
