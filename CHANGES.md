@@ -2,16 +2,13 @@
 
 ### New Features
 
-* Added contextual async calls and async future call.
+* Added additional contextual callable and runnable support
 
 ### API Changes
 
 * Changed to a new API entry point: `Recurrent.with`.
 * Added `.with` for configuring listeners.
 
-# 0.6.1
-
-* Added contextual synchronous callable and runnable support.
 
 # 0.6.0
 
