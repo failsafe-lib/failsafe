@@ -92,7 +92,8 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed invocation
+   * attempt.
    */
   public AsyncListeners<T> whenFailedAttemptAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
@@ -109,7 +110,8 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed invocation
+   * attempt.
    */
   public AsyncListeners<T> whenFailedAttemptAsync(ResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
@@ -118,8 +120,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously before a retry is attempted.
    */
   public AsyncListeners<T> whenRetryAsync(ContextualResultListener<? super T, ? extends Throwable> listener) {
     asyncCtxRetryListener = new AsyncCtxResultListener<T>(listener);
@@ -127,8 +128,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} before a retry is attempted.
    */
   public AsyncListeners<T> whenRetryAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
@@ -137,8 +137,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously before a retry is attempted.
    */
   public AsyncListeners<T> whenRetryAsync(ResultListener<? super T, ? extends Throwable> listener) {
     asyncRetryListener = new AsyncResultListener<T>(listener);
@@ -146,8 +145,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} before a retry is attempted.
    */
   public AsyncListeners<T> whenRetryAsync(ResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {

@@ -27,7 +27,7 @@ public final class AsyncInvocation extends Invocation {
     this.callable = (AsyncContextualCallable<Object>) callable;
     this.scheduler = scheduler;
     this.future = (RecurrentFuture<Object>) future;
-    this.listeners = (AsyncListeners<Object>) listeners;
+    this.listeners = (Listeners<Object>) listeners;
   }
 
   /**
@@ -115,7 +115,7 @@ public final class AsyncInvocation extends Invocation {
    */
   void prepare() {
     if (completeCalled && listeners != null)
-      listeners.handleRetry(lastResult, lastFailure, this, scheduler);
+      listeners.handleRetry(lastResult, lastFailure, listeners instanceof AsyncListeners ? copy() : this, scheduler);
     completeCalled = false;
     retryCalled = false;
   }

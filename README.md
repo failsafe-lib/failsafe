@@ -176,7 +176,7 @@ Recurrent.with(retryPolicy)
   .get(() -> connect());
 ```
 
-For asynchronous Recurrent invocations, [AsyncListeners] can also be used to receive asynchronous callbacks for failed attempt and retry events. Asynchronous completion and failure listeners can be registered via [RecurrentFuture]:
+For asynchronous Recurrent invocations, [AsyncListeners] can also be used to receive asynchronous callbacks for failed attempt and retry events. Asynchronous completion and failure listeners can be registered via [RecurrentFuture].
 
 #### Asynchronous API Integration
 

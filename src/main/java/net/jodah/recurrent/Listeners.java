@@ -163,7 +163,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after an invocation attempt fails.
+   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenFailure(ContextualResultListener<? super T, ? extends Throwable> listener) {
@@ -181,7 +181,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
+   * Registers the {@code listener} to be called before a retry is attempted.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenRetry(ContextualResultListener<? super T, ? extends Throwable> listener) {

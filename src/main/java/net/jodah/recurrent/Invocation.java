@@ -9,16 +9,13 @@ import net.jodah.recurrent.internal.util.Assert;
  * 
  * @author Jonathan Halterman
  */
-public class Invocation implements InvocationStats {
+public class Invocation extends InvocationStats {
   final RetryPolicy retryPolicy;
-  private final long startTime;
 
   // Mutable state
   protected volatile Object lastResult;
   protected volatile Throwable lastFailure;
   protected volatile boolean completed;
-  /** Number of attempts */
-  volatile int attempts;
   /** Wait time in nanoseconds */
   volatile long waitTime;
 
@@ -28,8 +25,8 @@ public class Invocation implements InvocationStats {
    * @throws NullPointerException if {@code retryPolicy} is null
    */
   public Invocation(RetryPolicy retryPolicy) {
+    super(System.nanoTime());
     this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
-    startTime = System.nanoTime();
     waitTime = retryPolicy.getDelay().toNanos();
   }
 
@@ -85,31 +82,6 @@ public class Invocation implements InvocationStats {
   }
 
   /**
-   * Gets the number of invocation attempts so far. Invocation attempts are recorded when {@code canRetry} is called or
-   * when the invocation is completed successfully.
-   */
-  @Override
-  public int getAttemptCount() {
-    return attempts;
-  }
-
-  /**
-   * Returns the elapsed time in milliseconds.
-   */
-  @Override
-  public long getElapsedMillis() {
-    return TimeUnit.NANOSECONDS.toMillis(getElapsedNanos());
-  }
-
-  /**
-   * Returns the elapsed time in nanoseconds.
-   */
-  @Override
-  public long getElapsedNanos() {
-    return System.nanoTime() - startTime;
-  }
-
-  /**
    * Returns the last failure that was recorded.
    * 
    * @see #recordFailure(Throwable)
@@ -128,22 +100,6 @@ public class Invocation implements InvocationStats {
   @SuppressWarnings("unchecked")
   public <T> T getLastResult() {
     return (T) lastResult;
-  }
-
-  /**
-   * Returns the start time in milliseconds.
-   */
-  @Override
-  public long getStartMillis() {
-    return TimeUnit.NANOSECONDS.toMillis(startTime);
-  }
-
-  /**
-   * Returns the start time in nanoseconds.
-   */
-  @Override
-  public long getStartNanos() {
-    return startTime;
   }
 
   /**
