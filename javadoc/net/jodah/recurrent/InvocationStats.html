@@ -18,8 +18,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -93,19 +93,28 @@ var activeTableTab = "activeTableTab";
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="subTitle">net.jodah.recurrent</div>
-<h2 title="Interface InvocationStats" class="title">Interface InvocationStats</h2>
+<h2 title="Class InvocationStats" class="title">Class InvocationStats</h2>
 </div>
 <div class="contentContainer">
+<ul class="inheritance">
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
+<li>
+<ul class="inheritance">
+<li>net.jodah.recurrent.InvocationStats</li>
+</ul>
+</li>
+</ul>
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
 <dl>
-<dt>All Known Implementing Classes:</dt>
-<dd><a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a>, <a href="../../../net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dd>
+<dt>Direct Known Subclasses:</dt>
+<dd><a href="../../../net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dd>
 </dl>
 <hr>
 <br>
-<pre>public interface <span class="typeNameLabel">InvocationStats</span></pre>
+<pre>public class <span class="typeNameLabel">InvocationStats</span>
+extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
 <div class="block">Invocation statistics.</div>
 </li>
 </ul>
@@ -120,7 +129,7 @@ var activeTableTab = "activeTableTab";
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -156,6 +165,13 @@ var activeTableTab = "activeTableTab";
 </td>
 </tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;java.lang.<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
+<code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
@@ -176,7 +192,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>getAttemptCount</h4>
-<pre>int&nbsp;getAttemptCount()</pre>
+<pre>public&nbsp;int&nbsp;getAttemptCount()</pre>
 <div class="block">Gets the number of invocation attempts so far. Invocation attempts are recorded when <code>canRetry</code> is called or
  when the invocation is completed successfully.</div>
 </li>
@@ -187,7 +203,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>getElapsedMillis</h4>
-<pre>long&nbsp;getElapsedMillis()</pre>
+<pre>public&nbsp;long&nbsp;getElapsedMillis()</pre>
 <div class="block">Returns the elapsed time in milliseconds.</div>
 </li>
 </ul>
@@ -197,7 +213,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>getElapsedNanos</h4>
-<pre>long&nbsp;getElapsedNanos()</pre>
+<pre>public&nbsp;long&nbsp;getElapsedNanos()</pre>
 <div class="block">Returns the elapsed time in nanoseconds.</div>
 </li>
 </ul>
@@ -207,7 +223,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>getStartMillis</h4>
-<pre>long&nbsp;getStartMillis()</pre>
+<pre>public&nbsp;long&nbsp;getStartMillis()</pre>
 <div class="block">Returns the start time in milliseconds.</div>
 </li>
 </ul>
@@ -217,7 +233,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockListLast">
 <li class="blockList">
 <h4>getStartNanos</h4>
-<pre>long&nbsp;getStartNanos()</pre>
+<pre>public&nbsp;long&nbsp;getStartNanos()</pre>
 <div class="block">Returns the start time in nanoseconds.</div>
 </li>
 </ul>

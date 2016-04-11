@@ -145,7 +145,7 @@
 <tr class="altColor">
 <td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
 <td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ContextualResultListener-">whenFailure</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called after an invocation attempt fails.</div>
+<div class="block">Registers the <code>listener</code> to be called when the retry policy is exceeded and the result is a failure.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -157,7 +157,7 @@
 <tr class="altColor">
 <td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
 <td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ContextualResultListener-">whenRetry</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when the retry policy is exceeded and the result is a failure.</div>
+<div class="block">Registers the <code>listener</code> to be called before a retry is attempted.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -170,6 +170,12 @@
 <td class="colFirst"><code>&lt;L extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;<a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&gt;<br>L</code></td>
 <td class="colLast"><span class="typeNameLabel">Listeners.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess</a></span>(<a href="../../../../net/jodah/recurrent/event/ContextualSuccessListener.html" title="interface in net.jodah.recurrent.event">ContextualSuccessListener</a>&lt;? super <a href="../../../../net/jodah/recurrent/Listeners.html" title="type parameter in Listeners">T</a>&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>&lt;T extends <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&gt;<br><a href="../../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></code></td>
+<td class="colLast"><span class="typeNameLabel">AsyncRecurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/AsyncRecurrent.html#with-T-">with</a></span>(T&nbsp;listeners)</code>
+<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
 </td>
 </tr>
 </tbody>
@@ -197,21 +203,9 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>static &lt;T&gt;&nbsp;T</code></td>
-<td class="colLast"><span class="typeNameLabel">Recurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Recurrent.html#get-java.util.concurrent.Callable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Listeners-">get</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable,
-   <a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;T&gt;&nbsp;listeners)</code>
-<div class="block">Invokes the <code>callable</code>, sleeping between invocation attempts according to the <code>retryPolicy</code>, and
- calling the <code>listeners</code> on recurrent events.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>static void</code></td>
-<td class="colLast"><span class="typeNameLabel">Recurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Recurrent.html#run-net.jodah.recurrent.CheckedRunnable-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.Listeners-">run</a></span>(<a href="../../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable,
-   <a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
-   <a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&nbsp;listeners)</code>
-<div class="block">Invokes the <code>runnable</code>, sleeping between invocation attempts according to the <code>retryPolicy</code>, and
- calling the <code>listeners</code> on recurrent events.</div>
+<td class="colFirst"><code><a href="../../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></code></td>
+<td class="colLast"><span class="typeNameLabel">SyncRecurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/SyncRecurrent.html#with-net.jodah.recurrent.Listeners-">with</a></span>(<a href="../../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&nbsp;listeners)</code>
+<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
 </td>
 </tr>
 </tbody>

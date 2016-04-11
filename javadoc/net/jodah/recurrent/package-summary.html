@@ -83,28 +83,42 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colFirst"><a href="../../../net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a>&lt;T&gt;</td>
+<td class="colLast">
+<div class="block">A callable that can manually trigger asynchronous retries or completion for an invocation.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../net/jodah/recurrent/AsyncRunnable.html" title="interface in net.jodah.recurrent">AsyncRunnable</a></td>
+<td class="colLast">
+<div class="block">A runnable that can manually trigger asynchronous retries or completion for an invocation.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a></td>
 <td class="colLast">
 <div class="block">A Runnable that throws checked exceptions.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;</td>
 <td class="colLast">
-<div class="block">A callable that can manually trigger retries or completion for an invocation.</div>
+<div class="block">A callable that provides contextual invocation statistics.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a></td>
+<td class="colLast">
+<div class="block">A runnable that provides contextual invocation statistics.</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a></td>
-<td class="colLast">
-<div class="block">A runnable that can manually trigger retries or completion for an invocation.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></td>
-<td class="colLast">
-<div class="block">Invocation statistics.</div>
-</td>
+<td class="colFirst"><a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></td>
+<td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
 </table>
@@ -137,24 +151,30 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></td>
+<td class="colLast">
+<div class="block">Invocation statistics.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;T&gt;</td>
 <td class="colLast">
 <div class="block">Recurrent event listeners.</div>
 </td>
 </tr>
-<tr class="altColor">
-<td class="colFirst"><a href="../../../net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent">Recurrent</a></td>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../../net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent">Recurrent</a>&lt;T&gt;</td>
 <td class="colLast">
 <div class="block">Performs invocations with synchronous or asynchronous retries according to a <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;</td>
 <td class="colLast">
 <div class="block">A future result of an asynchronous operation.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></td>
 <td class="colLast">
 <div class="block">A policy that defines when retries should be performed.</div>

@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -50,7 +50,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?net/jodah/recurrent/Invocation.html" target="_top">Frames</a></li>
@@ -100,7 +100,12 @@ var activeTableTab = "activeTableTab";
 <li><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">net.jodah.recurrent.InvocationStats</a></li>
+<li>
+<ul class="inheritance">
 <li>net.jodah.recurrent.Invocation</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -108,18 +113,13 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <dl>
-<dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></dd>
-</dl>
-<dl>
 <dt>Direct Known Subclasses:</dt>
 <dd><a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">Invocation</span>
-extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>
-implements <a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></pre>
+extends <a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></pre>
 <div class="block">Tracks invocations and determines when an invocation can be performed for a <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </li>
 </ul>
@@ -191,66 +191,36 @@ implements <a href="../../../net/jodah/recurrent/InvocationStats.html" title="in
 </td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code>int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getAttemptCount--">getAttemptCount</a></span>()</code>
-<div class="block">Gets the number of invocation attempts so far.</div>
-</td>
-</tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getElapsedMillis--">getElapsedMillis</a></span>()</code>
-<div class="block">Returns the elapsed time in milliseconds.</div>
-</td>
-</tr>
-<tr id="i7" class="rowColor">
-<td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getElapsedNanos--">getElapsedNanos</a></span>()</code>
-<div class="block">Returns the elapsed time in nanoseconds.</div>
-</td>
-</tr>
-<tr id="i8" class="altColor">
 <td class="colFirst"><code>&lt;T extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;<br>T</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getLastFailure--">getLastFailure</a></span>()</code>
 <div class="block">Returns the last failure that was recorded.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getLastResult--">getLastResult</a></span>()</code>
 <div class="block">Returns the last result that was recorded.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
-<td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getStartMillis--">getStartMillis</a></span>()</code>
-<div class="block">Returns the start time in milliseconds.</div>
-</td>
-</tr>
-<tr id="i11" class="rowColor">
-<td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getStartNanos--">getStartNanos</a></span>()</code>
-<div class="block">Returns the start time in nanoseconds.</div>
-</td>
-</tr>
-<tr id="i12" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getWaitMillis--">getWaitMillis</a></span>()</code>
 <div class="block">Returns the wait time in milliseconds.</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#getWaitNanos--">getWaitNanos</a></span>()</code>
 <div class="block">Returns the wait time in nanoseconds.</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#isComplete--">isComplete</a></span>()</code>
 <div class="block">Returns whether the invocation is complete.</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Invocation.html#recordFailure-java.lang.Throwable-">recordFailure</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&nbsp;failure)</code>
 <div class="block">Records a failed invocation attempt and returns true if a retry can be performed for the <code>failure</code>, else
@@ -258,6 +228,13 @@ implements <a href="../../../net/jodah/recurrent/InvocationStats.html" title="in
 </td>
 </tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.net.jodah.recurrent.InvocationStats">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;net.jodah.recurrent.<a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></h3>
+<code><a href="../../../net/jodah/recurrent/InvocationStats.html#getAttemptCount--">getAttemptCount</a>, <a href="../../../net/jodah/recurrent/InvocationStats.html#getElapsedMillis--">getElapsedMillis</a>, <a href="../../../net/jodah/recurrent/InvocationStats.html#getElapsedNanos--">getElapsedNanos</a>, <a href="../../../net/jodah/recurrent/InvocationStats.html#getStartMillis--">getStartMillis</a>, <a href="../../../net/jodah/recurrent/InvocationStats.html#getStartNanos--">getStartNanos</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
 <!--   -->
@@ -375,49 +352,6 @@ implements <a href="../../../net/jodah/recurrent/InvocationStats.html" title="in
 </dl>
 </li>
 </ul>
-<a name="getAttemptCount--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getAttemptCount</h4>
-<pre>public&nbsp;int&nbsp;getAttemptCount()</pre>
-<div class="block">Gets the number of invocation attempts so far. Invocation attempts are recorded when <code>canRetry</code> is called or
- when the invocation is completed successfully.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../net/jodah/recurrent/InvocationStats.html#getAttemptCount--">getAttemptCount</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="getElapsedMillis--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getElapsedMillis</h4>
-<pre>public&nbsp;long&nbsp;getElapsedMillis()</pre>
-<div class="block">Returns the elapsed time in milliseconds.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../net/jodah/recurrent/InvocationStats.html#getElapsedMillis--">getElapsedMillis</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="getElapsedNanos--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getElapsedNanos</h4>
-<pre>public&nbsp;long&nbsp;getElapsedNanos()</pre>
-<div class="block">Returns the elapsed time in nanoseconds.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../net/jodah/recurrent/InvocationStats.html#getElapsedNanos--">getElapsedNanos</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></code></dd>
-</dl>
-</li>
-</ul>
 <a name="getLastFailure--">
 <!--   -->
 </a>
@@ -444,34 +378,6 @@ implements <a href="../../../net/jodah/recurrent/InvocationStats.html" title="in
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../net/jodah/recurrent/Invocation.html#complete--"><code>complete()</code></a>, 
 <a href="../../../net/jodah/recurrent/Invocation.html#complete-java.lang.Object-"><code>complete(Object)</code></a></dd>
-</dl>
-</li>
-</ul>
-<a name="getStartMillis--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getStartMillis</h4>
-<pre>public&nbsp;long&nbsp;getStartMillis()</pre>
-<div class="block">Returns the start time in milliseconds.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../net/jodah/recurrent/InvocationStats.html#getStartMillis--">getStartMillis</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="getStartNanos--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getStartNanos</h4>
-<pre>public&nbsp;long&nbsp;getStartNanos()</pre>
-<div class="block">Returns the start time in nanoseconds.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../net/jodah/recurrent/InvocationStats.html#getStartNanos--">getStartNanos</a></code>&nbsp;in interface&nbsp;<code><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent">InvocationStats</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -558,7 +464,7 @@ implements <a href="../../../net/jodah/recurrent/InvocationStats.html" title="in
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../net/jodah/recurrent/InvocationStats.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?net/jodah/recurrent/Invocation.html" target="_top">Frames</a></li>

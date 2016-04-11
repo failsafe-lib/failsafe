@@ -143,7 +143,8 @@
 <td class="colFirst"><code><a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">AsyncListeners.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ResultListener-java.util.concurrent.ExecutorService-">whenFailedAttemptAsync</a></span>(<a href="../../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener,
                       <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ExecutorService</a>&nbsp;executor)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+ attempt.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -182,16 +183,14 @@
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">AsyncListeners.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/recurrent/AsyncListeners.html#whenRetryAsync-net.jodah.recurrent.event.ResultListener-">whenRetryAsync</a></span>(<a href="../../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously when the retry policy is exceeded and the result is a
- failure.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously before a retry is attempted.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">AsyncListeners.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/recurrent/AsyncListeners.html#whenRetryAsync-net.jodah.recurrent.event.ResultListener-java.util.concurrent.ExecutorService-">whenRetryAsync</a></span>(<a href="../../../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener,
               <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ExecutorService</a>&nbsp;executor)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously when the retry policy is exceeded and the result is a
- failure.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> before a retry is attempted.</div>
 </td>
 </tr>
 </tbody>

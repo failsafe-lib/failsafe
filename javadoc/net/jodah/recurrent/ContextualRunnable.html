@@ -102,7 +102,7 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public interface <span class="typeNameLabel">ContextualRunnable</span></pre>
-<div class="block">A runnable that can manually trigger retries or completion for an invocation.</div>
+<div class="block">A runnable that provides contextual invocation statistics.</div>
 </li>
 </ul>
 </div>
@@ -123,7 +123,7 @@ var activeTableTab = "activeTableTab";
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/ContextualRunnable.html#run-net.jodah.recurrent.AsyncInvocation-">run</a></span>(<a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a>&nbsp;invocation)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/ContextualRunnable.html#run-net.jodah.recurrent.InvocationStats-">run</a></span>(<a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a>&nbsp;stats)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -140,13 +140,13 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="run-net.jodah.recurrent.AsyncInvocation-">
+<a name="run-net.jodah.recurrent.InvocationStats-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>run</h4>
-<pre>void&nbsp;run(<a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a>&nbsp;invocation)
+<pre>void&nbsp;run(<a href="../../../net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a>&nbsp;stats)
   throws <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html?is-external=true" title="class or interface in java.lang">Exception</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
