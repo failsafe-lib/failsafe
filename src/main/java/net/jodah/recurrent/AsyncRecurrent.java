@@ -1,15 +1,40 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
-public interface AsyncRecurrent {
+import net.jodah.recurrent.internal.util.Assert;
+import net.jodah.recurrent.util.concurrent.Scheduler;
+
+/**
+ * Performs asynchronous invocations with retries according to a {@link RetryPolicy}.
+ * 
+ * @author Jonathan Halterman
+ */
+public class AsyncRecurrent {
+  private final RetryPolicy retryPolicy;
+  private final Scheduler scheduler;
+  private Listeners<?> listeners;
+
+  AsyncRecurrent(RetryPolicy retryPolicy, Scheduler scheduler) {
+    this.retryPolicy = retryPolicy;
+    this.scheduler = scheduler;
+  }
+
   /**
    * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
-  <T> java.util.concurrent.CompletableFuture<T> future(Callable<java.util.concurrent.CompletableFuture<T>> callable);
+  @SuppressWarnings("unchecked")
+  public <T> CompletableFuture<T> future(Callable<CompletableFuture<T>> callable) {
+    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
+    return response;
+  }
 
   /**
    * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
@@ -17,8 +42,12 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
-  <T> java.util.concurrent.CompletableFuture<T> future(
-      ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable);
+  @SuppressWarnings("unchecked")
+  public <T> CompletableFuture<T> future(ContextualCallable<CompletableFuture<T>> callable) {
+    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
+    return response;
+  }
 
   /**
    * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
@@ -27,8 +56,12 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
-  <T> java.util.concurrent.CompletableFuture<T> futureAsync(
-      AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable);
+  @SuppressWarnings("unchecked")
+  public <T> CompletableFuture<T> futureAsync(AsyncCallable<CompletableFuture<T>> callable) {
+    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
+    return response;
+  }
 
   /**
    * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
@@ -36,7 +69,9 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
-  <T> RecurrentFuture<T> get(Callable<T> callable);
+  public <T> RecurrentFuture<T> get(Callable<T> callable) {
+    return call(AsyncContextualCallable.of(callable), null);
+  }
 
   /**
    * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
@@ -44,7 +79,9 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
-  <T> RecurrentFuture<T> get(ContextualCallable<T> callable);
+  public <T> RecurrentFuture<T> get(ContextualCallable<T> callable) {
+    return call(AsyncContextualCallable.of(callable), null);
+  }
 
   /**
    * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
@@ -53,7 +90,9 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
-  <T> RecurrentFuture<T> getAsync(AsyncCallable<T> callable);
+  public <T> RecurrentFuture<T> getAsync(AsyncCallable<T> callable) {
+    return call(AsyncContextualCallable.of(callable), null);
+  }
 
   /**
    * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
@@ -61,7 +100,9 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code runnable} is null
    */
-  RecurrentFuture<Void> run(CheckedRunnable runnable);
+  public RecurrentFuture<Void> run(CheckedRunnable runnable) {
+    return call(AsyncContextualCallable.<Void>of(runnable), null);
+  }
 
   /**
    * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
@@ -69,7 +110,9 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code runnable} is null
    */
-  RecurrentFuture<Void> run(ContextualRunnable runnable);
+  public RecurrentFuture<Void> run(ContextualRunnable runnable) {
+    return call(AsyncContextualCallable.<Void>of(runnable), null);
+  }
 
   /**
    * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
@@ -78,10 +121,33 @@ public interface AsyncRecurrent {
    * 
    * @throws NullPointerException if the {@code runnable} is null
    */
-  RecurrentFuture<Void> runAsync(AsyncRunnable runnable);
+  public RecurrentFuture<Void> runAsync(AsyncRunnable runnable) {
+    return call(AsyncContextualCallable.<Void>of(runnable), null);
+  }
 
   /**
    * Configures the {@code listeners} to be called as invocation events occur.
    */
-  <T extends Listeners<?>> AsyncRecurrent with(T listeners);
+  public <T extends Listeners<?>> AsyncRecurrent with(T listeners) {
+    this.listeners = Assert.notNull(listeners, "listeners");
+    return this;
+  }
+
+  /**
+   * Calls the asynchronous {@code callable} via the {@code executor}, performing retries according to the
+   * {@code retryPolicy}.
+   * 
+   * @throws NullPointerException if any argument is null
+   */
+  @SuppressWarnings("unchecked")
+  private <T> RecurrentFuture<T> call(AsyncContextualCallable<T> callable, RecurrentFuture<T> future) {
+    Listeners<T> typedListeners = (Listeners<T>) listeners;
+    if (future == null)
+      future = new RecurrentFuture<T>(scheduler, typedListeners);
+    AsyncInvocation invocation = new AsyncInvocation(callable, retryPolicy, scheduler, future, typedListeners);
+    future.initialize(invocation);
+    callable.initialize(invocation);
+    future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
+    return future;
+  }
 }

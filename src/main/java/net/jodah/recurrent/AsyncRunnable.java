@@ -1,7 +1,7 @@
 package net.jodah.recurrent;
 
 /**
- * A runnable that can manually trigger asynchronous retries or completion for an invocation.
+ * A runnable that manually triggers asynchronous retries or completion.
  * 
  * @author Jonathan Halterman
  */
