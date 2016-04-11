@@ -1,7 +1,6 @@
 package net.jodah.recurrent;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -21,46 +20,6 @@ public class AsyncRecurrent {
   AsyncRecurrent(RetryPolicy retryPolicy, Scheduler scheduler) {
     this.retryPolicy = retryPolicy;
     this.scheduler = scheduler;
-  }
-
-  /**
-   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
-   * {@link RetryPolicy} is exceeded.
-   * 
-   * @throws NullPointerException if the {@code callable} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> CompletableFuture<T> future(Callable<CompletableFuture<T>> callable) {
-    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
-    return response;
-  }
-
-  /**
-   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
-   * {@link RetryPolicy} is exceeded.
-   * 
-   * @throws NullPointerException if the {@code callable} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> CompletableFuture<T> future(ContextualCallable<CompletableFuture<T>> callable) {
-    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
-    return response;
-  }
-
-  /**
-   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
-   * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
-   * manually scheduled via one of the {@code AsyncInvocation.retry} methods.
-   * 
-   * @throws NullPointerException if the {@code callable} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> CompletableFuture<T> futureAsync(AsyncCallable<CompletableFuture<T>> callable) {
-    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
-    return response;
   }
 
   /**
@@ -123,6 +82,55 @@ public class AsyncRecurrent {
    */
   public RecurrentFuture<Void> runAsync(AsyncRunnable runnable) {
     return call(AsyncContextualCallable.<Void>of(runnable), null);
+  }
+
+  /**
+   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * {@link RetryPolicy} is exceeded.
+   * <p>
+   * Supported on Java 8 and above.
+   * 
+   * @throws NullPointerException if the {@code callable} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> java.util.concurrent.CompletableFuture<T> future(
+      Callable<java.util.concurrent.CompletableFuture<T>> callable) {
+    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
+    return response;
+  }
+
+  /**
+   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * {@link RetryPolicy} is exceeded.
+   * <p>
+   * Supported on Java 8 and above.
+   * 
+   * @throws NullPointerException if the {@code callable} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> java.util.concurrent.CompletableFuture<T> future(
+      ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
+    return response;
+  }
+
+  /**
+   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
+   * manually scheduled via one of the {@code AsyncInvocation.retry} methods.
+   * <p>
+   * Supported on Java 8 and above.
+   * 
+   * @throws NullPointerException if the {@code callable} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> java.util.concurrent.CompletableFuture<T> futureAsync(
+      AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
+    call(AsyncContextualCallable.ofFuture(callable), RecurrentFuture.of(response, scheduler, (Listeners<T>) listeners));
+    return response;
   }
 
   /**
