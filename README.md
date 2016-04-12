@@ -102,7 +102,7 @@ Recurrent exposes [ExecutionStats] that provide the number of execution attempts
 
 ```java
 Recurrent.with(retryPolicy).get(stats -> {
-  log.debug("Connection attempt #{}", stats.getAttemptCount());
+  log.debug("Connection attempt #{}", stats.getExecutions());
   return connect();
 });
 ```
@@ -152,7 +152,7 @@ Recurrent supports [event listeners][listeners] that can be notified of various 
 ```java
 Recurrent.with(retryPolicy)
   .with(new Listeners<Connection>()
-    .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getAttemptCount()))
+    .whenRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getExecutions()))
     .whenFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
     .whenSuccess(cxn -> log.info("Connected to {}", cxn)))
   .get(() -> connect());
@@ -164,7 +164,7 @@ You can also implement listeners by extending the `Listeners` class and overridi
 Recurrent.with(retryPolicy)
   .with(new Listeners<Connection>() {
     public void onRetry(Connection cxn, Throwable failure, ExecutionStats stats) {
-      log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
+      log.warn("Failure #{}. Retrying.", stats.getExecutions());
     }
   
     public void onComplete(Connection cxn, Throwable failure) {

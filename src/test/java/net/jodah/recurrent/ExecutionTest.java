@@ -31,7 +31,7 @@ public class ExecutionTest {
     assertFalse(inv.canRetryFor(1));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertEquals(inv.getLastResult(), Integer.valueOf(1));
     assertNull(inv.getLastFailure());
@@ -46,7 +46,7 @@ public class ExecutionTest {
     assertFalse(inv.canRetryFor(null));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 3);
+    assertEquals(inv.getExecutions(), 3);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertNull(inv.getLastFailure());
@@ -63,7 +63,7 @@ public class ExecutionTest {
     assertFalse(inv.canRetryFor(1, null));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 3);
+    assertEquals(inv.getExecutions(), 3);
     assertTrue(inv.isComplete());
 
     // Given 2 max retries
@@ -76,7 +76,7 @@ public class ExecutionTest {
     assertFalse(inv.canRetryFor(null, e));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 3);
+    assertEquals(inv.getExecutions(), 3);
     assertTrue(inv.isComplete());
   }
 
@@ -90,7 +90,7 @@ public class ExecutionTest {
     assertFalse(inv.canRetryOn(e));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertEquals(inv.getLastFailure(), e);
@@ -104,7 +104,7 @@ public class ExecutionTest {
     assertFalse(inv.canRetryOn(e));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 3);
+    assertEquals(inv.getExecutions(), 3);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertEquals(inv.getLastFailure(), e);
@@ -118,7 +118,7 @@ public class ExecutionTest {
     inv.complete();
 
     // Then
-    assertEquals(inv.getAttemptCount(), 1);
+    assertEquals(inv.getExecutions(), 1);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertNull(inv.getLastFailure());
@@ -133,7 +133,7 @@ public class ExecutionTest {
     assertTrue(inv.complete(true));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 1);
+    assertEquals(inv.getExecutions(), 1);
     assertTrue(inv.isComplete());
     assertEquals(inv.getLastResult(), Boolean.TRUE);
     assertNull(inv.getLastFailure());
@@ -143,7 +143,7 @@ public class ExecutionTest {
     Execution inv = new Execution(new RetryPolicy());
     inv.fail(e);
     inv.fail(e);
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
   }
 
   public void testGetElapsedMillis() throws Throwable {
@@ -170,7 +170,7 @@ public class ExecutionTest {
     }
 
     assertEquals(inv.getLastResult(), Integer.valueOf(5));
-    assertEquals(inv.getAttemptCount(), 3);
+    assertEquals(inv.getExecutions(), 3);
   }
 
   public void shouldAdjustWaitTimeForBackoff() {

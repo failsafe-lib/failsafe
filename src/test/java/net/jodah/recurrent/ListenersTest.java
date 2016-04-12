@@ -49,11 +49,11 @@ public class ListenersTest {
     listeners = new Listeners<Boolean>();
     listeners.whenComplete((r, f, s) -> completeStats.incrementAndGet());
     listeners.whenComplete((r, f) -> complete.incrementAndGet());
-    listeners.whenFailedAttempt((r, f, s) -> assertEquals(failedAttemptStats.incrementAndGet(), s.getAttemptCount()));
+    listeners.whenFailedAttempt((r, f, s) -> assertEquals(failedAttemptStats.incrementAndGet(), s.getExecutions()));
     listeners.whenFailedAttempt((r, f) -> failedAttempt.incrementAndGet());
     listeners.whenFailure((r, f, s) -> failureStats.incrementAndGet());
     listeners.whenFailure((r, f) -> failure.incrementAndGet());
-    listeners.whenRetry((r, f, s) -> assertEquals(retryStats.incrementAndGet(), s.getAttemptCount()));
+    listeners.whenRetry((r, f, s) -> assertEquals(retryStats.incrementAndGet(), s.getExecutions()));
     listeners.whenRetry((r, f) -> retry.incrementAndGet());
     listeners.whenSuccess((r, s) -> successStats.incrementAndGet());
     listeners.whenSuccess((r) -> success.incrementAndGet());

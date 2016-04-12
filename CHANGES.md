@@ -8,6 +8,7 @@
 ### API Changes
 
 * Invocation APIs were renamed to Execution to better align with the `java.util.concurrent` naming.
+* `InvocationStats.getAttemptCount()` was renamed to `ExecutionStats.getExecutions()`
 
 # 0.7.0
 

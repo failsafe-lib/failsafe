@@ -40,7 +40,7 @@ public class AsyncExecutionTest {
     inv.complete();
 
     // Then
-    assertEquals(inv.getAttemptCount(), 1);
+    assertEquals(inv.getExecutions(), 1);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertNull(inv.getLastFailure());
@@ -56,7 +56,7 @@ public class AsyncExecutionTest {
     assertTrue(inv.complete(true));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 1);
+    assertEquals(inv.getExecutions(), 1);
     assertTrue(inv.isComplete());
     assertEquals(inv.getLastResult(), Boolean.TRUE);
     assertNull(inv.getLastFailure());
@@ -68,7 +68,7 @@ public class AsyncExecutionTest {
     inv.retryOn(e);
     inv.prepare();
     inv.retryOn(e);
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
   }
 
   public void testRetryForResult() {
@@ -82,7 +82,7 @@ public class AsyncExecutionTest {
     assertFalse(inv.retryFor(1));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertEquals(inv.getLastResult(), Integer.valueOf(1));
     assertNull(inv.getLastFailure());
@@ -101,7 +101,7 @@ public class AsyncExecutionTest {
     assertFalse(inv.retryFor(null));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertNull(inv.getLastFailure());
@@ -122,7 +122,7 @@ public class AsyncExecutionTest {
     assertFalse(inv.retryFor(1, null));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 3);
+    assertEquals(inv.getExecutions(), 3);
     assertTrue(inv.isComplete());
     assertEquals(inv.getLastResult(), Integer.valueOf(1));
     assertNull(inv.getLastFailure());
@@ -140,7 +140,7 @@ public class AsyncExecutionTest {
     assertFalse(inv.retryFor(null, e));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertEquals(inv.getLastFailure(), e);
@@ -160,7 +160,7 @@ public class AsyncExecutionTest {
     assertFalse(inv.retryOn(e));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertEquals(inv.getLastFailure(), e);
@@ -177,7 +177,7 @@ public class AsyncExecutionTest {
     assertFalse(inv.retryOn(e));
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertEquals(inv.getLastFailure(), e);
@@ -202,7 +202,7 @@ public class AsyncExecutionTest {
     inv.completeOrRetry(null, null);
 
     // Then
-    assertEquals(inv.getAttemptCount(), 2);
+    assertEquals(inv.getExecutions(), 2);
     assertTrue(inv.isComplete());
     assertNull(inv.getLastResult());
     assertNull(inv.getLastFailure());

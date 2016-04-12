@@ -182,7 +182,7 @@ public class Execution extends ExecutionStats {
   }
 
   private void incrementAttempts() {
-    attempts++;
+    executions++;
     adjustForBackoffs();
     adjustForMaxDuration();
   }
@@ -191,7 +191,7 @@ public class Execution extends ExecutionStats {
    * Returns true if the max retries or max duration for the retry policy have been exceeded, else false.
    */
   private boolean isPolicyExceeded() {
-    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || attempts <= retryPolicy.getMaxRetries();
+    boolean withinMaxRetries = retryPolicy.getMaxRetries() == -1 || executions <= retryPolicy.getMaxRetries();
     boolean withinMaxDuration = retryPolicy.getMaxDuration() == null
         || System.nanoTime() - startTime < retryPolicy.getMaxDuration().toNanos();
     return !withinMaxRetries || !withinMaxDuration;

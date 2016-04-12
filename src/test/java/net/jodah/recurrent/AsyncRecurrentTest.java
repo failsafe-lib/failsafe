@@ -86,7 +86,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
 
   public void shouldRunContextualWithExecutor() throws Throwable {
     assertRunWithExecutor((ContextualRunnable) stats -> {
-      assertEquals(stats.getAttemptCount(), counter.getAndIncrement());
+      assertEquals(stats.getExecutions(), counter.getAndIncrement());
       service.connect();
     });
   }
@@ -98,7 +98,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
         inv.complete();
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (inv.getAttemptCount() % 2 == 0)
+        if (inv.getExecutions() % 2 == 0)
           throw failure;
         if (!inv.retryOn(failure))
           throw failure;
@@ -149,7 +149,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
 
   public void shouldGetContextualWithExecutor() throws Throwable {
     assertGetWithExecutor((ContextualCallable<Boolean>) stats -> {
-      assertEquals(stats.getAttemptCount(), counter.getAndIncrement());
+      assertEquals(stats.getExecutions(), counter.getAndIncrement());
       return service.connect();
     });
   }
@@ -163,7 +163,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (inv.getAttemptCount() % 2 == 0)
+        if (inv.getExecutions() % 2 == 0)
           throw failure;
         if (!inv.retryOn(failure))
           throw failure;
@@ -225,7 +225,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (inv.getAttemptCount() % 2 == 0)
+        if (inv.getExecutions() % 2 == 0)
           throw failure;
         if (!inv.retryOn(failure))
           throw failure;
@@ -243,7 +243,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
 
   public void shouldManuallyRetryAndComplete() throws Throwable {
     Recurrent.with(retryAlways, executor).getAsync(inv -> {
-      if (inv.getAttemptCount() < 2)
+      if (inv.getExecutions() < 2)
         inv.retryOn(new ConnectException());
       else
         inv.complete(true);

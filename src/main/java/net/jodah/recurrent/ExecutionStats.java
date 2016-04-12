@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class ExecutionStats {
   final long startTime;
   /** Number of attempts */
-  volatile int attempts;
+  volatile int executions;
 
   ExecutionStats(long startTime) {
     this.startTime = startTime;
@@ -18,15 +18,15 @@ public class ExecutionStats {
 
   ExecutionStats(ExecutionStats stats) {
     this.startTime = stats.startTime;
-    this.attempts = stats.attempts;
+    this.executions = stats.executions;
   }
 
   /**
-   * Gets the number of execution attempts so far. Execution attempts are recorded when {@code canRetry} is called or
-   * when the execution is completed successfully.
+   * Gets the number of executions so far. Executions are recorded when {@code canRetry} is called or when the execution
+   * is completed successfully.
    */
-  public int getAttemptCount() {
-    return attempts;
+  public int getExecutions() {
+    return executions;
   }
 
   /**

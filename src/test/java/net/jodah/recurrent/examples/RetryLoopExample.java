@@ -42,6 +42,6 @@ public class RetryLoopExample {
     }
 
     assertEquals(execution.getLastResult(), Integer.valueOf(5));
-    assertEquals(execution.getAttemptCount(), 3);
+    assertEquals(execution.getExecutions(), 3);
   }
 }

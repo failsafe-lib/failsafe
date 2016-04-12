@@ -72,7 +72,7 @@ public class AsyncListenersTest {
       }
 
       public void onFailedAttempt(Boolean result, Throwable failure, ExecutionStats stats) {
-        waiter.assertEquals(failedAttemptStats.incrementAndGet(), stats.getAttemptCount());
+        waiter.assertEquals(failedAttemptStats.incrementAndGet(), stats.getExecutions());
       }
 
       public void onFailedAttempt(Boolean result, Throwable failure) {
@@ -88,7 +88,7 @@ public class AsyncListenersTest {
       }
 
       public void onRetry(Boolean result, Throwable failure, ExecutionStats stats) {
-        waiter.assertEquals(retryStats.incrementAndGet(), stats.getAttemptCount());
+        waiter.assertEquals(retryStats.incrementAndGet(), stats.getExecutions());
       }
 
       public void onRetry(Boolean result, Throwable failure) {
@@ -108,7 +108,7 @@ public class AsyncListenersTest {
       waiter.resume();
     });
     listeners.whenFailedAttemptAsync((r, f, s) -> {
-      waiter.assertEquals(failedAttemptStatsAsync.incrementAndGet(), s.getAttemptCount());
+      waiter.assertEquals(failedAttemptStatsAsync.incrementAndGet(), s.getExecutions());
       waiter.resume();
     });
     listeners.whenRetryAsync((r, f) -> {
@@ -116,7 +116,7 @@ public class AsyncListenersTest {
       waiter.resume();
     });
     listeners.whenRetryAsync((r, f, s) -> {
-      waiter.assertEquals(retryStatsAsync.incrementAndGet(), s.getAttemptCount());
+      waiter.assertEquals(retryStatsAsync.incrementAndGet(), s.getExecutions());
       waiter.resume();
     });
   }

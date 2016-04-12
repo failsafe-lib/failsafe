@@ -69,7 +69,7 @@ public class SyncRecurrentTest extends AbstractRecurrentTest {
 
   public void shouldRunContextual() throws Throwable {
     assertRun((ContextualRunnable) stats -> {
-      assertEquals(stats.getAttemptCount(), counter.getAndIncrement());
+      assertEquals(stats.getExecutions(), counter.getAndIncrement());
       service.connect();
     });
   }
@@ -98,7 +98,7 @@ public class SyncRecurrentTest extends AbstractRecurrentTest {
 
   public void shouldGetContextual() throws Throwable {
     assertGet((ContextualCallable<Boolean>) stats -> {
-      assertEquals(stats.getAttemptCount(), counter.getAndIncrement());
+      assertEquals(stats.getExecutions(), counter.getAndIncrement());
       return service.connect();
     });
   }
