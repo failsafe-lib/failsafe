@@ -135,21 +135,21 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/ExecutionStats.html#getAttemptCount--">getAttemptCount</a></span>()</code>
-<div class="block">Gets the number of execution attempts so far.</div>
-</td>
-</tr>
-<tr id="i1" class="rowColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/ExecutionStats.html#getElapsedMillis--">getElapsedMillis</a></span>()</code>
 <div class="block">Returns the elapsed time in milliseconds.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/ExecutionStats.html#getElapsedNanos--">getElapsedNanos</a></span>()</code>
 <div class="block">Returns the elapsed time in nanoseconds.</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/ExecutionStats.html#getExecutions--">getExecutions</a></span>()</code>
+<div class="block">Gets the number of executions so far.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
@@ -186,15 +186,15 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="getAttemptCount--">
+<a name="getExecutions--">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getAttemptCount</h4>
-<pre>public&nbsp;int&nbsp;getAttemptCount()</pre>
-<div class="block">Gets the number of execution attempts so far. Execution attempts are recorded when <code>canRetry</code> is called or
- when the execution is completed successfully.</div>
+<h4>getExecutions</h4>
+<pre>public&nbsp;int&nbsp;getExecutions()</pre>
+<div class="block">Gets the number of executions so far. Executions are recorded when <code>canRetry</code> is called or when the execution
+ is completed successfully.</div>
 </li>
 </ul>
 <a name="getElapsedMillis--">
