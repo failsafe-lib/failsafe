@@ -18,12 +18,12 @@ import org.testng.annotations.Test;
  * @author Jonathan Halterman
  */
 @Test
-public class InvocationTest {
+public class ExecutionTest {
   ConnectException e = new ConnectException();
 
   public void testCanRetryForResult() {
     // Given retry for null
-    Invocation inv = new Invocation(new RetryPolicy().retryWhen(null));
+    Execution inv = new Execution(new RetryPolicy().retryWhen(null));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -37,7 +37,7 @@ public class InvocationTest {
     assertNull(inv.getLastFailure());
 
     // Given 2 max retries
-    inv = new Invocation(new RetryPolicy().retryWhen(null).withMaxRetries(2));
+    inv = new Execution(new RetryPolicy().retryWhen(null).withMaxRetries(2));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -54,7 +54,7 @@ public class InvocationTest {
 
   public void testCanRetryForResultAndThrowable() {
     // Given retry for null
-    Invocation inv = new Invocation(new RetryPolicy().retryWhen(null));
+    Execution inv = new Execution(new RetryPolicy().retryWhen(null));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -67,7 +67,7 @@ public class InvocationTest {
     assertTrue(inv.isComplete());
 
     // Given 2 max retries
-    inv = new Invocation(new RetryPolicy().retryWhen(null).withMaxRetries(2));
+    inv = new Execution(new RetryPolicy().retryWhen(null).withMaxRetries(2));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -83,7 +83,7 @@ public class InvocationTest {
   @SuppressWarnings("unchecked")
   public void testCanRetryOn() {
     // Given retry on IllegalArgumentException
-    Invocation inv = new Invocation(new RetryPolicy().retryOn(IllegalArgumentException.class));
+    Execution inv = new Execution(new RetryPolicy().retryOn(IllegalArgumentException.class));
 
     // When / Then
     assertTrue(inv.canRetryOn(new IllegalArgumentException()));
@@ -96,7 +96,7 @@ public class InvocationTest {
     assertEquals(inv.getLastFailure(), e);
 
     // Given 2 max retries
-    inv = new Invocation(new RetryPolicy().withMaxRetries(2));
+    inv = new Execution(new RetryPolicy().withMaxRetries(2));
 
     // When / Then
     assertTrue(inv.canRetryOn(e));
@@ -112,7 +112,7 @@ public class InvocationTest {
 
   public void testComplete() {
     // Given
-    Invocation inv = new Invocation(new RetryPolicy());
+    Execution inv = new Execution(new RetryPolicy());
 
     // When
     inv.complete();
@@ -126,7 +126,7 @@ public class InvocationTest {
 
   public void testCompleteForResult() {
     // Given
-    Invocation inv = new Invocation(new RetryPolicy().retryWhen(null));
+    Execution inv = new Execution(new RetryPolicy().retryWhen(null));
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -140,14 +140,14 @@ public class InvocationTest {
   }
 
   public void testGetAttemptCount() {
-    Invocation inv = new Invocation(new RetryPolicy());
-    inv.recordFailure(e);
-    inv.recordFailure(e);
+    Execution inv = new Execution(new RetryPolicy());
+    inv.fail(e);
+    inv.fail(e);
     assertEquals(inv.getAttemptCount(), 2);
   }
 
   public void testGetElapsedMillis() throws Throwable {
-    Invocation inv = new Invocation(new RetryPolicy());
+    Execution inv = new Execution(new RetryPolicy());
     assertTrue(inv.getElapsedMillis() < 100);
     Thread.sleep(150);
     assertTrue(inv.getElapsedMillis() > 100);
@@ -159,13 +159,13 @@ public class InvocationTest {
     when(list.size()).thenThrow(failures(2, IllegalStateException.class)).thenReturn(5);
 
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(IllegalStateException.class);
-    Invocation inv = new Invocation(retryPolicy);
+    Execution inv = new Execution(retryPolicy);
 
     while (!inv.isComplete()) {
       try {
         inv.complete(list.size());
       } catch (IllegalStateException e) {
-        inv.recordFailure(e);
+        inv.fail(e);
       }
     }
 
@@ -174,22 +174,22 @@ public class InvocationTest {
   }
 
   public void shouldAdjustWaitTimeForBackoff() {
-    Invocation inv = new Invocation(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS));
+    Execution inv = new Execution(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS));
     assertEquals(inv.getWaitNanos(), 1);
-    inv.recordFailure(e);
+    inv.fail(e);
     assertEquals(inv.getWaitNanos(), 2);
-    inv.recordFailure(e);
+    inv.fail(e);
     assertEquals(inv.getWaitNanos(), 4);
-    inv.recordFailure(e);
+    inv.fail(e);
     assertEquals(inv.getWaitNanos(), 8);
-    inv.recordFailure(e);
+    inv.fail(e);
     assertEquals(inv.getWaitNanos(), 10);
-    inv.recordFailure(e);
+    inv.fail(e);
     assertEquals(inv.getWaitNanos(), 10);
   }
 
   public void shouldAdjustWaitTimeForMaxDuration() throws Throwable {
-    Invocation inv = new Invocation(
+    Execution inv = new Execution(
         new RetryPolicy().withDelay(49, TimeUnit.MILLISECONDS).withMaxDuration(50, TimeUnit.MILLISECONDS));
     Thread.sleep(10);
     assertTrue(inv.canRetryOn(e));
@@ -197,7 +197,7 @@ public class InvocationTest {
   }
 
   public void shouldSupportMaxDuration() throws Exception {
-    Invocation inv = new Invocation(new RetryPolicy().withMaxDuration(100, TimeUnit.MILLISECONDS));
+    Execution inv = new Execution(new RetryPolicy().withMaxDuration(100, TimeUnit.MILLISECONDS));
     assertTrue(inv.canRetryOn(e));
     assertTrue(inv.canRetryOn(e));
     Thread.sleep(100);
@@ -206,7 +206,7 @@ public class InvocationTest {
   }
 
   public void shouldSupportMaxRetries() throws Exception {
-    Invocation inv = new Invocation(new RetryPolicy().withMaxRetries(3));
+    Execution inv = new Execution(new RetryPolicy().withMaxRetries(3));
     assertTrue(inv.canRetryOn(e));
     assertTrue(inv.canRetryOn(e));
     assertTrue(inv.canRetryOn(e));
@@ -215,7 +215,7 @@ public class InvocationTest {
   }
 
   public void shouldGetWaitMillis() throws Throwable {
-    Invocation inv = new Invocation(new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
+    Execution inv = new Execution(new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(101, TimeUnit.MILLISECONDS)
         .retryWhen(null));
     assertEquals(inv.getWaitMillis(), 100);
@@ -228,14 +228,14 @@ public class InvocationTest {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnMultipleCompletes() {
-    Invocation inv = new Invocation(new RetryPolicy());
+    Execution inv = new Execution(new RetryPolicy());
     inv.complete();
     inv.complete();
   }
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnCanRetryWhenAlreadyComplete() {
-    Invocation inv = new Invocation(new RetryPolicy());
+    Execution inv = new Execution(new RetryPolicy());
     inv.complete();
     inv.canRetryOn(e);
   }

@@ -7,13 +7,13 @@ import net.jodah.recurrent.util.concurrent.Scheduler;
 import net.jodah.recurrent.util.concurrent.Schedulers;
 
 /**
- * Performs invocations with synchronous or asynchronous retries according to a {@link RetryPolicy}.
+ * Performs executions with synchronous or asynchronous retries according to a {@link RetryPolicy}.
  * 
  * @author Jonathan Halterman
  */
 public class Recurrent<T> {
   /**
-   * Creates and returns a new SyncRecurrent instance that will perform invocations and retries synchronously according
+   * Creates and returns a new SyncRecurrent instance that will perform executions and retries synchronously according
    * to the {@code retryPolicy}.
    * 
    * @throws NullPointerException if {@code retryPolicy} is null
@@ -23,7 +23,7 @@ public class Recurrent<T> {
   }
 
   /**
-   * Creates and returns a new AsyncRecurrent instance that will perform invocations and retries asynchronously via the
+   * Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
    * {@code executor} according to the {@code retryPolicy}.
    * 
    * @throws NullPointerException if {@code retryPolicy} or {@code executor} are null
@@ -33,7 +33,7 @@ public class Recurrent<T> {
   }
 
   /**
-   * Creates and returns a new AsyncRecurrent instance that will perform invocations and retries asynchronously via the
+   * Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
    * {@code scheduler} according to the {@code retryPolicy}.
    * 
    * @throws NullPointerException if {@code retryPolicy} or {@code scheduler} are null

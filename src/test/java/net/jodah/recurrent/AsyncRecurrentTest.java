@@ -274,7 +274,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
   }
 
   /**
-   * Asserts that asynchronous completion via an invocation is supported.
+   * Asserts that asynchronous completion via an execution is supported.
    */
   public void shouldCompleteAsync() throws Throwable {
     Waiter waiter = new Waiter();
@@ -306,7 +306,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
   }
 
   /**
-   * Asserts that retries are not attempted after a successful invocation.
+   * Asserts that retries are not attempted after a successful execution.
    */
   public void shouldSucceedWithoutRetries() throws Throwable {
     // Given retries not allowed

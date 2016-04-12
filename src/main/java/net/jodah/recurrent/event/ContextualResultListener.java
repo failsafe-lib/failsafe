@@ -1,9 +1,9 @@
 package net.jodah.recurrent.event;
 
-import net.jodah.recurrent.InvocationStats;
+import net.jodah.recurrent.ExecutionStats;
 
 /**
- * Listens for an invocation result, providing {@link InvocationStats} that describe invocations so far.
+ * Listens for an execution result, providing {@link ExecutionStats} that describe executions so far.
  * 
  * @author Jonathan Halterman
  * @param <R> result type
@@ -11,10 +11,10 @@ import net.jodah.recurrent.InvocationStats;
  */
 public interface ContextualResultListener<R, F extends Throwable> {
   /**
-   * Handles an invocation result.
+   * Handles an execution result.
    * 
-   * @param result The invocation result, else {@code null} if the call failed
-   * @param failure The invocation failure, else {@code null} if the call was successful
+   * @param result The execution result, else {@code null} if the call failed
+   * @param failure The execution failure, else {@code null} if the call was successful
    */
-  void onResult(R result, F failure, InvocationStats stats);
+  void onResult(R result, F failure, ExecutionStats stats);
 }

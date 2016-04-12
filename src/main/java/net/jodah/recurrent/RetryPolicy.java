@@ -112,7 +112,8 @@ public final class RetryPolicy {
       return false;
     if (retryableResultPredicate != null && retryableResultPredicate.test(result))
       return true;
-    if (!DEFAULT_VALUE.equals(abortableValue) && abortableValue == null ? result == null : abortableValue.equals(result))
+    if (!DEFAULT_VALUE.equals(abortableValue) && abortableValue == null ? result == null
+        : abortableValue.equals(result))
       return false;
     if (!DEFAULT_VALUE.equals(retryableValue))
       return retryableValue == null ? result == null : retryableValue.equals(result);
@@ -240,7 +241,7 @@ public final class RetryPolicy {
   }
 
   /**
-   * Specifies that retries should be aborted if the invocation result matches the {@code result}.
+   * Specifies that retries should be aborted if the execution result matches the {@code result}.
    */
   public RetryPolicy abortWhen(Object result) {
     this.abortableValue = result;
@@ -314,7 +315,7 @@ public final class RetryPolicy {
   }
 
   /**
-   * Specifies that a retry should occur if the invocation result matches the {@code result} and the retry policy is not
+   * Specifies that a retry should occur if the execution result matches the {@code result} and the retry policy is not
    * exceeded.
    */
   public RetryPolicy retryWhen(Object result) {

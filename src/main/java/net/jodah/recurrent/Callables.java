@@ -13,7 +13,7 @@ import net.jodah.recurrent.internal.util.Assert;
  */
 final class Callables {
   static <T> Callable<T> of(final ContextualResultListener<T, Throwable> listener, final T result,
-      final Throwable failure, final InvocationStats stats) {
+      final Throwable failure, final ExecutionStats stats) {
     return new Callable<T>() {
       @Override
       public T call() {

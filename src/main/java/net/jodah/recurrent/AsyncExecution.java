@@ -7,11 +7,11 @@ import net.jodah.recurrent.internal.util.Assert;
 import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
- * Tracks asynchronous invocations and allows retries to be scheduled according to a {@link RetryPolicy}.
+ * Tracks asynchronous executions and allows retries to be scheduled according to a {@link RetryPolicy}.
  * 
  * @author Jonathan Halterman
  */
-public final class AsyncInvocation extends Invocation {
+public final class AsyncExecution extends Execution {
   private final AsyncContextualCallable<Object> callable;
   private final RecurrentFuture<Object> future;
   private final Listeners<Object> listeners;
@@ -21,7 +21,7 @@ public final class AsyncInvocation extends Invocation {
   volatile boolean shouldRetry;
 
   @SuppressWarnings("unchecked")
-  <T> AsyncInvocation(AsyncContextualCallable<T> callable, RetryPolicy retryPolicy, Scheduler scheduler,
+  <T> AsyncExecution(AsyncContextualCallable<T> callable, RetryPolicy retryPolicy, Scheduler scheduler,
       RecurrentFuture<T> future, Listeners<T> listeners) {
     super(retryPolicy);
     this.callable = (AsyncContextualCallable<Object>) callable;
@@ -31,9 +31,9 @@ public final class AsyncInvocation extends Invocation {
   }
 
   /**
-   * Completes the invocation and the associated {@code RecurrentFuture}.
+   * Completes the execution and the associated {@code RecurrentFuture}.
    *
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   @Override
   public void complete() {
@@ -41,34 +41,34 @@ public final class AsyncInvocation extends Invocation {
   }
 
   /**
-   * Attempts to complete the invocation and the associated {@code RecurrentFuture} with the {@code result}. Returns
-   * true on success, else false if completion failed and should be retried via {@link #retry()}.
+   * Attempts to complete the execution and the associated {@code RecurrentFuture} with the {@code result}. Returns true
+   * on success, else false if completion failed and should be retried via {@link #retry()}.
    *
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
     return completeInternal(result, null, true);
   }
 
   /**
-   * Attempts to complete the invocation and the associated {@code RecurrentFuture} with the {@code result} and
+   * Attempts to complete the execution and the associated {@code RecurrentFuture} with the {@code result} and
    * {@code failure}. Returns true on success, else false if completion failed and should be retried via
    * {@link #retry()}.
    * <p>
-   * Note: the invocation may be completed even when the {@code failure} is not {@code null}, such as when the
+   * Note: the execution may be completed even when the {@code failure} is not {@code null}, such as when the
    * RetryPolicy does not allow retries for the {@code failure}.
    *
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result, Throwable failure) {
     return completeInternal(result, failure, true);
   }
 
   /**
-   * Attempts to retry a failed invocation. Returns true if the retry can be attempted, else returns returns false and
-   * completes the invocation and associated {@code RecurrentFuture}.
+   * Attempts to retry a failed execution. Returns true if the retry can be attempted, else returns returns false and
+   * completes the execution and associated {@code RecurrentFuture}.
    *
-   * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
+   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
   public boolean retry() {
     Assert.state(!retryCalled, "Retry has already been called");
@@ -77,20 +77,20 @@ public final class AsyncInvocation extends Invocation {
   }
 
   /**
-   * Attempts to retry a failed invocation. Returns true if the retry can be attempted for the {@code result}, else
-   * returns false and completes the invocation and associated {@code RecurrentFuture}.
+   * Attempts to retry a failed execution. Returns true if the retry can be attempted for the {@code result}, else
+   * returns false and completes the execution and associated {@code RecurrentFuture}.
    *
-   * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
+   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
   public boolean retryFor(Object result) {
     return retryFor(result, null);
   }
 
   /**
-   * Attempts to retry a failed invocation. Returns true if the retry can be attempted for the {@code result} and
-   * {@code failure}, else returns false and completes the invocation and associated {@code RecurrentFuture}.
+   * Attempts to retry a failed execution. Returns true if the retry can be attempted for the {@code result} and
+   * {@code failure}, else returns false and completes the execution and associated {@code RecurrentFuture}.
    * 
-   * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
+   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
   public boolean retryFor(Object result, Throwable failure) {
     Assert.state(!retryCalled, "Retry has already been called");
@@ -99,11 +99,11 @@ public final class AsyncInvocation extends Invocation {
   }
 
   /**
-   * Attempts to retry a failed invocation. Returns true if the retry can be attempted for the {@code failure}, else
-   * returns false and completes the invocation and associated {@code RecurrentFuture} exceptionally.
+   * Attempts to retry a failed execution. Returns true if the retry can be attempted for the {@code failure}, else
+   * returns false and completes the execution and associated {@code RecurrentFuture} exceptionally.
    *
    * @throws NullPointerException if {@code failure} is null
-   * @throws IllegalStateException if a retry method has already been called or the invocation is already complete
+   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
   public boolean retryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
@@ -121,9 +121,9 @@ public final class AsyncInvocation extends Invocation {
   }
 
   /**
-   * Attempts to complete the parent invocation followed by the future.
+   * Attempts to complete the parent execution followed by the future.
    * 
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   private synchronized boolean completeInternal(Object result, Throwable failure, boolean checkArgs) {
     super.complete(result, failure, checkArgs);
@@ -142,9 +142,9 @@ public final class AsyncInvocation extends Invocation {
   }
 
   /**
-   * Attempts to complete the invocation else schedule a retry.
+   * Attempts to complete the execution else schedule a retry.
    * 
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   synchronized boolean completeOrRetry(Object result, Throwable failure) {

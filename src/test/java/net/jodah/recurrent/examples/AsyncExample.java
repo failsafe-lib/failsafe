@@ -35,10 +35,10 @@ public class AsyncExample {
 
   public void example() throws Throwable {
     Recurrent.with(retryPolicy, executor)
-        .getAsync(invocation -> service.connect().whenComplete((result, failure) -> {
-          if (invocation.complete(result, failure))
+        .getAsync(execution -> service.connect().whenComplete((result, failure) -> {
+          if (execution.complete(result, failure))
             System.out.println("Success");
-          else if (!invocation.retry())
+          else if (!execution.retry())
             System.out.println("Connection attempts failed");
         }));
 

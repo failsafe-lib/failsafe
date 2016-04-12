@@ -1,7 +1,7 @@
 package net.jodah.recurrent.event;
 
 /**
- * Listens for an invocation success.
+ * Listens for an execution success.
  * 
  * @author Jonathan Halterman
  * @param <R> result type

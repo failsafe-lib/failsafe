@@ -3,27 +3,27 @@ package net.jodah.recurrent;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Invocation statistics.
+ * Execution statistics.
  * 
  * @author Jonathan Halterman
  */
-public class InvocationStats {
+public class ExecutionStats {
   final long startTime;
   /** Number of attempts */
   volatile int attempts;
 
-  InvocationStats(long startTime) {
+  ExecutionStats(long startTime) {
     this.startTime = startTime;
   }
 
-  InvocationStats(InvocationStats stats) {
+  ExecutionStats(ExecutionStats stats) {
     this.startTime = stats.startTime;
     this.attempts = stats.attempts;
   }
 
   /**
-   * Gets the number of invocation attempts so far. Invocation attempts are recorded when {@code canRetry} is called or
-   * when the invocation is completed successfully.
+   * Gets the number of execution attempts so far. Execution attempts are recorded when {@code canRetry} is called or
+   * when the execution is completed successfully.
    */
   public int getAttemptCount() {
     return attempts;
@@ -57,7 +57,7 @@ public class InvocationStats {
     return startTime;
   }
 
-  InvocationStats copy() {
-    return new InvocationStats(this);
+  ExecutionStats copy() {
+    return new ExecutionStats(this);
   }
 }

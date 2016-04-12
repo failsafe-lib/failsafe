@@ -5,11 +5,11 @@ import java.util.concurrent.TimeUnit;
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * Tracks invocations and determines when an invocation can be performed for a {@link RetryPolicy}.
+ * Tracks executions and determines when an execution can be performed for a {@link RetryPolicy}.
  * 
  * @author Jonathan Halterman
  */
-public class Invocation extends InvocationStats {
+public class Execution extends ExecutionStats {
   final RetryPolicy retryPolicy;
 
   // Mutable state
@@ -20,20 +20,20 @@ public class Invocation extends InvocationStats {
   volatile long waitTime;
 
   /**
-   * Creates a new Invocation for the {@code retryPolicy}.
+   * Creates a new Execution for the {@code retryPolicy}.
    * 
    * @throws NullPointerException if {@code retryPolicy} is null
    */
-  public Invocation(RetryPolicy retryPolicy) {
+  public Execution(RetryPolicy retryPolicy) {
     super(System.nanoTime());
     this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
     waitTime = retryPolicy.getDelay().toNanos();
   }
 
   /**
-   * Returns true if a retry can be performed for the {@code result}, else returns false and completes the invocation.
+   * Returns true if a retry can be performed for the {@code result}, else returns false and completes the execution.
    * 
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryFor(Object result) {
     return canRetryFor(result, null);
@@ -41,9 +41,9 @@ public class Invocation extends InvocationStats {
 
   /**
    * Returns true if a retry can be performed for the {@code result} or {@code failure}, else returns false and
-   * completes the invocation.
+   * completes the execution.
    * 
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryFor(Object result, Throwable failure) {
     if (complete(result, failure, true))
@@ -52,10 +52,10 @@ public class Invocation extends InvocationStats {
   }
 
   /**
-   * Returns true if a retry can be performed for the {@code failure}, else returns false and completes the invocation.
+   * Returns true if a retry can be performed for the {@code failure}, else returns false and completes the execution.
    * 
    * @throws NullPointerException if {@code failure} is null
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
@@ -63,19 +63,19 @@ public class Invocation extends InvocationStats {
   }
 
   /**
-   * Completes the invocation.
+   * Completes the execution.
    * 
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public void complete() {
     complete(null, null, false);
   }
 
   /**
-   * Attempts to complete the invocation with the {@code result}. Returns true on success, else false if completion
+   * Attempts to complete the execution with the {@code result}. Returns true on success, else false if completion
    * failed and should be retried.
    *
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
     return complete(result, null, true);
@@ -84,7 +84,7 @@ public class Invocation extends InvocationStats {
   /**
    * Returns the last failure that was recorded.
    * 
-   * @see #recordFailure(Throwable)
+   * @see #fail(Throwable)
    */
   @SuppressWarnings("unchecked")
   public <T extends Throwable> T getLastFailure() {
@@ -117,26 +117,26 @@ public class Invocation extends InvocationStats {
   }
 
   /**
-   * Returns whether the invocation is complete.
+   * Returns whether the execution is complete.
    * 
    * @see #complete()
    * @see #complete(Object)
-   * @see #recordFailure(Throwable)
+   * @see #fail(Throwable)
    */
   public boolean isComplete() {
     return completed;
   }
 
   /**
-   * Records a failed invocation attempt and returns true if a retry can be performed for the {@code failure}, else
-   * returns false and completes the invocation.
+   * Fails the execution attempt and returns true if a retry can be performed for the {@code failure}, else returns
+   * false and completes the execution.
    * 
    * <p>
    * Alias of {@link #canRetryOn(Throwable)}
    * 
-   * @throws IllegalStateException if the invocation is already complete
+   * @throws IllegalStateException if the execution is already complete
    */
-  public boolean recordFailure(Throwable failure) {
+  public boolean fail(Throwable failure) {
     return canRetryFor(null, failure);
   }
 
@@ -151,7 +151,7 @@ public class Invocation extends InvocationStats {
   }
 
   boolean complete(Object result, Throwable failure, boolean checkArgs) {
-    Assert.state(!completed, "Invocation has already been completed");
+    Assert.state(!completed, "Execution has already been completed");
     lastResult = result;
     lastFailure = failure;
     if (checkArgs && retryPolicy.allowsRetriesFor(result, failure))

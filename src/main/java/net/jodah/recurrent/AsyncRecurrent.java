@@ -8,7 +8,7 @@ import net.jodah.recurrent.internal.util.Assert;
 import net.jodah.recurrent.util.concurrent.Scheduler;
 
 /**
- * Performs asynchronous invocations with retries according to a {@link RetryPolicy}.
+ * Performs asynchronous executions with retries according to a {@link RetryPolicy}.
  * 
  * @author Jonathan Halterman
  */
@@ -45,7 +45,7 @@ public class AsyncRecurrent {
   /**
    * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
    * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
-   * manually scheduled via one of the {@code AsyncInvocation.retry} methods.
+   * manually scheduled via one of the {@code AsyncExecution.retry} methods.
    * 
    * @throws NullPointerException if the {@code callable} is null
    */
@@ -76,7 +76,7 @@ public class AsyncRecurrent {
   /**
    * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
    * exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
-   * one of the {@code AsyncInvocation.retry} methods.
+   * one of the {@code AsyncExecution.retry} methods.
    * 
    * @throws NullPointerException if the {@code runnable} is null
    */
@@ -119,7 +119,7 @@ public class AsyncRecurrent {
   /**
    * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
-   * manually scheduled via one of the {@code AsyncInvocation.retry} methods.
+   * manually scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>
    * Supported on Java 8 and above.
    * 
@@ -134,7 +134,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Configures the {@code listeners} to be called as invocation events occur.
+   * Configures the {@code listeners} to be called as execution events occur.
    */
   public <T extends Listeners<?>> AsyncRecurrent with(T listeners) {
     this.listeners = Assert.notNull(listeners, "listeners");
@@ -152,9 +152,9 @@ public class AsyncRecurrent {
     Listeners<T> typedListeners = (Listeners<T>) listeners;
     if (future == null)
       future = new RecurrentFuture<T>(scheduler, typedListeners);
-    AsyncInvocation invocation = new AsyncInvocation(callable, retryPolicy, scheduler, future, typedListeners);
-    future.initialize(invocation);
-    callable.initialize(invocation);
+    AsyncExecution execution = new AsyncExecution(callable, retryPolicy, scheduler, future, typedListeners);
+    future.initialize(execution);
+    callable.initialize(execution);
     try {
       future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     } catch (Throwable t) {

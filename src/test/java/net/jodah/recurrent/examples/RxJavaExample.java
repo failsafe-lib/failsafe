@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.annotations.Test;
 
 import net.jodah.recurrent.RetryPolicy;
-import net.jodah.recurrent.Invocation;
+import net.jodah.recurrent.Execution;
 import rx.Observable;
 import rx.Subscriber;
 
@@ -23,7 +23,7 @@ public class RxJavaExample {
       else
         System.out.println("Subscriber completed successfully");
     }).retryWhen(attempts -> {
-      Invocation stats = new Invocation(retryPolicy);
+      Execution stats = new Execution(retryPolicy);
       return attempts.flatMap(failure -> {
         System.out.println("Failure detected");
         if (stats.canRetryOn(failure))

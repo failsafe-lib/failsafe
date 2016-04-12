@@ -58,20 +58,20 @@ public class AsyncListeners<T> extends Listeners<T> {
     }
   }
 
-  static <T> void call(AsyncCtxResultListener<T> listener, T result, Throwable failure, InvocationStats stats,
+  static <T> void call(AsyncCtxResultListener<T> listener, T result, Throwable failure, ExecutionStats stats,
       Scheduler scheduler) {
     call(Callables.of(listener.listener, result, failure, stats), listener.executor, scheduler);
   }
 
   static <T> void call(AsyncResultListener<T> listener, AsyncCtxResultListener<T> ctxListener, T result,
-      Throwable failure, InvocationStats stats, Scheduler scheduler) {
+      Throwable failure, ExecutionStats stats, Scheduler scheduler) {
     if (listener != null)
       call(listener, result, failure, stats, scheduler);
     if (ctxListener != null)
       call(ctxListener, result, failure, stats, scheduler);
   }
 
-  static <T> void call(AsyncResultListener<T> listener, T result, Throwable failure, InvocationStats stats,
+  static <T> void call(AsyncResultListener<T> listener, T result, Throwable failure, ExecutionStats stats,
       Scheduler scheduler) {
     call(Callables.of(listener.listener, result, failure), listener.executor, scheduler);
   }
@@ -84,7 +84,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   * Registers the {@code listener} to be called asynchronously after a failed execution attempt.
    */
   public AsyncListeners<T> whenFailedAttemptAsync(ContextualResultListener<? super T, ? extends Throwable> listener) {
     asyncCtxFailedAttemptListener = new AsyncCtxResultListener<T>(listener);
@@ -92,7 +92,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed invocation
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed execution
    * attempt.
    */
   public AsyncListeners<T> whenFailedAttemptAsync(ContextualResultListener<? super T, ? extends Throwable> listener,
@@ -102,7 +102,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a failed invocation attempt.
+   * Registers the {@code listener} to be called asynchronously after a failed execution attempt.
    */
   public AsyncListeners<T> whenFailedAttemptAsync(ResultListener<? super T, ? extends Throwable> listener) {
     asyncFailedAttemptListener = new AsyncResultListener<T>(listener);
@@ -110,7 +110,7 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed invocation
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed execution
    * attempt.
    */
   public AsyncListeners<T> whenFailedAttemptAsync(ResultListener<? super T, ? extends Throwable> listener,
@@ -154,13 +154,13 @@ public class AsyncListeners<T> extends Listeners<T> {
   }
 
   @Override
-  void handleFailedAttempt(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
+  void handleFailedAttempt(T result, Throwable failure, ExecutionStats stats, Scheduler scheduler) {
     call(asyncFailedAttemptListener, asyncCtxFailedAttemptListener, result, failure, stats, scheduler);
     super.handleFailedAttempt(result, failure, stats, scheduler);
   }
 
   @Override
-  void handleRetry(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
+  void handleRetry(T result, Throwable failure, ExecutionStats stats, Scheduler scheduler) {
     call(asyncRetryListener, asyncCtxRetryListener, result, failure, stats, scheduler);
     super.handleRetry(result, failure, stats, scheduler);
   }

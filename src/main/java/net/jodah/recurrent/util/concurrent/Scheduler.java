@@ -5,7 +5,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Schedules invocations.
+ * Schedules executions.
  * 
  * @author Jonathan Halterman
  * @see Schedulers

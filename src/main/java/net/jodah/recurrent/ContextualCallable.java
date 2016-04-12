@@ -1,11 +1,11 @@
 package net.jodah.recurrent;
 
 /**
- * A callable that provides contextual invocation statistics.
+ * A callable that provides contextual execution statistics.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
  */
 public interface ContextualCallable<T> {
-  T call(InvocationStats stats) throws Exception;
+  T call(ExecutionStats stats) throws Exception;
 }

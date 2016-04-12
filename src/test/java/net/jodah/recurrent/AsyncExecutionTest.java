@@ -17,9 +17,9 @@ import org.testng.annotations.Test;
 import net.jodah.recurrent.util.concurrent.Scheduler;
 
 @Test
-public class AsyncInvocationTest {
+public class AsyncExecutionTest {
   ConnectException e = new ConnectException();
-  AsyncInvocation inv;
+  AsyncExecution inv;
   RecurrentFuture<Object> future;
   AsyncContextualCallable<Object> callable;
   Scheduler scheduler;
@@ -34,7 +34,7 @@ public class AsyncInvocationTest {
 
   public void testComplete() {
     // Given
-    inv = new AsyncInvocation(callable, new RetryPolicy(), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy(), scheduler, future, null);
 
     // When
     inv.complete();
@@ -49,7 +49,7 @@ public class AsyncInvocationTest {
 
   public void testCompleteForResult() {
     // Given
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -64,7 +64,7 @@ public class AsyncInvocationTest {
   }
 
   public void testGetAttemptCount() {
-    inv = new AsyncInvocation(callable, new RetryPolicy(), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy(), scheduler, future, null);
     inv.retryOn(e);
     inv.prepare();
     inv.retryOn(e);
@@ -73,7 +73,7 @@ public class AsyncInvocationTest {
 
   public void testRetryForResult() {
     // Given retry for null
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -90,7 +90,7 @@ public class AsyncInvocationTest {
     verify(future).complete(1, null, true);
 
     // Given 2 max retries
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null).withMaxRetries(1), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy().retryWhen(null).withMaxRetries(1), scheduler, future, null);
 
     // When / Then
     resetMocks();
@@ -111,7 +111,7 @@ public class AsyncInvocationTest {
 
   public void testRetryForResultAndThrowable() {
     // Given retry for null
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy().retryWhen(null), scheduler, future, null);
 
     // When / Then
     assertFalse(inv.complete(null));
@@ -130,7 +130,7 @@ public class AsyncInvocationTest {
     verify(future).complete(1, null, true);
 
     // Given 2 max retries
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryWhen(null).withMaxRetries(1), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy().retryWhen(null).withMaxRetries(1), scheduler, future, null);
 
     // When / Then
     resetMocks();
@@ -151,7 +151,7 @@ public class AsyncInvocationTest {
   @SuppressWarnings("unchecked")
   public void testRetryOn() {
     // Given retry on IllegalArgumentException
-    inv = new AsyncInvocation(callable, new RetryPolicy().retryOn(IllegalArgumentException.class), scheduler, future,
+    inv = new AsyncExecution(callable, new RetryPolicy().retryOn(IllegalArgumentException.class), scheduler, future,
         null);
 
     // When / Then
@@ -168,7 +168,7 @@ public class AsyncInvocationTest {
     verify(future).complete(null, e, false);
 
     // Given 2 max retries
-    inv = new AsyncInvocation(callable, new RetryPolicy().withMaxRetries(1), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy().withMaxRetries(1), scheduler, future, null);
 
     // When / Then
     resetMocks();
@@ -187,14 +187,14 @@ public class AsyncInvocationTest {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnRetryWhenAlreadyComplete() {
-    inv = new AsyncInvocation(callable, new RetryPolicy(), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy(), scheduler, future, null);
     inv.complete();
     inv.retryOn(e);
   }
 
   public void testCompleteOrRetry() {
     // Given retry on IllegalArgumentException
-    inv = new AsyncInvocation(callable, new RetryPolicy(), scheduler, future, null);
+    inv = new AsyncExecution(callable, new RetryPolicy(), scheduler, future, null);
 
     // When / Then
     inv.completeOrRetry(null, e);
@@ -217,7 +217,7 @@ public class AsyncInvocationTest {
     reset(callable);
   }
 
-  private void verifyScheduler(int invocations) {
-    verify(scheduler, times(invocations)).schedule(any(Callable.class), any(Long.class), any(TimeUnit.class));
+  private void verifyScheduler(int executions) {
+    verify(scheduler, times(executions)).schedule(any(Callable.class), any(Long.class), any(TimeUnit.class));
   }
 }

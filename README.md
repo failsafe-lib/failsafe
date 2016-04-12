@@ -12,11 +12,11 @@ Recurrent is a simple, zero-dependency library for performing retries. It featur
 
 * [Flexible retry policies](#retry-policies)
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
-* [Invocation statistics](#invocation-statistics)
+* [Execution statistics](#execution-statistics)
 * [CompletableFuture](#completablefuture-integration) and [Java 8 functional interface](#java-8-functional-interfaces) integration
 * [Event listeners](#event-listeners)
 * [Asynchronous API integration](#asynchronous-api-integration)
-* [Invocation tracking](#invocation-tracking)
+* [Execution tracking](#execution-tracking)
 
 Supports Java 6+ though the documentation uses lambdas for simplicity.
 
@@ -75,7 +75,7 @@ And of course we can combine these things into a single policy.
 
 #### Synchronous Retries
 
-Once we've defined a retry policy, we can perform a retryable synchronous invocation:
+Once we've defined a retry policy, we can perform a retryable synchronous execution:
 
 ```java
 // Run with retries
@@ -87,7 +87,7 @@ Connection connection = Recurrent.with(retryPolicy).get(() -> connect());
 
 #### Asynchronous Retries
 
-Asynchronous invocations are performed and retried on a [ScheduledExecutorService] and they return a [RecurrentFuture]. When the invocation succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
+Asynchronous executions are performed and retried on a [ScheduledExecutorService] and they return a [RecurrentFuture]. When the execution succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
 
 ```java
 Recurrent.with(retryPolicy, executor)
@@ -96,9 +96,9 @@ Recurrent.with(retryPolicy, executor)
   .whenFailure((result, failure) -> log.error("Connection attempts failed", failure));
 ```
 
-#### Invocation Statistics
+#### Execution Statistics
 
-Recurrent exposes [InvocationStats] that provide the number of invocation attempts as well as start and elapsed times:
+Recurrent exposes [ExecutionStats] that provide the number of execution attempts as well as start and elapsed times:
 
 ```java
 Recurrent.with(retryPolicy).get(stats -> {
@@ -147,7 +147,7 @@ CompletableFuture.supplyAsync(() -> Recurrent.with(retryPolicy).get(() -> "foo")
 
 #### Event Listeners
 
-Recurrent supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when invocations complete:
+Recurrent supports [event listeners][listeners] that can be notified of various events such as when retries are performed and when executions complete:
 
 ```java
 Recurrent.with(retryPolicy)
@@ -163,7 +163,7 @@ You can also implement listeners by extending the `Listeners` class and overridi
 ```java
 Recurrent.with(retryPolicy)
   .with(new Listeners<Connection>() {
-    public void onRetry(Connection cxn, Throwable failure, InvocationStats stats) {
+    public void onRetry(Connection cxn, Throwable failure, ExecutionStats stats) {
       log.warn("Failure #{}. Retrying.", stats.getAttemptCount());
     }
   
@@ -176,48 +176,48 @@ Recurrent.with(retryPolicy)
   }).get(() -> connect());
 ```
 
-For asynchronous Recurrent invocations, [AsyncListeners] can also be used to receive asynchronous callbacks for failed attempt and retry events. Asynchronous completion and failure listeners can be registered via [RecurrentFuture].
+For asynchronous Recurrent executions, [AsyncListeners] can also be used to receive asynchronous callbacks for failed attempt and retry events. Asynchronous completion and failure listeners can be registered via [RecurrentFuture].
 
 #### Asynchronous API Integration
 
-Recurrent can be integrated with asynchronous code that reports completion via callbacks. The `runAsync`, `getAsync` and `futureAsync` methods provide an [AsyncInvocation] reference that can be used to manually perform retries or completion inside asynchronous callbacks:
+Recurrent can be integrated with asynchronous code that reports completion via callbacks. The `runAsync`, `getAsync` and `futureAsync` methods provide an [AsyncExecution] reference that can be used to manually perform retries or completion inside asynchronous callbacks:
 
 ```java
 Recurrent.with(retryPolicy, executor)
-  .getAsync(invocation -> service.connect().whenComplete((result, failure) -> {
-    if (invocation.complete(result, failure))
+  .getAsync(execution -> service.connect().whenComplete((result, failure) -> {
+    if (execution.complete(result, failure))
       log.info("Connected");
-    else if (!invocation.retry())
+    else if (!execution.retry())
       log.error("Connection attempts failed", failure);
   }));
 ```
 
-Recurrent can also perform asynchronous invocations and retries on 3rd party schedulers via the [Scheduler] interface. See the [Vert.x example][Vert.x] for a more detailed implementation.
+Recurrent can also perform asynchronous executions and retries on 3rd party schedulers via the [Scheduler] interface. See the [Vert.x example][Vert.x] for a more detailed implementation.
 
-#### Invocation Tracking
+#### Execution Tracking
 
-In addition to automatically performing retries, Recurrent can be used to track invocations for you, allowing you to manually retry as needed:
+In addition to automatically performing retries, Recurrent can be used to track executions for you, allowing you to manually retry as needed:
 
 ```java
-Invocation invocation = new Invocation(retryPolicy);
-while (!invocation.isComplete()) {
+Execution execution = new Execution(retryPolicy);
+while (!execution.isComplete()) {
   try {
 	doSomething();
-    invocation.complete();
+    execution.complete();
   } catch (ConnectException e) {
-    invocation.recordFailure(e);
+    execution.fail(e);
   }
 }
 ```
 
-Invocation tracking is also useful for integrating with APIs that have their own retry mechanism:
+Execution tracking is also useful for integrating with APIs that have their own retry mechanism:
 
 ```java
-Invocation invocation = new Invocation(retryPolicy);
+Execution execution = new Execution(retryPolicy);
 
 // On failure
-if (invocation.canRetryOn(someFailure))
-  service.scheduleRetry(invocation.getWaitMillis(), TimeUnit.MILLISECONDS);
+if (execution.canRetryOn(someFailure))
+  service.scheduleRetry(execution.getWaitMillis(), TimeUnit.MILLISECONDS);
 ```
 
 See the [RxJava example][RxJava] for a more detailed implementation.
@@ -255,8 +255,8 @@ Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license]
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [RxJava]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/RxJavaExample.java
 [Vert.x]: https://github.com/jhalterman/recurrent/blob/master/src/test/java/net/jodah/recurrent/examples/VertxExample.java
-[InvocationStats]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/InvocationStats.html
-[Invocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Invocation.html
-[AsyncInvocation]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncInvocation.html
+[ExecutionStats]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/ExecutionStats.html
+[Execution]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/Execution
+[AsyncExecution]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/AsyncExecution
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
 [Scheduler]: http://jodah.net/recurrent/javadoc/net/jodah/recurrent/util/concurrent/Scheduler.html

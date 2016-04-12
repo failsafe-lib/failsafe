@@ -7,13 +7,13 @@ import java.util.function.BiConsumer;
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * An asynchronous callable with a reference to invocation information.
+ * An asynchronous callable with a reference to execution information.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
  */
 abstract class AsyncContextualCallable<T> implements Callable<T> {
-  protected AsyncInvocation invocation;
+  protected AsyncExecution execution;
 
   static <T> AsyncContextualCallable<T> of(final AsyncCallable<T> callable) {
     Assert.notNull(callable, "callable");
@@ -21,11 +21,11 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public synchronized T call() throws Exception {
         try {
-          invocation.prepare();
-          T result = callable.call(invocation);
+          execution.prepare();
+          T result = callable.call(execution);
           return result;
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
           return null;
         }
       }
@@ -38,10 +38,10 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public synchronized T call() throws Exception {
         try {
-          invocation.prepare();
-          runnable.run(invocation);
+          execution.prepare();
+          runnable.run(execution);
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
         }
 
         return null;
@@ -55,12 +55,12 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
+          execution.prepare();
           T result = callable.call();
-          invocation.completeOrRetry(result, null);
+          execution.completeOrRetry(result, null);
           return result;
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
           return null;
         }
       }
@@ -73,11 +73,11 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
+          execution.prepare();
           runnable.run();
-          invocation.completeOrRetry(null, null);
+          execution.completeOrRetry(null, null);
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
         }
 
         return null;
@@ -91,12 +91,12 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
-          T result = callable.call(invocation);
-          invocation.completeOrRetry(result, null);
+          execution.prepare();
+          T result = callable.call(execution);
+          execution.completeOrRetry(result, null);
           return result;
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
           return null;
         }
       }
@@ -109,11 +109,11 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
-          runnable.run(invocation);
-          invocation.completeOrRetry(null, null);
+          execution.prepare();
+          runnable.run(execution);
+          execution.completeOrRetry(null, null);
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
         }
 
         return null;
@@ -130,14 +130,14 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
+          execution.prepare();
           asyncFutureLock.acquire();
-          callable.call(invocation).whenComplete(new BiConsumer<T, Throwable>() {
+          callable.call(execution).whenComplete(new BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
               try {
                 if (failure != null)
-                  invocation.completeOrRetry(innerResult,
+                  execution.completeOrRetry(innerResult,
                       failure instanceof java.util.concurrent.CompletionException ? failure.getCause() : failure);
               } finally {
                 asyncFutureLock.release();
@@ -146,7 +146,7 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
           });
         } catch (Exception e) {
           try {
-            invocation.completeOrRetry(null, e);
+            execution.completeOrRetry(null, e);
           } finally {
             asyncFutureLock.release();
           }
@@ -163,18 +163,18 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
+          execution.prepare();
           callable.call().whenComplete(new BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
               // Unwrap CompletionException cause
               if (failure != null && failure instanceof java.util.concurrent.CompletionException)
                 failure = failure.getCause();
-              invocation.completeOrRetry(innerResult, failure);
+              execution.completeOrRetry(innerResult, failure);
             }
           });
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
         }
 
         return null;
@@ -189,18 +189,18 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
       @Override
       public T call() throws Exception {
         try {
-          invocation.prepare();
-          callable.call(invocation).whenComplete(new BiConsumer<T, Throwable>() {
+          execution.prepare();
+          callable.call(execution).whenComplete(new BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
               // Unwrap CompletionException cause
               if (failure != null && failure instanceof java.util.concurrent.CompletionException)
                 failure = failure.getCause();
-              invocation.completeOrRetry(innerResult, failure);
+              execution.completeOrRetry(innerResult, failure);
             }
           });
         } catch (Exception e) {
-          invocation.completeOrRetry(null, e);
+          execution.completeOrRetry(null, e);
         }
 
         return null;
@@ -208,7 +208,7 @@ abstract class AsyncContextualCallable<T> implements Callable<T> {
     };
   }
 
-  void initialize(AsyncInvocation invocation) {
-    this.invocation = invocation;
+  void initialize(AsyncExecution execution) {
+    this.execution = execution;
   }
 }

@@ -29,7 +29,7 @@ public class Listeners<T> {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
-      public void onResult(T result, Throwable failure, InvocationStats stats) {
+      public void onResult(T result, Throwable failure, ExecutionStats stats) {
         listener.onSuccess(result, stats);
       }
     };
@@ -46,7 +46,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Called when an invocation is completed.
+   * Called when an execution is completed.
    */
   public void onComplete(T result, Throwable failure) {
     if (completeListener != null)
@@ -54,9 +54,9 @@ public class Listeners<T> {
   }
 
   /**
-   * Called when an invocation is completed.
+   * Called when an execution is completed.
    */
-  public void onComplete(T result, Throwable failure, InvocationStats stats) {
+  public void onComplete(T result, Throwable failure, ExecutionStats stats) {
     if (ctxCompleteListener != null)
       ctxCompleteListener.onResult(result, failure, stats);
   }
@@ -72,7 +72,7 @@ public class Listeners<T> {
   /**
    * Called after a failed attempt.
    */
-  public void onFailedAttempt(T result, Throwable failure, InvocationStats stats) {
+  public void onFailedAttempt(T result, Throwable failure, ExecutionStats stats) {
     if (ctxFailedAttemptListener != null)
       ctxFailedAttemptListener.onResult(result, failure, stats);
   }
@@ -88,7 +88,7 @@ public class Listeners<T> {
   /**
    * Called after the retry policy is exceeded and the result is a failure.
    */
-  public void onFailure(T result, Throwable failure, InvocationStats stats) {
+  public void onFailure(T result, Throwable failure, ExecutionStats stats) {
     if (ctxFailureListener != null)
       ctxFailureListener.onResult(result, failure, stats);
   }
@@ -104,13 +104,13 @@ public class Listeners<T> {
   /**
    * Called before a retry is attempted.
    */
-  public void onRetry(T result, Throwable failure, InvocationStats stats) {
+  public void onRetry(T result, Throwable failure, ExecutionStats stats) {
     if (ctxRetryListener != null)
       ctxRetryListener.onResult(result, failure, stats);
   }
 
   /**
-   * Called after a successful invocation.
+   * Called after a successful execution.
    */
   public void onSuccess(T result) {
     if (successListener != null)
@@ -118,15 +118,15 @@ public class Listeners<T> {
   }
 
   /**
-   * Called after a successful invocation.
+   * Called after a successful execution.
    */
-  public void onSuccess(T result, InvocationStats stats) {
+  public void onSuccess(T result, ExecutionStats stats) {
     if (ctxSuccessListener != null)
       ctxSuccessListener.onSuccess(result, stats);
   }
 
   /**
-   * Registers the {@code listener} to be called when an invocation is completed.
+   * Registers the {@code listener} to be called when an execution is completed.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenComplete(ContextualResultListener<? super T, ? extends Throwable> listener) {
@@ -135,7 +135,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an invocation is completed.
+   * Registers the {@code listener} to be called when an execution is completed.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenComplete(ResultListener<? super T, ? extends Throwable> listener) {
@@ -144,7 +144,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after a failed invocation attempt.
+   * Registers the {@code listener} to be called after a failed execution attempt.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenFailedAttempt(
@@ -154,7 +154,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after a failed invocation attempt.
+   * Registers the {@code listener} to be called after a failed execution attempt.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenFailedAttempt(ResultListener<? super T, ? extends Throwable> listener) {
@@ -199,7 +199,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after a successful invocation.
+   * Registers the {@code listener} to be called after a successful execution.
    */
   @SuppressWarnings("unchecked")
   public <L extends Listeners<T>> L whenSuccess(ContextualSuccessListener<? super T> listener) {
@@ -208,7 +208,7 @@ public class Listeners<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after a successful invocation.
+   * Registers the {@code listener} to be called after a successful execution.
    */
   @SuppressWarnings("unchecked")
   public Listeners<T> whenSuccess(SuccessListener<? super T> listener) {
@@ -216,7 +216,7 @@ public class Listeners<T> {
     return this;
   }
 
-  void complete(T result, Throwable failure, InvocationStats stats, boolean success) {
+  void complete(T result, Throwable failure, ExecutionStats stats, boolean success) {
     if (success) {
       handleSuccess(result);
       handleSuccess(result, stats);
@@ -235,14 +235,14 @@ public class Listeners<T> {
     }
   }
 
-  void handleComplete(T result, Throwable failure, InvocationStats stats) {
+  void handleComplete(T result, Throwable failure, ExecutionStats stats) {
     try {
       onComplete(result, failure, stats);
     } catch (Exception ignore) {
     }
   }
 
-  void handleFailedAttempt(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
+  void handleFailedAttempt(T result, Throwable failure, ExecutionStats stats, Scheduler scheduler) {
     try {
       onFailedAttempt(result, failure);
     } catch (Exception ignore) {
@@ -260,14 +260,14 @@ public class Listeners<T> {
     }
   }
 
-  void handleFailure(T result, Throwable failure, InvocationStats stats) {
+  void handleFailure(T result, Throwable failure, ExecutionStats stats) {
     try {
       onFailure(result, failure, stats);
     } catch (Exception ignore) {
     }
   }
 
-  void handleRetry(T result, Throwable failure, InvocationStats stats, Scheduler scheduler) {
+  void handleRetry(T result, Throwable failure, ExecutionStats stats, Scheduler scheduler) {
     try {
       onRetry(result, failure);
     } catch (Exception ignore) {
@@ -285,7 +285,7 @@ public class Listeners<T> {
     }
   }
 
-  void handleSuccess(T result, InvocationStats stats) {
+  void handleSuccess(T result, ExecutionStats stats) {
     try {
       onSuccess(result, stats);
     } catch (Exception ignore) {

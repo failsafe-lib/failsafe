@@ -5,15 +5,15 @@ import java.util.concurrent.Callable;
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * A synchronous callable with a reference to invocation information.
+ * A synchronous callable with a reference to execution information.
  * 
  * @author Jonathan Halterman
  * @param <T> result type
  */
 abstract class SyncContextualCallable<T> implements Callable<T> {
-  protected InvocationStats stats;
+  protected ExecutionStats stats;
 
-  void initialize(InvocationStats stats) {
+  void initialize(ExecutionStats stats) {
     this.stats = stats;
   }
 

@@ -7,5 +7,5 @@ package net.jodah.recurrent;
  * @param <T> result type
  */
 public interface AsyncCallable<T> {
-  T call(AsyncInvocation invocation) throws Exception;
+  T call(AsyncExecution execution) throws Exception;
 }

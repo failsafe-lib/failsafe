@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import net.jodah.recurrent.internal.util.Assert;
 
 /**
- * Performs synchronous invocations with retries according to a {@link RetryPolicy}.
+ * Performs synchronous executions with retries according to a {@link RetryPolicy}.
  * 
  * @author Jonathan Halterman
  */
@@ -65,7 +65,7 @@ public class SyncRecurrent {
   }
 
   /**
-   * Configures the {@code listeners} to be called as invocation events occur.
+   * Configures the {@code listeners} to be called as execution events occur.
    */
   public SyncRecurrent with(Listeners<?> listeners) {
     this.listeners = Assert.notNull(listeners, "listeners");
@@ -80,11 +80,11 @@ public class SyncRecurrent {
    */
   @SuppressWarnings("unchecked")
   private <T> T call(Callable<T> callable) {
-    Invocation invocation = new Invocation(retryPolicy);
+    Execution execution = new Execution(retryPolicy);
 
     // Handle contextual calls
     if (callable instanceof SyncContextualCallable)
-      ((SyncContextualCallable<T>) callable).initialize(invocation);
+      ((SyncContextualCallable<T>) callable).initialize(execution);
 
     Listeners<T> typedListeners = (Listeners<T>) listeners;
     T result = null;
@@ -98,30 +98,30 @@ public class SyncRecurrent {
         failure = t;
       }
 
-      boolean completed = invocation.complete(result, failure, true);
+      boolean completed = execution.complete(result, failure, true);
       boolean success = completed && failure == null;
-      boolean shouldRetry = completed ? false : invocation.canRetryForInternal(result, failure);
+      boolean shouldRetry = completed ? false : execution.canRetryForInternal(result, failure);
 
       // Handle failure
       if (!success && typedListeners != null)
-        typedListeners.handleFailedAttempt(result, failure, invocation, null);
+        typedListeners.handleFailedAttempt(result, failure, execution, null);
 
       // Handle retry needed
       if (shouldRetry) {
         try {
-          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(invocation.waitTime));
+          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(execution.waitTime));
         } catch (InterruptedException e) {
           throw new RecurrentException(e);
         }
 
         if (typedListeners != null)
-          typedListeners.handleRetry(result, failure, invocation, null);
+          typedListeners.handleRetry(result, failure, execution, null);
       }
 
       // Handle completion
       if (completed || !shouldRetry) {
         if (typedListeners != null)
-          typedListeners.complete(result, failure, invocation, success);
+          typedListeners.complete(result, failure, execution, success);
         if (success || failure == null)
           return result;
         RecurrentException re = failure instanceof RecurrentException ? (RecurrentException) failure

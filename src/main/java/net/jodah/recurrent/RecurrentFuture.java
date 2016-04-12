@@ -25,7 +25,7 @@ import net.jodah.recurrent.util.concurrent.Scheduler;
 public class RecurrentFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
   private final Scheduler scheduler;
-  private InvocationStats stats;
+  private ExecutionStats stats;
   private volatile Future<T> delegate;
   private volatile boolean done;
   private volatile boolean cancelled;
@@ -99,7 +99,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an invocation is completed.
+   * Registers the {@code listener} to be called when an execution is completed.
    */
   public synchronized RecurrentFuture<T> whenComplete(
       ContextualResultListener<? super T, ? extends Throwable> listener) {
@@ -110,7 +110,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an invocation is completed.
+   * Registers the {@code listener} to be called when an execution is completed.
    */
   public synchronized RecurrentFuture<T> whenComplete(ResultListener<? super T, ? extends Throwable> listener) {
     listeners.whenComplete(listener);
@@ -120,7 +120,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when an invocation is completed.
+   * Registers the {@code listener} to be called asynchronously when an execution is completed.
    */
   public synchronized RecurrentFuture<T> whenCompleteAsync(
       ContextualResultListener<? super T, ? extends Throwable> listener) {
@@ -129,7 +129,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when an invocation is completed.
+   * Registers the {@code listener} to be called asynchronously when an execution is completed.
    */
   public synchronized RecurrentFuture<T> whenCompleteAsync(
       ContextualResultListener<? super T, ? extends Throwable> listener, ExecutorService executor) {
@@ -138,7 +138,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when an invocation is completed.
+   * Registers the {@code listener} to be called asynchronously when an execution is completed.
    */
   public synchronized RecurrentFuture<T> whenCompleteAsync(ResultListener<? super T, ? extends Throwable> listener) {
     call(done, asyncCompleteListener = new AsyncResultListener<T>(listener));
@@ -146,7 +146,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when an invocation is completed.
+   * Registers the {@code listener} to be called asynchronously when an execution is completed.
    */
   public synchronized RecurrentFuture<T> whenCompleteAsync(ResultListener<? super T, ? extends Throwable> listener,
       ExecutorService executor) {
@@ -215,7 +215,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after a successful invocation.
+   * Registers the {@code listener} to be called after a successful execution.
    */
   public synchronized RecurrentFuture<T> whenSuccess(ContextualSuccessListener<? super T> listener) {
     listeners.whenSuccess(listener);
@@ -225,7 +225,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called after a successful invocation.
+   * Registers the {@code listener} to be called after a successful execution.
    */
   public synchronized RecurrentFuture<T> whenSuccess(SuccessListener<? super T> listener) {
     listeners.whenSuccess(listener);
@@ -235,7 +235,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a successful invocation.
+   * Registers the {@code listener} to be called asynchronously after a successful execution.
    */
   public synchronized RecurrentFuture<T> whenSuccessAsync(ContextualSuccessListener<? super T> listener) {
     call(done && success,
@@ -244,7 +244,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a successful invocation.
+   * Registers the {@code listener} to be called asynchronously after a successful execution.
    */
   public synchronized RecurrentFuture<T> whenSuccessAsync(ContextualSuccessListener<? super T> listener,
       ExecutorService executor) {
@@ -254,7 +254,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a successful invocation.
+   * Registers the {@code listener} to be called asynchronously after a successful execution.
    */
   public synchronized RecurrentFuture<T> whenSuccessAsync(SuccessListener<? super T> listener) {
     call(done && success, asyncSuccessListener = new AsyncResultListener<T>(Listeners.resultListenerOf(listener)));
@@ -262,7 +262,7 @@ public class RecurrentFuture<T> implements Future<T> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a successful invocation.
+   * Registers the {@code listener} to be called asynchronously after a successful execution.
    */
   public synchronized RecurrentFuture<T> whenSuccessAsync(SuccessListener<? super T> listener,
       ExecutorService executor) {
@@ -285,7 +285,7 @@ public class RecurrentFuture<T> implements Future<T> {
     circuit.close();
   }
 
-  void initialize(InvocationStats stats) {
+  void initialize(ExecutionStats stats) {
     this.stats = stats;
   }
 

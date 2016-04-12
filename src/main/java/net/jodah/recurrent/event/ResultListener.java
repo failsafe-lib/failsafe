@@ -1,7 +1,7 @@
 package net.jodah.recurrent.event;
 
 /**
- * Listens for an invocation result.
+ * Listens for an execution result.
  * 
  * @author Jonathan Halterman
  * @param <R> result type
@@ -9,10 +9,10 @@ package net.jodah.recurrent.event;
  */
 public interface ResultListener<R, F extends Throwable> {
   /**
-   * Handles an invocation result.
+   * Handles an execution result.
    * 
-   * @param result The invocation result, else {@code null} if the call failed
-   * @param failure The invocation failure, else {@code null} if the call was successful
+   * @param result The execution result, else {@code null} if the call failed
+   * @param failure The execution failure, else {@code null} if the call was successful
    */
   void onResult(R result, F failure);
 }

@@ -11,7 +11,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import net.jodah.recurrent.RetryPolicy;
-import net.jodah.recurrent.Invocation;
+import net.jodah.recurrent.Execution;
 
 @Test
 public class RetryLoopExample {
@@ -28,20 +28,20 @@ public class RetryLoopExample {
   public void retryLoopExample() throws Throwable {
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(IllegalStateException.class).withBackoff(10, 40,
         TimeUnit.MILLISECONDS);
-    Invocation invocation = new Invocation(retryPolicy);
+    Execution execution = new Execution(retryPolicy);
 
-    while (!invocation.isComplete()) {
+    while (!execution.isComplete()) {
       try {
-        invocation.complete(list.size());
+        execution.complete(list.size());
       } catch (IllegalStateException e) {
-        invocation.recordFailure(e);
+        execution.fail(e);
 
         // Wait before retrying
-        Thread.sleep(invocation.getWaitMillis());
+        Thread.sleep(execution.getWaitMillis());
       }
     }
 
-    assertEquals(invocation.getLastResult(), Integer.valueOf(5));
-    assertEquals(invocation.getAttemptCount(), 3);
+    assertEquals(execution.getLastResult(), Integer.valueOf(5));
+    assertEquals(execution.getAttemptCount(), 3);
   }
 }

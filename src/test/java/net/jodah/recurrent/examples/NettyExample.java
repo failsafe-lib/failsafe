@@ -28,7 +28,7 @@ public class NettyExample {
     RetryPolicy retryPolicy = new RetryPolicy().withDelay(1, TimeUnit.SECONDS);
 
     Recurrent.with(retryPolicy, group).runAsync(
-        invocation -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
+        execution -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
           if (channelFuture.isSuccess()) {
             System.out.println("Connected!");
             try {
@@ -37,7 +37,7 @@ public class NettyExample {
             } catch (Exception ignore) {
               group.shutdownGracefully();
             }
-          } else if (!invocation.retryOn(channelFuture.cause()))
+          } else if (!execution.retryOn(channelFuture.cause()))
             System.out.println("Connection attempts failed");
         }));
 
