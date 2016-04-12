@@ -96,11 +96,11 @@ public final class RetryPolicy {
         return true;
       if (abortableFailures != null)
         for (Class<? extends Throwable> failureType : abortableFailures)
-          if (failure.getClass().isAssignableFrom(failureType))
+          if (failureType.isAssignableFrom(failure.getClass()))
             return false;
       if (retryableFailures != null)
         for (Class<? extends Throwable> failureType : retryableFailures)
-          if (failure.getClass().isAssignableFrom(failureType))
+          if (failureType.isAssignableFrom(failure.getClass()))
             return true;
 
       // Retry if the failure was not examined

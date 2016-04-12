@@ -1,11 +1,13 @@
 package net.jodah.recurrent;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.Test;
@@ -50,11 +52,19 @@ public class RetryPolicyTest {
 
   @SuppressWarnings("unchecked")
   public void testAllowsRetriesForFailure() {
-    RetryPolicy policy = new RetryPolicy().retryOn(IllegalArgumentException.class, IOException.class);
-    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
-    assertTrue(policy.allowsRetriesFor(null, new RuntimeException()));
-    assertTrue(policy.allowsRetriesFor(null, new IOException()));
+    RetryPolicy policy = new RetryPolicy().retryOn(Exception.class);
     assertTrue(policy.allowsRetriesFor(null, new Exception()));
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+
+    policy = new RetryPolicy().retryOn(IllegalArgumentException.class, IOException.class);
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertTrue(policy.allowsRetriesFor(null, new IOException()));
+    assertFalse(policy.allowsRetriesFor(null, new RuntimeException()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
+
+    policy = new RetryPolicy().retryOn(Arrays.asList(IllegalArgumentException.class));
+    assertTrue(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertFalse(policy.allowsRetriesFor(null, new RuntimeException()));
     assertFalse(policy.allowsRetriesFor(null, new IllegalStateException()));
   }
 
@@ -92,11 +102,19 @@ public class RetryPolicyTest {
 
   @SuppressWarnings("unchecked")
   public void testDoesNotAllowRetriesForAbortableFailure() {
-    RetryPolicy policy = new RetryPolicy().abortOn(IllegalArgumentException.class, IOException.class);
-    assertFalse(policy.allowsRetriesFor(null, new IllegalArgumentException()));
-    assertFalse(policy.allowsRetriesFor(null, new RuntimeException()));
-    assertFalse(policy.allowsRetriesFor(null, new IOException()));
+    RetryPolicy policy = new RetryPolicy().abortOn(Exception.class);
     assertFalse(policy.allowsRetriesFor(null, new Exception()));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+
+    policy = new RetryPolicy().abortOn(IllegalArgumentException.class, IOException.class);
+    assertFalse(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertFalse(policy.allowsRetriesFor(null, new IOException()));
+    assertTrue(policy.allowsRetriesFor(null, new RuntimeException()));
+    assertTrue(policy.allowsRetriesFor(null, new IllegalStateException()));
+
+    policy = new RetryPolicy().abortOn(Arrays.asList(IllegalArgumentException.class));
+    assertFalse(policy.allowsRetriesFor(null, new IllegalArgumentException()));
+    assertTrue(policy.allowsRetriesFor(null, new RuntimeException()));
     assertTrue(policy.allowsRetriesFor(null, new IllegalStateException()));
   }
 
@@ -136,5 +154,19 @@ public class RetryPolicyTest {
     shouldFail(
         () -> new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS).withMaxDuration(100, TimeUnit.MILLISECONDS),
         IllegalStateException.class);
+  }
+
+  public void testCopy() {
+    RetryPolicy rp = new RetryPolicy();
+    rp.withBackoff(2, 20, TimeUnit.SECONDS, 2.5);
+    rp.withMaxDuration(60, TimeUnit.SECONDS);
+    rp.withMaxRetries(3);
+
+    RetryPolicy rp2 = rp.copy();
+    assertEquals(rp.getDelay().toNanos(), rp2.getDelay().toNanos());
+    assertEquals(rp.getDelayMultiplier(), rp2.getDelayMultiplier());
+    assertEquals(rp.getMaxDelay().toNanos(), rp2.getMaxDelay().toNanos());
+    assertEquals(rp.getMaxDuration().toNanos(), rp2.getMaxDuration().toNanos());
+    assertEquals(rp.getMaxRetries(), rp2.getMaxRetries());
   }
 }
