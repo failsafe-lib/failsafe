@@ -133,27 +133,27 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/SyncRecurrent.html#get-java.util.concurrent.Callable-">get</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable)</code>
-<div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
+<div class="block">Executes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/SyncRecurrent.html#get-net.jodah.recurrent.ContextualCallable-">get</a></span>(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable)</code>
-<div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
+<div class="block">Executes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/SyncRecurrent.html#run-net.jodah.recurrent.CheckedRunnable-">run</a></span>(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable)</code>
-<div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
+<div class="block">Executes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/SyncRecurrent.html#run-net.jodah.recurrent.ContextualRunnable-">run</a></span>(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable)</code>
-<div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
+<div class="block">Executes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </td>
 </tr>
 <tr id="i4" class="altColor">
@@ -191,7 +191,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <li class="blockList">
 <h4>get</h4>
 <pre>public&nbsp;&lt;T&gt;&nbsp;T&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable)</pre>
-<div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
+<div class="block">Executes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -208,7 +208,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <li class="blockList">
 <h4>get</h4>
 <pre>public&nbsp;&lt;T&gt;&nbsp;T&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable)</pre>
-<div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
+<div class="block">Executes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -225,7 +225,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <li class="blockList">
 <h4>run</h4>
 <pre>public&nbsp;void&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable)</pre>
-<div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
+<div class="block">Executes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>runnable</code> is null</dd>
@@ -241,7 +241,7 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <li class="blockList">
 <h4>run</h4>
 <pre>public&nbsp;void&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable)</pre>
-<div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
+<div class="block">Executes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>runnable</code> is null</dd>
