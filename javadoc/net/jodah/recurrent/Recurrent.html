@@ -111,7 +111,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">Recurrent&lt;T&gt;</span>
 extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
-<div class="block">Performs invocations with synchronous or asynchronous retries according to a <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
+<div class="block">Performs executions with synchronous or asynchronous retries according to a <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </li>
 </ul>
 </div>
@@ -148,25 +148,25 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></code></td>
+<td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-">with</a></span>(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy)</code>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries synchronously according to
- the <code>retryPolicy</code>.</div>
+<div class="block">Creates and returns a new SyncRecurrent instance that will perform executions and retries synchronously according
+ to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></code></td>
+<td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-java.util.concurrent.ScheduledExecutorService-">with</a></span>(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
     <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ScheduledExecutorService</a>&nbsp;executor)</code>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>executor</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></code></td>
+<td class="colFirst"><code>static <a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">with</a></span>(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
     <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
@@ -215,9 +215,13 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <ul class="blockList">
 <li class="blockList">
 <h4>with</h4>
-<pre>public static&nbsp;<a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy)</pre>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries synchronously according to
- the <code>retryPolicy</code>.</div>
+<pre>public static&nbsp;<a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy)</pre>
+<div class="block">Creates and returns a new SyncRecurrent instance that will perform executions and retries synchronously according
+ to the <code>retryPolicy</code>.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>retryPolicy</code> is null</dd>
+</dl>
 </li>
 </ul>
 <a name="with-net.jodah.recurrent.RetryPolicy-java.util.concurrent.ScheduledExecutorService-">
@@ -226,10 +230,14 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <ul class="blockList">
 <li class="blockList">
 <h4>with</h4>
-<pre>public static&nbsp;<a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
+<pre>public static&nbsp;<a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
                                   <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ScheduledExecutorService</a>&nbsp;executor)</pre>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>executor</code> according to the <code>retryPolicy</code>.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>retryPolicy</code> or <code>executor</code> are null</dd>
+</dl>
 </li>
 </ul>
 <a name="with-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">
@@ -238,10 +246,14 @@ extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?
 <ul class="blockListLast">
 <li class="blockList">
 <h4>with</h4>
-<pre>public static&nbsp;<a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
+<pre>public static&nbsp;<a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
                                   <a href="../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</pre>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>retryPolicy</code> or <code>scheduler</code> are null</dd>
+</dl>
 </li>
 </ul>
 </li>

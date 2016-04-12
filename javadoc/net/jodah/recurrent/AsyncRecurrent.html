@@ -18,8 +18,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -93,15 +93,25 @@ var activeTableTab = "activeTableTab";
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="subTitle">net.jodah.recurrent</div>
-<h2 title="Interface AsyncRecurrent" class="title">Interface AsyncRecurrent</h2>
+<h2 title="Class AsyncRecurrent" class="title">Class AsyncRecurrent</h2>
 </div>
 <div class="contentContainer">
+<ul class="inheritance">
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
+<li>
+<ul class="inheritance">
+<li>net.jodah.recurrent.AsyncRecurrent</li>
+</ul>
+</li>
+</ul>
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
 <hr>
 <br>
-<pre>public interface <span class="typeNameLabel">AsyncRecurrent</span></pre>
+<pre>public class <span class="typeNameLabel">AsyncRecurrent</span>
+extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
+<div class="block">Performs asynchronous executions with retries according to a <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </li>
 </ul>
 </div>
@@ -115,7 +125,7 @@ var activeTableTab = "activeTableTab";
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -184,12 +194,19 @@ var activeTableTab = "activeTableTab";
 </td>
 </tr>
 <tr id="i9" class="rowColor">
-<td class="colFirst"><code>&lt;T extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&gt;<br><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></code></td>
+<td class="colFirst"><code>&lt;T extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&gt;<br><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/AsyncRecurrent.html#with-T-">with</a></span>(T&nbsp;listeners)</code>
-<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
+<div class="block">Configures the <code>listeners</code> to be called as execution events occur.</div>
 </td>
 </tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;java.lang.<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
+<code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
@@ -204,59 +221,13 @@ var activeTableTab = "activeTableTab";
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="future-java.util.concurrent.Callable-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>future</h4>
-<pre>&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable)</pre>
-<div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
- <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
-</dl>
-</li>
-</ul>
-<a name="future-net.jodah.recurrent.ContextualCallable-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>future</h4>
-<pre>&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable)</pre>
-<div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
- <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
-</dl>
-</li>
-</ul>
-<a name="futureAsync-net.jodah.recurrent.AsyncCallable-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>futureAsync</h4>
-<pre>&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;futureAsync(<a href="../../../net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable)</pre>
-<div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
- <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded. This method is intended for integration with asynchronous code. Retries must be
- manually scheduled via one of the <code>AsyncInvocation.retry</code> methods.</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
-</dl>
-</li>
-</ul>
 <a name="get-java.util.concurrent.Callable-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>get</h4>
-<pre>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable)</pre>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable)</pre>
 <div class="block">Invokes the <code>callable</code> asynchronously until a successful result is returned or the configured
  <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 <dl>
@@ -271,7 +242,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>get</h4>
-<pre>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable)</pre>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable)</pre>
 <div class="block">Invokes the <code>callable</code> asynchronously until a successful result is returned or the configured
  <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 <dl>
@@ -286,10 +257,10 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>getAsync</h4>
-<pre>&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;getAsync(<a href="../../../net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a>&lt;T&gt;&nbsp;callable)</pre>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;T&gt;&nbsp;getAsync(<a href="../../../net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a>&lt;T&gt;&nbsp;callable)</pre>
 <div class="block">Invokes the <code>callable</code> asynchronously until a successful result is returned or the configured
  <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded. This method is intended for integration with asynchronous code. Retries must be
- manually scheduled via one of the <code>AsyncInvocation.retry</code> methods.</div>
+ manually scheduled via one of the <code>AsyncExecution.retry</code> methods.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
@@ -302,7 +273,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>run</h4>
-<pre><a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Void.html?is-external=true" title="class or interface in java.lang">Void</a>&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable)</pre>
+<pre>public&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Void.html?is-external=true" title="class or interface in java.lang">Void</a>&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable)</pre>
 <div class="block">Invokes the <code>runnable</code> asynchronously until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 <dl>
@@ -317,7 +288,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>run</h4>
-<pre><a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Void.html?is-external=true" title="class or interface in java.lang">Void</a>&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable)</pre>
+<pre>public&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Void.html?is-external=true" title="class or interface in java.lang">Void</a>&gt;&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable)</pre>
 <div class="block">Invokes the <code>runnable</code> asynchronously until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 <dl>
@@ -332,13 +303,65 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>runAsync</h4>
-<pre><a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Void.html?is-external=true" title="class or interface in java.lang">Void</a>&gt;&nbsp;runAsync(<a href="../../../net/jodah/recurrent/AsyncRunnable.html" title="interface in net.jodah.recurrent">AsyncRunnable</a>&nbsp;runnable)</pre>
+<pre>public&nbsp;<a href="../../../net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Void.html?is-external=true" title="class or interface in java.lang">Void</a>&gt;&nbsp;runAsync(<a href="../../../net/jodah/recurrent/AsyncRunnable.html" title="interface in net.jodah.recurrent">AsyncRunnable</a>&nbsp;runnable)</pre>
 <div class="block">Invokes the <code>runnable</code> asynchronously until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
- one of the <code>AsyncInvocation.retry</code> methods.</div>
+ one of the <code>AsyncExecution.retry</code> methods.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>runnable</code> is null</dd>
+</dl>
+</li>
+</ul>
+<a name="future-java.util.concurrent.Callable-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>future</h4>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable)</pre>
+<div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
+ <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.
+ <p>
+ Supported on Java 8 and above.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
+</dl>
+</li>
+</ul>
+<a name="future-net.jodah.recurrent.ContextualCallable-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>future</h4>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;future(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable)</pre>
+<div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
+ <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.
+ <p>
+ Supported on Java 8 and above.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
+</dl>
+</li>
+</ul>
+<a name="futureAsync-net.jodah.recurrent.AsyncCallable-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>futureAsync</h4>
+<pre>public&nbsp;&lt;T&gt;&nbsp;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&nbsp;futureAsync(<a href="../../../net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a>&lt;<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html?is-external=true" title="class or interface in java.util.concurrent">CompletableFuture</a>&lt;T&gt;&gt;&nbsp;callable)</pre>
+<div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
+ <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded. This method is intended for integration with asynchronous code. Retries must be
+ manually scheduled via one of the <code>AsyncExecution.retry</code> methods.
+ <p>
+ Supported on Java 8 and above.</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if the <code>callable</code> is null</dd>
 </dl>
 </li>
 </ul>
@@ -350,8 +373,8 @@ var activeTableTab = "activeTableTab";
 <ul class="blockListLast">
 <li class="blockList">
 <h4>with</h4>
-<pre>&lt;T extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&gt;&nbsp;<a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a>&nbsp;with(T&nbsp;listeners)</pre>
-<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
+<pre>public&nbsp;&lt;T extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&gt;&nbsp;<a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a>&nbsp;with(T&nbsp;listeners)</pre>
+<div class="block">Configures the <code>listeners</code> to be called as execution events occur.</div>
 </li>
 </ul>
 </li>

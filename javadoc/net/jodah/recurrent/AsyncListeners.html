@@ -49,8 +49,8 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?net/jodah/recurrent/AsyncListeners.html" target="_top">Frames</a></li>
@@ -160,28 +160,28 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 <tr id="i0" class="altColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttemptAsync</a></span>(<a href="../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed execution attempt.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ContextualResultListener-java.util.concurrent.ExecutorService-">whenFailedAttemptAsync</a></span>(<a href="../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener,
                       <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ExecutorService</a>&nbsp;executor)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed execution
  attempt.</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ResultListener-">whenFailedAttemptAsync</a></span>(<a href="../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed execution attempt.</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ResultListener-java.util.concurrent.ExecutorService-">whenFailedAttemptAsync</a></span>(<a href="../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener,
                       <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ExecutorService</a>&nbsp;executor)</code>
-<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed execution
  attempt.</div>
 </td>
 </tr>
@@ -217,7 +217,7 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;net.jodah.recurrent.<a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></h3>
-<code><a href="../../../net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-">onComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-">onFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailure-T-java.lang.Throwable-">onFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailure-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-">onRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onSuccess-T-">onSuccess</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onSuccess-T-net.jodah.recurrent.InvocationStats-">onSuccess</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ContextualResultListener-">whenComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ResultListener-">whenComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ResultListener-">whenFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ContextualResultListener-">whenFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ResultListener-">whenFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ContextualResultListener-">whenRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ResultListener-">whenRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.SuccessListener-">whenSuccess</a></code></li>
+<code><a href="../../../net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-">onComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-">onFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailure-T-java.lang.Throwable-">onFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onFailure-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-">onRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onSuccess-T-">onSuccess</a>, <a href="../../../net/jodah/recurrent/Listeners.html#onSuccess-T-net.jodah.recurrent.ExecutionStats-">onSuccess</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ContextualResultListener-">whenComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ResultListener-">whenComplete</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ResultListener-">whenFailedAttempt</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ContextualResultListener-">whenFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ResultListener-">whenFailure</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ContextualResultListener-">whenRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenRetry-net.jodah.recurrent.event.ResultListener-">whenRetry</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess</a>, <a href="../../../net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.SuccessListener-">whenSuccess</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -264,7 +264,7 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 <li class="blockList">
 <h4>whenFailedAttemptAsync</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;&nbsp;whenFailedAttemptAsync(<a href="../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</pre>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed execution attempt.</div>
 </li>
 </ul>
 <a name="whenFailedAttemptAsync-net.jodah.recurrent.event.ContextualResultListener-java.util.concurrent.ExecutorService-">
@@ -275,7 +275,7 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 <h4>whenFailedAttemptAsync</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;&nbsp;whenFailedAttemptAsync(<a href="../../../net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener,
                                                 <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ExecutorService</a>&nbsp;executor)</pre>
-<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed execution
  attempt.</div>
 </li>
 </ul>
@@ -286,7 +286,7 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 <li class="blockList">
 <h4>whenFailedAttemptAsync</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;&nbsp;whenFailedAttemptAsync(<a href="../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener)</pre>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed execution attempt.</div>
 </li>
 </ul>
 <a name="whenFailedAttemptAsync-net.jodah.recurrent.event.ResultListener-java.util.concurrent.ExecutorService-">
@@ -297,7 +297,7 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 <h4>whenFailedAttemptAsync</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a>&lt;<a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt;&nbsp;whenFailedAttemptAsync(<a href="../../../net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a>&lt;? super <a href="../../../net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>,? extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt;&nbsp;listener,
                                                 <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ExecutorService</a>&nbsp;executor)</pre>
-<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed execution
  attempt.</div>
 </li>
 </ul>
@@ -371,8 +371,8 @@ extends <a href="../../../net/jodah/recurrent/Listeners.html" title="class in ne
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?net/jodah/recurrent/AsyncListeners.html" target="_top">Frames</a></li>

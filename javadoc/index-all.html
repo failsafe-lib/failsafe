@@ -69,7 +69,7 @@
 <!--   -->
 </a></div>
 <!-- ========= END OF TOP NAVBAR ========= -->
-<div class="contentContainer"><a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:W">W</a>&nbsp;<a name="I:A">
+<div class="contentContainer"><a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:W">W</a>&nbsp;<a name="I:A">
 <!--   -->
 </a>
 <h2 class="title">A</h2>
@@ -96,7 +96,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#abortWhen-java.lang.Object-">abortWhen(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
-<div class="block">Specifies that retries should be aborted if the invocation result matches the <code>result</code>.</div>
+<div class="block">Specifies that retries should be aborted if the execution result matches the <code>result</code>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#allowsRetries--">allowsRetries()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
@@ -108,11 +108,11 @@
 </dd>
 <dt><a href="net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">AsyncCallable</span></a>&lt;<a href="net/jodah/recurrent/AsyncCallable.html" title="type parameter in AsyncCallable">T</a>&gt; - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
-<div class="block">A callable that can manually trigger asynchronous retries or completion for an invocation.</div>
+<div class="block">A callable that manually triggers asynchronous retries or completion.</div>
 </dd>
-<dt><a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent"><span class="typeNameLink">AsyncInvocation</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
+<dt><a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent"><span class="typeNameLink">AsyncExecution</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
-<div class="block">Tracks asynchronous invocations and allows retries to be scheduled according to a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
+<div class="block">Tracks asynchronous executions and allows retries to be scheduled according to a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent"><span class="typeNameLink">AsyncListeners</span></a>&lt;<a href="net/jodah/recurrent/AsyncListeners.html" title="type parameter in AsyncListeners">T</a>&gt; - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
@@ -121,11 +121,13 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncListeners.html#AsyncListeners--">AsyncListeners()</a></span> - Constructor for class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">AsyncRecurrent</span></a> - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
-<dd>&nbsp;</dd>
+<dt><a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent"><span class="typeNameLink">AsyncRecurrent</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
+<dd>
+<div class="block">Performs asynchronous executions with retries according to a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
+</dd>
 <dt><a href="net/jodah/recurrent/AsyncRunnable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">AsyncRunnable</span></a> - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
-<div class="block">A runnable that can manually trigger asynchronous retries or completion for an invocation.</div>
+<div class="block">A runnable that manually triggers asynchronous retries or completion.</div>
 </dd>
 </dl>
 <a name="I:B">
@@ -141,26 +143,26 @@
 </a>
 <h2 class="title">C</h2>
 <dl>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncCallable.html#call-net.jodah.recurrent.AsyncInvocation-">call(AsyncInvocation)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncCallable.html#call-net.jodah.recurrent.AsyncExecution-">call(AsyncExecution)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncCallable.html" title="interface in net.jodah.recurrent">AsyncCallable</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ContextualCallable.html#call-net.jodah.recurrent.InvocationStats-">call(InvocationStats)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ContextualCallable.html#call-net.jodah.recurrent.ExecutionStats-">call(ExecutionStats)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#cancel-boolean-">cancel(boolean)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html#cancel-boolean-">cancel(boolean)</a></span> - Method in class net.jodah.recurrent.util.concurrent.<a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html" title="class in net.jodah.recurrent.util.concurrent">DefaultScheduledFuture</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#canRetryFor-java.lang.Object-">canRetryFor(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#canRetryFor-java.lang.Object-">canRetryFor(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
-<div class="block">Returns true if a retry can be performed for the <code>result</code>, else returns false and completes the invocation.</div>
+<div class="block">Returns true if a retry can be performed for the <code>result</code>, else returns false and completes the execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#canRetryFor-java.lang.Object-java.lang.Throwable-">canRetryFor(Object, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#canRetryFor-java.lang.Object-java.lang.Throwable-">canRetryFor(Object, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
 <div class="block">Returns true if a retry can be performed for the <code>result</code> or <code>failure</code>, else returns false and
- completes the invocation.</div>
+ completes the execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#canRetryOn-java.lang.Throwable-">canRetryOn(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#canRetryOn-java.lang.Throwable-">canRetryOn(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
-<div class="block">Returns true if a retry can be performed for the <code>failure</code>, else returns false and completes the invocation.</div>
+<div class="block">Returns true if a retry can be performed for the <code>failure</code>, else returns false and completes the execution.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">CheckedRunnable</span></a> - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
@@ -168,42 +170,42 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html#compareTo-java.util.concurrent.Delayed-">compareTo(Delayed)</a></span> - Method in class net.jodah.recurrent.util.concurrent.<a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html" title="class in net.jodah.recurrent.util.concurrent">DefaultScheduledFuture</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#complete--">complete()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#complete--">complete()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Completes the invocation and the associated <code>RecurrentFuture</code>.</div>
+<div class="block">Completes the execution and the associated <code>RecurrentFuture</code>.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#complete-java.lang.Object-">complete(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#complete-java.lang.Object-">complete(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Attempts to complete the invocation and the associated <code>RecurrentFuture</code> with the <code>result</code>.</div>
+<div class="block">Attempts to complete the execution and the associated <code>RecurrentFuture</code> with the <code>result</code>.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#complete-java.lang.Object-java.lang.Throwable-">complete(Object, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#complete-java.lang.Object-java.lang.Throwable-">complete(Object, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Attempts to complete the invocation and the associated <code>RecurrentFuture</code> with the <code>result</code> and
+<div class="block">Attempts to complete the execution and the associated <code>RecurrentFuture</code> with the <code>result</code> and
  <code>failure</code>.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#complete--">complete()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#complete--">complete()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
-<div class="block">Completes the invocation.</div>
+<div class="block">Completes the execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#complete-java.lang.Object-">complete(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#complete-java.lang.Object-">complete(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
-<div class="block">Attempts to complete the invocation with the <code>result</code>.</div>
+<div class="block">Attempts to complete the execution with the <code>result</code>.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">ContextualCallable</span></a>&lt;<a href="net/jodah/recurrent/ContextualCallable.html" title="type parameter in ContextualCallable">T</a>&gt; - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
-<div class="block">A callable that provides contextual invocation statistics.</div>
+<div class="block">A callable that provides contextual execution statistics.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event"><span class="typeNameLink">ContextualResultListener</span></a>&lt;<a href="net/jodah/recurrent/event/ContextualResultListener.html" title="type parameter in ContextualResultListener">R</a>,<a href="net/jodah/recurrent/event/ContextualResultListener.html" title="type parameter in ContextualResultListener">F</a> extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt; - Interface in <a href="net/jodah/recurrent/event/package-summary.html">net.jodah.recurrent.event</a></dt>
 <dd>
-<div class="block">Listens for an invocation result, providing <a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent"><code>InvocationStats</code></a> that describe invocations so far.</div>
+<div class="block">Listens for an execution result, providing <a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent"><code>ExecutionStats</code></a> that describe executions so far.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">ContextualRunnable</span></a> - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
-<div class="block">A runnable that provides contextual invocation statistics.</div>
+<div class="block">A runnable that provides contextual execution statistics.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/event/ContextualSuccessListener.html" title="interface in net.jodah.recurrent.event"><span class="typeNameLink">ContextualSuccessListener</span></a>&lt;<a href="net/jodah/recurrent/event/ContextualSuccessListener.html" title="type parameter in ContextualSuccessListener">R</a>&gt; - Interface in <a href="net/jodah/recurrent/event/package-summary.html">net.jodah.recurrent.event</a></dt>
 <dd>
-<div class="block">Listens for an invocation success, providing <a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent"><code>InvocationStats</code></a> that describe invocations so far.</div>
+<div class="block">Listens for an execution success, providing <a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent"><code>ExecutionStats</code></a> that describe executions so far.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#copy--">copy()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
@@ -228,22 +230,45 @@
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/util/Duration.html#Duration-long-java.util.concurrent.TimeUnit-">Duration(long, TimeUnit)</a></span> - Constructor for class net.jodah.recurrent.util.<a href="net/jodah/recurrent/util/Duration.html" title="class in net.jodah.recurrent.util">Duration</a></dt>
 <dd>&nbsp;</dd>
 </dl>
+<a name="I:E">
+<!--   -->
+</a>
+<h2 class="title">E</h2>
+<dl>
+<dt><a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Execution</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
+<dd>
+<div class="block">Tracks executions and determines when an execution can be performed for a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#Execution-net.jodah.recurrent.RetryPolicy-">Execution(RetryPolicy)</a></span> - Constructor for class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
+<dd>
+<div class="block">Creates a new Execution for the <code>retryPolicy</code>.</div>
+</dd>
+<dt><a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent"><span class="typeNameLink">ExecutionStats</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
+<dd>
+<div class="block">Execution statistics.</div>
+</dd>
+</dl>
 <a name="I:F">
 <!--   -->
 </a>
 <h2 class="title">F</h2>
 <dl>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#future-java.util.concurrent.Callable-">future(Callable&lt;CompletableFuture&lt;T&gt;&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#fail-java.lang.Throwable-">fail(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
+<dd>
+<div class="block">Fails the execution attempt and returns true if a retry can be performed for the <code>failure</code>, else returns
+ false and completes the execution.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#future-java.util.concurrent.Callable-">future(Callable&lt;CompletableFuture&lt;T&gt;&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
  <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#future-net.jodah.recurrent.ContextualCallable-">future(ContextualCallable&lt;CompletableFuture&lt;T&gt;&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#future-net.jodah.recurrent.ContextualCallable-">future(ContextualCallable&lt;CompletableFuture&lt;T&gt;&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
  <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#futureAsync-net.jodah.recurrent.AsyncCallable-">futureAsync(AsyncCallable&lt;CompletableFuture&lt;T&gt;&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#futureAsync-net.jodah.recurrent.AsyncCallable-">futureAsync(AsyncCallable&lt;CompletableFuture&lt;T&gt;&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> asynchronously until the resulting future is successfully completed or the configured
  <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
@@ -254,12 +279,12 @@
 </a>
 <h2 class="title">G</h2>
 <dl>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#get-java.util.concurrent.Callable-">get(Callable&lt;T&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#get-java.util.concurrent.Callable-">get(Callable&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> asynchronously until a successful result is returned or the configured
  <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#get-net.jodah.recurrent.ContextualCallable-">get(ContextualCallable&lt;T&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#get-net.jodah.recurrent.ContextualCallable-">get(ContextualCallable&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> asynchronously until a successful result is returned or the configured
  <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
@@ -268,12 +293,12 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#get-long-java.util.concurrent.TimeUnit-">get(long, TimeUnit)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#get-java.util.concurrent.Callable-">get(Callable&lt;T&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#get-java.util.concurrent.Callable-">get(Callable&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#get-net.jodah.recurrent.ContextualCallable-">get(ContextualCallable&lt;T&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#get-net.jodah.recurrent.ContextualCallable-">get(ContextualCallable&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
@@ -282,14 +307,14 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html#get-long-java.util.concurrent.TimeUnit-">get(long, TimeUnit)</a></span> - Method in class net.jodah.recurrent.util.concurrent.<a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html" title="class in net.jodah.recurrent.util.concurrent">DefaultScheduledFuture</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#getAsync-net.jodah.recurrent.AsyncCallable-">getAsync(AsyncCallable&lt;T&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#getAsync-net.jodah.recurrent.AsyncCallable-">getAsync(AsyncCallable&lt;T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>callable</code> asynchronously until a successful result is returned or the configured
  <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/InvocationStats.html#getAttemptCount--">getAttemptCount()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ExecutionStats.html#getAttemptCount--">getAttemptCount()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent">ExecutionStats</a></dt>
 <dd>
-<div class="block">Gets the number of invocation attempts so far.</div>
+<div class="block">Gets the number of execution attempts so far.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#getDelay--">getDelay()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
@@ -301,19 +326,19 @@
 <dd>
 <div class="block">Returns the delay multiplier for backoff retries.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/InvocationStats.html#getElapsedMillis--">getElapsedMillis()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ExecutionStats.html#getElapsedMillis--">getElapsedMillis()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent">ExecutionStats</a></dt>
 <dd>
 <div class="block">Returns the elapsed time in milliseconds.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/InvocationStats.html#getElapsedNanos--">getElapsedNanos()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ExecutionStats.html#getElapsedNanos--">getElapsedNanos()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent">ExecutionStats</a></dt>
 <dd>
 <div class="block">Returns the elapsed time in nanoseconds.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#getLastFailure--">getLastFailure()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#getLastFailure--">getLastFailure()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
 <div class="block">Returns the last failure that was recorded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#getLastResult--">getLastResult()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#getLastResult--">getLastResult()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
 <div class="block">Returns the last result that was recorded.</div>
 </dd>
@@ -329,19 +354,19 @@
 <dd>
 <div class="block">Returns the max retries.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/InvocationStats.html#getStartMillis--">getStartMillis()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ExecutionStats.html#getStartMillis--">getStartMillis()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent">ExecutionStats</a></dt>
 <dd>
 <div class="block">Returns the start time in milliseconds.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/InvocationStats.html#getStartNanos--">getStartNanos()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent">InvocationStats</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ExecutionStats.html#getStartNanos--">getStartNanos()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/ExecutionStats.html" title="class in net.jodah.recurrent">ExecutionStats</a></dt>
 <dd>
 <div class="block">Returns the start time in nanoseconds.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#getWaitMillis--">getWaitMillis()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#getWaitMillis--">getWaitMillis()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
 <div class="block">Returns the wait time in milliseconds.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#getWaitNanos--">getWaitNanos()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#getWaitNanos--">getWaitNanos()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
 <div class="block">Returns the wait time in nanoseconds.</div>
 </dd>
@@ -351,25 +376,13 @@
 </a>
 <h2 class="title">I</h2>
 <dl>
-<dt><a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Invocation</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
-<dd>
-<div class="block">Tracks invocations and determines when an invocation can be performed for a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#Invocation-net.jodah.recurrent.RetryPolicy-">Invocation(RetryPolicy)</a></span> - Constructor for class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
-<dd>
-<div class="block">Creates a new Invocation for the <code>retryPolicy</code>.</div>
-</dd>
-<dt><a href="net/jodah/recurrent/InvocationStats.html" title="class in net.jodah.recurrent"><span class="typeNameLink">InvocationStats</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
-<dd>
-<div class="block">Invocation statistics.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#isCancelled--">isCancelled()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html#isCancelled--">isCancelled()</a></span> - Method in class net.jodah.recurrent.util.concurrent.<a href="net/jodah/recurrent/util/concurrent/DefaultScheduledFuture.html" title="class in net.jodah.recurrent.util.concurrent">DefaultScheduledFuture</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#isComplete--">isComplete()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Execution.html#isComplete--">isComplete()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Execution.html" title="class in net.jodah.recurrent">Execution</a></dt>
 <dd>
-<div class="block">Returns whether the invocation is complete.</div>
+<div class="block">Returns whether the execution is complete.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#isDone--">isDone()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>&nbsp;</dd>
@@ -417,17 +430,17 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-">onComplete(T, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Called when an invocation is completed.</div>
+<div class="block">Called when an execution is completed.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onComplete(T, Throwable, InvocationStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onComplete-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onComplete(T, Throwable, ExecutionStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Called when an invocation is completed.</div>
+<div class="block">Called when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-">onFailedAttempt(T, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
 <div class="block">Called after a failed attempt.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onFailedAttempt(T, Throwable, InvocationStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onFailedAttempt-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onFailedAttempt(T, Throwable, ExecutionStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
 <div class="block">Called after a failed attempt.</div>
 </dd>
@@ -435,27 +448,27 @@
 <dd>
 <div class="block">Called after the retry policy is exceeded and the result is a failure.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onFailure-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onFailure(T, Throwable, InvocationStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onFailure-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onFailure(T, Throwable, ExecutionStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
 <div class="block">Called after the retry policy is exceeded and the result is a failure.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/event/ContextualResultListener.html#onResult-R-F-net.jodah.recurrent.InvocationStats-">onResult(R, F, InvocationStats)</a></span> - Method in interface net.jodah.recurrent.event.<a href="net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/event/ContextualResultListener.html#onResult-R-F-net.jodah.recurrent.ExecutionStats-">onResult(R, F, ExecutionStats)</a></span> - Method in interface net.jodah.recurrent.event.<a href="net/jodah/recurrent/event/ContextualResultListener.html" title="interface in net.jodah.recurrent.event">ContextualResultListener</a></dt>
 <dd>
-<div class="block">Handles an invocation result.</div>
+<div class="block">Handles an execution result.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/event/ResultListener.html#onResult-R-F-">onResult(R, F)</a></span> - Method in interface net.jodah.recurrent.event.<a href="net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event">ResultListener</a></dt>
 <dd>
-<div class="block">Handles an invocation result.</div>
+<div class="block">Handles an execution result.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-">onRetry(T, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
 <div class="block">Called before a retry is attempted.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-net.jodah.recurrent.InvocationStats-">onRetry(T, Throwable, InvocationStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onRetry-T-java.lang.Throwable-net.jodah.recurrent.ExecutionStats-">onRetry(T, Throwable, ExecutionStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
 <div class="block">Called before a retry is attempted.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/event/ContextualSuccessListener.html#onSuccess-R-net.jodah.recurrent.InvocationStats-">onSuccess(R, InvocationStats)</a></span> - Method in interface net.jodah.recurrent.event.<a href="net/jodah/recurrent/event/ContextualSuccessListener.html" title="interface in net.jodah.recurrent.event">ContextualSuccessListener</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/event/ContextualSuccessListener.html#onSuccess-R-net.jodah.recurrent.ExecutionStats-">onSuccess(R, ExecutionStats)</a></span> - Method in interface net.jodah.recurrent.event.<a href="net/jodah/recurrent/event/ContextualSuccessListener.html" title="interface in net.jodah.recurrent.event">ContextualSuccessListener</a></dt>
 <dd>
 <div class="block">Handles the successful completion of a call.</div>
 </dd>
@@ -465,11 +478,11 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onSuccess-T-">onSuccess(T)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Called after a successful invocation.</div>
+<div class="block">Called after a successful execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onSuccess-T-net.jodah.recurrent.InvocationStats-">onSuccess(T, InvocationStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#onSuccess-T-net.jodah.recurrent.ExecutionStats-">onSuccess(T, ExecutionStats)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Called after a successful invocation.</div>
+<div class="block">Called after a successful execution.</div>
 </dd>
 </dl>
 <a name="I:P">
@@ -485,14 +498,9 @@
 </a>
 <h2 class="title">R</h2>
 <dl>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/Invocation.html#recordFailure-java.lang.Throwable-">recordFailure(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Invocation.html" title="class in net.jodah.recurrent">Invocation</a></dt>
-<dd>
-<div class="block">Records a failed invocation attempt and returns true if a retry can be performed for the <code>failure</code>, else
- returns false and completes the invocation.</div>
-</dd>
 <dt><a href="net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent"><span class="typeNameLink">Recurrent</span></a>&lt;<a href="net/jodah/recurrent/Recurrent.html" title="type parameter in Recurrent">T</a>&gt; - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
 <dd>
-<div class="block">Performs invocations with synchronous or asynchronous retries according to a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
+<div class="block">Performs executions with synchronous or asynchronous retries according to a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Recurrent.html#Recurrent--">Recurrent()</a></span> - Constructor for class net.jodah.recurrent.<a href="net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent">Recurrent</a></dt>
 <dd>&nbsp;</dd>
@@ -506,19 +514,19 @@
 </dd>
 <dt><a href="net/jodah/recurrent/event/ResultListener.html" title="interface in net.jodah.recurrent.event"><span class="typeNameLink">ResultListener</span></a>&lt;<a href="net/jodah/recurrent/event/ResultListener.html" title="type parameter in ResultListener">R</a>,<a href="net/jodah/recurrent/event/ResultListener.html" title="type parameter in ResultListener">F</a> extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&gt; - Interface in <a href="net/jodah/recurrent/event/package-summary.html">net.jodah.recurrent.event</a></dt>
 <dd>
-<div class="block">Listens for an invocation result.</div>
+<div class="block">Listens for an execution result.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#retry--">retry()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#retry--">retry()</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Attempts to retry a failed invocation.</div>
+<div class="block">Attempts to retry a failed execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#retryFor-java.lang.Object-">retryFor(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#retryFor-java.lang.Object-">retryFor(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Attempts to retry a failed invocation.</div>
+<div class="block">Attempts to retry a failed execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#retryFor-java.lang.Object-java.lang.Throwable-">retryFor(Object, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#retryFor-java.lang.Object-java.lang.Throwable-">retryFor(Object, Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Attempts to retry a failed invocation.</div>
+<div class="block">Attempts to retry a failed execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryIf-net.jodah.recurrent.util.BiPredicate-">retryIf(BiPredicate&lt;T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
@@ -530,9 +538,9 @@
 <div class="block">Specifies that a retry should occur if the <code>resultPredicate</code> matches the result and the retry policy is not
  exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncInvocation.html#retryOn-java.lang.Throwable-">retryOn(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncInvocation.html" title="class in net.jodah.recurrent">AsyncInvocation</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncExecution.html#retryOn-java.lang.Throwable-">retryOn(Throwable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncExecution.html" title="class in net.jodah.recurrent">AsyncExecution</a></dt>
 <dd>
-<div class="block">Attempts to retry a failed invocation.</div>
+<div class="block">Attempts to retry a failed execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryOn-java.lang.Class...-">retryOn(Class&lt;? extends Throwable&gt;...)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
@@ -561,34 +569,34 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#retryWhen-java.lang.Object-">retryWhen(Object)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
-<div class="block">Specifies that a retry should occur if the invocation result matches the <code>result</code> and the retry policy is not
+<div class="block">Specifies that a retry should occur if the execution result matches the <code>result</code> and the retry policy is not
  exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#run-net.jodah.recurrent.CheckedRunnable-">run(CheckedRunnable)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#run-net.jodah.recurrent.CheckedRunnable-">run(CheckedRunnable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>runnable</code> asynchronously until successful or until the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#run-net.jodah.recurrent.ContextualRunnable-">run(ContextualRunnable)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#run-net.jodah.recurrent.ContextualRunnable-">run(ContextualRunnable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>runnable</code> asynchronously until successful or until the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRunnable.html#run-net.jodah.recurrent.AsyncInvocation-">run(AsyncInvocation)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRunnable.html" title="interface in net.jodah.recurrent">AsyncRunnable</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRunnable.html#run-net.jodah.recurrent.AsyncExecution-">run(AsyncExecution)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRunnable.html" title="interface in net.jodah.recurrent">AsyncRunnable</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/CheckedRunnable.html#run--">run()</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ContextualRunnable.html#run-net.jodah.recurrent.InvocationStats-">run(InvocationStats)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/ContextualRunnable.html#run-net.jodah.recurrent.ExecutionStats-">run(ExecutionStats)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#run-net.jodah.recurrent.CheckedRunnable-">run(CheckedRunnable)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#run-net.jodah.recurrent.CheckedRunnable-">run(CheckedRunnable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#run-net.jodah.recurrent.ContextualRunnable-">run(ContextualRunnable)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#run-net.jodah.recurrent.ContextualRunnable-">run(ContextualRunnable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#runAsync-net.jodah.recurrent.AsyncRunnable-">runAsync(AsyncRunnable)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#runAsync-net.jodah.recurrent.AsyncRunnable-">runAsync(AsyncRunnable)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
 <div class="block">Invokes the <code>runnable</code> asynchronously until successful or until the configured <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
@@ -605,7 +613,7 @@
 </dd>
 <dt><a href="net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent"><span class="typeNameLink">Scheduler</span></a> - Interface in <a href="net/jodah/recurrent/util/concurrent/package-summary.html">net.jodah.recurrent.util.concurrent</a></dt>
 <dd>
-<div class="block">Schedules invocations.</div>
+<div class="block">Schedules executions.</div>
 </dd>
 <dt><a href="net/jodah/recurrent/util/concurrent/Schedulers.html" title="class in net.jodah.recurrent.util.concurrent"><span class="typeNameLink">Schedulers</span></a> - Class in <a href="net/jodah/recurrent/util/concurrent/package-summary.html">net.jodah.recurrent.util.concurrent</a></dt>
 <dd>
@@ -613,10 +621,12 @@
 </dd>
 <dt><a href="net/jodah/recurrent/event/SuccessListener.html" title="interface in net.jodah.recurrent.event"><span class="typeNameLink">SuccessListener</span></a>&lt;<a href="net/jodah/recurrent/event/SuccessListener.html" title="type parameter in SuccessListener">R</a>&gt; - Interface in <a href="net/jodah/recurrent/event/package-summary.html">net.jodah.recurrent.event</a></dt>
 <dd>
-<div class="block">Listens for an invocation success.</div>
+<div class="block">Listens for an execution success.</div>
 </dd>
-<dt><a href="net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent"><span class="typeNameLink">SyncRecurrent</span></a> - Interface in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
-<dd>&nbsp;</dd>
+<dt><a href="net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent"><span class="typeNameLink">SyncRecurrent</span></a> - Class in <a href="net/jodah/recurrent/package-summary.html">net.jodah.recurrent</a></dt>
+<dd>
+<div class="block">Performs synchronous executions with retries according to a <a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
+</dd>
 </dl>
 <a name="I:T">
 <!--   -->
@@ -639,60 +649,60 @@
 <dl>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ContextualResultListener-">whenComplete(ContextualResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenComplete-net.jodah.recurrent.event.ResultListener-">whenComplete(ResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenComplete-net.jodah.recurrent.event.ContextualResultListener-">whenComplete(ContextualResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenComplete-net.jodah.recurrent.event.ResultListener-">whenComplete(ResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenCompleteAsync-net.jodah.recurrent.event.ContextualResultListener-">whenCompleteAsync(ContextualResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenCompleteAsync-net.jodah.recurrent.event.ContextualResultListener-java.util.concurrent.ExecutorService-">whenCompleteAsync(ContextualResultListener&lt;? super T, ? extends Throwable&gt;, ExecutorService)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenCompleteAsync-net.jodah.recurrent.event.ResultListener-">whenCompleteAsync(ResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenCompleteAsync-net.jodah.recurrent.event.ResultListener-java.util.concurrent.ExecutorService-">whenCompleteAsync(ResultListener&lt;? super T, ? extends Throwable&gt;, ExecutorService)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously when an invocation is completed.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously when an execution is completed.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttempt(ContextualResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called after a failed execution attempt.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenFailedAttempt-net.jodah.recurrent.event.ResultListener-">whenFailedAttempt(ResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called after a failed execution attempt.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ContextualResultListener-">whenFailedAttemptAsync(ContextualResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed execution attempt.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ContextualResultListener-java.util.concurrent.ExecutorService-">whenFailedAttemptAsync(ContextualResultListener&lt;? super T, ? extends Throwable&gt;, ExecutorService)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed execution
  attempt.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ResultListener-">whenFailedAttemptAsync(ResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed invocation attempt.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a failed execution attempt.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncListeners.html#whenFailedAttemptAsync-net.jodah.recurrent.event.ResultListener-java.util.concurrent.ExecutorService-">whenFailedAttemptAsync(ResultListener&lt;? super T, ? extends Throwable&gt;, ExecutorService)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncListeners.html" title="class in net.jodah.recurrent">AsyncListeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed invocation
+<div class="block">Registers the <code>listener</code> to be called asynchronously on the <code>executor</code> after a failed execution
  attempt.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenFailure-net.jodah.recurrent.event.ContextualResultListener-">whenFailure(ContextualResultListener&lt;? super T, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
@@ -757,58 +767,58 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess(ContextualSuccessListener&lt;? super T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Listeners.html#whenSuccess-net.jodah.recurrent.event.SuccessListener-">whenSuccess(SuccessListener&lt;? super T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenSuccess-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccess(ContextualSuccessListener&lt;? super T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenSuccess-net.jodah.recurrent.event.SuccessListener-">whenSuccess(SuccessListener&lt;? super T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenSuccessAsync-net.jodah.recurrent.event.ContextualSuccessListener-">whenSuccessAsync(ContextualSuccessListener&lt;? super T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenSuccessAsync-net.jodah.recurrent.event.ContextualSuccessListener-java.util.concurrent.ExecutorService-">whenSuccessAsync(ContextualSuccessListener&lt;? super T&gt;, ExecutorService)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenSuccessAsync-net.jodah.recurrent.event.SuccessListener-">whenSuccessAsync(SuccessListener&lt;? super T&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RecurrentFuture.html#whenSuccessAsync-net.jodah.recurrent.event.SuccessListener-java.util.concurrent.ExecutorService-">whenSuccessAsync(SuccessListener&lt;? super T&gt;, ExecutorService)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RecurrentFuture.html" title="class in net.jodah.recurrent">RecurrentFuture</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful invocation.</div>
+<div class="block">Registers the <code>listener</code> to be called asynchronously after a successful execution.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#with-T-">with(T)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/AsyncRecurrent.html#with-T-">with(T)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></dt>
 <dd>
-<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
+<div class="block">Configures the <code>listeners</code> to be called as execution events occur.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-">with(RetryPolicy)</a></span> - Static method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent">Recurrent</a></dt>
 <dd>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries synchronously according to
- the <code>retryPolicy</code>.</div>
+<div class="block">Creates and returns a new SyncRecurrent instance that will perform executions and retries synchronously according
+ to the <code>retryPolicy</code>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-java.util.concurrent.ScheduledExecutorService-">with(RetryPolicy, ScheduledExecutorService)</a></span> - Static method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent">Recurrent</a></dt>
 <dd>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>executor</code> according to the <code>retryPolicy</code>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">with(RetryPolicy, Scheduler)</a></span> - Static method in class net.jodah.recurrent.<a href="net/jodah/recurrent/Recurrent.html" title="class in net.jodah.recurrent">Recurrent</a></dt>
 <dd>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#with-net.jodah.recurrent.Listeners-">with(Listeners&lt;?&gt;)</a></span> - Method in interface net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/recurrent/SyncRecurrent.html#with-net.jodah.recurrent.Listeners-">with(Listeners&lt;?&gt;)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></dt>
 <dd>
-<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
+<div class="block">Configures the <code>listeners</code> to be called as execution events occur.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/recurrent/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-">withBackoff(long, long, TimeUnit)</a></span> - Method in class net.jodah.recurrent.<a href="net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></dt>
 <dd>
@@ -833,7 +843,7 @@
 <div class="block">Sets the max number of retries to perform.</div>
 </dd>
 </dl>
-<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:W">W</a>&nbsp;</div>
+<a href="#I:A">A</a>&nbsp;<a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:N">N</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:W">W</a>&nbsp;</div>
 <!-- ======= START OF BOTTOM NAVBAR ====== -->
 <div class="bottomNav"><a name="navbar.bottom">
 <!--   -->

@@ -18,8 +18,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -93,15 +93,25 @@ var activeTableTab = "activeTableTab";
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="subTitle">net.jodah.recurrent</div>
-<h2 title="Interface SyncRecurrent" class="title">Interface SyncRecurrent</h2>
+<h2 title="Class SyncRecurrent" class="title">Class SyncRecurrent</h2>
 </div>
 <div class="contentContainer">
+<ul class="inheritance">
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</a></li>
+<li>
+<ul class="inheritance">
+<li>net.jodah.recurrent.SyncRecurrent</li>
+</ul>
+</li>
+</ul>
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
 <hr>
 <br>
-<pre>public interface <span class="typeNameLabel">SyncRecurrent</span></pre>
+<pre>public class <span class="typeNameLabel">SyncRecurrent</span>
+extends <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
+<div class="block">Performs synchronous executions with retries according to a <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a>.</div>
 </li>
 </ul>
 </div>
@@ -115,7 +125,7 @@ var activeTableTab = "activeTableTab";
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -147,12 +157,19 @@ var activeTableTab = "activeTableTab";
 </td>
 </tr>
 <tr id="i4" class="altColor">
-<td class="colFirst"><code><a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></code></td>
+<td class="colFirst"><code><a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/recurrent/SyncRecurrent.html#with-net.jodah.recurrent.Listeners-">with</a></span>(<a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&nbsp;listeners)</code>
-<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
+<div class="block">Configures the <code>listeners</code> to be called as execution events occur.</div>
 </td>
 </tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;java.lang.<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></h3>
+<code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#equals-java.lang.Object-" title="class or interface in java.lang">equals</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#getClass--" title="class or interface in java.lang">getClass</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#hashCode--" title="class or interface in java.lang">hashCode</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notify--" title="class or interface in java.lang">notify</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#notifyAll--" title="class or interface in java.lang">notifyAll</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#toString--" title="class or interface in java.lang">toString</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait--" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-" title="class or interface in java.lang">wait</a>, <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true#wait-long-int-" title="class or interface in java.lang">wait</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
@@ -173,7 +190,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>get</h4>
-<pre>&lt;T&gt;&nbsp;T&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable)</pre>
+<pre>public&nbsp;&lt;T&gt;&nbsp;T&nbsp;get(<a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html?is-external=true" title="class or interface in java.util.concurrent">Callable</a>&lt;T&gt;&nbsp;callable)</pre>
 <div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 <dl>
@@ -190,7 +207,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>get</h4>
-<pre>&lt;T&gt;&nbsp;T&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable)</pre>
+<pre>public&nbsp;&lt;T&gt;&nbsp;T&nbsp;get(<a href="../../../net/jodah/recurrent/ContextualCallable.html" title="interface in net.jodah.recurrent">ContextualCallable</a>&lt;T&gt;&nbsp;callable)</pre>
 <div class="block">Invokes the <code>callable</code> until a successful result is returned or the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is
  exceeded.</div>
 <dl>
@@ -207,7 +224,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>run</h4>
-<pre>void&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable)</pre>
+<pre>public&nbsp;void&nbsp;run(<a href="../../../net/jodah/recurrent/CheckedRunnable.html" title="interface in net.jodah.recurrent">CheckedRunnable</a>&nbsp;runnable)</pre>
 <div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -223,7 +240,7 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <h4>run</h4>
-<pre>void&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable)</pre>
+<pre>public&nbsp;void&nbsp;run(<a href="../../../net/jodah/recurrent/ContextualRunnable.html" title="interface in net.jodah.recurrent">ContextualRunnable</a>&nbsp;runnable)</pre>
 <div class="block">Invokes the <code>runnable</code> until successful or until the configured <a href="../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent"><code>RetryPolicy</code></a> is exceeded.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
@@ -239,8 +256,8 @@ var activeTableTab = "activeTableTab";
 <ul class="blockListLast">
 <li class="blockList">
 <h4>with</h4>
-<pre><a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&nbsp;listeners)</pre>
-<div class="block">Configures the <code>listeners</code> to be called as invocation events occur.</div>
+<pre>public&nbsp;<a href="../../../net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a>&nbsp;with(<a href="../../../net/jodah/recurrent/Listeners.html" title="class in net.jodah.recurrent">Listeners</a>&lt;?&gt;&nbsp;listeners)</pre>
+<div class="block">Configures the <code>listeners</code> to be called as execution events occur.</div>
 </li>
 </ul>
 </li>

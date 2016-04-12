@@ -135,7 +135,7 @@
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
 <td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/RetryPolicy.html#abortWhen-java.lang.Object-">abortWhen</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
-<div class="block">Specifies that retries should be aborted if the invocation result matches the <code>result</code>.</div>
+<div class="block">Specifies that retries should be aborted if the execution result matches the <code>result</code>.</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -180,7 +180,7 @@
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a></code></td>
 <td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/RetryPolicy.html#retryWhen-java.lang.Object-">retryWhen</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
-<div class="block">Specifies that a retry should occur if the invocation result matches the <code>result</code> and the retry policy is not
+<div class="block">Specifies that a retry should occur if the execution result matches the <code>result</code> and the retry policy is not
  exceeded.</div>
 </td>
 </tr>
@@ -233,25 +233,25 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>static <a href="../../../../net/jodah/recurrent/SyncRecurrent.html" title="interface in net.jodah.recurrent">SyncRecurrent</a></code></td>
+<td class="colFirst"><code>static <a href="../../../../net/jodah/recurrent/SyncRecurrent.html" title="class in net.jodah.recurrent">SyncRecurrent</a></code></td>
 <td class="colLast"><span class="typeNameLabel">Recurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-">with</a></span>(<a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy)</code>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries synchronously according to
- the <code>retryPolicy</code>.</div>
+<div class="block">Creates and returns a new SyncRecurrent instance that will perform executions and retries synchronously according
+ to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>static <a href="../../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></code></td>
+<td class="colFirst"><code>static <a href="../../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></code></td>
 <td class="colLast"><span class="typeNameLabel">Recurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-java.util.concurrent.ScheduledExecutorService-">with</a></span>(<a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
     <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html?is-external=true" title="class or interface in java.util.concurrent">ScheduledExecutorService</a>&nbsp;executor)</code>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>executor</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static <a href="../../../../net/jodah/recurrent/AsyncRecurrent.html" title="interface in net.jodah.recurrent">AsyncRecurrent</a></code></td>
+<td class="colFirst"><code>static <a href="../../../../net/jodah/recurrent/AsyncRecurrent.html" title="class in net.jodah.recurrent">AsyncRecurrent</a></code></td>
 <td class="colLast"><span class="typeNameLabel">Recurrent.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Recurrent.html#with-net.jodah.recurrent.RetryPolicy-net.jodah.recurrent.util.concurrent.Scheduler-">with</a></span>(<a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy,
     <a href="../../../../net/jodah/recurrent/util/concurrent/Scheduler.html" title="interface in net.jodah.recurrent.util.concurrent">Scheduler</a>&nbsp;scheduler)</code>
-<div class="block">Creates and returns a new Recurrent instance that will perform invocations and retries asynchronously via the
+<div class="block">Creates and returns a new AsyncRecurrent instance that will perform executions and retries asynchronously via the
  <code>scheduler</code> according to the <code>retryPolicy</code>.</div>
 </td>
 </tr>
@@ -264,8 +264,8 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Invocation.html#Invocation-net.jodah.recurrent.RetryPolicy-">Invocation</a></span>(<a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy)</code>
-<div class="block">Creates a new Invocation for the <code>retryPolicy</code>.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../net/jodah/recurrent/Execution.html#Execution-net.jodah.recurrent.RetryPolicy-">Execution</a></span>(<a href="../../../../net/jodah/recurrent/RetryPolicy.html" title="class in net.jodah.recurrent">RetryPolicy</a>&nbsp;retryPolicy)</code>
+<div class="block">Creates a new Execution for the <code>retryPolicy</code>.</div>
 </td>
 </tr>
 <tr class="rowColor">
