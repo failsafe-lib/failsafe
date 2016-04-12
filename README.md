@@ -114,8 +114,8 @@ Java 8 users can use Recurrent to retry [CompletableFuture] calls:
 ```java
 Recurrent.with(retryPolicy, executor)
   .future(() -> CompletableFuture.supplyAsync(() -> "foo")
-  .thenApplyAsync(value -> value + "bar")
-  .thenAccept(System.out::println));
+    .thenApplyAsync(value -> value + "bar")
+    .thenAccept(System.out::println));
 ```
 
 #### Java 8 Functional Interfaces
