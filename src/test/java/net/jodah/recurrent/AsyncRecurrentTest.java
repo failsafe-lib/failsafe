@@ -92,15 +92,15 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
   }
 
   public void shouldRunAsync() throws Throwable {
-    assertRunWithExecutor((AsyncRunnable) inv -> {
+    assertRunWithExecutor((AsyncRunnable) exec -> {
       try {
         service.connect();
-        inv.complete();
+        exec.complete();
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (inv.getExecutions() % 2 == 0)
+        if (exec.getExecutions() % 2 == 0)
           throw failure;
-        if (!inv.retryOn(failure))
+        if (!exec.retryOn(failure))
           throw failure;
       }
     });
@@ -155,17 +155,17 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
   }
 
   public void shouldGetAsync() throws Throwable {
-    assertGetWithExecutor((AsyncCallable<?>) inv -> {
+    assertGetWithExecutor((AsyncCallable<?>) exec -> {
       try {
         boolean result = service.connect();
-        if (!inv.complete(result))
-          inv.retryFor(result);
+        if (!exec.complete(result))
+          exec.retryFor(result);
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (inv.getExecutions() % 2 == 0)
+        if (exec.getExecutions() % 2 == 0)
           throw failure;
-        if (!inv.retryOn(failure))
+        if (!exec.retryOn(failure))
           throw failure;
         return null;
       }
@@ -217,17 +217,17 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
   }
 
   public void testFutureAsync() throws Throwable {
-    assertGetFuture((AsyncCallable<?>) inv -> CompletableFuture.supplyAsync(() -> {
+    assertGetFuture((AsyncCallable<?>) exec -> CompletableFuture.supplyAsync(() -> {
       try {
         boolean result = service.connect();
-        if (!inv.complete(result))
-          inv.retryFor(result);
+        if (!exec.complete(result))
+          exec.retryFor(result);
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (inv.getExecutions() % 2 == 0)
+        if (exec.getExecutions() % 2 == 0)
           throw failure;
-        if (!inv.retryOn(failure))
+        if (!exec.retryOn(failure))
           throw failure;
         return null;
       }
@@ -242,11 +242,11 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
   }
 
   public void shouldManuallyRetryAndComplete() throws Throwable {
-    Recurrent.with(retryAlways, executor).getAsync(inv -> {
-      if (inv.getExecutions() < 2)
-        inv.retryOn(new ConnectException());
+    Recurrent.with(retryAlways, executor).getAsync(exec -> {
+      if (exec.getExecutions() < 2)
+        exec.retryOn(new ConnectException());
       else
-        inv.complete(true);
+        exec.complete(true);
       return true;
     }).whenComplete((result, failure) -> {
       waiter.assertTrue(result);
@@ -268,7 +268,7 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
 
-    assertThrows(() -> Recurrent.with(retryTwice, executor).futureAsync(inv -> {
+    assertThrows(() -> Recurrent.with(retryTwice, executor).futureAsync(exec -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
   }
@@ -278,9 +278,9 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
    */
   public void shouldCompleteAsync() throws Throwable {
     Waiter waiter = new Waiter();
-    Recurrent.with(retryAlways, executor).runAsync(inv -> executor.schedule(() -> {
+    Recurrent.with(retryAlways, executor).runAsync(exec -> executor.schedule(() -> {
       try {
-        inv.complete();
+        exec.complete();
         waiter.resume();
       } catch (Exception e) {
         waiter.fail(e);

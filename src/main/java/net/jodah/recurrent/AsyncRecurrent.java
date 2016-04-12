@@ -23,7 +23,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
+   * Executes the {@code callable} asynchronously until a successful result is returned or the configured
    * {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
@@ -33,7 +33,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
+   * Executes the {@code callable} asynchronously until a successful result is returned or the configured
    * {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
@@ -43,7 +43,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} asynchronously until a successful result is returned or the configured
+   * Executes the {@code callable} asynchronously until a successful result is returned or the configured
    * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
    * manually scheduled via one of the {@code AsyncExecution.retry} methods.
    * 
@@ -54,7 +54,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
+   * Executes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
    * exceeded.
    * 
    * @throws NullPointerException if the {@code runnable} is null
@@ -64,7 +64,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
+   * Executes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
    * exceeded.
    * 
    * @throws NullPointerException if the {@code runnable} is null
@@ -74,7 +74,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
+   * Executes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
    * exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
    * one of the {@code AsyncExecution.retry} methods.
    * 
@@ -85,7 +85,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * Executes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded.
    * <p>
    * Supported on Java 8 and above.
@@ -101,7 +101,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * Executes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded.
    * <p>
    * Supported on Java 8 and above.
@@ -117,7 +117,7 @@ public class AsyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * Executes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
    * manually scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>

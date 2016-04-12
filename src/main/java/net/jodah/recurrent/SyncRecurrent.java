@@ -19,7 +19,7 @@ public class SyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
+   * Executes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
    * exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
@@ -31,7 +31,7 @@ public class SyncRecurrent {
   }
 
   /**
-   * Invokes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
+   * Executes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
    * exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
@@ -43,7 +43,7 @@ public class SyncRecurrent {
   }
 
   /**
-   * Invokes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
+   * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded, or if
@@ -54,7 +54,7 @@ public class SyncRecurrent {
   }
 
   /**
-   * Invokes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
+   * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RecurrentException if the {@code callable} fails with a Throwable and the retry policy is exceeded, or if
