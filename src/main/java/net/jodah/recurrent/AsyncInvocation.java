@@ -157,8 +157,14 @@ public final class AsyncInvocation extends Invocation {
       listeners.handleFailedAttempt(result, failure, this, scheduler);
 
     // Handle retry needed
-    if (shouldRetry)
-      future.setFuture((Future) scheduler.schedule(callable, waitTime, TimeUnit.NANOSECONDS));
+    if (shouldRetry) {
+      try {
+        future.setFuture((Future) scheduler.schedule(callable, waitTime, TimeUnit.NANOSECONDS));
+      } catch (Throwable t) {
+        failure = t;
+        shouldRetry = false;
+      }
+    }
 
     // Handle completed
     if (completed || !shouldRetry)

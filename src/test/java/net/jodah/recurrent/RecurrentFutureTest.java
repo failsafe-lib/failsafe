@@ -10,6 +10,8 @@ import java.net.SocketException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.BeforeMethod;
@@ -134,8 +136,7 @@ public class RecurrentFutureTest {
     when(service.connect()).thenThrow(failures(2, SocketException.class)).thenReturn(false, false, true);
 
     // When
-    registerListeners(
-        Recurrent.with(new RetryPolicy().retryWhen(false).withMaxRetries(3), executor).get(callable));
+    registerListeners(Recurrent.with(new RetryPolicy().retryWhen(false).withMaxRetries(3), executor).get(callable));
     waiter.await(1000, 6);
 
     // Then
@@ -151,5 +152,14 @@ public class RecurrentFutureTest {
     assertEquals(successStats.get(), 0);
     assertEquals(successAsync.get(), 0);
     assertEquals(successStatsAsync.get(), 0);
+  }
+
+  @Test(expectedExceptions = TimeoutException.class)
+  public void shouldGetWithTimeout() throws Throwable {
+    Recurrent.with(new RetryPolicy(), executor).run(() -> {
+      Thread.sleep(1000);
+    }).get(100, TimeUnit.MILLISECONDS);
+
+    Thread.sleep(1000);
   }
 }

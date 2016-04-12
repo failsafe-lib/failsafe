@@ -1,3 +1,14 @@
+# 0.7.1
+
+### Bug Fixes
+
+* Added better support for scheduling failure handling
+* Fixed RetryPolicy failure assignability checking
+
+### API Changes
+
+* Invocation APIs were renamed to Execution to better align with the `java.util.concurrent` naming.
+
 # 0.7.0
 
 ### New Features

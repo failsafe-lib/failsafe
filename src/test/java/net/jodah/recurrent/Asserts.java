@@ -20,7 +20,7 @@ public class Asserts {
     }
     return true;
   }
-  
+
   @SafeVarargs
   public static void assertMatches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
     Throwable current = actual;

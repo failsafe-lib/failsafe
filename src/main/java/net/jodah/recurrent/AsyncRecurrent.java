@@ -155,7 +155,12 @@ public class AsyncRecurrent {
     AsyncInvocation invocation = new AsyncInvocation(callable, retryPolicy, scheduler, future, typedListeners);
     future.initialize(invocation);
     callable.initialize(invocation);
-    future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
+    try {
+      future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
+    } catch (Throwable t) {
+      future.complete(null, t, false);
+    }
+
     return future;
   }
 }
