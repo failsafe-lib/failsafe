@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Recurrent is a simple, zero-dependency library for performing retries. It features:
+Recurrent is a simple, zero-dependency library for performing retries. It was designed to be as easy to use as possible, with a concise API for handling everday use cases and the flexibility to handle everything else. Recurrent features:
 
 * [Flexible retry policies](#retry-policies)
 * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
@@ -22,9 +22,28 @@ Supports Java 6+ though the documentation uses lambdas for simplicity.
 
 ## Usage
 
+To start, define a [RetryPolicy] that expresses when retries should be performed:
+
+```java
+RetryPolicy retryPolicy = new RetryPolicy()
+  .retryOn(ConnectException.class)
+  .withDelay(1, TimeUnit.SECONDS)
+  .withMaxRetries(3);
+```
+
+Then use your [RetryPolicy] to execute a `Runnable` or `Callable` *with* retries:
+
+```java
+// Run with retries
+Recurrent.with(retryPolicy).run(() -> connect());
+
+// Get with retries
+Connection connection = Recurrent.with(retryPolicy).get(() -> connect());
+```
+
 #### Retry Policies
 
-Recurrent supports flexible [retry policies][RetryPolicy] that allow you to express when retries should be performed.
+Recurrent's [retry policies][RetryPolicy] provide flexibility in allowing you to express when retries should be performed.
 
 A policy can allow retries on particular failures:
 
@@ -75,11 +94,11 @@ And of course we can combine these things into a single policy.
 
 #### Synchronous Retries
 
-Once we've defined a retry policy, we can perform a retryable synchronous execution:
+With a retry policy defined, we can perform a retryable synchronous execution:
 
 ```java
 // Run with retries
-Recurrent.with(retryPolicy).run(() -> doSomething());
+Recurrent.with(retryPolicy).run(() -> connect());
 
 // Get with retries
 Connection connection = Recurrent.with(retryPolicy).get(() -> connect());
@@ -87,7 +106,7 @@ Connection connection = Recurrent.with(retryPolicy).get(() -> connect());
 
 #### Asynchronous Retries
 
-Asynchronous executions are performed and retried on a [ScheduledExecutorService] and they return a [RecurrentFuture]. When the execution succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
+Asynchronous executions can be performed and retried on a [ScheduledExecutorService] and return a [RecurrentFuture]. When the execution succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
 
 ```java
 Recurrent.with(retryPolicy, executor)
@@ -113,7 +132,7 @@ Java 8 users can use Recurrent to retry [CompletableFuture] calls:
 
 ```java
 Recurrent.with(retryPolicy, executor)
-  .future(() -> CompletableFuture.supplyAsync(() -> "foo")
+  .future(() -> connectAsync())
     .thenApplyAsync(value -> value + "bar")
     .thenAccept(System.out::println));
 ```
