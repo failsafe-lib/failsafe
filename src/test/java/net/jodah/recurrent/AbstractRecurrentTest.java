@@ -19,4 +19,7 @@ public class AbstractRecurrentTest {
 
     boolean disconnect();
   }
+  
+  public interface FastService extends Service {
+  }
 }

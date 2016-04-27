@@ -29,12 +29,6 @@ public class SyncRecurrentTest extends AbstractRecurrentTest {
   private @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureSyncThrowables = new Class[] {
       ExecutionException.class, RecurrentException.class, SocketException.class };
 
-  public interface Service {
-    boolean connect();
-
-    boolean disconnect();
-  }
-
   @BeforeMethod
   protected void beforeMethod() {
     reset(service);

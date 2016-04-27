@@ -4,6 +4,7 @@ import static net.jodah.recurrent.Asserts.assertThrows;
 import static net.jodah.recurrent.Asserts.matches;
 import static net.jodah.recurrent.Testing.failures;
 import static net.jodah.recurrent.Testing.ignoreExceptions;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -359,6 +360,12 @@ public class AsyncRecurrentTest extends AbstractRecurrentTest {
     executor.shutdownNow();
     assertThrows(() -> future.get(), ExecutionException.class, RejectedExecutionException.class);
     assertEquals(counter.get(), 1, "Callable should have been executed before executor was shutdown");
+  }
+
+  @SuppressWarnings("unused")
+  public void shouldSupportCovariance() {
+    FastService fastService = mock(FastService.class);
+    RecurrentFuture<Service> future = Recurrent.with(new RetryPolicy(), executor).get(() -> fastService);
   }
 
   private RecurrentFuture<?> run(AsyncRecurrent recurrent, Object runnable) {
