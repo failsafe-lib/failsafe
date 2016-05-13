@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -8,10 +9,10 @@
   </parent>
 
   <groupId>net.jodah</groupId>
-  <artifactId>recurrent</artifactId>
+  <artifactId>failsafe</artifactId>
   <version>0.7.2-SNAPSHOT</version>
-  <name>Recurrent</name>
-  <url>http://github.com/jhalterman/recurrent/</url>
+  <name>Failsafe</name>
+  <url>http://github.com/jhalterman/failsafe/</url>
 
   <properties>
     <devCompileVersion>1.8</devCompileVersion>
@@ -34,9 +35,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:jhalterman/recurrent.git</connection>
-    <developerConnection>scm:git:git@github.com:jhalterman/recurrent.git</developerConnection>
-    <url>http://github.com/jhalterman/recurrent/</url>
+    <connection>scm:git:git@github.com:jhalterman/failsafe.git</connection>
+    <developerConnection>scm:git:git@github.com:jhalterman/failsafe.git</developerConnection>
+    <url>http://github.com/jhalterman/failsafe/</url>
   </scm>
 
   <dependencies>
@@ -48,8 +49,8 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>2.0.2-beta</version>
+      <artifactId>mockito-core</artifactId>
+      <version>2.0.52-beta</version>
       <scope>test</scope>
     </dependency>
     <dependency>

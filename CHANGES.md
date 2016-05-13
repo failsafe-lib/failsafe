@@ -1,3 +1,13 @@
+# 0.8.0
+
+### New Features
+
+* Added support for circuit breakers
+
+### API Changes
+
+* Project renamed from Recurrent to Failsafe
+
 # 0.7.1
 
 ### Bug Fixes

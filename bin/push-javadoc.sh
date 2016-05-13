@@ -1,7 +1,7 @@
 #!/bin/sh
 # run from top level dir
 
-PROJECT=recurrent
+PROJECT=failsafe
 
 mvn javadoc:javadoc -Djv=$apiVersion
 rm -rf target/docs
