@@ -3,7 +3,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.internal.util.Assert;
 
 /**
- * Safety from synchronous and asynchronous execution failures.
+ * Simple, sophisticated failure handling.
  * 
  * @author Jonathan Halterman
  */

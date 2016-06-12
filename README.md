@@ -11,8 +11,8 @@
 Failsafe is a lightweight, zero-dependency library for handling failures. It was designed to be as easy to use as possible, with a concise API for handling everday use cases and the flexibility to handle everything else. Failsafe features:
 
 * [Retries](#retries)
-  * [Flexible retry policies](#retry-policies)
-  * [Synchronous](synchronous-retries) and [asynchronous retries](#asynchronous-retries)
+  * [Retry policies](#retry-policies)
+  * [Synchronous](#synchronous-retries) and [asynchronous retries](#asynchronous-retries)
 * [Circuit breakers](#circuit-breakers)
   * [Configuration](#circuit-breaker-configuration)
 * [Execution context](#execution-context)
@@ -48,6 +48,16 @@ Failsafe.with(retryPolicy).run(() -> connect());
 
 // Get with retries
 Connection connection = Failsafe.with(retryPolicy).get(() -> connect());
+```
+
+Java 6 / 7 is also supported:
+
+```java
+Connection connection = Failsafe.with(retryPolicy).get(new Callable<Connection>() {
+  public Connection call() {
+    return connect();
+  }
+});
 ```
 
 #### Retry Policies
@@ -142,7 +152,7 @@ We can then execute a `Runnable` or `Callable` *with* the `breaker`:
 Failsafe.with(breaker).run(this::connect);
 ```
 
-When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and additional execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions exceed a success threshold, the breaker is *closed* again and executions will proceed as normal.
+When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions exceed a success threshold, the breaker is *closed* again and executions will proceed as normal.
 
 #### Circuit Breaker Configuration
 
@@ -206,7 +216,7 @@ Execution failures are first retried according to the `RetryPolicy`, then if the
 
 #### Failing Together
 
-A circuit breaker can and should be shared across code that accesses inter-dependent system components that which together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again.
+A circuit breaker can and should be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again.
 
 #### Standalone Usage
 
@@ -308,8 +318,8 @@ Java 8 users can use Failsafe to retry [CompletableFuture] calls:
 Failsafe.with(retryPolicy)
   .with(executor)
   .future(this::connectAsync)
-    .thenApplyAsync(value -> value + "bar")
-    .thenAccept(System.out::println));
+  .thenApplyAsync(value -> value + "bar")
+  .thenAccept(System.out::println));
 ```
 
 #### Functional Interface Integration
