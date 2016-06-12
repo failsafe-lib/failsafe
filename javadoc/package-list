@@ -1,4 +1,5 @@
-net.jodah.recurrent
-net.jodah.recurrent.event
-net.jodah.recurrent.util
-net.jodah.recurrent.util.concurrent
+net.jodah.failsafe
+net.jodah.failsafe.event
+net.jodah.failsafe.function
+net.jodah.failsafe.util
+net.jodah.failsafe.util.concurrent
