@@ -127,7 +127,7 @@ Failsafe.with(retryPolicy)
 
 #### Circuit Breakers
 
-[Circuit breakers][FowlerCircuitBreaker] are a way of creating systems that [fail-fast][FailFast] by temporarily disabling execution as a way of preventing system overload. Creating a circuit breaker is straightforward:
+[Circuit breakers][FowlerCircuitBreaker] are a way of creating systems that [fail-fast][FailFast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
 
 ```java
 CircuitBreaker breaker = new CircuitBreaker()
