@@ -15,8 +15,8 @@ import net.jodah.failsafe.internal.ClosedState;
 import net.jodah.failsafe.internal.HalfOpenState;
 import net.jodah.failsafe.internal.OpenState;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.Ratio;
 import net.jodah.failsafe.util.Duration;
+import net.jodah.failsafe.util.Ratio;
 
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.

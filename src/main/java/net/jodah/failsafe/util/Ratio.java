@@ -1,4 +1,4 @@
-package net.jodah.failsafe.internal.util;
+package net.jodah.failsafe.util;
 
 /**
  * A ratio.

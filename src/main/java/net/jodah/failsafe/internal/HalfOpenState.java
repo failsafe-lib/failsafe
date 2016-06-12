@@ -3,7 +3,7 @@ package net.jodah.failsafe.internal;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.internal.util.CircularBitSet;
-import net.jodah.failsafe.internal.util.Ratio;
+import net.jodah.failsafe.util.Ratio;
 
 public class HalfOpenState implements CircuitState {
   private final CircuitBreaker circuit;
