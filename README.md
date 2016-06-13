@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Failsafe is a lightweight, zero-dependency library for handling failures. It was designed to be as easy to use as possible, with a concise API for handling everday use cases and the flexibility to handle everything else. Failsafe features:
+Failsafe is a lightweight, zero-dependency library for handling failures. It was designed to be as easy to use as possible, with a concise API for handling everyday use cases and the flexibility to handle everything else. Failsafe features:
 
 * [Retries](#retries)
   * [Retry policies](#retry-policies)
