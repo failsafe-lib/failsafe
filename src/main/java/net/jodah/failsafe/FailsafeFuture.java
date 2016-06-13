@@ -17,7 +17,7 @@ import net.jodah.failsafe.internal.util.ReentrantCircuit;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 /**
- * The future result of an asynchronous execution.
+ * The future result of an asynchronous Failsafe execution.
  * 
  * @author Jonathan Halterman
  * @param <T> result type

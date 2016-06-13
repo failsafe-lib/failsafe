@@ -238,9 +238,9 @@ if (breaker.allowsExecution()) {
 Failsafe can provide an [ExecutionContext] containing execution related information such as the number of execution attempts as well as start and elapsed times:
 
 ```java
-Failsafe.with(retryPolicy).get(ctx -> {
+Failsafe.with(retryPolicy).run(ctx -> {
   log.debug("Connection attempt #{}", ctx.getExecutions());
-  return connect();
+  connect();
 });
 ```
 
