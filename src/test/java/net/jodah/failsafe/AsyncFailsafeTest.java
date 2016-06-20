@@ -57,15 +57,12 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(true);
 
-    // When
-    FailsafeFuture<?> future = run(Failsafe.with(retryAlways).with(executor), runnable);
-
-    // Then
-    future.onComplete((result, failure) -> {
+    // When / Then
+    FailsafeFuture<?> future = run(Failsafe.with(retryAlways).with(executor).onComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertNull(failure);
       waiter.resume();
-    });
+    }), runnable);
     assertNull(future.get());
     waiter.await(3000);
     verify(service, times(3)).connect();
@@ -76,14 +73,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When
-    FailsafeFuture<?> future2 = run(Failsafe.with(retryTwice).with(executor), runnable);
-
-    // Then
-    future2.onComplete((result, failure) -> {
+    FailsafeFuture<?> future2 = run(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(failure instanceof ConnectException);
       waiter.resume();
-    });
+    }), runnable);
+
+    // Then
     assertThrows(() -> future2.get(), futureAsyncThrowables);
     waiter.await(3000);
     verify(service, times(3)).connect();
@@ -120,15 +116,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
     RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
 
-    // When
-    FailsafeFuture<Boolean> future = get(Failsafe.with(retryPolicy).with(executor), callable);
-
-    // Then
-    future.onComplete((result, failure) -> {
-      waiter.assertTrue(result);
-      waiter.assertNull(failure);
-      waiter.resume();
-    });
+    // When / Then
+    FailsafeFuture<Boolean> future = get(
+        Failsafe.<Boolean>with(retryPolicy).with(executor).onComplete((result, failure) -> {
+          waiter.assertTrue(result);
+          waiter.assertNull(failure);
+          waiter.resume();
+        }), callable);
     assertTrue(future.get());
     waiter.await(3000);
     verify(service, times(5)).connect();
@@ -138,15 +132,12 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     counter.set(0);
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
-    // When
-    FailsafeFuture<Boolean> future2 = get(Failsafe.with(retryTwice).with(executor), callable);
-
-    // Then
-    future2.onComplete((result, failure) -> {
+    // When / Then
+    FailsafeFuture<Boolean> future2 = get(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(failure instanceof ConnectException);
       waiter.resume();
-    });
+    }), callable);
     assertThrows(() -> future2.get(), futureAsyncThrowables);
     waiter.await(3000);
     verify(service, times(3)).connect();
@@ -252,16 +243,16 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldManuallyRetryAndComplete() throws Throwable {
-    Failsafe.with(retryAlways).with(executor).getAsync(exec -> {
+    Failsafe.<Boolean>with(retryAlways).with(executor).onComplete((result, failure) -> {
+      waiter.assertTrue(result);
+      waiter.assertNull(failure);
+      waiter.resume();
+    }).getAsync(exec -> {
       if (exec.getExecutions() < 2)
         exec.retryOn(new ConnectException());
       else
         exec.complete(true);
       return true;
-    }).onComplete((result, failure) -> {
-      waiter.assertTrue(result);
-      waiter.assertNull(failure);
-      waiter.resume();
     });
     waiter.await(3000);
   }
@@ -366,7 +357,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     FailsafeFuture<Service> future = Failsafe.with(new RetryPolicy()).with(executor).get(() -> fastService);
   }
 
-  private FailsafeFuture<?> run(AsyncFailsafe failsafe, Object runnable) {
+  private FailsafeFuture<?> run(AsyncFailsafe<?> failsafe, Object runnable) {
     if (runnable instanceof CheckedRunnable)
       return failsafe.run((CheckedRunnable) runnable);
     else if (runnable instanceof ContextualRunnable)
@@ -376,7 +367,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> FailsafeFuture<T> get(AsyncFailsafe failsafe, Object callable) {
+  private <T> FailsafeFuture<T> get(AsyncFailsafe<?> failsafe, Object callable) {
     if (callable instanceof Callable)
       return failsafe.get((Callable<T>) callable);
     else if (callable instanceof ContextualCallable)
@@ -386,7 +377,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> CompletableFuture<T> future(AsyncFailsafe failsafe, Object callable) {
+  private <T> CompletableFuture<T> future(AsyncFailsafe<?> failsafe, Object callable) {
     if (callable instanceof Callable)
       return failsafe.future((Callable<CompletableFuture<T>>) callable);
     else if (callable instanceof ContextualCallable)

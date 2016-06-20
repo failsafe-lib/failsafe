@@ -20,11 +20,11 @@ public class RxJavaExample {
       else
         System.out.println("Subscriber completed successfully");
     }).retryWhen(attempts -> {
-      Execution context = new Execution(retryPolicy);
+      Execution execution = new Execution(retryPolicy);
       return attempts.flatMap(failure -> {
         System.out.println("Failure detected");
-        if (context.canRetryOn(failure))
-          return Observable.timer(context.getWaitTime().toNanos(), TimeUnit.NANOSECONDS);
+        if (execution.canRetryOn(failure))
+          return Observable.timer(execution.getWaitTime().toNanos(), TimeUnit.NANOSECONDS);
         else
           return Observable.error(failure);
       });

@@ -15,19 +15,19 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 public final class AsyncExecution extends AbstractExecution {
   private final Callable<Object> callable;
   private final FailsafeFuture<Object> future;
-  private final Listeners<Object> listeners;
+  private final ListenerBindings<Object, Object> listeners;
   private final Scheduler scheduler;
   volatile boolean completeCalled;
   volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
   <T> AsyncExecution(Callable<T> callable, RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, Scheduler scheduler,
-      FailsafeFuture<T> future, Listeners<?> listeners) {
+      FailsafeFuture<T> future, ListenerBindings<?, ?> listeners) {
     super(retryPolicy, circuitBreaker);
     this.callable = (Callable<Object>) callable;
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
-    this.listeners = (Listeners<Object>) listeners;
+    this.listeners = (ListenerBindings<Object, Object>) listeners;
   }
 
   /**
@@ -121,7 +121,7 @@ public final class AsyncExecution extends AbstractExecution {
     }
 
     if (completeCalled && listeners != null)
-      listeners.handleRetry(lastResult, lastFailure, listeners instanceof AsyncListeners ? copy() : this, scheduler);
+      listeners.handleRetry(lastResult, lastFailure, this);
 
     super.before();
     completeCalled = false;
@@ -140,7 +140,7 @@ public final class AsyncExecution extends AbstractExecution {
 
       // Handle failure
       if (!success && listeners != null)
-        listeners.handleFailedAttempt(result, failure, this, scheduler);
+        listeners.handleFailedAttempt(result, failure, this);
 
       // Handle completed
       if (completed)

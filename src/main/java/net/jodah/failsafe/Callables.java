@@ -5,6 +5,7 @@ import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 
 import net.jodah.failsafe.event.ContextualResultListener;
+import net.jodah.failsafe.event.FailureListener;
 import net.jodah.failsafe.event.ResultListener;
 import net.jodah.failsafe.function.AsyncCallable;
 import net.jodah.failsafe.function.AsyncRunnable;
@@ -41,6 +42,16 @@ final class Callables {
       @Override
       public T call() {
         listener.onResult(result, failure, context);
+        return null;
+      }
+    };
+  }
+
+  static <T> Callable<T> of(final FailureListener<Throwable> listener, final Throwable failure) {
+    return new Callable<T>() {
+      @Override
+      public T call() {
+        listener.onFailure(failure);
         return null;
       }
     };

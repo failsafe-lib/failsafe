@@ -216,7 +216,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     assertEquals(counter.get(), 2);
   }
 
-  private void run(SyncFailsafe failsafe, Object runnable) {
+  private void run(SyncFailsafe<?> failsafe, Object runnable) {
     if (runnable instanceof CheckedRunnable)
       failsafe.run((CheckedRunnable) runnable);
     else if (runnable instanceof ContextualRunnable)
@@ -224,10 +224,10 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T get(SyncFailsafe failsafe, Object callable) {
+  private <T> T get(SyncFailsafe<?> failsafe, Object callable) {
     if (callable instanceof Callable)
-      return failsafe.get((Callable<T>) callable);
+      return (T) failsafe.get((Callable<T>) callable);
     else
-      return failsafe.get((ContextualCallable<T>) callable);
+      return (T) failsafe.get((ContextualCallable<T>) callable);
   }
 }

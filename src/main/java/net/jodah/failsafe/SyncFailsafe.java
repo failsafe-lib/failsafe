@@ -15,11 +15,11 @@ import net.jodah.failsafe.util.concurrent.Schedulers;
  * Performs synchronous executions according to a {@link RetryPolicy} and {@link CircuitBreaker}.
  * 
  * @author Jonathan Halterman
+ * @param <L> listener result type
  */
-public class SyncFailsafe {
-  private RetryPolicy retryPolicy = RetryPolicy.NEVER;
-  private CircuitBreaker circuitBreaker;
-  private Listeners<?> listeners;
+public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
+  RetryPolicy retryPolicy = RetryPolicy.NEVER;
+  CircuitBreaker circuitBreaker;
 
   SyncFailsafe(RetryPolicy retryPolicy) {
     this.retryPolicy = retryPolicy;
@@ -85,7 +85,7 @@ public class SyncFailsafe {
    * @throws NullPointerException if {@code circuitBreaker} is null
    * @throws IllegalStateException if a circuit breaker is already configured
    */
-  public SyncFailsafe with(CircuitBreaker circuitBreaker) {
+  public SyncFailsafe<L> with(CircuitBreaker circuitBreaker) {
     Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configured");
     this.circuitBreaker = Assert.notNull(circuitBreaker, "circuitBreaker");
     return this;
@@ -97,7 +97,7 @@ public class SyncFailsafe {
    * @throws NullPointerException if {@code retryPolicy} is null
    * @throws IllegalStateException if a retry policy is already configured
    */
-  public SyncFailsafe with(RetryPolicy retryPolicy) {
+  public SyncFailsafe<L> with(RetryPolicy retryPolicy) {
     Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configured");
     this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
     return this;
@@ -108,9 +108,10 @@ public class SyncFailsafe {
    * 
    * @throws NullPointerException if {@code listeners} is null
    */
-  public SyncFailsafe with(Listeners<?> listeners) {
-    this.listeners = Assert.notNull(listeners, "listeners");
-    return this;
+  @SuppressWarnings("unchecked")
+  public <T> SyncFailsafe<T> with(Listeners<T> listeners) {
+    this.listeners = (Listeners<L>) Assert.notNull(listeners, "listeners");
+    return (SyncFailsafe<T>) this;
   }
 
   /**
@@ -119,8 +120,8 @@ public class SyncFailsafe {
    * 
    * @throws NullPointerException if {@code executor} is null
    */
-  public AsyncFailsafe with(ScheduledExecutorService executor) {
-    return new AsyncFailsafe(retryPolicy, circuitBreaker, Schedulers.of(executor), listeners);
+  public AsyncFailsafe<L> with(ScheduledExecutorService executor) {
+    return new AsyncFailsafe<L>(this, Schedulers.of(executor));
   }
 
   /**
@@ -129,8 +130,8 @@ public class SyncFailsafe {
    * 
    * @throws NullPointerException if {@code scheduler} is null
    */
-  public AsyncFailsafe with(Scheduler scheduler) {
-    return new AsyncFailsafe(retryPolicy, circuitBreaker, Assert.notNull(scheduler, "scheduler"), listeners);
+  public AsyncFailsafe<L> with(Scheduler scheduler) {
+    return new AsyncFailsafe<L>(this, Assert.notNull(scheduler, "scheduler"));
   }
 
   /**
@@ -154,7 +155,6 @@ public class SyncFailsafe {
     if (callable instanceof ContextualCallableWrapper)
       ((ContextualCallableWrapper<T>) callable).inject(execution);
 
-    Listeners<T> typedListeners = (Listeners<T>) listeners;
     T result = null;
     Throwable failure;
 
@@ -174,12 +174,11 @@ public class SyncFailsafe {
       boolean complete = execution.complete(result, failure, true);
 
       // Handle failure
-      if (!execution.success && typedListeners != null)
-        typedListeners.handleFailedAttempt(result, failure, execution, null);
+      if (!execution.success)
+        handleFailedAttempt((L) result, failure, execution);
 
       if (complete) {
-        if (typedListeners != null)
-          typedListeners.complete(result, failure, execution, execution.success);
+        complete((L) result, failure, execution, execution.success);
         if (execution.success || failure == null)
           return result;
         FailsafeException re = failure instanceof FailsafeException ? (FailsafeException) failure
@@ -192,8 +191,7 @@ public class SyncFailsafe {
           throw new FailsafeException(e);
         }
 
-        if (typedListeners != null)
-          typedListeners.handleRetry(result, failure, execution, null);
+        handleRetry((L) result, failure, execution);
       }
     }
   }

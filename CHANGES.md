@@ -1,3 +1,9 @@
+# 0.8.1
+
+### New Features
+
+* Added `FailureLisener`
+
 # 0.8.0
 
 ### New Features

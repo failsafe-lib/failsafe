@@ -12,19 +12,21 @@ public class Failsafe {
    * Creates and returns a new SyncFailsafe instance that will perform executions and retries synchronously according to
    * the {@code retryPolicy}.
    * 
+   * @param <T> result type
    * @throws NullPointerException if {@code retryPolicy} is null
    */
-  public static SyncFailsafe with(RetryPolicy retryPolicy) {
-    return new SyncFailsafe(Assert.notNull(retryPolicy, "retryPolicy"));
+  public static <T> SyncFailsafe<T> with(RetryPolicy retryPolicy) {
+    return new SyncFailsafe<T>(Assert.notNull(retryPolicy, "retryPolicy"));
   }
 
   /**
    * Creates and returns a new SyncFailsafe instance that will perform executions and retries synchronously according to
    * the {@code circuitBreaker}.
    * 
+   * @param <T> result type
    * @throws NullPointerException if {@code circuitBreaker} is null
    */
-  public static SyncFailsafe with(CircuitBreaker circuitBreaker) {
-    return new SyncFailsafe(Assert.notNull(circuitBreaker, "circuitBreaker"));
+  public static <T> SyncFailsafe<T> with(CircuitBreaker circuitBreaker) {
+    return new SyncFailsafe<T>(Assert.notNull(circuitBreaker, "circuitBreaker"));
   }
 }
