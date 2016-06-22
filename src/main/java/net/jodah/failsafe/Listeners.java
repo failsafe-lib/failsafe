@@ -8,6 +8,18 @@ package net.jodah.failsafe;
  */
 public class Listeners<T> {
   /**
+   * Called when an execution is aborted.
+   */
+  public void onAbort(T result, Throwable failure) {
+  }
+
+  /**
+   * Called when an execution is aborted.
+   */
+  public void onAbort(T result, Throwable failure, ExecutionContext context) {
+  }
+
+  /**
    * Called when an execution is completed.
    */
   public void onComplete(T result, Throwable failure) {

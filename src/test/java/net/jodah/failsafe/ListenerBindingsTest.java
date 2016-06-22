@@ -44,6 +44,13 @@ public class ListenerBindingsTest {
   AtomicInteger asyncComplete;
   AtomicInteger asyncCtxComplete;
 
+  AtomicInteger abort;
+  AtomicInteger abortResult;
+  AtomicInteger ctxAbort;
+  AtomicInteger asyncAbort;
+  AtomicInteger asyncAbortResult;
+  AtomicInteger asyncCtxAbort;
+
   AtomicInteger failure;
   AtomicInteger failureResult;
   AtomicInteger ctxFailure;
@@ -84,6 +91,13 @@ public class ListenerBindingsTest {
     asyncComplete = new AtomicInteger();
     asyncCtxComplete = new AtomicInteger();
 
+    abort = new AtomicInteger();
+    abortResult = new AtomicInteger();
+    ctxAbort = new AtomicInteger();
+    asyncAbort = new AtomicInteger();
+    asyncAbortResult = new AtomicInteger();
+    asyncCtxAbort = new AtomicInteger();
+
     failure = new AtomicInteger();
     failureResult = new AtomicInteger();
     ctxFailure = new AtomicInteger();
@@ -101,27 +115,37 @@ public class ListenerBindingsTest {
     failsafe.onFailedAttempt(e -> failedAttempt.incrementAndGet());
     failsafe.onFailedAttempt((r, f) -> failedAttemptResult.incrementAndGet());
     failsafe.onFailedAttempt((r, f, s) -> assertEquals(ctxFailedAttempt.incrementAndGet(), s.getExecutions()));
-    failsafe.onFailedAttemptAsync(e -> asyncFailedAttempt.incrementAndGet(), executor);
-    failsafe.onFailedAttemptAsync((r, f) -> asyncFailedAttemptResult.incrementAndGet(), executor);
-    failsafe.onFailedAttemptAsync(
-        (r, f, s) -> waiter.assertEquals(asyncCtxFailedAttempt.incrementAndGet(), s.getExecutions()), executor);
+    failsafe.onFailedAttemptAsync(e -> {
+      asyncFailedAttempt.incrementAndGet();
+      waiter.resume();
+    } , executor);
+    failsafe.onFailedAttemptAsync((r, f) -> {
+      asyncFailedAttemptResult.incrementAndGet();
+      waiter.resume();
+    } , executor);
+    failsafe.onFailedAttemptAsync((r, f, s) -> {
+      waiter.assertEquals(asyncCtxFailedAttempt.incrementAndGet(), s.getExecutions());
+      waiter.resume();
+    } , executor);
 
     failsafe.onRetry(e -> retry.incrementAndGet());
     failsafe.onRetry((r, f) -> retryResult.incrementAndGet());
     failsafe.onRetry((r, f, s) -> assertEquals(ctxRetry.incrementAndGet(), s.getExecutions()));
-    failsafe.onRetryAsync(e -> asyncRetry.incrementAndGet(), executor);
-    failsafe.onRetryAsync((r, f) -> asyncRetryResult.incrementAndGet(), executor);
-    failsafe.onRetryAsync((r, f, s) -> waiter.assertEquals(asyncCtxRetry.incrementAndGet(), s.getExecutions()),
-        executor);
+    failsafe.onRetryAsync(e -> {
+      asyncRetry.incrementAndGet();
+      waiter.resume();
+    } , executor);
+    failsafe.onRetryAsync((r, f) -> {
+      asyncRetryResult.incrementAndGet();
+      waiter.resume();
+    } , executor);
+    failsafe.onRetryAsync((r, f, s) -> {
+      waiter.assertEquals(asyncCtxRetry.incrementAndGet(), s.getExecutions());
+      waiter.resume();
+    } , executor);
 
-    failsafe.onComplete((r, f) -> {
-      complete.incrementAndGet();
-      waiter.resume();
-    });
-    failsafe.onComplete((r, f, s) -> {
-      ctxComplete.incrementAndGet();
-      waiter.resume();
-    });
+    failsafe.onComplete((r, f) -> complete.incrementAndGet());
+    failsafe.onComplete((r, f, s) -> ctxComplete.incrementAndGet());
     failsafe.onCompleteAsync((r, f) -> {
       asyncComplete.incrementAndGet();
       waiter.resume();
@@ -130,6 +154,13 @@ public class ListenerBindingsTest {
       asyncCtxComplete.incrementAndGet();
       waiter.resume();
     } , executor);
+
+    failsafe.onAbort(e -> abort.incrementAndGet());
+    failsafe.onAbort((r, e) -> abortResult.incrementAndGet());
+    failsafe.onAbort((r, e, c) -> ctxAbort.incrementAndGet());
+    failsafe.onAbortAsync(e -> asyncAbort.incrementAndGet(), executor);
+    failsafe.onAbortAsync((r, e) -> asyncAbortResult.incrementAndGet(), executor);
+    failsafe.onAbortAsync((r, e, c) -> asyncCtxAbort.incrementAndGet(), executor);
 
     failsafe.onFailure(e -> failure.incrementAndGet());
     failsafe.onFailure((r, f) -> failureResult.incrementAndGet());
@@ -149,7 +180,6 @@ public class ListenerBindingsTest {
   /**
    * Asserts that listeners are called the expected number of times for a successful completion.
    */
-  @Test(enabled = false)
   public void testListenersForSuccessfulCompletion() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
@@ -158,7 +188,7 @@ public class ListenerBindingsTest {
 
     // When
     bindListeners(Failsafe.with(new RetryPolicy().retryWhen(false))).get(callable);
-    waiter.await(1000, 4);
+    waiter.await(1000, 12 + 12 + 2);
 
     // Then
     assertEquals(failedAttempt.get(), 4);
@@ -180,6 +210,13 @@ public class ListenerBindingsTest {
     assertEquals(asyncComplete.get(), 1);
     assertEquals(asyncCtxComplete.get(), 1);
 
+    assertEquals(abort.get(), 0);
+    assertEquals(abortResult.get(), 0);
+    assertEquals(ctxAbort.get(), 0);
+    assertEquals(asyncAbort.get(), 0);
+    assertEquals(asyncAbortResult.get(), 0);
+    assertEquals(asyncCtxAbort.get(), 0);
+
     assertEquals(failure.get(), 0);
     assertEquals(failureResult.get(), 0);
     assertEquals(ctxFailure.get(), 0);
@@ -196,7 +233,6 @@ public class ListenerBindingsTest {
   /**
    * Asserts that listeners are called the expected number of times for a failure completion.
    */
-  @Test(enabled = false)
   public void testListenersForFailureCompletion() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
@@ -205,7 +241,7 @@ public class ListenerBindingsTest {
 
     // When
     bindListeners(Failsafe.with(new RetryPolicy().retryWhen(false).withMaxRetries(3))).get(callable);
-    waiter.await(1000, 4);
+    waiter.await(1000, 12 + 9 + 2);
 
     // Then
     assertEquals(failedAttempt.get(), 4);
@@ -226,6 +262,71 @@ public class ListenerBindingsTest {
     assertEquals(ctxComplete.get(), 1);
     assertEquals(asyncComplete.get(), 1);
     assertEquals(asyncCtxComplete.get(), 1);
+
+    assertEquals(abort.get(), 0);
+    assertEquals(abortResult.get(), 0);
+    assertEquals(ctxAbort.get(), 0);
+    assertEquals(asyncAbort.get(), 0);
+    assertEquals(asyncAbortResult.get(), 0);
+    assertEquals(asyncCtxAbort.get(), 0);
+
+    assertEquals(failure.get(), 1);
+    assertEquals(failureResult.get(), 1);
+    assertEquals(ctxFailure.get(), 1);
+    assertEquals(asyncFailure.get(), 1);
+    assertEquals(asyncFailureResult.get(), 1);
+    assertEquals(asyncCtxFailure.get(), 1);
+
+    assertEquals(success.get(), 0);
+    assertEquals(ctxSuccess.get(), 0);
+    assertEquals(asyncSuccess.get(), 0);
+    assertEquals(asyncCtxSuccess.get(), 0);
+  }
+
+  /**
+   * Asserts that listeners are called the expected number of times for an aborted execution.
+   */
+  @SuppressWarnings("unchecked")
+  public void testListenersForAbort() throws Throwable {
+    Callable<Boolean> callable = () -> service.connect();
+
+    // Given - Fail twice then succeed
+    when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
+        .thenThrow(IllegalArgumentException.class);
+
+    // When
+    Asserts.assertThrows(
+        () -> bindListeners(Failsafe.with(new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3)))
+            .get(callable),
+        FailsafeException.class, IllegalArgumentException.class);
+    waiter.await(1000, 9 + 6 + 2);
+
+    // Then
+    assertEquals(failedAttempt.get(), 3);
+    assertEquals(failedAttemptResult.get(), 3);
+    assertEquals(ctxFailedAttempt.get(), 3);
+    assertEquals(asyncFailedAttempt.get(), 3);
+    assertEquals(asyncFailedAttemptResult.get(), 3);
+    assertEquals(asyncCtxFailedAttempt.get(), 3);
+
+    assertEquals(retry.get(), 2);
+    assertEquals(retryResult.get(), 2);
+    assertEquals(ctxRetry.get(), 2);
+    assertEquals(asyncRetry.get(), 2);
+    assertEquals(asyncRetryResult.get(), 2);
+    assertEquals(asyncCtxRetry.get(), 2);
+
+    assertEquals(complete.get(), 1);
+    assertEquals(ctxComplete.get(), 1);
+    assertEquals(asyncComplete.get(), 1);
+    assertEquals(asyncCtxComplete.get(), 1);
+
+    assertEquals(abort.get(), 1);
+    assertEquals(abortResult.get(), 1);
+    assertEquals(ctxAbort.get(), 1);
+    assertEquals(asyncAbort.get(), 1);
+    assertEquals(asyncAbortResult.get(), 1);
+    assertEquals(asyncCtxAbort.get(), 1);
 
     assertEquals(failure.get(), 1);
     assertEquals(failureResult.get(), 1);

@@ -15,19 +15,17 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 public final class AsyncExecution extends AbstractExecution {
   private final Callable<Object> callable;
   private final FailsafeFuture<Object> future;
-  private final ListenerBindings<Object, Object> listeners;
   private final Scheduler scheduler;
   volatile boolean completeCalled;
   volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
   <T> AsyncExecution(Callable<T> callable, RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, Scheduler scheduler,
-      FailsafeFuture<T> future, ListenerBindings<?, ?> listeners) {
-    super(retryPolicy, circuitBreaker);
+      FailsafeFuture<T> future, ListenerBindings<?, Object> listeners) {
+    super(retryPolicy, circuitBreaker, listeners);
     this.callable = (Callable<Object>) callable;
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
-    this.listeners = (ListenerBindings<Object, Object>) listeners;
   }
 
   /**
@@ -116,7 +114,10 @@ public final class AsyncExecution extends AbstractExecution {
   void before() {
     if (circuitBreaker != null && !circuitBreaker.allowsExecution()) {
       completed = true;
-      future.complete(null, new CircuitBreakerOpenException(), false);
+      Exception failure = new CircuitBreakerOpenException();
+      if (listeners != null)
+        listeners.complete(null, failure, this, false);
+      future.complete(null, failure);
       return;
     }
 
@@ -136,16 +137,8 @@ public final class AsyncExecution extends AbstractExecution {
   @Override
   synchronized boolean complete(Object result, Throwable failure, boolean checkArgs) {
     if (!completeCalled) {
-      super.complete(result, failure, checkArgs);
-
-      // Handle failure
-      if (!success && listeners != null)
-        listeners.handleFailedAttempt(result, failure, this);
-
-      // Handle completed
-      if (completed)
-        future.complete(result, failure, success);
-
+      if (super.complete(result, failure, checkArgs))
+        future.complete(result, failure);
       completeCalled = true;
     }
 
@@ -165,7 +158,9 @@ public final class AsyncExecution extends AbstractExecution {
         return true;
       } catch (Throwable t) {
         failure = t;
-        future.complete(null, failure, false);
+        if (listeners != null)
+          listeners.complete(null, t, this, false);
+        future.complete(null, failure);
       }
     }
 

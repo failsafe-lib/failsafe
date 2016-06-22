@@ -16,9 +16,7 @@ import net.jodah.failsafe.internal.util.ReentrantCircuit;
  */
 public class FailsafeFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
-  private final ListenerBindings<?, T> listeners;
   private final java.util.concurrent.CompletableFuture<T> completableFuture;
-  private ExecutionContext context;
 
   // Mutable state
   private volatile Future<T> delegate;
@@ -27,15 +25,13 @@ public class FailsafeFuture<T> implements Future<T> {
   private volatile T result;
   private volatile Throwable failure;
 
-  FailsafeFuture(ListenerBindings<?, T> listeners) {
-    this.listeners = listeners;
+  FailsafeFuture() {
     this.completableFuture = null;
     circuit.open();
   }
 
-  FailsafeFuture(java.util.concurrent.CompletableFuture<T> future, ListenerBindings<?, T> listeners) {
+  FailsafeFuture(java.util.concurrent.CompletableFuture<T> future) {
     this.completableFuture = future;
-    this.listeners = listeners;
     circuit.open();
   }
 
@@ -79,20 +75,15 @@ public class FailsafeFuture<T> implements Future<T> {
     return done;
   }
 
-  synchronized void complete(T result, Throwable failure, boolean success) {
+  synchronized void complete(T result, Throwable failure) {
     this.result = result;
     this.failure = failure;
     done = true;
 
-    listeners.complete(result, failure, context, success);
     if (completableFuture != null)
       completeFuture();
 
     circuit.close();
-  }
-
-  void inject(ExecutionContext context) {
-    this.context = context;
   }
 
   void setFuture(Future<T> delegate) {

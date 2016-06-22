@@ -108,11 +108,10 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
    * @throws NullPointerException if the {@code callable} is null
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
-  @SuppressWarnings("unchecked")
   public <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable) {
     java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response, (ListenerBindings<?, T>) this));
+    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response));
     return response;
   }
 
@@ -125,11 +124,10 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
    * @throws NullPointerException if the {@code callable} is null
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
-  @SuppressWarnings("unchecked")
   public <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
     java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response, (ListenerBindings<?, T>) this));
+    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response));
     return response;
   }
 
@@ -143,11 +141,10 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
    * @throws NullPointerException if the {@code callable} is null
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
-  @SuppressWarnings("unchecked")
   public <T> java.util.concurrent.CompletableFuture<T> futureAsync(
       AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
     java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response, (ListenerBindings<?, T>) this));
+    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response));
     return response;
   }
 
@@ -202,16 +199,16 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
     }
 
     if (future == null)
-      future = new FailsafeFuture<T>((ListenerBindings<?, T>) this);
+      future = new FailsafeFuture<T>();
     AsyncExecution execution = new AsyncExecution(callable, retryPolicy, circuitBreaker, scheduler, future,
-        (ListenerBindings<?, ?>) this);
+        (ListenerBindings<?, Object>) this);
     callable.inject(execution);
-    future.inject(execution);
 
     try {
       future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     } catch (Throwable t) {
-      future.complete(null, t, false);
+      complete(null, t, execution, false);
+      future.complete(null, t);
     }
 
     return future;

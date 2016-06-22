@@ -54,6 +54,13 @@ public class ListenerBindings<S, T> {
     private AsyncResultListener<T> asyncFailureResultListener;
     private AsyncCtxResultListener<T> asyncCtxFailureListener;
 
+    private FailureListener<Throwable> abortListener;
+    private ResultListener<T, Throwable> abortResultListener;
+    private ContextualResultListener<T, Throwable> ctxAbortListener;
+    private AsyncResultListener<T> asyncAbortListener;
+    private AsyncResultListener<T> asyncAbortResultListener;
+    private AsyncCtxResultListener<T> asyncCtxAbortListener;
+
     private SuccessListener<T> successListener;
     private ContextualSuccessListener<T> ctxSuccessListener;
     private AsyncResultListener<T> asyncSuccessListener;
@@ -93,6 +100,57 @@ public class ListenerBindings<S, T> {
       this.listener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
       this.executor = Assert.notNull(executor, "executor");
     }
+  }
+
+  /**
+   * Registers the {@code listener} to be called when retries are aborted according to the retry policy.
+   */
+  public S onAbort(FailureListener<? extends Throwable> listener) {
+    getConfig().abortListener = (FailureListener<Throwable>) Assert.notNull(listener, "listener");
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called when retries are aborted according to the retry policy.
+   */
+  public S onAbort(ResultListener<? extends T, ? extends Throwable> listener) {
+    getConfig().abortResultListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called after a failed execution attempt.
+   */
+  public S onAbort(ContextualResultListener<? extends T, ? extends Throwable> listener) {
+    getConfig().ctxAbortListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when retries are aborted
+   * according to the retry policy.
+   */
+  public S onAbortAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
+    getConfig().asyncAbortListener = new AsyncResultListener<T>(resultListenerOf(listener), executor);
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when retries are aborted
+   * according to the retry policy.
+   */
+  public S onAbortAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
+    getConfig().asyncAbortResultListener = new AsyncResultListener<T>(listener, executor);
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failed execution
+   * attempt.
+   */
+  public S onAbortAsync(ContextualResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
+    getConfig().asyncCtxAbortListener = new AsyncCtxResultListener<T>(listener, executor);
+    return (S) this;
   }
 
   /**
@@ -321,6 +379,24 @@ public class ListenerBindings<S, T> {
     handleComplete(result, failure, context);
   }
 
+  void handleAbort(T result, Throwable failure, ExecutionContext context) {
+    if (listenerConfig != null)
+      call(listenerConfig.abortListener, listenerConfig.abortResultListener, listenerConfig.ctxAbortListener,
+          listenerConfig.asyncAbortListener, listenerConfig.asyncAbortResultListener,
+          listenerConfig.asyncCtxAbortListener, result, failure, context);
+
+    if (listeners != null) {
+      try {
+        listeners.onAbort(result, failure);
+      } catch (Exception ignore) {
+      }
+      try {
+        listeners.onAbort(result, failure, context);
+      } catch (Exception ignore) {
+      }
+    }
+  }
+
   void handleFailedAttempt(T result, Throwable failure, ExecutionContext context) {
     if (listenerConfig != null)
       call(listenerConfig.failedAttemptListener, listenerConfig.failedAttemptResultListener,
@@ -515,9 +591,12 @@ public class ListenerBindings<S, T> {
   }
 
   private static void call(Callable<?> callable, ExecutorService executor, Scheduler scheduler) {
-    if (executor != null)
-      executor.submit(callable);
-    else
-      scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
+    try {
+      if (executor != null)
+        executor.submit(callable);
+      else
+        scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
+    } catch (Exception ignore) {
+    }
   }
 }

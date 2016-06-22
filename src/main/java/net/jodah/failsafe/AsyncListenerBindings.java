@@ -38,6 +38,10 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
     private AsyncResultListener<T> asyncCompleteListener;
     private AsyncCtxResultListener<T> asyncCtxCompleteListener;
 
+    private AsyncResultListener<T> asyncAbortListener;
+    private AsyncResultListener<T> asyncAbortResultListener;
+    private AsyncCtxResultListener<T> asyncCtxAbortListener;
+
     private AsyncResultListener<T> asyncFailureListener;
     private AsyncResultListener<T> asyncFailureResultListener;
     private AsyncCtxResultListener<T> asyncCtxFailureListener;
@@ -48,6 +52,33 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
 
   AsyncListenerConfig<T> getAsyncConfig() {
     return asyncListenerConfig != null ? asyncListenerConfig : (asyncListenerConfig = new AsyncListenerConfig<T>());
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the configured Failsafe executor or Scheduler when
+   * retries are aborted according to the retry policy.
+   */
+  public S onAbortAsync(ContextualResultListener<? extends T, ? extends Throwable> listener) {
+    getAsyncConfig().asyncCtxAbortListener = new AsyncCtxResultListener<T>(listener);
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the configured Failsafe executor or Scheduler when
+   * retries are aborted according to the retry policy.
+   */
+  public S onAbortAsync(FailureListener<? extends Throwable> listener) {
+    getAsyncConfig().asyncAbortListener = new AsyncResultListener<T>(ListenerBindings.resultListenerOf(listener));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the configured Failsafe executor or Scheduler when
+   * retries are aborted according to the retry policy.
+   */
+  public S onAbortAsync(ResultListener<? extends T, ? extends Throwable> listener) {
+    getAsyncConfig().asyncAbortResultListener = new AsyncResultListener<T>(listener);
+    return (S) this;
   }
 
   /**
@@ -167,6 +198,14 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
   public S onSuccessAsync(SuccessListener<? extends T> listener) {
     getAsyncConfig().asyncSuccessListener = new AsyncResultListener<T>(ListenerBindings.resultListenerOf(listener));
     return (S) this;
+  }
+
+  @Override
+  void handleAbort(T result, Throwable failure, ExecutionContext context) {
+    super.handleAbort(result, failure, context);
+    if (asyncListenerConfig != null)
+      call(asyncListenerConfig.asyncAbortListener, asyncListenerConfig.asyncAbortResultListener,
+          asyncListenerConfig.asyncCtxAbortListener, result, failure, context);
   }
 
   @Override

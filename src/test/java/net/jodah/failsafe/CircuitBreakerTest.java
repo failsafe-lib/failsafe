@@ -1,6 +1,6 @@
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Testing.shouldFail;
+import static net.jodah.failsafe.Asserts.assertThrows;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -59,40 +59,40 @@ public class CircuitBreakerTest {
   }
 
   public void shouldRequireValidDelay() {
-    shouldFail(() -> new CircuitBreaker().withDelay(5, null), NullPointerException.class);
-    shouldFail(() -> new CircuitBreaker().withDelay(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay(5, null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidTimeout() {
-    shouldFail(() -> new CircuitBreaker().withTimeout(5, null), NullPointerException.class);
-    shouldFail(() -> new CircuitBreaker().withTimeout(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withTimeout(5, null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withTimeout(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
   }
-  
+
   public void shouldRequireValidFailureThreshold() {
-    shouldFail(() -> new CircuitBreaker().withFailureThreshold(0), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withFailureThreshold(2, 2).withFailureThreshold(2),
+    assertThrows(() -> new CircuitBreaker().withFailureThreshold(0), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withFailureThreshold(2, 2).withFailureThreshold(2),
         IllegalStateException.class);
   }
 
   public void shouldRequireValidFailureThresholdRatio() {
-    shouldFail(() -> new CircuitBreaker().withFailureThreshold(0, 2), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withFailureThreshold(2, 0), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withFailureThreshold(2, 1), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withFailureThreshold(2).withFailureThreshold(2, 2),
+    assertThrows(() -> new CircuitBreaker().withFailureThreshold(0, 2), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withFailureThreshold(2, 0), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withFailureThreshold(2, 1), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withFailureThreshold(2).withFailureThreshold(2, 2),
         IllegalStateException.class);
   }
 
   public void shouldRequireValidSuccessThreshold() {
-    shouldFail(() -> new CircuitBreaker().withSuccessThreshold(0), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withSuccessThreshold(2, 2).withSuccessThreshold(2),
+    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(0), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 2).withSuccessThreshold(2),
         IllegalStateException.class);
   }
 
   public void shouldRequireValidSuccessThresholdRatio() {
-    shouldFail(() -> new CircuitBreaker().withSuccessThreshold(0, 2), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withSuccessThreshold(2, 0), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withSuccessThreshold(2, 1), IllegalArgumentException.class);
-    shouldFail(() -> new CircuitBreaker().withSuccessThreshold(2).withSuccessThreshold(2, 2),
+    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(0, 2), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 0), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 1), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2).withSuccessThreshold(2, 2),
         IllegalStateException.class);
   }
 }

@@ -143,13 +143,9 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
    */
   @SuppressWarnings("unchecked")
   private <T> T call(Callable<T> callable) {
-    Execution execution = null;
-    if (circuitBreaker == null)
-      execution = new Execution(retryPolicy);
-    else {
+    if (circuitBreaker != null)
       circuitBreaker.initialize();
-      execution = new Execution(retryPolicy, circuitBreaker);
-    }
+    Execution execution = new Execution(retryPolicy, circuitBreaker, (ListenerBindings<?, Object>) this);
 
     // Handle contextual calls
     if (callable instanceof ContextualCallableWrapper)
@@ -171,14 +167,7 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
       }
 
       // Attempt to complete execution
-      boolean complete = execution.complete(result, failure, true);
-
-      // Handle failure
-      if (!execution.success)
-        handleFailedAttempt((L) result, failure, execution);
-
-      if (complete) {
-        complete((L) result, failure, execution, execution.success);
+      if (execution.complete(result, failure, true)) {
         if (execution.success || failure == null)
           return result;
         FailsafeException re = failure instanceof FailsafeException ? (FailsafeException) failure
