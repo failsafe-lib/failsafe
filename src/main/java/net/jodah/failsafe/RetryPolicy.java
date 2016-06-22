@@ -29,9 +29,9 @@ public final class RetryPolicy {
   private Duration maxDelay;
   private Duration maxDuration;
   private int maxRetries;
-  private boolean retryableContainsFailureCheck;
-  private List<BiPredicate<Object, Throwable>> retryablePredicates;
-  private List<BiPredicate<Object, Throwable>> abortablePredicates;
+  private boolean failureConditionChecked;
+  private List<BiPredicate<Object, Throwable>> retryPredicates;
+  private List<BiPredicate<Object, Throwable>> abortPredicates;
 
   /**
    * Creates a retry policy that always retries with no delay.
@@ -39,8 +39,8 @@ public final class RetryPolicy {
   public RetryPolicy() {
     delay = Duration.NONE;
     maxRetries = -1;
-    abortablePredicates = new ArrayList<BiPredicate<Object, Throwable>>();
-    retryablePredicates = new ArrayList<BiPredicate<Object, Throwable>>();
+    abortPredicates = new ArrayList<BiPredicate<Object, Throwable>>();
+    retryPredicates = new ArrayList<BiPredicate<Object, Throwable>>();
   }
 
   /**
@@ -52,9 +52,9 @@ public final class RetryPolicy {
     this.maxDelay = rp.maxDelay;
     this.maxDuration = rp.maxDuration;
     this.maxRetries = rp.maxRetries;
-    this.retryablePredicates = new ArrayList<BiPredicate<Object, Throwable>>(rp.retryablePredicates);
-    this.abortablePredicates = new ArrayList<BiPredicate<Object, Throwable>>(rp.abortablePredicates);
-    this.retryableContainsFailureCheck = rp.retryableContainsFailureCheck;
+    this.retryPredicates = new ArrayList<BiPredicate<Object, Throwable>>(rp.retryPredicates);
+    this.abortPredicates = new ArrayList<BiPredicate<Object, Throwable>>(rp.abortPredicates);
+    this.failureConditionChecked = rp.failureConditionChecked;
   }
 
   /**
@@ -65,7 +65,7 @@ public final class RetryPolicy {
   @SuppressWarnings("unchecked")
   public <T> RetryPolicy abortIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
-    abortablePredicates.add((BiPredicate<Object, Throwable>) completionPredicate);
+    abortPredicates.add((BiPredicate<Object, Throwable>) completionPredicate);
     return this;
   }
 
@@ -76,7 +76,7 @@ public final class RetryPolicy {
    */
   public <T> RetryPolicy abortIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    abortablePredicates.add(resultPredicateFor(resultPredicate));
+    abortPredicates.add(Predicates.resultPredicateFor(resultPredicate));
     return this;
   }
 
@@ -99,12 +99,12 @@ public final class RetryPolicy {
    * in retries being aborted.
    * 
    * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
+   * @throws IllegalArgumentException if failures is null or empty
    */
   public RetryPolicy abortOn(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    abortablePredicates.add(failurePredicateFor(failures));
+    abortPredicates.add(Predicates.failurePredicateFor(failures));
     return this;
   }
 
@@ -115,7 +115,7 @@ public final class RetryPolicy {
    */
   public RetryPolicy abortOn(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    abortablePredicates.add(failurePredicateFor(failurePredicate));
+    abortPredicates.add(Predicates.failurePredicateFor(failurePredicate));
     return this;
   }
 
@@ -123,7 +123,7 @@ public final class RetryPolicy {
    * Specifies that retries should be aborted if the execution result matches the {@code result}.
    */
   public RetryPolicy abortWhen(Object result) {
-    abortablePredicates.add(resultPredicateFor(result));
+    abortPredicates.add(Predicates.resultPredicateFor(result));
     return this;
   }
 
@@ -131,7 +131,7 @@ public final class RetryPolicy {
    * Returns whether an execution can be aborted for the {@code result} and {@code failure} according to the policy.
    */
   public boolean canAbortFor(Object result, Throwable failure) {
-    for (BiPredicate<Object, Throwable> predicate : abortablePredicates) {
+    for (BiPredicate<Object, Throwable> predicate : abortPredicates) {
       if (predicate.test(result, failure))
         return true;
     }
@@ -152,12 +152,12 @@ public final class RetryPolicy {
     if (!canRetry())
       return false;
 
-    for (BiPredicate<Object, Throwable> predicate : retryablePredicates) {
+    for (BiPredicate<Object, Throwable> predicate : retryPredicates) {
       if (predicate.test(result, failure))
         return true;
     }
 
-    return failure != null && !retryableContainsFailureCheck;
+    return failure != null && !failureConditionChecked;
   }
 
   /**
@@ -223,8 +223,8 @@ public final class RetryPolicy {
   @SuppressWarnings("unchecked")
   public <T> RetryPolicy retryIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
-    retryableContainsFailureCheck = true;
-    retryablePredicates.add((BiPredicate<Object, Throwable>) completionPredicate);
+    failureConditionChecked = true;
+    retryPredicates.add((BiPredicate<Object, Throwable>) completionPredicate);
     return this;
   }
 
@@ -236,7 +236,7 @@ public final class RetryPolicy {
    */
   public <T> RetryPolicy retryIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    retryablePredicates.add(resultPredicateFor(resultPredicate));
+    retryPredicates.add(Predicates.resultPredicateFor(resultPredicate));
     return this;
   }
 
@@ -257,13 +257,13 @@ public final class RetryPolicy {
    * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
    * 
    * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
+   * @throws IllegalArgumentException if failures is null or empty
    */
   public RetryPolicy retryOn(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    retryableContainsFailureCheck = true;
-    retryablePredicates.add(failurePredicateFor(failures));
+    failureConditionChecked = true;
+    retryPredicates.add(Predicates.failurePredicateFor(failures));
     return this;
   }
 
@@ -275,8 +275,8 @@ public final class RetryPolicy {
    */
   public RetryPolicy retryOn(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    retryableContainsFailureCheck = true;
-    retryablePredicates.add(failurePredicateFor(failurePredicate));
+    failureConditionChecked = true;
+    retryPredicates.add(Predicates.failurePredicateFor(failurePredicate));
     return this;
   }
 
@@ -285,7 +285,7 @@ public final class RetryPolicy {
    * exceeded.
    */
   public RetryPolicy retryWhen(Object result) {
-    retryablePredicates.add(resultPredicateFor(result));
+    retryPredicates.add(Predicates.resultPredicateFor(result));
     return this;
   }
 
@@ -361,48 +361,5 @@ public final class RetryPolicy {
     Assert.isTrue(maxRetries >= -1, "maxRetries must be greater than or equal to -1");
     this.maxRetries = maxRetries;
     return this;
-  }
-
-  private static BiPredicate<Object, Throwable> resultPredicateFor(Object result) {
-    return new BiPredicate<Object, Throwable>() {
-      @Override
-      public boolean test(Object t, Throwable u) {
-        return result == null ? t == null : result.equals(t);
-      }
-    };
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> BiPredicate<Object, Throwable> resultPredicateFor(Predicate<T> resultPredicate) {
-    return new BiPredicate<Object, Throwable>() {
-      @Override
-      public boolean test(Object t, Throwable u) {
-        return ((Predicate<Object>) resultPredicate).test(t);
-      }
-    };
-  }
-
-  private static BiPredicate<Object, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
-    return new BiPredicate<Object, Throwable>() {
-      @Override
-      public boolean test(Object t, Throwable u) {
-        if (u == null)
-          return false;
-        for (Class<? extends Throwable> failureType : failures)
-          if (failureType.isAssignableFrom(u.getClass()))
-            return true;
-        return false;
-      }
-    };
-  }
-
-  @SuppressWarnings("unchecked")
-  private static BiPredicate<Object, Throwable> failurePredicateFor(Predicate<? extends Throwable> failurePredicate) {
-    return new BiPredicate<Object, Throwable>() {
-      @Override
-      public boolean test(Object t, Throwable u) {
-        return u != null && ((Predicate<Throwable>) failurePredicate).test(u);
-      }
-    };
   }
 }

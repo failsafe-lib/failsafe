@@ -1,5 +1,6 @@
 package net.jodah.failsafe;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +25,6 @@ import net.jodah.failsafe.util.Ratio;
  * @author Jonathan Halterman
  */
 public class CircuitBreaker {
-  private static final Object DEFAULT_VALUE = new Object();
-
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<CircuitState>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
@@ -41,11 +40,8 @@ public class CircuitBreaker {
   private Ratio failureThresholdRatio;
   private Integer successThreshold;
   private Ratio successThresholdRatio;
-  private List<Class<? extends Throwable>> failures;
-  private Predicate<Throwable> failurePredicate;
-  private Object failureValue = DEFAULT_VALUE;
-  private Predicate<Object> resultPredicate;
-  private BiPredicate<Object, Throwable> completionPredicate;
+  private boolean failureConditionChecked;
+  private List<BiPredicate<Object, Throwable>> failurePredicates;
   CheckedRunnable onOpen;
   CheckedRunnable onHalfOpen;
   CheckedRunnable onClose;
@@ -54,6 +50,7 @@ public class CircuitBreaker {
    * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay.
    */
   public CircuitBreaker() {
+    failurePredicates = new ArrayList<BiPredicate<Object, Throwable>>();
   }
 
   /**
@@ -90,7 +87,8 @@ public class CircuitBreaker {
   @SuppressWarnings("unchecked")
   public <T> CircuitBreaker failIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
-    this.completionPredicate = (BiPredicate<Object, Throwable>) completionPredicate;
+    failureConditionChecked = true;
+    failurePredicates.add((BiPredicate<Object, Throwable>) completionPredicate);
     return this;
   }
 
@@ -99,10 +97,9 @@ public class CircuitBreaker {
    * 
    * @throws NullPointerException if {@code resultPredicate} is null
    */
-  @SuppressWarnings("unchecked")
   public <T> CircuitBreaker failIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    this.resultPredicate = (Predicate<Object>) resultPredicate;
+    failurePredicates.add(Predicates.resultPredicateFor(resultPredicate));
     return this;
   }
 
@@ -116,8 +113,7 @@ public class CircuitBreaker {
   public CircuitBreaker failOn(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "failures cannot be empty");
-    this.failures = Arrays.asList(failures);
-    return this;
+    return failOn(Arrays.asList(failures));
   }
 
   /**
@@ -129,7 +125,8 @@ public class CircuitBreaker {
   public CircuitBreaker failOn(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    this.failures = failures;
+    failureConditionChecked = true;
+    failurePredicates.add(Predicates.failurePredicateFor(failures));
     return this;
   }
 
@@ -138,10 +135,10 @@ public class CircuitBreaker {
    * 
    * @throws NullPointerException if {@code failurePredicate} is null
    */
-  @SuppressWarnings("unchecked")
   public CircuitBreaker failOn(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    this.failurePredicate = (Predicate<Throwable>) failurePredicate;
+    failureConditionChecked = true;
+    failurePredicates.add(Predicates.failurePredicateFor(failurePredicate));
     return this;
   }
 
@@ -149,7 +146,7 @@ public class CircuitBreaker {
    * Specifies that a failure should be recorded if the execution result matches the {@code result}.
    */
   public CircuitBreaker failWhen(Object result) {
-    this.failureValue = result;
+    failurePredicates.add(Predicates.resultPredicateFor(result));
     return this;
   }
 
@@ -243,31 +240,13 @@ public class CircuitBreaker {
    * @see #failOn(Predicate)
    * @see #failWhen(Object)
    */
-  public boolean isFailure(Object result, Throwable throwable) {
-    // Check completion conditions
-    if (completionPredicate != null && completionPredicate.test(result, throwable))
-      return true;
-
-    // Check failure condition(s)
-    if (throwable != null) {
-      if (failurePredicate != null && failurePredicate.test(throwable))
+  public boolean isFailure(Object result, Throwable failure) {
+    for (BiPredicate<Object, Throwable> predicate : failurePredicates) {
+      if (predicate.test(result, failure))
         return true;
-      if (failures != null)
-        for (Class<? extends Throwable> failureType : failures)
-          if (failureType.isAssignableFrom(throwable.getClass()))
-            return true;
-
-      // Retry if the failure was not examined
-      return completionPredicate == null && failurePredicate == null && failures == null;
     }
 
-    // Check result condition(s)
-    if (resultPredicate != null && resultPredicate.test(result))
-      return true;
-    if (!DEFAULT_VALUE.equals(failureValue))
-      return failureValue == null ? result == null : failureValue.equals(result);
-
-    return false;
+    return failure != null && !failureConditionChecked;
   }
 
   /**
