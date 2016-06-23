@@ -116,7 +116,7 @@ abstract class AbstractExecution extends ExecutionContext {
         listeners.handleFailedAttempt(result, failure, this);
       if (shouldAbort)
         listeners.handleAbort(result, failure, this);
-      if (completed)
+      else if (completed)
         listeners.complete(result, failure, this, success);
     }
 

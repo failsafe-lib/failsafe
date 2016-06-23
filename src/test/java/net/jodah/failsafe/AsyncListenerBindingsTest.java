@@ -217,7 +217,7 @@ public class AsyncListenerBindingsTest {
         Failsafe.with(new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3)).with(executor))
             .get(callable).get(),
         ExecutionException.class, IllegalArgumentException.class);
-    waiter.await(1000, 9 + 6 + 2);
+    waiter.await(1000, 9 + 6);
 
     // Then
     assertEquals(asyncFailedAttempt.get(), 3);
@@ -228,19 +228,18 @@ public class AsyncListenerBindingsTest {
     assertEquals(asyncRetryResult.get(), 2);
     assertEquals(asyncCtxRetry.get(), 2);
 
-    assertEquals(asyncComplete.get(), 1);
-    assertEquals(asyncCtxComplete.get(), 1);
+    assertEquals(asyncComplete.get(), 0);
+    assertEquals(asyncCtxComplete.get(), 0);
 
     assertEquals(asyncAbort.get(), 1);
     assertEquals(asyncAbortResult.get(), 1);
     assertEquals(asyncCtxAbort.get(), 1);
 
-    assertEquals(asyncFailure.get(), 1);
-    assertEquals(asyncFailureResult.get(), 1);
-    assertEquals(asyncCtxFailure.get(), 1);
+    assertEquals(asyncFailure.get(), 0);
+    assertEquals(asyncFailureResult.get(), 0);
+    assertEquals(asyncCtxFailure.get(), 0);
 
     assertEquals(asyncSuccess.get(), 0);
     assertEquals(asyncCtxSuccess.get(), 0);
   }
-
 }

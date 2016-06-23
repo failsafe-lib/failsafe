@@ -5,7 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
 import java.util.concurrent.Callable;
@@ -299,7 +299,7 @@ public class ListenerBindingsTest {
         () -> bindListeners(Failsafe.with(new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3)))
             .get(callable),
         FailsafeException.class, IllegalArgumentException.class);
-    waiter.await(1000, 9 + 6 + 2);
+    waiter.await(1000, 9 + 6);
 
     // Then
     assertEquals(failedAttempt.get(), 3);
@@ -316,10 +316,10 @@ public class ListenerBindingsTest {
     assertEquals(asyncRetryResult.get(), 2);
     assertEquals(asyncCtxRetry.get(), 2);
 
-    assertEquals(complete.get(), 1);
-    assertEquals(ctxComplete.get(), 1);
-    assertEquals(asyncComplete.get(), 1);
-    assertEquals(asyncCtxComplete.get(), 1);
+    assertEquals(complete.get(), 0);
+    assertEquals(ctxComplete.get(), 0);
+    assertEquals(asyncComplete.get(), 0);
+    assertEquals(asyncCtxComplete.get(), 0);
 
     assertEquals(abort.get(), 1);
     assertEquals(abortResult.get(), 1);
@@ -328,12 +328,12 @@ public class ListenerBindingsTest {
     assertEquals(asyncAbortResult.get(), 1);
     assertEquals(asyncCtxAbort.get(), 1);
 
-    assertEquals(failure.get(), 1);
-    assertEquals(failureResult.get(), 1);
-    assertEquals(ctxFailure.get(), 1);
-    assertEquals(asyncFailure.get(), 1);
-    assertEquals(asyncFailureResult.get(), 1);
-    assertEquals(asyncCtxFailure.get(), 1);
+    assertEquals(failure.get(), 0);
+    assertEquals(failureResult.get(), 0);
+    assertEquals(ctxFailure.get(), 0);
+    assertEquals(asyncFailure.get(), 0);
+    assertEquals(asyncFailureResult.get(), 0);
+    assertEquals(asyncCtxFailure.get(), 0);
 
     assertEquals(success.get(), 0);
     assertEquals(ctxSuccess.get(), 0);
@@ -342,10 +342,10 @@ public class ListenerBindingsTest {
   }
 
   /**
-   * Asserts that a failure listener is called on an abort.
+   * Asserts that a failure listener is not called on an abort.
    */
   @SuppressWarnings("unchecked")
-  public void testFailureListenerCalledOnAbort() {
+  public void testFailureListenerNotCalledOnAbort() {
     // Given
     RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class);
     AtomicBoolean called = new AtomicBoolean();
@@ -362,6 +362,6 @@ public class ListenerBindingsTest {
     } catch (Exception expected) {
     }
 
-    assertTrue(called.get());
+    assertFalse(called.get());
   }
 }
