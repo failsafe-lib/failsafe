@@ -131,7 +131,8 @@ public class ListenerBindings<S, T> {
    * according to the retry policy.
    */
   public S onAbortAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncAbortListener = new AsyncResultListener<T>(resultListenerOf(listener), executor);
+    getConfig().asyncAbortListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
+        executor);
     return (S) this;
   }
 
@@ -226,7 +227,8 @@ public class ListenerBindings<S, T> {
    * attempt.
    */
   public S onFailedAttemptAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncFailedAttemptListener = new AsyncResultListener<T>(resultListenerOf(listener), executor);
+    getConfig().asyncFailedAttemptListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
+        executor);
     return (S) this;
   }
 
@@ -278,7 +280,8 @@ public class ListenerBindings<S, T> {
    * failure.
    */
   public S onFailureAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncFailureListener = new AsyncResultListener<T>(resultListenerOf(listener), executor);
+    getConfig().asyncFailureListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
+        executor);
     return (S) this;
   }
 
@@ -327,7 +330,8 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before a retry is attempted.
    */
   public S onRetryAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncRetryListener = new AsyncResultListener<T>(resultListenerOf(listener), executor);
+    getConfig().asyncRetryListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
+        executor);
     return (S) this;
   }
 

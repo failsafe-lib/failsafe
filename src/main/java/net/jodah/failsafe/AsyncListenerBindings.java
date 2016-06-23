@@ -68,7 +68,7 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
    * retries are aborted according to the retry policy.
    */
   public S onAbortAsync(FailureListener<? extends Throwable> listener) {
-    getAsyncConfig().asyncAbortListener = new AsyncResultListener<T>(ListenerBindings.resultListenerOf(listener));
+    getAsyncConfig().asyncAbortListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener));
     return (S) this;
   }
 
@@ -114,7 +114,7 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
    */
   public S onFailedAttemptAsync(FailureListener<? extends Throwable> listener) {
     getAsyncConfig().asyncFailedAttemptListener = new AsyncResultListener<T>(
-        ListenerBindings.resultListenerOf(listener));
+        ListenerBindings.<T>resultListenerOf(listener));
     return (S) this;
   }
 
@@ -141,7 +141,7 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
    * the retry policy is exceeded and the result is a failure.
    */
   public S onFailureAsync(FailureListener<? extends Throwable> listener) {
-    getAsyncConfig().asyncFailureListener = new AsyncResultListener<T>(ListenerBindings.resultListenerOf(listener));
+    getAsyncConfig().asyncFailureListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener));
     return (S) this;
   }
 
@@ -168,7 +168,7 @@ public class AsyncListenerBindings<S, T> extends ListenerBindings<S, T> {
    * a retry is attempted.
    */
   public S onRetryAsync(FailureListener<? extends Throwable> listener) {
-    getAsyncConfig().asyncRetryListener = new AsyncResultListener<T>(ListenerBindings.resultListenerOf(listener));
+    getAsyncConfig().asyncRetryListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener));
     return (S) this;
   }
 

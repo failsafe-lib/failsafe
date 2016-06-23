@@ -87,7 +87,6 @@ public final class RetryPolicy {
    * @throws NullPointerException if {@code failures} is null
    * @throws IllegalArgumentException if failures is empty
    */
-  @SuppressWarnings("unchecked")
   public RetryPolicy abortOn(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "Failures cannot be empty");

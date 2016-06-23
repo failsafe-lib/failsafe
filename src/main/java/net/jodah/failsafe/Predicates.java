@@ -14,7 +14,7 @@ final class Predicates {
   /**
    * Returns a predicate that evaluates whether the {@code result} equals an execution result.
    */
-  static BiPredicate<Object, Throwable> resultPredicateFor(Object result) {
+  static BiPredicate<Object, Throwable> resultPredicateFor(final Object result) {
     return new BiPredicate<Object, Throwable>() {
       @Override
       public boolean test(Object t, Throwable u) {
@@ -27,7 +27,7 @@ final class Predicates {
    * Returns a predicate that evaluates the {@code failurePredicate} against a failure.
    */
   @SuppressWarnings("unchecked")
-  static BiPredicate<Object, Throwable> failurePredicateFor(Predicate<? extends Throwable> failurePredicate) {
+  static BiPredicate<Object, Throwable> failurePredicateFor(final Predicate<? extends Throwable> failurePredicate) {
     return new BiPredicate<Object, Throwable>() {
       @Override
       public boolean test(Object t, Throwable u) {
@@ -40,7 +40,7 @@ final class Predicates {
    * Returns a predicate that evaluates the {@code resultPredicate} against a result.
    */
   @SuppressWarnings("unchecked")
-  static <T> BiPredicate<Object, Throwable> resultPredicateFor(Predicate<T> resultPredicate) {
+  static <T> BiPredicate<Object, Throwable> resultPredicateFor(final Predicate<T> resultPredicate) {
     return new BiPredicate<Object, Throwable>() {
       @Override
       public boolean test(Object t, Throwable u) {
@@ -52,7 +52,7 @@ final class Predicates {
   /**
    * Returns a predicate that returns whether any of the {@code failures} are assignable from an execution failure.
    */
-  static BiPredicate<Object, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
+  static BiPredicate<Object, Throwable> failurePredicateFor(final List<Class<? extends Throwable>> failures) {
     return new BiPredicate<Object, Throwable>() {
       @Override
       public boolean test(Object t, Throwable u) {
