@@ -179,7 +179,7 @@ Or when, for example, the last 3 out of 5 executions have failed:
 breaker.withFailureThreshold(3, 5);
 ```
 
-Typically, a breaker is configured to delay before attempting to *close* again:
+After opening, a breaker is typically configured to delay before attempting to *close* again:
 
 ```java
 breaker.withDelay(1, TimeUnit.MINUTES);
