@@ -109,7 +109,15 @@ retryPolicy
   .abortIf(result -> result == true)
 ```
 
-And of course we can combine these things into a single policy.
+Retry policies support multiple retry or abort conditions of the same type:
+
+```java
+retryPolicy
+  .retryWhen(null)
+  .retryWhen("");
+```
+
+And of course we can combine any of these things into a single policy.
 
 #### Synchronous Retries
 
