@@ -2,7 +2,18 @@
 
 ### New Features
 
-* Added `FailureLisener`
+* Simplified listeners API.
+* Added support for failure listeners via `Failsafe.with(...).onFailure(e -> {})`.
+* Added `onAbort` listeners.
+* Added additional async listeners.
+* `RetryPolicy` and `CircuitBreaker` now support multiple configuration rules. Ex: `new RetryPolicy().retryWhen(null).retryWhen("")`. If any rule matches then the policy is matched.
+
+### API Changes
+
+* Added top level support for listener registration via `Failsafe.with(...).onXxx`. The `Listeners` class is now only meant for Java 6 and 7 usage via method overrides.
+* Removed listener registration from `Listeners` class.
+* Removed `AsyncListeners` class. 
+* Removed listener registration from `FailsafeFuture` class.
 
 # 0.8.0
 

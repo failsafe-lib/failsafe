@@ -50,7 +50,7 @@ Failsafe.with(retryPolicy).run(() -> connect());
 Connection connection = Failsafe.with(retryPolicy).get(() -> connect());
 ```
 
-Java 6 / 7 is also supported:
+Java 6 and 7 are also supported:
 
 ```java
 Connection connection = Failsafe.with(retryPolicy).get(new Callable<Connection>() {
@@ -130,9 +130,9 @@ Asynchronous executions can be performed and retried on a [ScheduledExecutorServ
 ```java
 Failsafe.with(retryPolicy)
   .with(executor)
-  .run(this::connect)
   .onSuccess(connection -> log.info("Connected to {}", connection))
-  .onFailure((result, failure) -> log.error("Connection attempts failed", failure));
+  .onFailure(failure -> log.error("Connection attempts failed", failure))
+  .run(this::connect);
 ```
 
 #### Circuit Breakers
@@ -220,9 +220,13 @@ A circuit breaker can and should be shared across code that accesses inter-depen
 
 #### Standalone Usage
 
-A `CircuitBreaker` can also be manually operated in a standalone way:
+A [CircuitBreaker] can also be manually operated in a standalone way:
 
 ```java
+breaker.open();
+breaker.halfOpen();
+breaker.close();
+
 if (breaker.allowsExecution()) {
   try {
     doSomething();
@@ -246,17 +250,26 @@ Failsafe.with(retryPolicy).run(ctx -> {
 
 #### Event Listeners
 
-Failsafe supports execution and retry event listeners via the [Listeners] class:
+Failsafe supports a variety of execution and retry event [listeners]:
+
 ```java
 Failsafe.with(retryPolicy)
-  .with(new Listeners<Connection>()
-    .onRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getExecutions()))
-    .onFailure((cxn, failure) -> log.error("Connection attempts failed", failure))
-    .onSuccess(cxn -> log.info("Connected to {}", cxn)))
+  .onRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getExecutions()))
+  .onFailuredAttempt(failure -> log.error("Connection attempts failed", failure))
+  .onSuccess(cxn -> log.info("Connected to {}", cxn))
   .get(this::connect);
 ```
 
-Non-Java 8 users can extend the `Listeners` class and override individual event handlers:
+[Asynchronous listeners][AsyncListeners] are also supported:
+
+```java
+Failsafe.with(retryPolicy)
+  .with(executor)
+  .onFailureAsync(e -> log.error("Failed to create connection", e))
+  .onSuccessAsync(cxn -> log.info("Connected to {}", cxn), anotherExecutor);
+```
+
+Java 6 and 7 users can extend the `Listeners` class and override individual event handlers:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -265,26 +278,6 @@ Failsafe.with(retryPolicy)
       log.warn("Failure #{}. Retrying.", stats.getExecutions());
     }
   }).get(() -> connect());
-```
-
-Asynchronous completion and failure listeners can be registered via [FailsafeFuture]:
-
-```java
-Failsafe.with(retryPolicy)
-  .with(executor)
-  .run(this::connect)
-  .onSuccess(connection -> log.info("Connected to {}", connection))
-  .onFailure((result, failure) -> log.error("Connection attempts failed", failure));
-```
-
-And asynchronous retry and failed attempt listeners can be registered via [AsyncListeners]: 
-
-```java
-Failsafe.with(retryPolicy)
-  .with(executor)
-  .with(new AsyncListeners<Connection>()
-    .onRetryAsync((result, failure) -> log.info("Retrying")))
-  .get(this::connect);
 ```
 
 [CircuitBreaker] related event listeners can also be registered:
@@ -402,8 +395,8 @@ Failsafe is a volunteer effort. If you use it and you like it, you can help by s
 
 Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-[Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
-[AsyncListeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListeners.html
+[listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ListenerBindings.html
+[AsyncListeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListenerBindings.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
 [FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
