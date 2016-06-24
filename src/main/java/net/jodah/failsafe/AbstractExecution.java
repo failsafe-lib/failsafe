@@ -8,7 +8,7 @@ import net.jodah.failsafe.util.Duration;
 abstract class AbstractExecution extends ExecutionContext {
   final RetryPolicy retryPolicy;
   final CircuitBreaker circuitBreaker;
-  final ListenerBindings<?, Object> listeners;
+  final ListenerConfig<?, Object> listeners;
 
   // Mutable state
   long attemptStartTime;
@@ -23,7 +23,7 @@ abstract class AbstractExecution extends ExecutionContext {
    * 
    * @throws NullPointerException if {@code retryPolicy} is null
    */
-  AbstractExecution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, ListenerBindings<?, Object> listeners) {
+  AbstractExecution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, ListenerConfig<?, Object> listeners) {
     super(new Duration(System.nanoTime(), TimeUnit.NANOSECONDS));
     this.retryPolicy = retryPolicy;
     this.circuitBreaker = circuitBreaker;

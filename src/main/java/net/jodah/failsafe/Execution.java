@@ -35,7 +35,7 @@ public class Execution extends AbstractExecution {
     super(Assert.notNull(retryPolicy, "retryPolicy"), Assert.notNull(circuitBreaker, "circuitBreaker"), null);
   }
 
-  Execution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, ListenerBindings<?, Object> listeners) {
+  Execution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, ListenerConfig<?, Object> listeners) {
     super(retryPolicy, circuitBreaker, listeners);
   }
 

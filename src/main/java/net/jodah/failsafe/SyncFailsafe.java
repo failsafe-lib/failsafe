@@ -15,9 +15,9 @@ import net.jodah.failsafe.util.concurrent.Schedulers;
  * Performs synchronous executions according to a {@link RetryPolicy} and {@link CircuitBreaker}.
  * 
  * @author Jonathan Halterman
- * @param <L> listener result type
+ * @param <R> listener result type
  */
-public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
+public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
   RetryPolicy retryPolicy = RetryPolicy.NEVER;
   CircuitBreaker circuitBreaker;
 
@@ -85,7 +85,7 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
    * @throws NullPointerException if {@code circuitBreaker} is null
    * @throws IllegalStateException if a circuit breaker is already configured
    */
-  public SyncFailsafe<L> with(CircuitBreaker circuitBreaker) {
+  public SyncFailsafe<R> with(CircuitBreaker circuitBreaker) {
     Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configured");
     this.circuitBreaker = Assert.notNull(circuitBreaker, "circuitBreaker");
     return this;
@@ -97,7 +97,7 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
    * @throws NullPointerException if {@code retryPolicy} is null
    * @throws IllegalStateException if a retry policy is already configured
    */
-  public SyncFailsafe<L> with(RetryPolicy retryPolicy) {
+  public SyncFailsafe<R> with(RetryPolicy retryPolicy) {
     Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configured");
     this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
     return this;
@@ -110,7 +110,7 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
    */
   @SuppressWarnings("unchecked")
   public <T> SyncFailsafe<T> with(Listeners<T> listeners) {
-    this.listeners = (Listeners<L>) Assert.notNull(listeners, "listeners");
+    this.listeners = (Listeners<R>) Assert.notNull(listeners, "listeners");
     return (SyncFailsafe<T>) this;
   }
 
@@ -120,8 +120,8 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
    * 
    * @throws NullPointerException if {@code executor} is null
    */
-  public AsyncFailsafe<L> with(ScheduledExecutorService executor) {
-    return new AsyncFailsafe<L>(this, Schedulers.of(executor));
+  public AsyncFailsafe<R> with(ScheduledExecutorService executor) {
+    return new AsyncFailsafe<R>(this, Schedulers.of(executor));
   }
 
   /**
@@ -130,8 +130,8 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
    * 
    * @throws NullPointerException if {@code scheduler} is null
    */
-  public AsyncFailsafe<L> with(Scheduler scheduler) {
-    return new AsyncFailsafe<L>(this, Assert.notNull(scheduler, "scheduler"));
+  public AsyncFailsafe<R> with(Scheduler scheduler) {
+    return new AsyncFailsafe<R>(this, Assert.notNull(scheduler, "scheduler"));
   }
 
   /**
@@ -145,7 +145,7 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
   private <T> T call(Callable<T> callable) {
     if (circuitBreaker != null)
       circuitBreaker.initialize();
-    Execution execution = new Execution(retryPolicy, circuitBreaker, (ListenerBindings<?, Object>) this);
+    Execution execution = new Execution(retryPolicy, circuitBreaker, (ListenerConfig<?, Object>) this);
 
     // Handle contextual calls
     if (callable instanceof ContextualCallableWrapper)
@@ -180,7 +180,7 @@ public class SyncFailsafe<L> extends ListenerBindings<SyncFailsafe<L>, L> {
           throw new FailsafeException(e);
         }
 
-        handleRetry((L) result, failure, execution);
+        handleRetry((R) result, failure, execution);
       }
     }
   }

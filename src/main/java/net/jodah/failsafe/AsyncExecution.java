@@ -21,7 +21,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   @SuppressWarnings("unchecked")
   <T> AsyncExecution(Callable<T> callable, RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, Scheduler scheduler,
-      FailsafeFuture<T> future, ListenerBindings<?, Object> listeners) {
+      FailsafeFuture<T> future, ListenerConfig<?, Object> listeners) {
     super(retryPolicy, circuitBreaker, listeners);
     this.callable = (Callable<Object>) callable;
     this.scheduler = scheduler;

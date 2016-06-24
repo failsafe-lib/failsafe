@@ -17,18 +17,18 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
  * Performs asynchronous executions according to a {@link RetryPolicy} and {@link CircuitBreaker}.
  * 
  * @author Jonathan Halterman
- * @param <L> listener result type
+ * @param <R> listener result type
  */
-public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L> {
+public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
   private RetryPolicy retryPolicy;
   private CircuitBreaker circuitBreaker;
 
-  AsyncFailsafe(SyncFailsafe<L> failsafe, Scheduler scheduler) {
+  AsyncFailsafe(SyncFailsafe<R> failsafe, Scheduler scheduler) {
     super(scheduler);
     this.retryPolicy = failsafe.retryPolicy;
     this.circuitBreaker = failsafe.circuitBreaker;
     this.listeners = failsafe.listeners;
-    this.listenerConfig = failsafe.listenerConfig;
+    this.listenerRegistry = failsafe.listenerRegistry;
   }
 
   /**
@@ -154,7 +154,7 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
    * @throws NullPointerException if {@code circuitBreaker} is null
    * @throws IllegalStateException if a circuit breaker is already configured
    */
-  public AsyncFailsafe<L> with(CircuitBreaker circuitBreaker) {
+  public AsyncFailsafe<R> with(CircuitBreaker circuitBreaker) {
     Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configurd");
     this.circuitBreaker = Assert.notNull(circuitBreaker, "circuitBreaker");
     return this;
@@ -166,7 +166,7 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
    * @throws NullPointerException if {@code retryPolicy} is null
    * @throws IllegalStateException if a retry policy is already configured
    */
-  public AsyncFailsafe<L> with(RetryPolicy retryPolicy) {
+  public AsyncFailsafe<R> with(RetryPolicy retryPolicy) {
     Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configurd");
     this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
     return this;
@@ -179,7 +179,7 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
    */
   @SuppressWarnings("unchecked")
   public <T> AsyncFailsafe<T> with(Listeners<T> listeners) {
-    this.listeners = (Listeners<L>) Assert.notNull(listeners, "listeners");
+    this.listeners = (Listeners<R>) Assert.notNull(listeners, "listeners");
     return (AsyncFailsafe<T>) this;
   }
 
@@ -201,7 +201,7 @@ public class AsyncFailsafe<L> extends AsyncListenerBindings<AsyncFailsafe<L>, L>
     if (future == null)
       future = new FailsafeFuture<T>();
     AsyncExecution execution = new AsyncExecution(callable, retryPolicy, circuitBreaker, scheduler, future,
-        (ListenerBindings<?, Object>) this);
+        (ListenerConfig<?, Object>) this);
     callable.inject(execution);
 
     try {
