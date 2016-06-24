@@ -351,20 +351,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertEquals(counter.get(), 1, "Callable should have been executed before executor was shutdown");
   }
 
-  public void foo() {
-    // Given
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    AtomicInteger counter = new AtomicInteger();
-
-    // When
-    Failsafe.with(new RetryPolicy()).with(executor).run(ctx -> {
-      System.out.println(ctx.getExecutions());
-      if (counter.incrementAndGet() < 3)
-        throw new RuntimeException();
-    });
-
-  }
-
   @SuppressWarnings("unused")
   public void shouldSupportCovariance() {
     FastService fastService = mock(FastService.class);

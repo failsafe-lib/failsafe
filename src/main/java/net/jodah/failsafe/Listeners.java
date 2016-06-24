@@ -44,15 +44,21 @@ public class Listeners<T> {
   }
 
   /**
-   * Called after the retry policy is exceeded and the result is a failure.
+   * Called after a failure occurs that cannot be retried.
    */
   public void onFailure(T result, Throwable failure) {
   }
 
   /**
-   * Called after the retry policy is exceeded and the result is a failure.
+   * Called after a failure occurs that cannot be retried.
    */
   public void onFailure(T result, Throwable failure, ExecutionContext context) {
+  }
+
+  /**
+   * Called after the retry policy is exceeded and the result is a failure.
+   */
+  public void onRetriesExceeded(T result, Throwable failure) {
   }
 
   /**

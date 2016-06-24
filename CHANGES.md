@@ -1,5 +1,9 @@
 # 0.8.2
 
+### New Features
+
+* Added support for `onRetriesExceeded` listeners.
+
 ### Bug Fixes
 
 * Abort should not call failure listeners.

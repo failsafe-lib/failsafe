@@ -1,5 +1,7 @@
 package net.jodah.failsafe;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,85 +30,138 @@ public class ListenerBindings<S, T> {
   }
 
   static class ListenerConfig<T> {
-    private FailureListener<Throwable> failedAttemptListener;
-    private ResultListener<T, Throwable> failedAttemptResultListener;
-    private ContextualResultListener<T, Throwable> ctxFailedAttemptListener;
-    private AsyncResultListener<T> asyncFailedAttemptListener;
-    private AsyncResultListener<T> asyncFailedAttemptResultListener;
-    private AsyncCtxResultListener<T> asyncCtxFailedAttemptListener;
+    private List<ContextualResultListener<T, Throwable>> abortListeners;
+    private List<ContextualResultListener<T, Throwable>> completeListeners;
+    private List<ContextualResultListener<T, Throwable>> failedAttemptListeners;
+    private List<ContextualResultListener<T, Throwable>> failureListeners;
+    private List<ContextualResultListener<T, Throwable>> retriesExceededListeners;
+    private List<ContextualResultListener<T, Throwable>> retryListeners;
+    private List<ContextualResultListener<T, Throwable>> successListeners;
 
-    private FailureListener<Throwable> retryListener;
-    private ResultListener<T, Throwable> retryResultListener;
-    private ContextualResultListener<T, Throwable> ctxRetryListener;
-    private AsyncResultListener<T> asyncRetryListener;
-    private AsyncResultListener<T> asyncRetryResultListener;
-    private AsyncCtxResultListener<T> asyncCtxRetryListener;
-
-    private ResultListener<T, Throwable> completeListener;
-    private ContextualResultListener<T, Throwable> ctxCompleteListener;
-    private AsyncResultListener<T> asyncCompleteListener;
-    private AsyncCtxResultListener<T> asyncCtxCompleteListener;
-
-    private FailureListener<Throwable> failureListener;
-    private ResultListener<T, Throwable> failureResultListener;
-    private ContextualResultListener<T, Throwable> ctxFailureListener;
-    private AsyncResultListener<T> asyncFailureListener;
-    private AsyncResultListener<T> asyncFailureResultListener;
-    private AsyncCtxResultListener<T> asyncCtxFailureListener;
-
-    private FailureListener<Throwable> abortListener;
-    private ResultListener<T, Throwable> abortResultListener;
-    private ContextualResultListener<T, Throwable> ctxAbortListener;
-    private AsyncResultListener<T> asyncAbortListener;
-    private AsyncResultListener<T> asyncAbortResultListener;
-    private AsyncCtxResultListener<T> asyncCtxAbortListener;
-
-    private SuccessListener<T> successListener;
-    private ContextualSuccessListener<T> ctxSuccessListener;
-    private AsyncResultListener<T> asyncSuccessListener;
-    private AsyncCtxResultListener<T> asyncCtxSuccessListener;
-  }
-
-  ListenerConfig<T> getConfig() {
-    return listenerConfig != null ? listenerConfig : (listenerConfig = new ListenerConfig<T>());
-  }
-
-  static class AsyncCtxResultListener<T> {
-    ContextualResultListener<T, Throwable> listener;
-    ExecutorService executor;
-
-    AsyncCtxResultListener(ContextualResultListener<? extends T, ? extends Throwable> listener) {
-      this.listener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-      this.executor = null;
+    List<ContextualResultListener<T, Throwable>> abort() {
+      return abortListeners != null ? abortListeners
+          : (abortListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
     }
 
-    AsyncCtxResultListener(ContextualResultListener<? extends T, ? extends Throwable> listener,
-        ExecutorService executor) {
-      this.listener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-      this.executor = Assert.notNull(executor, "executor");
+    List<ContextualResultListener<T, Throwable>> complete() {
+      return completeListeners != null ? completeListeners
+          : (completeListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+    }
+
+    List<ContextualResultListener<T, Throwable>> failedAttempt() {
+      return failedAttemptListeners != null ? failedAttemptListeners
+          : (failedAttemptListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+    }
+
+    List<ContextualResultListener<T, Throwable>> failure() {
+      return failureListeners != null ? failureListeners
+          : (failureListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+    }
+
+    List<ContextualResultListener<T, Throwable>> retriesExceeded() {
+      return retriesExceededListeners != null ? retriesExceededListeners
+          : (retriesExceededListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+    }
+
+    List<ContextualResultListener<T, Throwable>> retry() {
+      return retryListeners != null ? retryListeners
+          : (retryListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+    }
+
+    List<ContextualResultListener<T, Throwable>> success() {
+      return successListeners != null ? successListeners
+          : (successListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
     }
   }
 
-  static class AsyncResultListener<T> {
-    ResultListener<T, Throwable> listener;
-    ExecutorService executor;
+  static <T> ContextualResultListener<T, Throwable> listenerOf(
+      ContextualResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor,
+      Scheduler scheduler) {
+    return new ContextualResultListener<T, Throwable>() {
+      @Override
+      public void onResult(T result, Throwable failure, ExecutionContext context) {
+        Callable<T> callable = new Callable<T>() {
+          public T call() {
+            ((ContextualResultListener<T, Throwable>) listener).onResult(result, failure, context);
+            return null;
+          }
+        };
 
-    AsyncResultListener(ResultListener<? extends T, ? extends Throwable> listener) {
-      this.listener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-      this.executor = null;
-    }
+        try {
+          if (executor != null)
+            executor.submit(callable);
+          else
+            scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
+        } catch (Exception ignore) {
+        }
+      }
+    };
+  }
 
-    AsyncResultListener(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-      this.listener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-      this.executor = Assert.notNull(executor, "executor");
+  static <T> ContextualResultListener<T, Throwable> listenerOf(ContextualSuccessListener<? extends T> listener) {
+    Assert.notNull(listener, "listener");
+    return new ContextualResultListener<T, Throwable>() {
+      @Override
+      public void onResult(T result, Throwable failure, ExecutionContext context) {
+        ((ContextualSuccessListener<T>) listener).onSuccess(result, context);
+      }
+    };
+  }
+
+  static <T> ContextualResultListener<T, Throwable> listenerOf(FailureListener<? extends Throwable> listener) {
+    Assert.notNull(listener, "listener");
+    return new ContextualResultListener<T, Throwable>() {
+      @Override
+      public void onResult(T result, Throwable failure, ExecutionContext context) {
+        ((FailureListener<Throwable>) listener).onFailure(failure);
+      }
+    };
+  }
+
+  static <T> ContextualResultListener<T, Throwable> listenerOf(
+      ResultListener<? extends T, ? extends Throwable> listener) {
+    Assert.notNull(listener, "listener");
+    return new ContextualResultListener<T, Throwable>() {
+      @Override
+      public void onResult(T result, Throwable failure, ExecutionContext context) {
+        ((ResultListener<T, Throwable>) listener).onResult(result, failure);
+      }
+    };
+  }
+
+  static <T> ContextualResultListener<T, Throwable> listenerOf(SuccessListener<? extends T> listener) {
+    Assert.notNull(listener, "listener");
+    return new ContextualResultListener<T, Throwable>() {
+      @Override
+      public void onResult(T result, Throwable failure, ExecutionContext context) {
+        ((SuccessListener<T>) listener).onSuccess(result);
+      }
+    };
+  }
+
+  private static <T> void call(List<ContextualResultListener<T, Throwable>> listeners, T result, Throwable failure,
+      ExecutionContext context) {
+    for (ContextualResultListener<T, Throwable> listener : listeners) {
+      try {
+        listener.onResult(result, failure, context);
+      } catch (Exception ignore) {
+      }
     }
+  }
+
+  /**
+   * Registers the {@code listener} to be called after a failed execution attempt.
+   */
+  public S onAbort(ContextualResultListener<? extends T, ? extends Throwable> listener) {
+    config().abort().add((ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener"));
+    return (S) this;
   }
 
   /**
    * Registers the {@code listener} to be called when retries are aborted according to the retry policy.
    */
   public S onAbort(FailureListener<? extends Throwable> listener) {
-    getConfig().abortListener = (FailureListener<Throwable>) Assert.notNull(listener, "listener");
+    config().abort().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -114,34 +169,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called when retries are aborted according to the retry policy.
    */
   public S onAbort(ResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().abortResultListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called after a failed execution attempt.
-   */
-  public S onAbort(ContextualResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().ctxAbortListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when retries are aborted
-   * according to the retry policy.
-   */
-  public S onAbortAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncAbortListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
-        executor);
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when retries are aborted
-   * according to the retry policy.
-   */
-  public S onAbortAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncAbortResultListener = new AsyncResultListener<T>(listener, executor);
+    config().abort().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -150,7 +178,25 @@ public class ListenerBindings<S, T> {
    * attempt.
    */
   public S onAbortAsync(ContextualResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncCtxAbortListener = new AsyncCtxResultListener<T>(listener, executor);
+    config().abort().add(listenerOf(listener, Assert.notNull(executor, "executor"), null));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when retries are aborted
+   * according to the retry policy.
+   */
+  public S onAbortAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
+    config().abort().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when retries are aborted
+   * according to the retry policy.
+   */
+  public S onAbortAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
+    config().abort().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -158,7 +204,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called when an execution is completed.
    */
   public S onComplete(ContextualResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().ctxCompleteListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().complete().add((ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener"));
     return (S) this;
   }
 
@@ -166,24 +212,24 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called when an execution is completed.
    */
   public S onComplete(ResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().completeListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().complete().add(listenerOf(listener));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when an execution is completed.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is completed.
    */
   public S onCompleteAsync(ContextualResultListener<? extends T, ? extends Throwable> listener,
       ExecutorService executor) {
-    getConfig().asyncCtxCompleteListener = new AsyncCtxResultListener<T>(listener, executor);
+    config().complete().add(listenerOf(listener, Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when an execution is completed.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is completed.
    */
   public S onCompleteAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncCompleteListener = new AsyncResultListener<T>(listener, executor);
+    config().complete().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -191,8 +237,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called after a failed execution attempt.
    */
   public S onFailedAttempt(ContextualResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().ctxFailedAttemptListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener,
-        "listener");
+    config().failedAttempt().add((ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener"));
     return (S) this;
   }
 
@@ -200,7 +245,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called after a failed execution attempt.
    */
   public S onFailedAttempt(FailureListener<? extends Throwable> listener) {
-    getConfig().failedAttemptListener = (FailureListener<Throwable>) Assert.notNull(listener, "listener");
+    config().failedAttempt().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -208,7 +253,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called after a failed execution attempt.
    */
   public S onFailedAttempt(ResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().failedAttemptResultListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().failedAttempt().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -218,7 +263,7 @@ public class ListenerBindings<S, T> {
    */
   public S onFailedAttemptAsync(ContextualResultListener<? extends T, ? extends Throwable> listener,
       ExecutorService executor) {
-    getConfig().asyncCtxFailedAttemptListener = new AsyncCtxResultListener<T>(listener, executor);
+    config().failedAttempt().add(listenerOf(listener, Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -227,8 +272,7 @@ public class ListenerBindings<S, T> {
    * attempt.
    */
   public S onFailedAttemptAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncFailedAttemptListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
-        executor);
+    config().failedAttempt().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -237,60 +281,93 @@ public class ListenerBindings<S, T> {
    * attempt.
    */
   public S onFailedAttemptAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncFailedAttemptResultListener = new AsyncResultListener<T>(listener, executor);
+    config().failedAttempt().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
+   * Registers the {@code listener} to be called after a failure occurs that cannot be retried.
    */
   public S onFailure(ContextualResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().ctxFailureListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().failure().add((ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener"));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
+   * Registers the {@code listener} to be called after a failure occurs that cannot be retried.
    */
   public S onFailure(FailureListener<? extends Throwable> listener) {
-    getConfig().failureListener = (FailureListener<Throwable>) Assert.notNull(listener, "listener");
+    config().failure().add(listenerOf(listener));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
+   * Registers the {@code listener} to be called after a failure occurs that cannot be retried.
    */
   public S onFailure(ResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().failureResultListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().failure().add(listenerOf(listener));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failure occurs that
+   * cannot be retried.
    */
   public S onFailureAsync(ContextualResultListener<? extends T, ? extends Throwable> listener,
       ExecutorService executor) {
-    getConfig().asyncCtxFailureListener = new AsyncCtxResultListener<T>(listener, executor);
+    config().failure().add(listenerOf(listener, Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failure occurs that
+   * cannot be retried.
    */
   public S onFailureAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncFailureListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
-        executor);
+    config().failure().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously when the retry policy is exceeded and the result is a
-   * failure.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a failure occurs that
+   * cannot be retried.
    */
   public S onFailureAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncFailureResultListener = new AsyncResultListener<T>(listener, executor);
+    config().failure().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
+   */
+  public S onRetriesExceeded(FailureListener<? extends Throwable> listener) {
+    config().retriesExceeded().add(listenerOf(listener));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called when the retry policy is exceeded and the result is a failure.
+   */
+  public S onRetriesExceeded(ResultListener<? extends T, ? extends Throwable> listener) {
+    config().retriesExceeded().add(listenerOf(listener));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when the retry policy is
+   * exceeded and the result is a failure.
+   */
+  public S onRetriesExceededAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
+    config().retriesExceeded().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
+    return (S) this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when the retry policy is
+   * exceeded and the result is a failure.
+   */
+  public S onRetriesExceededAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
+    config().retriesExceeded().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -298,7 +375,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called before a retry is attempted.
    */
   public S onRetry(ContextualResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().ctxRetryListener = (ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().retry().add((ContextualResultListener<T, Throwable>) Assert.notNull(listener, "listener"));
     return (S) this;
   }
 
@@ -306,7 +383,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called before a retry is attempted.
    */
   public S onRetry(FailureListener<? extends Throwable> listener) {
-    getConfig().retryListener = (FailureListener<Throwable>) Assert.notNull(listener, "listener");
+    config().retry().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -314,7 +391,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called before a retry is attempted.
    */
   public S onRetry(ResultListener<? extends T, ? extends Throwable> listener) {
-    getConfig().retryResultListener = (ResultListener<T, Throwable>) Assert.notNull(listener, "listener");
+    config().retry().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -322,7 +399,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before a retry is attempted.
    */
   public S onRetryAsync(ContextualResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncCtxRetryListener = new AsyncCtxResultListener<T>(listener, executor);
+    config().retry().add(listenerOf(listener, Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -330,8 +407,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before a retry is attempted.
    */
   public S onRetryAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncRetryListener = new AsyncResultListener<T>(ListenerBindings.<T>resultListenerOf(listener),
-        executor);
+    config().retry().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -339,7 +415,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before a retry is attempted.
    */
   public S onRetryAsync(ResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor) {
-    getConfig().asyncRetryResultListener = new AsyncResultListener<T>(listener, executor);
+    config().retry().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -347,7 +423,7 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called after a successful execution.
    */
   public S onSuccess(ContextualSuccessListener<? extends T> listener) {
-    getConfig().ctxSuccessListener = (ContextualSuccessListener<T>) Assert.notNull(listener, "listener");
+    config().success().add(listenerOf(listener));
     return (S) this;
   }
 
@@ -355,23 +431,23 @@ public class ListenerBindings<S, T> {
    * Registers the {@code listener} to be called after a successful execution.
    */
   public S onSuccess(SuccessListener<? extends T> listener) {
-    getConfig().successListener = (SuccessListener<T>) Assert.notNull(listener, "listener");
+    config().success().add(listenerOf(listener));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a successful execution.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a successful execution.
    */
   public S onSuccessAsync(ContextualSuccessListener<? extends T> listener, ExecutorService executor) {
-    getConfig().asyncCtxSuccessListener = new AsyncCtxResultListener<T>(resultListenerOf(listener), executor);
+    config().success().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously after a successful execution.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} after a successful execution.
    */
   public S onSuccessAsync(SuccessListener<? extends T> listener, ExecutorService executor) {
-    getConfig().asyncSuccessListener = new AsyncResultListener<T>(resultListenerOf(listener), executor);
+    config().success().add(listenerOf(listenerOf(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -383,11 +459,15 @@ public class ListenerBindings<S, T> {
     handleComplete(result, failure, context);
   }
 
+  ListenerConfig<T> config() {
+    return listenerConfig != null ? listenerConfig : (listenerConfig = new ListenerConfig<T>());
+  }
+
   void handleAbort(T result, Throwable failure, ExecutionContext context) {
-    if (listenerConfig != null)
-      call(listenerConfig.abortListener, listenerConfig.abortResultListener, listenerConfig.ctxAbortListener,
-          listenerConfig.asyncAbortListener, listenerConfig.asyncAbortResultListener,
-          listenerConfig.asyncCtxAbortListener, result, failure, context);
+    if (listenerConfig != null && listenerConfig.abortListeners != null) {
+      context = context.copy();
+      call(listenerConfig.abortListeners, result, failure, context);
+    }
 
     if (listeners != null) {
       try {
@@ -401,12 +481,29 @@ public class ListenerBindings<S, T> {
     }
   }
 
+  void handleComplete(T result, Throwable failure, ExecutionContext context) {
+    if (listenerConfig != null && listenerConfig.completeListeners != null) {
+      context = context.copy();
+      call(listenerConfig.completeListeners, result, failure, context);
+    }
+
+    if (listeners != null) {
+      try {
+        listeners.onComplete(result, failure);
+      } catch (Exception ignore) {
+      }
+      try {
+        listeners.onComplete(result, failure, context);
+      } catch (Exception ignore) {
+      }
+    }
+  }
+
   void handleFailedAttempt(T result, Throwable failure, ExecutionContext context) {
-    if (listenerConfig != null)
-      call(listenerConfig.failedAttemptListener, listenerConfig.failedAttemptResultListener,
-          listenerConfig.ctxFailedAttemptListener, listenerConfig.asyncFailedAttemptListener,
-          listenerConfig.asyncFailedAttemptResultListener, listenerConfig.asyncCtxFailedAttemptListener, result,
-          failure, context);
+    if (listenerConfig != null && listenerConfig.failedAttemptListeners != null) {
+      context = context.copy();
+      call(listenerConfig.failedAttemptListeners, result, failure, context);
+    }
 
     if (listeners != null) {
       try {
@@ -420,11 +517,43 @@ public class ListenerBindings<S, T> {
     }
   }
 
+  void handleFailure(T result, Throwable failure, ExecutionContext context) {
+    if (listenerConfig != null && listenerConfig.failureListeners != null) {
+      context = context.copy();
+      call(listenerConfig.failureListeners, result, failure, context);
+    }
+
+    if (listeners != null) {
+      try {
+        listeners.onFailure(result, failure);
+      } catch (Exception ignore) {
+      }
+      try {
+        listeners.onFailure(result, failure, context);
+      } catch (Exception ignore) {
+      }
+    }
+  }
+
+  void handleRetriesExceeded(T result, Throwable failure, ExecutionContext context) {
+    if (listenerConfig != null && listenerConfig.retriesExceededListeners != null) {
+      context = context.copy();
+      call(listenerConfig.retriesExceededListeners, result, failure, context);
+    }
+
+    if (listeners != null) {
+      try {
+        listeners.onRetriesExceeded(result, failure);
+      } catch (Exception ignore) {
+      }
+    }
+  }
+
   void handleRetry(T result, Throwable failure, ExecutionContext context) {
-    if (listenerConfig != null)
-      call(listenerConfig.retryListener, listenerConfig.retryResultListener, listenerConfig.ctxRetryListener,
-          listenerConfig.asyncRetryListener, listenerConfig.asyncRetryResultListener,
-          listenerConfig.asyncCtxRetryListener, result, failure, context);
+    if (listenerConfig != null && listenerConfig.retryListeners != null) {
+      context = context.copy();
+      call(listenerConfig.retryListeners, result, failure, context);
+    }
 
     if (listeners != null) {
       try {
@@ -439,9 +568,10 @@ public class ListenerBindings<S, T> {
   }
 
   void handleSuccess(T result, ExecutionContext context) {
-    if (listenerConfig != null)
-      call(listenerConfig.successListener, listenerConfig.ctxSuccessListener, listenerConfig.asyncSuccessListener,
-          listenerConfig.asyncCtxSuccessListener, result, context);
+    if (listenerConfig != null && listenerConfig.successListeners != null) {
+      context = context.copy();
+      call(listenerConfig.successListeners, result, null, context);
+    }
 
     if (listeners != null) {
       try {
@@ -452,155 +582,6 @@ public class ListenerBindings<S, T> {
         listeners.onSuccess(result, context);
       } catch (Exception ignore) {
       }
-    }
-  }
-
-  void handleComplete(T result, Throwable failure, ExecutionContext context) {
-    if (listenerConfig != null)
-      call(null, listenerConfig.completeListener, listenerConfig.ctxCompleteListener, null,
-          listenerConfig.asyncCompleteListener, listenerConfig.asyncCtxCompleteListener, result, failure, context);
-
-    if (listeners != null) {
-      try {
-        listeners.onComplete(result, failure);
-      } catch (Exception ignore) {
-      }
-      try {
-        listeners.onComplete(result, failure, context);
-      } catch (Exception ignore) {
-      }
-    }
-  }
-
-  void handleFailure(T result, Throwable failure, ExecutionContext context) {
-    if (listenerConfig != null)
-      call(listenerConfig.failureListener, listenerConfig.failureResultListener, listenerConfig.ctxFailureListener,
-          listenerConfig.asyncFailureListener, listenerConfig.asyncFailureResultListener,
-          listenerConfig.asyncCtxFailureListener, result, failure, context);
-
-    if (listeners != null) {
-      try {
-        listeners.onFailure(result, failure);
-      } catch (Exception ignore) {
-      }
-      try {
-        listeners.onFailure(result, failure, context);
-      } catch (Exception ignore) {
-      }
-    }
-  }
-
-  static <T> ContextualResultListener<T, Throwable> resultListenerOf(final ContextualSuccessListener<T> listener) {
-    Assert.notNull(listener, "listener");
-    return new ContextualResultListener<T, Throwable>() {
-      @Override
-      public void onResult(T result, Throwable failure, ExecutionContext context) {
-        listener.onSuccess(result, context);
-      }
-    };
-  }
-
-  static <T> ResultListener<T, Throwable> resultListenerOf(final FailureListener<? extends Throwable> listener) {
-    Assert.notNull(listener, "listener");
-    return new ResultListener<T, Throwable>() {
-      @Override
-      public void onResult(T result, Throwable failure) {
-        ((FailureListener<Throwable>) listener).onFailure(failure);
-      }
-    };
-  }
-
-  static <T> ResultListener<T, Throwable> resultListenerOf(final SuccessListener<T> listener) {
-    Assert.notNull(listener, "listener");
-    return new ResultListener<T, Throwable>() {
-      @Override
-      public void onResult(T result, Throwable failure) {
-        listener.onSuccess(result);
-      }
-    };
-  }
-
-  private static <T> void call(FailureListener<Throwable> l1, ResultListener<T, Throwable> l2,
-      ContextualResultListener<T, Throwable> l3, AsyncResultListener<T> l4, AsyncResultListener<T> l5,
-      AsyncCtxResultListener<T> l6, T result, Throwable failure, ExecutionContext context) {
-    if (l1 != null)
-      call(l1, failure);
-    if (l2 != null)
-      call(l2, result, failure);
-    if (l3 != null)
-      call(l3, result, failure, context);
-    if (l4 != null)
-      call(l4, result, failure, null);
-    if (l5 != null)
-      call(l5, result, failure, null);
-    if (l6 != null)
-      call(l6, result, failure, context, null);
-  }
-
-  private static <T> void call(SuccessListener<T> l1, ContextualSuccessListener<T> l2, AsyncResultListener<T> l3,
-      AsyncCtxResultListener<T> l4, T result, ExecutionContext context) {
-    if (l1 != null)
-      call(l1, result);
-    if (l2 != null)
-      call(l2, result, context);
-    if (l3 != null)
-      call(l3, result, null, null);
-    if (l4 != null)
-      call(l4, result, null, context, null);
-  }
-
-  private static <T> void call(FailureListener<Throwable> listener, Throwable failure) {
-    try {
-      listener.onFailure(failure);
-    } catch (Exception ignore) {
-    }
-  }
-
-  private static <T> void call(ResultListener<T, Throwable> listener, T result, Throwable failure) {
-    try {
-      listener.onResult(result, failure);
-    } catch (Exception ignore) {
-    }
-  }
-
-  private static <T> void call(ContextualResultListener<T, Throwable> listener, T result, Throwable failure,
-      ExecutionContext context) {
-    try {
-      listener.onResult(result, failure, context);
-    } catch (Exception ignore) {
-    }
-  }
-
-  private static <T> void call(SuccessListener<T> listener, T result) {
-    try {
-      listener.onSuccess(result);
-    } catch (Exception ignore) {
-    }
-  }
-
-  private static <T> void call(ContextualSuccessListener<T> listener, T result, ExecutionContext context) {
-    try {
-      listener.onSuccess(result, context);
-    } catch (Exception ignore) {
-    }
-  }
-
-  static <T> void call(AsyncResultListener<T> listener, T result, Throwable failure, Scheduler scheduler) {
-    call(Callables.of(listener.listener, result, failure), listener.executor, scheduler);
-  }
-
-  static <T> void call(AsyncCtxResultListener<T> listener, T result, Throwable failure, ExecutionContext context,
-      Scheduler scheduler) {
-    call(Callables.of(listener.listener, result, failure, context.copy()), listener.executor, scheduler);
-  }
-
-  private static void call(Callable<?> callable, ExecutorService executor, Scheduler scheduler) {
-    try {
-      if (executor != null)
-        executor.submit(callable);
-      else
-        scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
-    } catch (Exception ignore) {
     }
   }
 }
