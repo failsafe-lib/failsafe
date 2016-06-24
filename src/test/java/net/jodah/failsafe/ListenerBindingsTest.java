@@ -158,9 +158,18 @@ public class ListenerBindingsTest {
     failsafe.onAbort(e -> abort.incrementAndGet());
     failsafe.onAbort((r, e) -> abortResult.incrementAndGet());
     failsafe.onAbort((r, e, c) -> ctxAbort.incrementAndGet());
-    failsafe.onAbortAsync(e -> asyncAbort.incrementAndGet(), executor);
-    failsafe.onAbortAsync((r, e) -> asyncAbortResult.incrementAndGet(), executor);
-    failsafe.onAbortAsync((r, e, c) -> asyncCtxAbort.incrementAndGet(), executor);
+    failsafe.onAbortAsync(e -> {
+      asyncAbort.incrementAndGet();
+      waiter.resume();
+    } , executor);
+    failsafe.onAbortAsync((r, e) -> {
+      asyncAbortResult.incrementAndGet();
+      waiter.resume();
+    } , executor);
+    failsafe.onAbortAsync((r, e, c) -> {
+      asyncCtxAbort.incrementAndGet();
+      waiter.resume();
+    } , executor);
 
     failsafe.onFailure(e -> failure.incrementAndGet());
     failsafe.onFailure((r, f) -> failureResult.incrementAndGet());
@@ -299,7 +308,7 @@ public class ListenerBindingsTest {
         () -> bindListeners(Failsafe.with(new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3)))
             .get(callable),
         FailsafeException.class, IllegalArgumentException.class);
-    waiter.await(1000, 9 + 6);
+    waiter.await(1000, 9 + 6 + 3);
 
     // Then
     assertEquals(failedAttempt.get(), 3);
