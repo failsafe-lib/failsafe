@@ -263,7 +263,7 @@ Failsafe supports a variety of execution and retry event [listeners]:
 ```java
 Failsafe.with(retryPolicy)
   .onRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getExecutions()))
-  .onFailuredAttempt(failure -> log.error("Connection attempts failed", failure))
+  .onFailedAttempt(failure -> log.error("Connection attempts failed", failure))
   .onSuccess(cxn -> log.info("Connected to {}", cxn))
   .get(this::connect);
 ```
