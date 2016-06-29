@@ -21,7 +21,7 @@ import net.jodah.failsafe.util.Duration;
  * 
  * @author Jonathan Halterman
  */
-public final class RetryPolicy {
+public class RetryPolicy {
   static final RetryPolicy NEVER = new RetryPolicy().withMaxRetries(0);
 
   private Duration delay;
