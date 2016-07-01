@@ -3,6 +3,7 @@
 ### New Features
 
 * Added support for `onRetriesExceeded` listeners.
+* `RetryPolicy` can be extended (it's no longer marked as final)
 
 ### Bug Fixes
 

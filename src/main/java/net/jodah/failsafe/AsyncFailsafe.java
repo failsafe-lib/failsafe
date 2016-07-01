@@ -207,7 +207,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
     try {
       future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     } catch (Throwable t) {
-      complete(null, t, execution, false);
+      handleComplete(null, t, execution, false);
       future.complete(null, t);
     }
 

@@ -125,8 +125,8 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when the
-   * retry policy is exceeded and the result is a failure.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
+   * execution fails and the retry policy is exceeded.
    */
   public S onRetriesExceededAsync(FailureListener<? extends Throwable> listener) {
     registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
@@ -134,8 +134,8 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when the
-   * retry policy is exceeded and the result is a failure.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
+   * execution fails and the retry policy is exceeded.
    */
   public S onRetriesExceededAsync(ResultListener<? extends R, ? extends Throwable> listener) {
     registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));

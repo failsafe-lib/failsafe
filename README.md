@@ -133,14 +133,14 @@ Connection connection = Failsafe.with(retryPolicy).get(this::connect);
 
 #### Asynchronous Retries
 
-Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler] implementation, and return a [FailsafeFuture]. When the execution succeeds or the retry policy is exceeded, the future is completed and any listeners registered against it are called:
+Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler] implementation, and return a [FailsafeFuture]. When the execution succeeds or the retry policy is exceeded, the future is completed and any registered [listeners](#event-listeners) are called:
 
 ```java
 Failsafe.with(retryPolicy)
   .with(executor)
   .onSuccess(connection -> log.info("Connected to {}", connection))
   .onFailure(failure -> log.error("Connection attempts failed", failure))
-  .run(this::connect);
+  .get(this::connect);
 ```
 
 #### Circuit Breakers
@@ -258,7 +258,7 @@ Failsafe.with(retryPolicy).run(ctx -> {
 
 #### Event Listeners
 
-Failsafe supports a variety of execution and retry event [listeners]:
+Failsafe supports a variety of execution and retry event [listeners][ListenerConfig]:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -268,7 +268,7 @@ Failsafe.with(retryPolicy)
   .get(this::connect);
 ```
 
-[Asynchronous listeners][AsyncListeners] are also supported:
+[Asynchronous listeners][AsyncListenerConfig] are also supported:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -277,7 +277,7 @@ Failsafe.with(retryPolicy)
   .onSuccessAsync(cxn -> log.info("Connected to {}", cxn), anotherExecutor);
 ```
 
-Java 6 and 7 users can extend the `Listeners` class and override individual event handlers:
+Java 6 and 7 users can extend the [Listeners] class and override individual event handlers:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -403,8 +403,9 @@ Failsafe is a volunteer effort. If you use it and you like it, you can help by s
 
 Copyright 2015-2016 Jonathan Halterman - Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-[listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ListenerBindings.html
-[AsyncListeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListenerBindings.html
+[Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
+[ListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ListenerConfig.html
+[AsyncListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListenerConfig.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
 [FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html

@@ -15,6 +15,7 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile Object lastResult;
   volatile Throwable lastFailure;
   volatile boolean completed;
+  volatile boolean retriesExceeded;
   volatile boolean success;
   volatile long waitNanos;
 
@@ -104,10 +105,10 @@ abstract class AbstractExecution extends ExecutionContext {
     boolean maxRetriesExceeded = retryPolicy.getMaxRetries() != -1 && executions > retryPolicy.getMaxRetries();
     boolean maxDurationExceeded = retryPolicy.getMaxDuration() != null
         && elapsedNanos > retryPolicy.getMaxDuration().toNanos();
+    retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
     boolean shouldAbort = retryPolicy.canAbortFor(result, failure);
-    boolean shouldRetry = !shouldAbort && checkArgs && retryPolicy.canRetryFor(result, failure);
-
-    completed = maxRetriesExceeded || maxDurationExceeded || !shouldRetry || shouldAbort;
+    boolean shouldRetry = !retriesExceeded && !shouldAbort && checkArgs && retryPolicy.canRetryFor(result, failure);
+    completed = shouldAbort || !shouldRetry;
     success = completed && !shouldRetry && !shouldAbort && failure == null;
 
     // Call listeners
@@ -116,8 +117,12 @@ abstract class AbstractExecution extends ExecutionContext {
         listeners.handleFailedAttempt(result, failure, this);
       if (shouldAbort)
         listeners.handleAbort(result, failure, this);
-      else if (completed)
-        listeners.complete(result, failure, this, success);
+      else {
+        if (retriesExceeded)
+          listeners.handleRetriesExceeded(result, failure, this);
+        if (completed)
+          listeners.handleComplete(result, failure, this, success);
+      }
     }
 
     return completed;

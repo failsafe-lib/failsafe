@@ -116,7 +116,7 @@ public final class AsyncExecution extends AbstractExecution {
       completed = true;
       Exception failure = new CircuitBreakerOpenException();
       if (listeners != null)
-        listeners.complete(null, failure, this, false);
+        listeners.handleComplete(null, failure, this, false);
       future.complete(null, failure);
       return;
     }
@@ -159,7 +159,7 @@ public final class AsyncExecution extends AbstractExecution {
       } catch (Throwable t) {
         failure = t;
         if (listeners != null)
-          listeners.complete(null, t, this, false);
+          listeners.handleComplete(null, t, this, false);
         future.complete(null, failure);
       }
     }

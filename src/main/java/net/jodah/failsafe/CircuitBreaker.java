@@ -40,8 +40,9 @@ public class CircuitBreaker {
   private Ratio failureThresholdRatio;
   private Integer successThreshold;
   private Ratio successThresholdRatio;
-  private boolean failureConditionChecked;
-  private List<BiPredicate<Object, Throwable>> failurePredicates;
+  /** Indicates whether failures are checked by a configured failure condition */
+  private boolean failuresChecked;
+  private List<BiPredicate<Object, Throwable>> failureConditions;
   CheckedRunnable onOpen;
   CheckedRunnable onHalfOpen;
   CheckedRunnable onClose;
@@ -50,7 +51,7 @@ public class CircuitBreaker {
    * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay.
    */
   public CircuitBreaker() {
-    failurePredicates = new ArrayList<BiPredicate<Object, Throwable>>();
+    failureConditions = new ArrayList<BiPredicate<Object, Throwable>>();
   }
 
   /**
@@ -87,8 +88,8 @@ public class CircuitBreaker {
   @SuppressWarnings("unchecked")
   public <T> CircuitBreaker failIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
-    failureConditionChecked = true;
-    failurePredicates.add((BiPredicate<Object, Throwable>) completionPredicate);
+    failuresChecked = true;
+    failureConditions.add((BiPredicate<Object, Throwable>) completionPredicate);
     return this;
   }
 
@@ -99,7 +100,7 @@ public class CircuitBreaker {
    */
   public <T> CircuitBreaker failIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    failurePredicates.add(Predicates.resultPredicateFor(resultPredicate));
+    failureConditions.add(Predicates.resultPredicateFor(resultPredicate));
     return this;
   }
 
@@ -125,8 +126,8 @@ public class CircuitBreaker {
   public CircuitBreaker failOn(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    failureConditionChecked = true;
-    failurePredicates.add(Predicates.failurePredicateFor(failures));
+    failuresChecked = true;
+    failureConditions.add(Predicates.failurePredicateFor(failures));
     return this;
   }
 
@@ -137,8 +138,8 @@ public class CircuitBreaker {
    */
   public CircuitBreaker failOn(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    failureConditionChecked = true;
-    failurePredicates.add(Predicates.failurePredicateFor(failurePredicate));
+    failuresChecked = true;
+    failureConditions.add(Predicates.failurePredicateFor(failurePredicate));
     return this;
   }
 
@@ -146,7 +147,7 @@ public class CircuitBreaker {
    * Specifies that a failure should be recorded if the execution result matches the {@code result}.
    */
   public CircuitBreaker failWhen(Object result) {
-    failurePredicates.add(Predicates.resultPredicateFor(result));
+    failureConditions.add(Predicates.resultPredicateFor(result));
     return this;
   }
 
@@ -230,8 +231,8 @@ public class CircuitBreaker {
   }
 
   /**
-   * Returns whether the circuit breaker considers the {@code result} or {@code throwable} a failure based on its
-   * failure configuration.
+   * Returns whether the circuit breaker considers the {@code result} or {@code throwable} a failure based on the
+   * configured conditions, or if {@code failure} is not null it is not checked by any configured condition.
    * 
    * @see #failIf(BiPredicate)
    * @see #failIf(Predicate)
@@ -241,12 +242,13 @@ public class CircuitBreaker {
    * @see #failWhen(Object)
    */
   public boolean isFailure(Object result, Throwable failure) {
-    for (BiPredicate<Object, Throwable> predicate : failurePredicates) {
+    for (BiPredicate<Object, Throwable> predicate : failureConditions) {
       if (predicate.test(result, failure))
         return true;
     }
 
-    return failure != null && !failureConditionChecked;
+    // Return true if the failure is not checked by a configured condition
+    return failure != null && !failuresChecked;
   }
 
   /**

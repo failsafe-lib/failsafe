@@ -44,55 +44,55 @@ public class Listeners<R> {
   }
 
   /**
-   * Called after a failed attempt.
+   * Called when an execution attempt fails.
    */
   public void onFailedAttempt(R result, Throwable failure) {
   }
 
   /**
-   * Called after a failed attempt.
+   * Called when an execution attempt fails.
    */
   public void onFailedAttempt(R result, Throwable failure, ExecutionContext context) {
   }
 
   /**
-   * Called after a failure occurs that cannot be retried.
+   * Called when an execution fails and cannot be retried.
    */
   public void onFailure(R result, Throwable failure) {
   }
 
   /**
-   * Called after a failure occurs that cannot be retried.
+   * Called when an execution fails and cannot be retried.
    */
   public void onFailure(R result, Throwable failure, ExecutionContext context) {
   }
 
   /**
-   * Called after the retry policy is exceeded and the result is a failure.
+   * Called when an execution fails and retries are exceeded.
    */
   public void onRetriesExceeded(R result, Throwable failure) {
   }
 
   /**
-   * Called before a retry is attempted.
+   * Called before an execution is retried.
    */
   public void onRetry(R result, Throwable failure) {
   }
 
   /**
-   * Called before a retry is attempted.
+   * Called before an execution is retried.
    */
   public void onRetry(R result, Throwable failure, ExecutionContext context) {
   }
 
   /**
-   * Called after a successful execution.
+   * Called when an execution is successful.
    */
   public void onSuccess(R result) {
   }
 
   /**
-   * Called after a successful execution.
+   * Called when an execution is successful.
    */
   public void onSuccess(R result, ExecutionContext context) {
   }
