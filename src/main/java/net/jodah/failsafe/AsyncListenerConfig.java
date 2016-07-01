@@ -39,7 +39,7 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
    * execution is aborted according to the retry policy.
    */
   public S onAbortAsync(FailureListener<? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    registry().abort().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
     return (S) this;
   }
 
@@ -84,7 +84,7 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
    * failed execution attempt.
    */
   public S onFailedAttemptAsync(FailureListener<? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    registry().failedAttempt().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
     return (S) this;
   }
 
@@ -111,7 +111,7 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
    * failure occurs that cannot be retried.
    */
   public S onFailureAsync(FailureListener<? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    registry().failure().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
     return (S) this;
   }
 
@@ -129,7 +129,7 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
    * execution fails and the retry policy is exceeded.
    */
   public S onRetriesExceededAsync(FailureListener<? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    registry().retriesExceeded().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
     return (S) this;
   }
 
@@ -156,7 +156,7 @@ public class AsyncListenerConfig<S, R> extends ListenerConfig<S, R> {
    * retry is attempted.
    */
   public S onRetryAsync(FailureListener<? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    registry().retry().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
     return (S) this;
   }
 

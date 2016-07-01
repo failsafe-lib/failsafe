@@ -99,11 +99,11 @@ public class Listeners<R> {
 
   @SuppressWarnings("unchecked")
   static <T> ContextualResultListener<T, Throwable> of(
-      ContextualResultListener<? extends T, ? extends Throwable> listener, ExecutorService executor,
-      Scheduler scheduler) {
+      final ContextualResultListener<? extends T, ? extends Throwable> listener, final ExecutorService executor,
+      final Scheduler scheduler) {
     return new ContextualResultListener<T, Throwable>() {
       @Override
-      public void onResult(T result, Throwable failure, ExecutionContext context) {
+      public void onResult(final T result, final Throwable failure, final ExecutionContext context) {
         Callable<T> callable = new Callable<T>() {
           public T call() {
             ((ContextualResultListener<T, Throwable>) listener).onResult(result, failure, context);
@@ -123,7 +123,7 @@ public class Listeners<R> {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(ContextualSuccessListener<? extends T> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(final ContextualSuccessListener<? extends T> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
@@ -134,7 +134,7 @@ public class Listeners<R> {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(FailureListener<? extends Throwable> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(final FailureListener<? extends Throwable> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
@@ -145,7 +145,8 @@ public class Listeners<R> {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(ResultListener<? extends T, ? extends Throwable> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(
+      final ResultListener<? extends T, ? extends Throwable> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
@@ -156,7 +157,7 @@ public class Listeners<R> {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(SuccessListener<? extends T> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(final SuccessListener<? extends T> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override

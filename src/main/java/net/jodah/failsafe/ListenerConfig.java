@@ -93,7 +93,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called when an execution is aborted.
    */
   public S onAbort(FailureListener<? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(listener));
+    registry().abort().add(Listeners.<R>of(listener));
     return (S) this;
   }
 
@@ -117,7 +117,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
    */
   public S onAbortAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    registry().abort().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -174,7 +174,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called when an execution attempt fails.
    */
   public S onFailedAttempt(FailureListener<? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(listener));
+    registry().failedAttempt().add(Listeners.<R>of(listener));
     return (S) this;
   }
 
@@ -199,7 +199,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution attempt fails.
    */
   public S onFailedAttemptAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    registry().failedAttempt().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -223,7 +223,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called when an execution fails and cannot be retried.
    */
   public S onFailure(FailureListener<? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(listener));
+    registry().failure().add(Listeners.<R>of(listener));
     return (S) this;
   }
 
@@ -250,7 +250,7 @@ public class ListenerConfig<S, R> {
    * cannot be retried.
    */
   public S onFailureAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    registry().failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    registry().failure().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -267,7 +267,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called when an execution fails and retries are exceeded.
    */
   public S onRetriesExceeded(FailureListener<? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(listener));
+    registry().retriesExceeded().add(Listeners.<R>of(listener));
     return (S) this;
   }
 
@@ -284,7 +284,7 @@ public class ListenerConfig<S, R> {
    * retries are exceeded.
    */
   public S onRetriesExceededAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    registry().retriesExceeded().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
@@ -309,7 +309,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called before an execution is retried.
    */
   public S onRetry(FailureListener<? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(listener));
+    registry().retry().add(Listeners.<R>of(listener));
     return (S) this;
   }
 
@@ -333,7 +333,7 @@ public class ListenerConfig<S, R> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
    */
   public S onRetryAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    registry().retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    registry().retry().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
