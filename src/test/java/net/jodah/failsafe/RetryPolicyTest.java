@@ -61,6 +61,10 @@ public class RetryPolicyTest {
     policy = new RetryPolicy().retryOn(Exception.class);
     assertTrue(policy.canRetryFor(null, new Exception()));
     assertTrue(policy.canRetryFor(null, new IllegalArgumentException()));
+    
+    policy = new RetryPolicy().retryOn(RuntimeException.class);
+    assertTrue(policy.canRetryFor(null, new IllegalArgumentException()));
+    assertFalse(policy.canRetryFor(null, new Exception()));
 
     policy = new RetryPolicy().retryOn(IllegalArgumentException.class, IOException.class);
     assertTrue(policy.canRetryFor(null, new IllegalArgumentException()));
@@ -74,10 +78,11 @@ public class RetryPolicyTest {
     assertFalse(policy.canRetryFor(null, new IllegalStateException()));
   }
 
-  public void testCanRetryFOrResult() {
+  public void testCanRetryForResult() {
     RetryPolicy policy = new RetryPolicy().retryWhen(10);
     assertTrue(policy.canRetryFor(10, null));
     assertFalse(policy.canRetryFor(5, null));
+    assertTrue(policy.canRetryFor(5, new Exception()));
   }
 
   public void testCanAbortForNull() {
