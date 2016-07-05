@@ -31,11 +31,9 @@ public class OpenState implements CircuitState {
 
   @Override
   public void recordFailure() {
-    throw new IllegalStateException("Cannot record result for open circuit");
   }
 
   @Override
   public void recordSuccess() {
-    throw new IllegalStateException("Cannot record result for open circuit");
   }
 }
