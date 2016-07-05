@@ -264,7 +264,8 @@ public class ListenerConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution fails and retries are exceeded.
+   * Registers the {@code listener} to be called when an execution fails and the max retry attempts or duration are
+   * exceeded.
    */
   public S onRetriesExceeded(FailureListener<? extends Throwable> listener) {
     registry().retriesExceeded().add(Listeners.<R>of(listener));
@@ -272,7 +273,8 @@ public class ListenerConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution fails and retries are exceeded.
+   * Registers the {@code listener} to be called when an execution fails and the max retry attempts or duration are
+   * exceeded.
    */
   public S onRetriesExceeded(ResultListener<? extends R, ? extends Throwable> listener) {
     registry().retriesExceeded().add(Listeners.of(listener));
@@ -280,17 +282,18 @@ public class ListenerConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and
-   * retries are exceeded.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and the
+   * max retry attempts or duration are exceeded.
    */
   public S onRetriesExceededAsync(FailureListener<? extends Throwable> listener, ExecutorService executor) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
+    registry().retriesExceeded()
+        .add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and
-   * retries are exceeded.
+   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and the
+   * max retry attempts or duration are exceeded.
    */
   public S onRetriesExceededAsync(ResultListener<? extends R, ? extends Throwable> listener, ExecutorService executor) {
     registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
