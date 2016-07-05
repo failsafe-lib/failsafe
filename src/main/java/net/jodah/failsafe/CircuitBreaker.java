@@ -312,8 +312,11 @@ public class CircuitBreaker {
   public void recordSuccess() {
     CircuitState circuitState = state.get();
     if (state != null) {
-      circuitState.recordSuccess();
-      currentExecutions.decrementAndGet();
+      try {
+        circuitState.recordSuccess();
+      } finally {
+        currentExecutions.decrementAndGet();
+      }
     }
   }
 
@@ -435,19 +438,25 @@ public class CircuitBreaker {
   void recordFailure() {
     CircuitState circuitState = state.get();
     if (state != null) {
-      circuitState.recordFailure();
-      currentExecutions.decrementAndGet();
+      try {
+        circuitState.recordFailure();
+      } finally {
+        currentExecutions.decrementAndGet();
+      }
     }
   }
 
   void recordResult(Object result, Throwable failure) {
     CircuitState circuitState = state.get();
     if (state != null) {
-      if (isFailure(result, failure))
-        circuitState.recordFailure();
-      else
-        circuitState.recordSuccess();
-      currentExecutions.decrementAndGet();
+      try {
+        if (isFailure(result, failure))
+          circuitState.recordFailure();
+        else
+          circuitState.recordSuccess();
+      } finally {
+        currentExecutions.decrementAndGet();
+      }
     }
   }
 
