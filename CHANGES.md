@@ -1,3 +1,9 @@
+# 0.8.3
+
+### Bug Fixes
+
+* Fixed #33 - `CircuitBreaker` not decrementing currentExections when under load
+
 # 0.8.2
 
 ### New Features
