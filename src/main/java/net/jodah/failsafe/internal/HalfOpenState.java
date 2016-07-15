@@ -28,7 +28,7 @@ public class HalfOpenState implements CircuitState {
 
     if (successRatio != null)
       bitSet = new CircularBitSet(successRatio.denominator);
-    if (failureRatio != null)
+    else if (failureRatio != null)
       bitSet = new CircularBitSet(failureRatio.denominator);
   }
 
@@ -82,50 +82,44 @@ public class HalfOpenState implements CircuitState {
    * Checks to determine if a threshold has been met and the circuit should be opened or closed.
    * 
    * <p>
-   * When a success or failure ratio is configured, the circuit is opened or closed after the expected number of
-   * executions based on whether the ratio was exceeded.
+   * If a success ratio is configured, the circuit is opened or closed after the expected number of executions based on
+   * whether the ratio was exceeded.
    * <p>
-   * If a success threshold is configured, the circuit is closed if the expected number of executions are successful
-   * else it's opened if a single execution fails.
+   * Else if a success threshold is configured, the circuit is closed if there are an expected number of successive
+   * successful executions and opened if there is a single failure.
    * <p>
-   * If a failure threshold is configured, the circuit is opened if the expected number of executions fails else it's
-   * closed if a single execution succeeds.
+   * Else if a failure ratio is configured, the circuit is opened or closed after the expected number of executions
+   * based on whether the ratio was not exceeded.
+   * <p>
+   * Else if a failure threshold is configured, the circuit is closed if there is a single success else it is opened
+   * when the expected number of successive failures occur.
+   * <p>
+   * Else when no thresholds are configured, the circuit opens or closes on a single failure or success.
    */
   synchronized void checkThreshold() {
-    // Handle success threshold ratio
-    if (successRatio != null && executions == successRatio.denominator) {
-      if (bitSet.positiveRatio() >= successRatio.ratio)
-        circuit.close();
-      else
-        circuit.open();
-    }
-
-    // Handle success threshold
-    if (successThresh != null) {
+    if (successRatio != null) {
+      if (executions == successRatio.denominator)
+        if (bitSet.positiveRatio() >= successRatio.ratio)
+          circuit.close();
+        else
+          circuit.open();
+    } else if (successThresh != null) {
       if (successiveSuccesses == successThresh)
         circuit.close();
-      else if (failureThresh == null && failureRatio == null && successiveFailures == 1)
+      else if (successiveFailures == 1)
         circuit.open();
-    }
-
-    // Handle failure threshold ratio
-    if (failureRatio != null && executions == failureRatio.denominator) {
-      if (bitSet.negativeRatio() >= failureRatio.ratio)
-        circuit.open();
-      else
-        circuit.close();
-    }
-
-    // Handle failure threshold
-    if (failureThresh != null) {
+    } else if (failureRatio != null) {
+      if (executions == failureRatio.denominator)
+        if (bitSet.negativeRatio() >= failureRatio.ratio)
+          circuit.open();
+        else
+          circuit.close();
+    } else if (failureThresh != null) {
       if (successiveFailures == failureThresh)
         circuit.open();
-      else if (successThresh == null && successRatio == null && successiveSuccesses == 1)
+      else if (successiveSuccesses == 1)
         circuit.close();
-    }
-
-    // Handle no thresholds configured
-    if (successThresh == null && failureThresh == null && successRatio == null && failureRatio == null) {
+    } else {
       if (successiveSuccesses == 1)
         circuit.close();
       else
