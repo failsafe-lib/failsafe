@@ -36,10 +36,8 @@ public class CircuitBreaker {
   };
   private Duration delay = Duration.NONE;
   private Duration timeout;
-  private Integer failureThreshold;
-  private Ratio failureThresholdRatio;
-  private Integer successThreshold;
-  private Ratio successThresholdRatio;
+  private Ratio failureThreshold;
+  private Ratio successThreshold;
   /** Indicates whether failures are checked by a configured failure condition */
   private boolean failuresChecked;
   private List<BiPredicate<Object, Throwable>> failureConditions;
@@ -48,10 +46,11 @@ public class CircuitBreaker {
   CheckedRunnable onClose;
 
   /**
-   * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay.
+   * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay by default.
    */
   public CircuitBreaker() {
     failureConditions = new ArrayList<BiPredicate<Object, Throwable>>();
+    state.set(new ClosedState(this));
   }
 
   /**
@@ -161,40 +160,19 @@ public class CircuitBreaker {
   }
 
   /**
-   * Returns the number of successive failures that must occur when in a closed state in order to open the circuit else
-   * null if none has been configured.
-   * 
-   * @see #withFailureThreshold(int)
-   */
-  public Integer getFailureThreshold() {
-    return failureThreshold;
-  }
-
-  /**
    * Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit.
    * 
    * @see #withFailureThreshold(int, int)
    */
-  public Ratio getFailureThresholdRatio() {
-    return failureThresholdRatio;
+  public Ratio getFailureThreshold() {
+    return failureThreshold;
   }
 
   /**
    * Gets the state of the circuit.
    */
   public State getState() {
-    CircuitState circuitState = state.get();
-    return circuitState == null ? State.CLOSED : circuitState.getState();
-  }
-
-  /**
-   * Returns the number of successive successful executions that must occur when in a half-open state in order to close
-   * the circuit else null if none has been configured.
-   * 
-   * @see #withSuccessThreshold(int)
-   */
-  public Integer getSuccessThreshold() {
-    return successThreshold;
+    return state.get().getState();
   }
 
   /**
@@ -203,8 +181,8 @@ public class CircuitBreaker {
    * 
    * @see #withSuccessThreshold(int, int)
    */
-  public Ratio getSuccessThresholdRatio() {
-    return successThresholdRatio;
+  public Ratio getSuccessThreshold() {
+    return successThreshold;
   }
 
   /**
@@ -249,6 +227,13 @@ public class CircuitBreaker {
 
     // Return true if the failure is not checked by a configured condition
     return failure != null && !failuresChecked;
+  }
+
+  /**
+   * Returns whether the circuit is half open.
+   */
+  public boolean isHalfOpen() {
+    return State.HALF_OPEN.equals(getState());
   }
 
   /**
@@ -310,13 +295,10 @@ public class CircuitBreaker {
    * Records an execution success.
    */
   public void recordSuccess() {
-    CircuitState circuitState = state.get();
-    if (state != null) {
-      try {
-        circuitState.recordSuccess();
-      } finally {
-        currentExecutions.decrementAndGet();
-      }
+    try {
+      state.get().recordSuccess();
+    } finally {
+      currentExecutions.decrementAndGet();
     }
   }
 
@@ -339,19 +321,13 @@ public class CircuitBreaker {
   }
 
   /**
-   * Sets the number of successive failures that must occur when in a closed state in order to open the circuit. 0
-   * represents no threshold.
+   * Sets the number of successive failures that must occur when in a closed state in order to open the circuit.
    * 
    * @throws IllegalArgumentException if {@code failureThresh} < 1
-   * @throws IllegalStateException if a failure ratio has already been configured via
-   *           {@link #withFailureThreshold(int, int)}
    */
   public CircuitBreaker withFailureThreshold(int failureThreshold) {
     Assert.isTrue(failureThreshold >= 1, "failureThreshold must be greater than or equal to 1");
-    Assert.state(failureThresholdRatio == null,
-        "failure threshold and failure threshold ratio cannot both be configured");
-    this.failureThreshold = failureThreshold;
-    return this;
+    return withFailureThreshold(failureThreshold, failureThreshold);
   }
 
   /**
@@ -363,31 +339,26 @@ public class CircuitBreaker {
    * @param executions The number of executions to measure the {@code failures} against
    * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is <
    *           {@code executions}
-   * @throws IllegalStateException if a failure ratio has already been configured via {@link #withFailureThreshold(int)}
    */
   public CircuitBreaker withFailureThreshold(int failures, int executions) {
     Assert.isTrue(failures >= 1, "failures must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= failures, "executions must be greater than or equal to failures");
-    Assert.state(failureThreshold == null, "failure threshold and failure threshold ratio cannot both be configured");
-    this.failureThresholdRatio = new Ratio(failures, executions);
+    this.failureThreshold = new Ratio(failures, executions);
+    if (successThreshold == null)
+      state.get().setThreshold(failureThreshold);
     return this;
   }
 
   /**
    * Sets the number of successive successful executions that must occur when in a half-open state in order to close the
-   * circuit. 0 represents no threshold.
+   * circuit, else the circuit is re-opened when a failure occurs.
    * 
    * @throws IllegalArgumentException if {@code successThreshold} < 1
-   * @throws IllegalStateException if a success ratio has already been configured via
-   *           {@link #withSuccessThreshold(int, int)}
    */
   public CircuitBreaker withSuccessThreshold(int successThreshold) {
     Assert.isTrue(successThreshold >= 1, "successThreshold must be greater than or equal to 1");
-    Assert.state(successThresholdRatio == null,
-        "success threshold and success threshold ratio cannot both be configured");
-    this.successThreshold = successThreshold;
-    return this;
+    return withSuccessThreshold(successThreshold, successThreshold);
   }
 
   /**
@@ -399,15 +370,13 @@ public class CircuitBreaker {
    * @param executions The number of executions to measure the {@code successes} against
    * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is <
    *           {@code executions}
-   * @throws IllegalStateException if a success threshold has already been configured via
-   *           {@link #withSuccessThreshold(int)}
    */
   public CircuitBreaker withSuccessThreshold(int successes, int executions) {
     Assert.isTrue(successes >= 1, "successes must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= successes, "executions must be greater than or equal to successes");
-    Assert.state(successThreshold == null, "success threshold and success threshold ratio cannot both be configured");
-    this.successThresholdRatio = new Ratio(successes, executions);
+    this.successThreshold = new Ratio(successes, executions);
+    state.get().setThreshold(successThreshold);
     return this;
   }
 
@@ -424,44 +393,30 @@ public class CircuitBreaker {
     return this;
   }
 
-  /**
-   * Initializes the circuit prior to use.
-   */
-  synchronized void initialize() {
-    if (state.get() == null)
-      state.set(new ClosedState(this));
+  void before() {
+    currentExecutions.incrementAndGet();
   }
 
   /**
    * Records an execution failure.
    */
   void recordFailure() {
-    CircuitState circuitState = state.get();
-    if (state != null) {
-      try {
-        circuitState.recordFailure();
-      } finally {
-        currentExecutions.decrementAndGet();
-      }
+    try {
+      state.get().recordFailure();
+    } finally {
+      currentExecutions.decrementAndGet();
     }
   }
 
   void recordResult(Object result, Throwable failure) {
-    CircuitState circuitState = state.get();
-    if (state != null) {
-      try {
-        if (isFailure(result, failure))
-          circuitState.recordFailure();
-        else
-          circuitState.recordSuccess();
-      } finally {
-        currentExecutions.decrementAndGet();
-      }
+    try {
+      if (isFailure(result, failure))
+        state.get().recordFailure();
+      else
+        state.get().recordSuccess();
+    } finally {
+      currentExecutions.decrementAndGet();
     }
-  }
-
-  void before() {
-    currentExecutions.incrementAndGet();
   }
 
   /**

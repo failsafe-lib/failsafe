@@ -1,18 +1,26 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker.State;
+import net.jodah.failsafe.util.Ratio;
 
 /**
  * The state of a circuit.
  * 
  * @author Jonathan Halterman
  */
-public interface CircuitState {
-  boolean allowsExecution(CircuitBreakerStats stats);
+public abstract class CircuitState {
+  static final Ratio ONE_OF_ONE = new Ratio(1, 1);
 
-  State getState();
+  public abstract boolean allowsExecution(CircuitBreakerStats stats);
 
-  void recordFailure();
+  public abstract State getState();
 
-  void recordSuccess();
+  public void recordFailure() {
+  }
+
+  public void recordSuccess() {
+  }
+
+  public void setThreshold(Ratio threshold) {
+  }
 }

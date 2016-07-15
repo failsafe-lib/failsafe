@@ -5,21 +5,13 @@ import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
-public class ClosedState implements CircuitState {
+public class ClosedState extends CircuitState {
   private final CircuitBreaker circuit;
-  private final Integer failureThresh;
-  private final Ratio failureRatio;
-
-  private volatile int executions;
-  private volatile int successiveFailures;
   private CircularBitSet bitSet;
 
   public ClosedState(CircuitBreaker circuit) {
     this.circuit = circuit;
-    this.failureThresh = circuit.getFailureThreshold();
-    this.failureRatio = circuit.getFailureThresholdRatio();
-    if (failureRatio != null)
-      bitSet = new CircularBitSet(failureRatio.denominator);
+    setThreshold(circuit.getFailureThreshold() != null ? circuit.getFailureThreshold() : ONE_OF_ONE);
   }
 
   @Override
@@ -34,20 +26,19 @@ public class ClosedState implements CircuitState {
 
   @Override
   public synchronized void recordFailure() {
-    executions++;
-    successiveFailures++;
-    if (bitSet != null)
-      bitSet.setNext(false);
+    bitSet.setNext(false);
     checkThreshold();
   }
 
   @Override
   public synchronized void recordSuccess() {
-    executions++;
-    successiveFailures = 0;
-    if (bitSet != null)
-      bitSet.setNext(true);
+    bitSet.setNext(true);
     checkThreshold();
+  }
+
+  @Override
+  public void setThreshold(Ratio threshold) {
+    bitSet = new CircularBitSet(threshold.denominator, bitSet);
   }
 
   /**
@@ -61,16 +52,15 @@ public class ClosedState implements CircuitState {
    * closed if a single execution succeeds.
    */
   synchronized void checkThreshold() {
-    // Handle failure threshold ratio
-    if (failureRatio != null && executions >= failureRatio.denominator && bitSet.negativeRatio() >= failureRatio.ratio)
-      circuit.open();
+    Ratio failureRatio = circuit.getFailureThreshold();
 
-    // Handle failure threshold
-    if (failureThresh != null && successiveFailures == failureThresh)
+    // Handle failure threshold ratio
+    if (failureRatio != null && bitSet.occupiedBits() >= failureRatio.denominator
+        && bitSet.negativeRatio() >= failureRatio.ratio)
       circuit.open();
 
     // Handle no thresholds configured
-    if (failureThresh == null && failureRatio == null && successiveFailures == 1)
+    if (failureRatio == null && bitSet.negativeRatio() == 1)
       circuit.open();
   }
 }

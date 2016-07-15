@@ -143,8 +143,6 @@ public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
    */
   @SuppressWarnings("unchecked")
   private <T> T call(Callable<T> callable) {
-    if (circuitBreaker != null)
-      circuitBreaker.initialize();
     Execution execution = new Execution(retryPolicy, circuitBreaker, (ListenerConfig<?, Object>) this);
 
     // Handle contextual calls

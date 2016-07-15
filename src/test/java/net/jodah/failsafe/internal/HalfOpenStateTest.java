@@ -6,6 +6,7 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.Test;
 
 import net.jodah.failsafe.CircuitBreaker;
+import net.jodah.failsafe.Testing;
 import net.jodah.failsafe.internal.HalfOpenState;
 
 @Test
@@ -164,6 +165,7 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isClosed());
 
     // When
+    state.recordSuccess();
     state.recordFailure();
 
     // Then
@@ -238,6 +240,7 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isClosed());
 
     // When
+    state.recordFailure();
     state.recordSuccess();
 
     // Then
@@ -359,6 +362,79 @@ public class HalfOpenStateTest {
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
+    state.recordSuccess();
+
+    // Then
+    assertTrue(breaker.isClosed());
+  }
+
+  /**
+   * Asserts that the late configuration of a failure ratio is handled by resetting the state's internal tracking. Also
+   * asserts that executions from prior configurations are carried over to a new configuration.
+   */
+  public void shouldHandleLateSetFailureRatio() {
+    // Given
+    CircuitBreaker breaker = new CircuitBreaker();
+    breaker.halfOpen();
+    HalfOpenState state = Testing.stateFor(breaker);
+
+    // When
+    breaker.withFailureThreshold(2);
+    state.recordFailure();
+    assertTrue(breaker.isHalfOpen());
+    state.recordFailure();
+
+    // Then
+    assertTrue(breaker.isOpen());
+
+    // Given
+    breaker = new CircuitBreaker().withFailureThreshold(3);
+    breaker.halfOpen();
+    state = Testing.stateFor(breaker);
+
+    // When
+    state.recordFailure();
+    state.recordFailure();
+    breaker.withFailureThreshold(3, 5);
+    state.recordSuccess();
+    state.recordSuccess();
+    assertTrue(breaker.isHalfOpen());
+    state.recordFailure();
+
+    // Then
+    assertTrue(breaker.isOpen());
+  }
+
+  /**
+   * Asserts that the late configuration of a success ratio is handled by resetting the state's internal tracking. Also
+   * asserts that executions from prior configurations are carried over to a new configuration.
+   */
+  public void shouldHandleLateSetSucessRatio() {
+    // Given
+    CircuitBreaker breaker = new CircuitBreaker();
+    breaker.halfOpen();
+    HalfOpenState state = Testing.stateFor(breaker);
+
+    // When
+    breaker.withSuccessThreshold(2);
+    state.recordSuccess();
+    assertTrue(breaker.isHalfOpen());
+    state.recordSuccess();
+
+    // Then
+    assertTrue(breaker.isClosed());
+
+    // Given
+    breaker = new CircuitBreaker().withFailureThreshold(3);
+    breaker.halfOpen();
+    state = Testing.stateFor(breaker);
+
+    // When
+    state.recordFailure();
+    state.recordFailure();
+    breaker.withSuccessThreshold(2, 4);
+    state.recordSuccess();
+    assertTrue(breaker.isHalfOpen());
     state.recordSuccess();
 
     // Then

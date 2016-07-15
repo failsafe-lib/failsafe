@@ -70,29 +70,21 @@ public class CircuitBreakerTest {
 
   public void shouldRequireValidFailureThreshold() {
     assertThrows(() -> new CircuitBreaker().withFailureThreshold(0), IllegalArgumentException.class);
-    assertThrows(() -> new CircuitBreaker().withFailureThreshold(2, 2).withFailureThreshold(2),
-        IllegalStateException.class);
   }
 
   public void shouldRequireValidFailureThresholdRatio() {
     assertThrows(() -> new CircuitBreaker().withFailureThreshold(0, 2), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withFailureThreshold(2, 0), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withFailureThreshold(2, 1), IllegalArgumentException.class);
-    assertThrows(() -> new CircuitBreaker().withFailureThreshold(2).withFailureThreshold(2, 2),
-        IllegalStateException.class);
   }
 
   public void shouldRequireValidSuccessThreshold() {
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(0), IllegalArgumentException.class);
-    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 2).withSuccessThreshold(2),
-        IllegalStateException.class);
   }
 
   public void shouldRequireValidSuccessThresholdRatio() {
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(0, 2), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 0), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 1), IllegalArgumentException.class);
-    assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2).withSuccessThreshold(2, 2),
-        IllegalStateException.class);
   }
 }

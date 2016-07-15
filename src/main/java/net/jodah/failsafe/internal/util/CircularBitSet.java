@@ -16,16 +16,15 @@ public class CircularBitSet {
   private volatile int positives;
   private volatile int negatives;
 
-  public CircularBitSet(int size) {
+  public CircularBitSet(int size, CircularBitSet oldBitSet) {
     this.bitSet = new BitSet(size);
     this.size = size;
-  }
 
-  /**
-   * Returns the ratio of positive bits to the number of occupied bits.
-   */
-  public double positiveRatio() {
-    return (double) positives / (double) occupiedBits;
+    // Initialize from oldBitSet
+    if (oldBitSet != null) {
+      for (int i = 0; i < size && i < oldBitSet.occupiedBits; i++)
+        setNext(oldBitSet.bitSet.get(i));
+    }
   }
 
   /**
@@ -33,6 +32,20 @@ public class CircularBitSet {
    */
   public double negativeRatio() {
     return (double) negatives / (double) occupiedBits;
+  }
+
+  /**
+   * Returns the number of occupied bits in the set.
+   */
+  public int occupiedBits() {
+    return occupiedBits;
+  }
+
+  /**
+   * Returns the ratio of positive bits to the number of occupied bits.
+   */
+  public double positiveRatio() {
+    return (double) positives / (double) occupiedBits;
   }
 
   /**
@@ -65,5 +78,10 @@ public class CircularBitSet {
     }
 
     return previousValue;
+  }
+
+  @Override
+  public String toString() {
+    return bitSet.toString();
   }
 }

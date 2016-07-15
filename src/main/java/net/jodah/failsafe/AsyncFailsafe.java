@@ -193,7 +193,6 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
   @SuppressWarnings("unchecked")
   private <T> FailsafeFuture<T> call(AsyncCallableWrapper<T> callable, FailsafeFuture<T> future) {
     if (circuitBreaker != null) {
-      circuitBreaker.initialize();
       if (!circuitBreaker.allowsExecution())
         throw new CircuitBreakerOpenException();
     }
