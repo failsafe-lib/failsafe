@@ -22,8 +22,17 @@ public class CircularBitSet {
 
     // Initialize from oldBitSet
     if (oldBitSet != null) {
-      for (int i = 0; i < size && i < oldBitSet.occupiedBits; i++)
-        setNext(oldBitSet.bitSet.get(i));
+      initializeFromOldBits(oldBitSet);
+    }
+  }
+
+  /**
+   * Initialize bitSet from oldBitSet with correct order
+   */
+  private void initializeFromOldBits(CircularBitSet oldBitSet) {
+    int startIndex = oldBitSet.occupiedBits <= size ? 0 : oldBitSet.occupiedBits - size;
+    for (int i = startIndex; i < oldBitSet.occupiedBits; i++) {
+      setNext(oldBitSet.bitSet.get(i));
     }
   }
 
