@@ -93,4 +93,24 @@ public class CircularBitSetTest {
     assertEquals(bs2.positiveRatio(), .5);
     assertEquals(bs2.negativeRatio(), .5);
   }
+
+  public void shouldCopyBitsToLargerBitSetWithCorrectOrder() {
+    CircularBitSet bs = new CircularBitSet(2, null);
+    boolean[] prevBits = { true, true, false };
+    for (boolean prevBit : prevBits) {
+      bs.setNext(prevBit);
+    }
+
+    CircularBitSet bs2 = new CircularBitSet(4, bs);
+    assertEquals(bs2.occupiedBits(), 2);
+    assertEquals(bs2.positiveRatio(), .5);
+    assertEquals(bs2.negativeRatio(), .5);
+
+    bs2.setNext(true);
+    bs2.setNext(true);
+    bs2.setNext(true);
+    assertEquals(bs2.occupiedBits(), 4);
+    assertEquals(bs2.positiveRatio(), 1.0);
+    assertEquals(bs2.negativeRatio(), .0);
+  }
 }
