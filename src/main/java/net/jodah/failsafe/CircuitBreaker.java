@@ -160,8 +160,10 @@ public class CircuitBreaker {
   }
 
   /**
-   * Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit.
+   * Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit else
+   * {@code null} if none has been configured.
    * 
+   * @see #withFailureThreshold(int)
    * @see #withFailureThreshold(int, int)
    */
   public Ratio getFailureThreshold() {
@@ -177,8 +179,9 @@ public class CircuitBreaker {
 
   /**
    * Gets the ratio of successive successful executions that must occur when in a half-open state in order to close the
-   * circuit.
+   * circuit else {@code null} if none has been configured.
    * 
+   * @see #withSuccessThreshold(int)
    * @see #withSuccessThreshold(int, int)
    */
   public Ratio getSuccessThreshold() {
@@ -340,13 +343,12 @@ public class CircuitBreaker {
    * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is <
    *           {@code executions}
    */
-  public CircuitBreaker withFailureThreshold(int failures, int executions) {
+  public synchronized CircuitBreaker withFailureThreshold(int failures, int executions) {
     Assert.isTrue(failures >= 1, "failures must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= failures, "executions must be greater than or equal to failures");
     this.failureThreshold = new Ratio(failures, executions);
-    if (successThreshold == null)
-      state.get().setThreshold(failureThreshold);
+    state.get().setFailureThreshold(failureThreshold);
     return this;
   }
 
@@ -371,12 +373,12 @@ public class CircuitBreaker {
    * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is <
    *           {@code executions}
    */
-  public CircuitBreaker withSuccessThreshold(int successes, int executions) {
+  public synchronized CircuitBreaker withSuccessThreshold(int successes, int executions) {
     Assert.isTrue(successes >= 1, "successes must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= successes, "executions must be greater than or equal to successes");
     this.successThreshold = new Ratio(successes, executions);
-    state.get().setThreshold(successThreshold);
+    state.get().setSuccessThreshold(successThreshold);
     return this;
   }
 

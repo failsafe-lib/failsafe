@@ -21,6 +21,9 @@ public abstract class CircuitState {
   public void recordSuccess() {
   }
 
-  public void setThreshold(Ratio threshold) {
+  public void setFailureThreshold(Ratio threshold) {
+  }
+
+  public void setSuccessThreshold(Ratio threshold) {
   }
 }

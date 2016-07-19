@@ -11,7 +11,7 @@ public class ClosedState extends CircuitState {
 
   public ClosedState(CircuitBreaker circuit) {
     this.circuit = circuit;
-    setThreshold(circuit.getFailureThreshold() != null ? circuit.getFailureThreshold() : ONE_OF_ONE);
+    setFailureThreshold(circuit.getFailureThreshold() != null ? circuit.getFailureThreshold() : ONE_OF_ONE);
   }
 
   @Override
@@ -37,7 +37,7 @@ public class ClosedState extends CircuitState {
   }
 
   @Override
-  public void setThreshold(Ratio threshold) {
+  public void setFailureThreshold(Ratio threshold) {
     bitSet = new CircularBitSet(threshold.denominator, bitSet);
   }
 

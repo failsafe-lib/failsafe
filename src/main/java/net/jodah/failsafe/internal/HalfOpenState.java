@@ -11,7 +11,7 @@ public class HalfOpenState extends CircuitState {
 
   public HalfOpenState(CircuitBreaker circuit) {
     this.circuit = circuit;
-    setThreshold(circuit.getSuccessThreshold() != null ? circuit.getSuccessThreshold()
+    setSuccessThreshold(circuit.getSuccessThreshold() != null ? circuit.getSuccessThreshold()
         : circuit.getFailureThreshold() != null ? circuit.getFailureThreshold() : ONE_OF_ONE);
   }
 
@@ -38,7 +38,13 @@ public class HalfOpenState extends CircuitState {
   }
 
   @Override
-  public void setThreshold(Ratio threshold) {
+  public void setFailureThreshold(Ratio threshold) {
+    if (circuit.getSuccessThreshold() == null)
+      bitSet = new CircularBitSet(threshold.denominator, bitSet);
+  }
+
+  @Override
+  public void setSuccessThreshold(Ratio threshold) {
     bitSet = new CircularBitSet(threshold.denominator, bitSet);
   }
 
