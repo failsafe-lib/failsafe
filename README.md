@@ -11,10 +11,7 @@
 Failsafe is a lightweight, zero-dependency library for handling failures. It was designed to be as easy to use as possible, with a concise API for handling everday use cases and the flexibility to handle everything else. Failsafe features:
 
 * [Retries](#retries)
-  * [Retry policies](#retry-policies)
-  * [Synchronous](#synchronous-retries) and [asynchronous retries](#asynchronous-retries)
 * [Circuit breakers](#circuit-breakers)
-  * [Configuration](#circuit-breaker-configuration)
 * [Execution context](#execution-context)
 * [Event listeners](#event-listeners)
 * [Asynchronous API integration](#asynchronous-api-integration)
