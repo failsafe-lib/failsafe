@@ -106,16 +106,17 @@ abstract class AbstractExecution extends ExecutionContext {
     boolean maxDurationExceeded = retryPolicy.getMaxDuration() != null
         && elapsedNanos > retryPolicy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean shouldAbort = retryPolicy.canAbortFor(result, failure);
-    boolean shouldRetry = !retriesExceeded && !shouldAbort && checkArgs && retryPolicy.canRetryFor(result, failure);
-    completed = shouldAbort || !shouldRetry;
-    success = completed && !shouldRetry && !shouldAbort && failure == null;
+    boolean isAbortable = retryPolicy.canAbortFor(result, failure);
+    boolean isRetryable = retryPolicy.canRetryFor(result, failure);
+    boolean shouldRetry = !retriesExceeded && checkArgs && !isAbortable && retryPolicy.allowsRetries() && isRetryable;
+    completed = isAbortable || !shouldRetry;
+    success = completed && !isAbortable && !isRetryable && failure == null;
 
     // Call listeners
     if (listeners != null) {
       if (!success)
         listeners.handleFailedAttempt(result, failure, this);
-      if (shouldAbort)
+      if (isAbortable)
         listeners.handleAbort(result, failure, this);
       else {
         if (retriesExceeded)

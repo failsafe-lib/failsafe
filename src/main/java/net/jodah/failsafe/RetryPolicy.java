@@ -129,8 +129,18 @@ public class RetryPolicy {
   }
 
   /**
-   * Returns whether an execution can be aborted for the {@code result} and {@code failure} according to the configured
-   * abort conditions.
+   * Returns whether the policy allows retries according to the configured {@link #withMaxRetries(int) maxRetries} and
+   * {@link #withMaxDuration(long, TimeUnit) maxDuration}.
+   * 
+   * @see #withMaxRetries(int)
+   * @see #withMaxDuration(long, TimeUnit)
+   */
+  public boolean allowsRetries() {
+    return (maxRetries == -1 || maxRetries > 0) && (maxDuration == null || maxDuration.toNanos() > 0);
+  }
+
+  /**
+   * Returns whether an execution result can be aborted given the configured abort conditions.
    * 
    * @see #abortIf(BiPredicate)
    * @see #abortIf(Predicate)
@@ -148,16 +158,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Returns whether an execution can be retried according to the configured maxRetries and maxDuration.
-   */
-  public boolean canRetry() {
-    return (maxRetries == -1 || maxRetries > 0) && (maxDuration == null || maxDuration.toNanos() > 0);
-  }
-
-  /**
-   * Returns whether an execution can be retried for the {@code result} and {@code failure} according to configured
-   * retry conditions, or if the {@code failure} is not null and no retry condition has been configured to check
-   * failures.
+   * Returns whether an execution result can be retried given the configured abort conditions.
    * 
    * @see #retryIf(BiPredicate)
    * @see #retryIf(Predicate)
@@ -167,9 +168,6 @@ public class RetryPolicy {
    * @see #retryWhen(Object)
    */
   public boolean canRetryFor(Object result, Throwable failure) {
-    if (!canRetry())
-      return false;
-
     for (BiPredicate<Object, Throwable> predicate : retryConditions) {
       if (predicate.test(result, failure))
         return true;
