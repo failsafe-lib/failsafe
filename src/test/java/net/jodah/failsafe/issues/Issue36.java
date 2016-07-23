@@ -1,6 +1,6 @@
 package net.jodah.failsafe.issues;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,7 +16,9 @@ import net.jodah.failsafe.RetryPolicy;
 @Test
 @SuppressWarnings("unchecked")
 public class Issue36 {
-  RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false).retryOn(Exception.class).withMaxRetries(3);
+  RetryPolicy retryPolicy = new RetryPolicy().retryIf((Boolean r) -> r == null || !r)
+      .retryOn(Exception.class)
+      .withMaxRetries(3);
   AtomicInteger calls;
   AtomicInteger failedAttempts;
   AtomicInteger retries;
@@ -29,13 +31,17 @@ public class Issue36 {
   }
 
   public void test() {
-    Failsafe.with(retryPolicy)
-        .onFailedAttempt(e -> failedAttempts.incrementAndGet())
-        .onRetry(e -> retries.incrementAndGet())
-        .get(() -> {
-          calls.incrementAndGet();
-          return false;
-        });
+    try {
+      Failsafe.with(retryPolicy)
+          .onFailedAttempt((r, f, c) -> failedAttempts.incrementAndGet())
+          .onRetry(e -> retries.incrementAndGet())
+          .get(() -> {
+            calls.incrementAndGet();
+            throw new Exception();
+          });
+      fail();
+    } catch (Exception expected) {
+    }
 
     // Then
     assertCounters();
