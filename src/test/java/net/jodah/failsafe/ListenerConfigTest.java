@@ -52,13 +52,13 @@ public class ListenerConfigTest {
     }
 
     /** Records an async invocation of the {@code listener}. */
-    void async(Object listener) {
+    synchronized void async(Object listener) {
       sync(listener);
       waiter.resume();
     }
 
     /** Records an async invocation of the {@code listener} and asserts the {@code context}'s execution count. */
-    void async(Object listener, ExecutionContext context) {
+    synchronized void async(Object listener, ExecutionContext context) {
       sync(listener, context);
       waiter.resume();
     }
