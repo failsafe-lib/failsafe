@@ -413,7 +413,7 @@ Failsafe was designed to integrate nicely with existing libraries. Here are some
 
 ## Public API Integration
 
-For library developers, Failsafe integrates nicely into public APIs, allowing your users to configure retry policies for different opererations. One integration approach is to subclass the RetryPolicy class, then expose that as part of your API while the rest of Failsafe remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to relocate Failsafe into your project's package structure as desired.
+For library developers, Failsafe integrates nicely into public APIs, allowing your users to configure retry policies for different operations. One integration approach is to subclass the RetryPolicy class, then expose that as part of your API while the rest of Failsafe remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to relocate Failsafe into your project's package structure as desired.
 
 ## Docs
 
