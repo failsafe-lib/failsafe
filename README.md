@@ -320,7 +320,7 @@ circuitBreaker.onOpen(() -> log.info("The circuit was opened"));
 
 #### Asynchronous API Integration
 
-Failsafe can be integrated with asynchronous code that reports completion via callbacks. The `runAsync`, `getAsync` and `futureAsync` methods provide an [AsyncExecution] reference that can be used to manually perform retries or completion inside asynchronous callbacks:
+Failsafe can be integrated with asynchronous code that reports completion via callbacks. The `runAsync`, `getAsync` and `futureAsync` methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
 
 ```java
 Failsafe.with(retryPolicy)
