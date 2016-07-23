@@ -12,6 +12,7 @@ Failsafe is a lightweight, zero-dependency library for handling failures. It was
 
 * [Retries](#retries)
 * [Circuit breakers](#circuit-breakers)
+* [Fallbacks](#fallbacks)
 * [Execution context](#execution-context)
 * [Event listeners](#event-listeners)
 * [Asynchronous API integration](#asynchronous-api-integration)
@@ -240,6 +241,32 @@ if (breaker.allowsExecution()) {
     breaker.recordFailure(e);
   }
 }
+```
+
+#### Fallbacks
+
+Fallbacks allow you to provide an alternative result for a failed execution. They can be used to suppress exceptions and provide a default result:
+
+```java
+Failsafe.with(retryPolicy)
+  .withFallback(null)
+  .get(this::connect);
+```
+
+Throw a custom exception:
+
+```java
+Failsafe.with(retryPolicy)
+  .withFallback(failure -> { throw new CustomException(failure); })
+  .get(this::connect);
+```
+
+Or compute an alternative result such as from a backup resource:
+
+```java
+Failsafe.with(retryPolicy)
+  .withFallback(f -> this::connectToBackup)
+  .get(this::connectToPrimary);
 ```
 
 #### Execution Context

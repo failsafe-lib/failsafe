@@ -4,9 +4,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 
 import net.jodah.failsafe.Callables.ContextualCallableWrapper;
+import net.jodah.failsafe.function.BiFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.ContextualCallable;
 import net.jodah.failsafe.function.ContextualRunnable;
+import net.jodah.failsafe.function.Function;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 import net.jodah.failsafe.util.concurrent.Schedulers;
@@ -20,13 +22,14 @@ import net.jodah.failsafe.util.concurrent.Schedulers;
 public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
   RetryPolicy retryPolicy = RetryPolicy.NEVER;
   CircuitBreaker circuitBreaker;
-
-  SyncFailsafe(RetryPolicy retryPolicy) {
-    this.retryPolicy = retryPolicy;
-  }
+  BiFunction<R, Throwable, R> fallback;
 
   SyncFailsafe(CircuitBreaker circuitBreaker) {
     this.circuitBreaker = circuitBreaker;
+  }
+
+  SyncFailsafe(RetryPolicy retryPolicy) {
+    this.retryPolicy = retryPolicy;
   }
 
   /**
@@ -92,6 +95,17 @@ public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
   }
 
   /**
+   * Configures the {@code listeners} to be called as execution events occur.
+   * 
+   * @throws NullPointerException if {@code listeners} is null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> SyncFailsafe<T> with(Listeners<T> listeners) {
+    this.listeners = (Listeners<R>) Assert.notNull(listeners, "listeners");
+    return (SyncFailsafe<T>) this;
+  }
+
+  /**
    * Configures the {@code retryPolicy} to be used for retrying failed executions.
    * 
    * @throws NullPointerException if {@code retryPolicy} is null
@@ -101,17 +115,6 @@ public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
     Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configured");
     this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
     return this;
-  }
-
-  /**
-   * Configures the {@code listeners} to be called as execution events occur.
-   * 
-   * @throws NullPointerException if {@code listeners} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> SyncFailsafe<T> with(Listeners<T> listeners) {
-    this.listeners = (Listeners<R>) Assert.notNull(listeners, "listeners");
-    return (SyncFailsafe<T>) this;
   }
 
   /**
@@ -135,6 +138,45 @@ public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
   }
 
   /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   * 
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called
+   */
+  @SuppressWarnings("unchecked")
+  public SyncFailsafe<R> withFallback(BiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
+    Assert.state(this.fallback == null, "withFallback has already been called");
+    this.fallback = (BiFunction<R, Throwable, R>) Assert.notNull(fallback, "fallback");
+    return this;
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   * 
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called
+   */
+  @SuppressWarnings("unchecked")
+  public SyncFailsafe<R> withFallback(Function<? extends Throwable, ? extends R> fallback) {
+    Assert.state(this.fallback == null, "withFallback has already been called");
+    this.fallback = (BiFunction<R, Throwable, R>) Callables
+        .<R, Throwable, R>of((Function<Throwable, R>) Assert.notNull(fallback, "fallback"));
+    return this;
+  }
+
+  /**
+   * Configures the {@code fallback} result to be returned if execution fails.
+   * 
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called
+   */
+  public SyncFailsafe<R> withFallback(R fallback) {
+    Assert.state(this.fallback == null, "withFallback has already been called");
+    this.fallback = Callables.of(Assert.notNull(fallback, "fallback"));
+    return this;
+  }
+
+  /**
    * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
    * 
    * @throws FailsafeException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
@@ -153,8 +195,12 @@ public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
     Throwable failure;
 
     while (true) {
-      if (circuitBreaker != null && !circuitBreaker.allowsExecution())
-        throw new CircuitBreakerOpenException();
+      if (circuitBreaker != null && !circuitBreaker.allowsExecution()) {
+        CircuitBreakerOpenException e = new CircuitBreakerOpenException();
+        if (fallback == null)
+          throw e;
+        return (T) fallback.apply((R) result, e);
+      }
 
       try {
         execution.before();
@@ -168,9 +214,9 @@ public class SyncFailsafe<R> extends ListenerConfig<SyncFailsafe<R>, R> {
       if (execution.complete(result, failure, true)) {
         if (execution.success || failure == null)
           return result;
-        FailsafeException re = failure instanceof FailsafeException ? (FailsafeException) failure
-            : new FailsafeException(failure);
-        throw re;
+        if (fallback != null)
+          return (T) fallback.apply((R) result, failure);
+        throw failure instanceof FailsafeException ? (FailsafeException) failure : new FailsafeException(failure);
       } else {
         try {
           Thread.sleep(execution.getWaitTime().toMillis());

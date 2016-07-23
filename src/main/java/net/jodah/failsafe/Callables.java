@@ -6,9 +6,11 @@ import java.util.function.BiConsumer;
 
 import net.jodah.failsafe.function.AsyncCallable;
 import net.jodah.failsafe.function.AsyncRunnable;
+import net.jodah.failsafe.function.BiFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.ContextualCallable;
 import net.jodah.failsafe.function.ContextualRunnable;
+import net.jodah.failsafe.function.Function;
 import net.jodah.failsafe.internal.util.Assert;
 
 /**
@@ -31,6 +33,24 @@ final class Callables {
     void inject(AsyncExecution execution) {
       this.execution = execution;
     }
+  }
+
+  static <T, U, R> BiFunction<T, U, R> of(final R result) {
+    return new BiFunction<T, U, R>() {
+      @Override
+      public R apply(T t, U u) {
+        return result;
+      }
+    };
+  }
+
+  static <T, U, R> BiFunction<T, U, R> of(final Function<U, R> function) {
+    return new BiFunction<T, U, R>() {
+      @Override
+      public R apply(T t, U u) {
+        return function.apply(u);
+      }
+    };
   }
 
   static <T> Callable<T> of(final CheckedRunnable runnable) {

@@ -5,6 +5,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import net.jodah.failsafe.function.BiFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.ReentrantCircuit;
 
@@ -75,14 +76,21 @@ public class FailsafeFuture<T> implements Future<T> {
     return done;
   }
 
-  synchronized void complete(T result, Throwable failure) {
-    this.result = result;
-    this.failure = failure;
-    done = true;
+  synchronized void complete(T result, Throwable failure, BiFunction<T, Throwable, T> fallback) {
+    if (fallback == null) {
+      this.result = result;
+      this.failure = failure;
+    } else {
+      try {
+        this.result = fallback.apply(result, failure);
+      } catch (Throwable fallbackFailure) {
+        this.failure = fallbackFailure;
+      }
+    }
 
+    done = true;
     if (completableFuture != null)
       completeFuture();
-
     circuit.close();
   }
 

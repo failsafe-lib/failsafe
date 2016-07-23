@@ -4,6 +4,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import net.jodah.failsafe.function.BiFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -15,17 +16,19 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 public final class AsyncExecution extends AbstractExecution {
   private final Callable<Object> callable;
   private final FailsafeFuture<Object> future;
+  private final BiFunction<Object, Throwable, Object> fallback;
   private final Scheduler scheduler;
   volatile boolean completeCalled;
   volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
   <T> AsyncExecution(Callable<T> callable, RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, Scheduler scheduler,
-      FailsafeFuture<T> future, ListenerConfig<?, Object> listeners) {
+      FailsafeFuture<T> future, ListenerConfig<?, Object> listeners, BiFunction<T, Throwable, T> fallback) {
     super(retryPolicy, circuitBreaker, listeners);
     this.callable = (Callable<Object>) callable;
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
+    this.fallback = (BiFunction<Object, Throwable, Object>) fallback;
   }
 
   /**
@@ -117,7 +120,7 @@ public final class AsyncExecution extends AbstractExecution {
       Exception failure = new CircuitBreakerOpenException();
       if (listeners != null)
         listeners.handleComplete(null, failure, this, false);
-      future.complete(null, failure);
+      future.complete(null, failure, fallback);
       return;
     }
 
@@ -138,7 +141,7 @@ public final class AsyncExecution extends AbstractExecution {
   synchronized boolean complete(Object result, Throwable failure, boolean checkArgs) {
     if (!completeCalled) {
       if (super.complete(result, failure, checkArgs))
-        future.complete(result, failure);
+        future.complete(result, failure, fallback);
       completeCalled = true;
     }
 
@@ -160,7 +163,7 @@ public final class AsyncExecution extends AbstractExecution {
         failure = t;
         if (listeners != null)
           listeners.handleComplete(null, t, this, false);
-        future.complete(null, failure);
+        future.complete(null, failure, fallback);
       }
     }
 
