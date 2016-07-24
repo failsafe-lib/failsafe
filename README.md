@@ -402,6 +402,10 @@ if (execution.canRetryOn(someFailure))
 
 See the [RxJava example][RxJava] for a more detailed implementation.
 
+## Comparisons
+
+* [Failsafe vs Hystrix](https://github.com/jhalterman/failsafe/wiki/Comparisons#failsafe-vs-hystrix)
+
 ## Example Integrations
 
 Failsafe was designed to integrate nicely with existing libraries. Here are some example integrations:
