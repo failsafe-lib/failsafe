@@ -307,7 +307,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the {@code delay} between retries, exponentially backing of to the {@code maxDelay} and multiplying successive
+   * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying successive
    * delays by a factor of 2.
    * 
    * @throws NullPointerException if {@code timeUnit} is null
@@ -318,7 +318,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the {@code delay} between retries, exponentially backing of to the {@code maxDelay} and multiplying successive
+   * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying successive
    * delays by the {@code delayMultiplier}.
    * 
    * @throws NullPointerException if {@code timeUnit} is null
