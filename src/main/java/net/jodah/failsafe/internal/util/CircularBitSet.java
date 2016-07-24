@@ -8,10 +8,11 @@ import java.util.BitSet;
  * @author Jonathan Halterman
  */
 public class CircularBitSet {
-  private final BitSet bitSet;
+  final BitSet bitSet;
   private final int size;
 
-  private volatile int currentIndex;
+  /** Index to write next entry to */
+  volatile int nextIndex;
   private volatile int occupiedBits;
   private volatile int positives;
   private volatile int negatives;
@@ -20,20 +21,24 @@ public class CircularBitSet {
     this.bitSet = new BitSet(size);
     this.size = size;
 
-    // Initialize from oldBitSet
     if (oldBitSet != null) {
-      initializeFromOldBits(oldBitSet);
+      synchronized (oldBitSet) {
+        copyBits(oldBitSet, this);
+      }
     }
   }
 
   /**
-   * Initialize bitSet from oldBitSet with correct order
+   * Copies the most recent bits from the {@code left} BitSet to the {@code right} BitSet in order from oldest to
+   * newest.
    */
-  private void initializeFromOldBits(CircularBitSet oldBitSet) {
-    int startIndex = oldBitSet.occupiedBits <= size ? 0 : oldBitSet.occupiedBits - size;
-    for (int i = startIndex; i < oldBitSet.occupiedBits; i++) {
-      setNext(oldBitSet.bitSet.get(i));
-    }
+  static void copyBits(CircularBitSet left, CircularBitSet right) {
+    int bitsToCopy = Math.min(left.occupiedBits, right.size);
+    int index = left.nextIndex - bitsToCopy;
+    if (index < 0)
+      index += left.occupiedBits;
+    for (int i = 0; i < bitsToCopy; i++, index = left.indexAfter(index))
+      right.setNext(left.bitSet.get(index));
   }
 
   /**
@@ -66,13 +71,10 @@ public class CircularBitSet {
     if (occupiedBits < size)
       occupiedBits++;
     else
-      previousValue = bitSet.get(currentIndex) ? 1 : 0;
+      previousValue = bitSet.get(nextIndex) ? 1 : 0;
 
-    bitSet.set(currentIndex, value);
-    if (currentIndex == size - 1)
-      currentIndex = 0;
-    else
-      currentIndex++;
+    bitSet.set(nextIndex, value);
+    nextIndex = indexAfter(nextIndex);
 
     if (value) {
       if (previousValue != 1)
@@ -89,8 +91,24 @@ public class CircularBitSet {
     return previousValue;
   }
 
+  /**
+   * Returns an array representation of the BitSet entries.
+   */
   @Override
   public String toString() {
-    return bitSet.toString();
+    StringBuilder sb = new StringBuilder().append('[');
+    for (int i = 0; i < occupiedBits; i++) {
+      if (i > 0)
+        sb.append(", ");
+      sb.append(bitSet.get(i));
+    }
+    return sb.append(']').toString();
+  }
+
+  /**
+   * Returns the index after the {@code index}.
+   */
+  private int indexAfter(int index) {
+    return index == size - 1 ? 0 : index + 1;
   }
 }

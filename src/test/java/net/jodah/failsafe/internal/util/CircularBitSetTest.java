@@ -1,10 +1,10 @@
 package net.jodah.failsafe.internal.util;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.*;
+
+import java.util.Arrays;
 
 import org.testng.annotations.Test;
-
-import net.jodah.failsafe.internal.util.CircularBitSet;
 
 @Test
 public class CircularBitSetTest {
@@ -32,85 +32,74 @@ public class CircularBitSetTest {
     assertEquals(bs.negativeRatio(), 0.0);
   }
 
-  public void shouldCopyBits() {
-    CircularBitSet bs = new CircularBitSet(50, null);
-    for (int i = 0; i < 50; i++)
-      bs.setNext(i % 2 == 0);
+  public void testCopyBitsToEqualSizedSet() {
+    CircularBitSet left = new CircularBitSet(5, null);
+    setBits(left, true, 2);
+    setBits(left, false, 3);
 
-    CircularBitSet bs2 = new CircularBitSet(26, bs);
-    assertEquals(bs2.occupiedBits(), 26);
-    assertEquals(bs2.positiveRatio(), .5);
-    assertEquals(bs2.negativeRatio(), .5);
+    left.nextIndex = 0;
+    CircularBitSet right = new CircularBitSet(5, left);
+    assertValues(right, true, true, false, false, false);
 
-    CircularBitSet bs3 = new CircularBitSet(100, bs);
-    assertEquals(bs3.occupiedBits(), 50);
-    assertEquals(bs3.positiveRatio(), .5);
-    assertEquals(bs3.negativeRatio(), .5);
+    left.nextIndex = 2;
+    right = new CircularBitSet(5, left);
+    assertValues(right, false, false, false, true, true);
+
+    left.nextIndex = 4;
+    right = new CircularBitSet(5, left);
+    assertValues(right, false, true, true, false, false);
   }
 
-  public void shouldCopyBitsFromFullOldBitsSetWithCorrectOrder() {
-    CircularBitSet bs = new CircularBitSet(4, null);
-    boolean[] prevBits = { true, true, true, false };
-    for (boolean prevBit : prevBits) {
-      bs.setNext(prevBit);
-    }
+  public void testCopyBitsToSmallerSet() {
+    CircularBitSet left = new CircularBitSet(10, null);
+    setBits(left, true, 5);
+    setBits(left, false, 5);
 
-    CircularBitSet bs2 = new CircularBitSet(2, bs);
-    assertEquals(bs2.occupiedBits(), 2);
-    assertEquals(bs2.positiveRatio(), .5);
-    assertEquals(bs2.negativeRatio(), .5);
+    left.nextIndex = 0;
+    CircularBitSet right = new CircularBitSet(4, left);
+    assertValues(right, false, false, false, false);
 
-    bs2.setNext(true);
-    assertEquals(bs2.occupiedBits(), 2);
-    assertEquals(bs2.positiveRatio(), .5);
-    assertEquals(bs2.negativeRatio(), .5);
+    left.nextIndex = 2;
+    right = new CircularBitSet(4, left);
+    assertValues(right, false, false, true, true);
 
-    bs2.setNext(true);
-    assertEquals(bs2.occupiedBits(), 2);
-    assertEquals(bs2.positiveRatio(), 1.0);
-    assertEquals(bs2.negativeRatio(), .0);
+    left.nextIndex = 7;
+    right = new CircularBitSet(4, left);
+    assertValues(right, true, true, false, false);
   }
 
-  public void shouldCopyBitsFromNonFullOldBitsSetWithCorrectOrder() {
-    CircularBitSet bs = new CircularBitSet(8, null);
-    boolean[] prevBits = { true, true, true, false, false, false };
-    for (boolean prevBit : prevBits) {
-      bs.setNext(prevBit);
-    }
+  public void testCopyBitsToLargerSet() {
+    CircularBitSet left = new CircularBitSet(5, null);
+    setBits(left, true, 2);
+    setBits(left, false, 3);
 
-    CircularBitSet bs2 = new CircularBitSet(4, bs);
-    assertEquals(bs2.occupiedBits(), 4);
-    assertEquals(bs2.positiveRatio(), .25);
-    assertEquals(bs2.negativeRatio(), .75);
+    left.nextIndex = 0;
+    CircularBitSet right = new CircularBitSet(6, left);
+    assertValues(right, true, true, false, false, false);
 
-    bs2.setNext(true);
-    assertEquals(bs2.occupiedBits(), 4);
-    assertEquals(bs2.positiveRatio(), .25);
-    assertEquals(bs2.negativeRatio(), .75);
+    left.nextIndex = 2;
+    right = new CircularBitSet(6, left);
+    assertValues(right, false, false, false, true, true);
 
-    bs2.setNext(true);
-    assertEquals(bs2.occupiedBits(), 4);
-    assertEquals(bs2.positiveRatio(), .5);
-    assertEquals(bs2.negativeRatio(), .5);
+    left.nextIndex = 4;
+    right = new CircularBitSet(6, left);
+    assertValues(right, false, true, true, false, false);
   }
 
-  public void shouldCopyBitsToLargerBitSetWithCorrectOrder() {
-    CircularBitSet bs = new CircularBitSet(2, null);
-    boolean[] prevBits = { true, true, false };
-    for (boolean prevBit : prevBits) {
-      bs.setNext(prevBit);
-    }
+  private boolean[] valuesFor(CircularBitSet bs) {
+    boolean[] values = new boolean[bs.occupiedBits()];
+    for (int i = 0; i < values.length; i++)
+      values[i] = bs.bitSet.get(i);
+    return values;
+  }
 
-    CircularBitSet bs2 = new CircularBitSet(4, bs);
-    assertEquals(bs2.occupiedBits(), 2);
-    assertEquals(bs2.positiveRatio(), .5);
-    assertEquals(bs2.negativeRatio(), .5);
+  private void assertValues(CircularBitSet bs, boolean... right) {
+    boolean[] left = valuesFor(bs);
+    assertTrue(Arrays.equals(left, right), Arrays.toString(left) + " != " + Arrays.toString(right));
+  }
 
-    bs2.setNext(true);
-    bs2.setNext(true);
-    bs2.setNext(true);
-    assertEquals(bs2.occupiedBits(), 4);
-    assertEquals(bs2.positiveRatio(), 1.0);
-    assertEquals(bs2.negativeRatio(), .0);
+  private void setBits(CircularBitSet bs, boolean value, int count) {
+    for (int i = 0; i < count; i++)
+      bs.setNext(value);
   }
 }
