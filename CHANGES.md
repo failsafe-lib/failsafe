@@ -1,3 +1,14 @@
+# 0.9.0
+
+### New Features
+
+* Added support for [fallbacks](https://github.com/jhalterman/failsafe#fallbacks).
+
+### Bug Fixes
+
+* Fixed issue #36 - Failed attempt listener not always called on completion.
+* Fixed issue #34 - CircuitBreaker should default to closed state.
+
 # 0.8.3
 
 ### Bug Fixes
