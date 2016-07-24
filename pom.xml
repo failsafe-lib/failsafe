@@ -9,7 +9,7 @@
 
   <groupId>net.jodah</groupId>
   <artifactId>failsafe</artifactId>
-  <version>0.9.0</version>
+  <version>0.9.1-SNAPSHOT</version>
   <name>Failsafe</name>
   <url>http://github.com/jhalterman/failsafe/</url>
 
