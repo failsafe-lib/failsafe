@@ -1,3 +1,9 @@
+# 0.9.1
+
+### New Features
+
+* Added support for retry delay [jitter](https://github.com/jhalterman/failsafe#retry-policies).
+
 # 0.9.0
 
 ### New Features
