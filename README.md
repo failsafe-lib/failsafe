@@ -102,7 +102,7 @@ Or a [time based jitter][jitter-duration]:
 retryPolicy.withJitter(100, TimeUnit.MILLISECONDS);
 ```
 
-It can add a [max number of retries][max-retries] and a [max retry duration][max-duration]:
+It can add a max number of retries and a max retry duration:
 
 ```java
 retryPolicy

@@ -245,7 +245,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Returns the max retries. Defaults to -1, which retries forever.
+   * Returns the max retries. Defaults to {@code 100}, which retries forever.
    * 
    * @see #withMaxRetries(int)
    */
@@ -383,10 +383,10 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the {@code jitter} to randomly vary retry delays by. For each retry delay, a random portion of the
-   * {@code jitterFactor} multiplied by the delay with be added or subtracted to the delay. For example: a retry delay
-   * of 100 milliseconds and a {@code jitterFactor} of .25 will result in a random retry delay between 75 and 125
-   * milliseconds.
+   * Sets the {@code jitterFactor} to randomly vary retry delays by. For each retry delay, a random portion of the delay
+   * multiplied by the {@code jitterFactor} will be added or subtracted to the delay. For example: a retry delay of
+   * {@code 100} milliseconds and a {@code jitterFactor} of {@code .25} will result in a random retry delay between
+   * {@code 75} and {@code 125} milliseconds.
    * <p>
    * Jitter should be combined with {@link #withDelay(long, TimeUnit) fixed} or
    * {@link #withBackoff(long, long, TimeUnit) exponential backoff} delays.
@@ -405,15 +405,15 @@ public class RetryPolicy {
 
   /**
    * Sets the {@code jitter} to randomly vary retry delays by. For each retry delay, a random portion of the
-   * {@code jitter} will be added or subtracted to the delay. For example: a {@code jitter} of 100 milliseconds will
-   * randomly add between -100 and 100 milliseconds to each retry delay.
+   * {@code jitter} will be added or subtracted to the delay. For example: a {@code jitter} of {@code 100} milliseconds
+   * will randomly add between {@code -100} and {@code 100} milliseconds to each retry delay.
    * <p>
    * Jitter should be combined with {@link #withDelay(long, TimeUnit) fixed} or
    * {@link #withBackoff(long, long, TimeUnit) exponential backoff} delays.
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code jitter} is <= 0
-   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(long)} has already been called
+   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(double)} has already been called
    */
   public RetryPolicy withJitter(long jitter, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
@@ -438,7 +438,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the max number of retries to perform. -1 indicates to retry forever.
+   * Sets the max number of retries to perform. {@code -1} indicates to retry forever.
    * 
    * @throws IllegalArgumentException if {@code maxRetries} < -1
    */
