@@ -58,4 +58,11 @@ public class Testing {
       return null;
     }
   }
+
+  public static void sleep(long duration) {
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException ignore) {
+    }
+  }
 }

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.Callable;
@@ -214,6 +215,23 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     // Then
     assertThrows(runnable, CircuitBreakerOpenException.class);
     assertEquals(counter.get(), 2);
+  }
+
+  /**
+   * Asserts that an execution is failed when the max duration is exceeded.
+   */
+  public void shouldCompleteWhenMaxDurationExceeded() throws Throwable {
+    when(service.connect()).thenReturn(false);
+    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false).withMaxDuration(100, TimeUnit.MILLISECONDS);
+
+    assertEquals(Failsafe.with(retryPolicy).onFailure((r, f) -> {
+      assertEquals(r, Boolean.FALSE);
+      assertNull(f);
+    }).get(() -> {
+      Testing.sleep(120);
+      return service.connect();
+    }), Boolean.FALSE);
+    verify(service).connect();
   }
 
   private void run(SyncFailsafe<?> failsafe, Object runnable) {
