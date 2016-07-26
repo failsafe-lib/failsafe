@@ -84,13 +84,25 @@ It can add a fixed delay between retries:
 retryPolicy.withDelay(1, TimeUnit.SECONDS);
 ```
 
-Or a delay that backs off exponentially:
+Or a delay that [backs off][backoff] exponentially:
 
 ```java
 retryPolicy.withBackoff(1, 30, TimeUnit.SECONDS);
 ```
 
-It can add a max number of retries and a max retry duration:
+It can add a random [jitter factor][jitter-factor] to the delay:
+
+```java
+retryPolicy.withJitter(.1);
+```
+
+Or a [time based jitter][jitter-duration]:
+
+```java
+retryPolicy.withJitter(100, TimeUnit.MILLISECONDS);
+```
+
+It can add a [max number of retries][max-retries] and a [max retry duration][max-duration]:
 
 ```java
 retryPolicy
@@ -98,7 +110,7 @@ retryPolicy
   .withMaxDuration(5, TimeUnit.MINUTES);
 ```
 
-It can also specify which results, failures or conditions to abort retries on:
+It can also specify which results, failures or conditions to [abort retries][abort-retries] on:
 
 ```java
 retryPolicy
@@ -431,6 +443,12 @@ Failsafe is a volunteer effort. If you use it and you like it, you can help by s
 
 Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
+[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
+[abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
+[max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
+[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
+[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-long-java.util.concurrent.TimeUnit-
+[jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
 [Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
 [ListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ListenerConfig.html
 [AsyncListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListenerConfig.html

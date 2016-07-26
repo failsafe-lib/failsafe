@@ -174,7 +174,7 @@ public class RetryPolicyTest {
 
     RetryPolicy rp2 = rp.copy();
     assertEquals(rp.getDelay().toNanos(), rp2.getDelay().toNanos());
-    assertEquals(rp.getDelayMultiplier(), rp2.getDelayMultiplier());
+    assertEquals(rp.getDelayFactor(), rp2.getDelayFactor());
     assertEquals(rp.getMaxDelay().toNanos(), rp2.getMaxDelay().toNanos());
     assertEquals(rp.getMaxDuration().toNanos(), rp2.getMaxDuration().toNanos());
     assertEquals(rp.getMaxRetries(), rp2.getMaxRetries());

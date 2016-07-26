@@ -157,7 +157,7 @@ public final class AsyncExecution extends AbstractExecution {
   synchronized boolean completeOrRetry(Object result, Throwable failure) {
     if (!complete(result, failure, true) && !future.isDone() && !future.isCancelled()) {
       try {
-        future.setFuture((Future) scheduler.schedule(callable, waitNanos, TimeUnit.NANOSECONDS));
+        future.setFuture((Future) scheduler.schedule(callable, delayNanos, TimeUnit.NANOSECONDS));
         return true;
       } catch (Throwable t) {
         failure = t;

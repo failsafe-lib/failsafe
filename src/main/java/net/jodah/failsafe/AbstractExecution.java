@@ -17,6 +17,7 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile boolean completed;
   volatile boolean retriesExceeded;
   volatile boolean success;
+  volatile long delayNanos;
   volatile long waitNanos;
 
   /**
@@ -29,7 +30,7 @@ abstract class AbstractExecution extends ExecutionContext {
     this.retryPolicy = retryPolicy;
     this.circuitBreaker = circuitBreaker;
     this.listeners = listeners;
-    waitNanos = retryPolicy.getDelay().toNanos();
+    waitNanos = delayNanos = retryPolicy.getDelay().toNanos();
   }
 
   /**
@@ -90,6 +91,18 @@ abstract class AbstractExecution extends ExecutionContext {
         circuitBreaker.recordSuccess();
     }
 
+    // Adjust the delay for backoffs
+    if (retryPolicy.getMaxDelay() != null)
+      delayNanos = (long) Math.min(delayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
+
+    // Calculate the wait time with jitter
+    if (retryPolicy.getJitter() != null)
+      waitNanos = randomizeDelay(delayNanos, retryPolicy.getJitter().toNanos(), Math.random());
+    else if (retryPolicy.getJitterFactor() > 0.0)
+      waitNanos = randomizeDelay(delayNanos, retryPolicy.getJitterFactor(), Math.random());
+    else
+      waitNanos = delayNanos;
+
     // Adjust the wait time for max duration
     if (retryPolicy.getMaxDuration() != null) {
       long maxRemainingWaitTime = retryPolicy.getMaxDuration().toNanos() - elapsedNanos;
@@ -97,10 +110,6 @@ abstract class AbstractExecution extends ExecutionContext {
       if (waitNanos < 0)
         waitNanos = 0;
     }
-
-    // Adjust the wait time for backoffs
-    if (retryPolicy.getMaxDelay() != null)
-      waitNanos = (long) Math.min(waitNanos * retryPolicy.getDelayMultiplier(), retryPolicy.getMaxDelay().toNanos());
 
     boolean maxRetriesExceeded = retryPolicy.getMaxRetries() != -1 && executions > retryPolicy.getMaxRetries();
     boolean maxDurationExceeded = retryPolicy.getMaxDuration() != null
@@ -127,5 +136,15 @@ abstract class AbstractExecution extends ExecutionContext {
     }
 
     return completed;
+  }
+
+  static long randomizeDelay(long delay, long jitter, double random) {
+    double randomAddend = (1 - random * 2) * jitter;
+    return (long) (delay + randomAddend);
+  }
+
+  static long randomizeDelay(long delay, double jitterFactor, double random) {
+    double randomFactor = 1 + (1 - random * 2) * jitterFactor;
+    return (long) (delay * randomFactor);
   }
 }
