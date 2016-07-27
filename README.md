@@ -414,35 +414,27 @@ if (execution.canRetryOn(someFailure))
 
 See the [RxJava example][RxJava] for a more detailed implementation.
 
-## Comparisons
+## Additional Resources
 
-* [Failsafe vs Hystrix](https://github.com/jhalterman/failsafe/wiki/Comparisons#failsafe-vs-hystrix)
+* [Javadocs](https://jhalterman.github.com/failsafe/javadoc)
+* [Example Integrations](https://github.com/jhalterman/failsafe/wiki/Example-Integrations)
+* [3rd Party Tools](https://github.com/jhalterman/failsafe/wiki/3rd-Party-Tools)
+* [Comparisons](https://github.com/jhalterman/failsafe/wiki/Comparisons)
+* [Who's Using Failsafe](https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe)
 
-## Example Integrations
+## Library and API Integration
 
-Failsafe was designed to integrate nicely with existing libraries. Here are some example integrations:
-
-* [Java 8](https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/Java8Example.java)
-* [Netty](https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/NettyExample.java)
-* [RxJava]
-* [Vert.x]
-
-## Public API Integration
-
-For library developers, Failsafe integrates nicely into public APIs, allowing your users to configure retry policies for different operations. One integration approach is to subclass the RetryPolicy class, then expose that as part of your API while the rest of Failsafe remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to relocate Failsafe into your project's package structure as desired.
-
-## Docs
-
-JavaDocs are available [here](https://jhalterman.github.com/failsafe/javadoc).
+For library and public API developers, Failsafe integrates nicely into existing APIs, allowing your users to configure retry policies for different operations. One integration approach is to subclass the RetryPolicy class and expose that as part of your API while the rest of Failsafe remains internal. Another approach is to use something like the [Maven shade plugin](https://maven.apache.org/plugins/maven-shade-plugin/) to rename and relocate Failsafe classes into your project's package structure as desired.
 
 ## Contribute
 
-Failsafe is a volunteer effort. If you use it and you like it, you can help by spreading the word!
+Failsafe is a volunteer effort. If you use it and you like it, [let us know][whos-using], and also help by spreading the word!
 
 ## License
 
 Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
+[whos-using]: https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe
 [backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
