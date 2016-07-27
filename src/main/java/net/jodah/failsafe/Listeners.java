@@ -5,10 +5,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.failsafe.event.ContextualResultListener;
-import net.jodah.failsafe.event.ContextualSuccessListener;
-import net.jodah.failsafe.event.FailureListener;
-import net.jodah.failsafe.event.ResultListener;
-import net.jodah.failsafe.event.SuccessListener;
+import net.jodah.failsafe.function.CheckedBiConsumer;
+import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -105,7 +103,7 @@ public class Listeners<R> {
       @Override
       public void onResult(final T result, final Throwable failure, final ExecutionContext context) {
         Callable<T> callable = new Callable<T>() {
-          public T call() {
+          public T call() throws Exception {
             ((ContextualResultListener<T, Throwable>) listener).onResult(result, failure, context);
             return null;
           }
@@ -123,46 +121,47 @@ public class Listeners<R> {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(final ContextualSuccessListener<? extends T> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(final CheckedConsumer<? extends Throwable> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
-      public void onResult(T result, Throwable failure, ExecutionContext context) {
-        ((ContextualSuccessListener<T>) listener).onSuccess(result, context);
-      }
-    };
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(final FailureListener<? extends Throwable> listener) {
-    Assert.notNull(listener, "listener");
-    return new ContextualResultListener<T, Throwable>() {
-      @Override
-      public void onResult(T result, Throwable failure, ExecutionContext context) {
-        ((FailureListener<Throwable>) listener).onFailure(failure);
+      public void onResult(T result, Throwable failure, ExecutionContext context) throws Exception {
+        ((CheckedConsumer<Throwable>) listener).accept(failure);
       }
     };
   }
 
   @SuppressWarnings("unchecked")
   static <T> ContextualResultListener<T, Throwable> of(
-      final ResultListener<? extends T, ? extends Throwable> listener) {
+      final CheckedBiConsumer<? extends T, ? extends Throwable> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
-      public void onResult(T result, Throwable failure, ExecutionContext context) {
-        ((ResultListener<T, Throwable>) listener).onResult(result, failure);
+      public void onResult(T result, Throwable failure, ExecutionContext context) throws Exception {
+        ((CheckedBiConsumer<T, Throwable>) listener).accept(result, failure);
       }
     };
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(final SuccessListener<? extends T> listener) {
+  static <T> ContextualResultListener<T, Throwable> ofResult(final CheckedConsumer<? extends T> listener) {
     Assert.notNull(listener, "listener");
     return new ContextualResultListener<T, Throwable>() {
       @Override
-      public void onResult(T result, Throwable failure, ExecutionContext context) {
-        ((SuccessListener<T>) listener).onSuccess(result);
+      public void onResult(T result, Throwable failure, ExecutionContext context) throws Exception {
+        ((CheckedConsumer<T>) listener).accept(result);
+      }
+    };
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> ContextualResultListener<T, Throwable> ofResult(
+      final CheckedBiConsumer<? extends T, ExecutionContext> listener) {
+    Assert.notNull(listener, "listener");
+    return new ContextualResultListener<T, Throwable>() {
+      @Override
+      public void onResult(T result, Throwable failure, ExecutionContext context) throws Exception {
+        ((CheckedBiConsumer<T, ExecutionContext>) listener).accept(result, context);
       }
     };
   }

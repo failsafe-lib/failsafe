@@ -14,7 +14,7 @@ public class Execution extends AbstractExecution {
    * @throws NullPointerException if {@code circuitBreaker} is null
    */
   public Execution(CircuitBreaker circuitBreaker) {
-    super(null, Assert.notNull(circuitBreaker, "circuitBreaker"), null);
+    super(new FailsafeConfig<Object, FailsafeConfig<Object, ?>>().with(circuitBreaker));
   }
 
   /**
@@ -23,7 +23,7 @@ public class Execution extends AbstractExecution {
    * @throws NullPointerException if {@code retryPolicy} is null
    */
   public Execution(RetryPolicy retryPolicy) {
-    super(Assert.notNull(retryPolicy, "retryPolicy"), null, null);
+    super(new FailsafeConfig<Object, FailsafeConfig<Object, ?>>().with(retryPolicy));
   }
 
   /**
@@ -32,11 +32,12 @@ public class Execution extends AbstractExecution {
    * @throws NullPointerException if {@code retryPolicy} or {@code circuitBreaker} are null
    */
   public Execution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker) {
-    super(Assert.notNull(retryPolicy, "retryPolicy"), Assert.notNull(circuitBreaker, "circuitBreaker"), null);
+    super(new FailsafeConfig<Object, FailsafeConfig<Object, FailsafeConfig<Object, ?>>>().with(retryPolicy)
+        .with(circuitBreaker));
   }
 
-  Execution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, ListenerConfig<?, Object> listeners) {
-    super(retryPolicy, circuitBreaker, listeners);
+  Execution(FailsafeConfig<Object, ?> config) {
+    super(config);
   }
 
   /**

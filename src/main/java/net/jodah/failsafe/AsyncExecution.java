@@ -4,7 +4,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import net.jodah.failsafe.function.BiFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -16,19 +15,17 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 public final class AsyncExecution extends AbstractExecution {
   private final Callable<Object> callable;
   private final FailsafeFuture<Object> future;
-  private final BiFunction<Object, Throwable, Object> fallback;
   private final Scheduler scheduler;
   volatile boolean completeCalled;
   volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
-  <T> AsyncExecution(Callable<T> callable, RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, Scheduler scheduler,
-      FailsafeFuture<T> future, ListenerConfig<?, Object> listeners, BiFunction<T, Throwable, T> fallback) {
-    super(retryPolicy, circuitBreaker, listeners);
+  <T> AsyncExecution(Callable<T> callable, Scheduler scheduler, FailsafeFuture<T> future,
+      FailsafeConfig<Object, ?> config) {
+    super(config);
     this.callable = (Callable<Object>) callable;
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
-    this.fallback = (BiFunction<Object, Throwable, Object>) fallback;
   }
 
   /**
@@ -115,17 +112,17 @@ public final class AsyncExecution extends AbstractExecution {
    * flags, and calling the retry listeners.
    */
   void before() {
-    if (circuitBreaker != null && !circuitBreaker.allowsExecution()) {
+    if (config.circuitBreaker != null && !config.circuitBreaker.allowsExecution()) {
       completed = true;
       Exception failure = new CircuitBreakerOpenException();
-      if (listeners != null)
-        listeners.handleComplete(null, failure, this, false);
-      future.complete(null, failure, fallback);
+      if (config != null)
+        config.handleComplete(null, failure, this, false);
+      future.complete(null, failure, config.fallback);
       return;
     }
 
-    if (completeCalled && listeners != null)
-      listeners.handleRetry(lastResult, lastFailure, this);
+    if (completeCalled && config != null)
+      config.handleRetry(lastResult, lastFailure, this);
 
     super.before();
     completeCalled = false;
@@ -141,7 +138,7 @@ public final class AsyncExecution extends AbstractExecution {
   synchronized boolean complete(Object result, Throwable failure, boolean checkArgs) {
     if (!completeCalled) {
       if (super.complete(result, failure, checkArgs))
-        future.complete(result, failure, fallback);
+        future.complete(result, failure, config.fallback);
       completeCalled = true;
     }
 
@@ -161,9 +158,9 @@ public final class AsyncExecution extends AbstractExecution {
         return true;
       } catch (Throwable t) {
         failure = t;
-        if (listeners != null)
-          listeners.handleComplete(null, t, this, false);
-        future.complete(null, failure, fallback);
+        if (config != null)
+          config.handleComplete(null, t, this, false);
+        future.complete(null, failure, config.fallback);
       }
     }
 

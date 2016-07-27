@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.annotations.Test;
 
 import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.function.BiFunction;
+import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 
 @Test
@@ -66,7 +66,7 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker breaker, BiFunction<T, Throwable, T> fallback, Callable<T> callable)
+  <T> T failsafeGet(CircuitBreaker breaker, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable)
       throws ExecutionException, InterruptedException {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(breaker).withFallback(fallback).get(callable)
@@ -76,7 +76,7 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy retryPolicy, BiFunction<T, Throwable, T> fallback, Callable<T> callable)
+  <T> T failsafeGet(RetryPolicy retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable)
       throws ExecutionException, InterruptedException {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(retryPolicy).withFallback(fallback).get(callable)

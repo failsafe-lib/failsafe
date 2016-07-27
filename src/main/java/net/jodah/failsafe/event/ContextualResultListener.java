@@ -16,5 +16,5 @@ public interface ContextualResultListener<R, F extends Throwable> {
    * @param result The execution result, else {@code null} if the call failed
    * @param failure The execution failure, else {@code null} if the call was successful
    */
-  void onResult(R result, F failure, ExecutionContext context);
+  void onResult(R result, F failure, ExecutionContext context) throws Exception;
 }

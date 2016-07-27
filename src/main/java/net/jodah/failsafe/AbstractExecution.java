@@ -6,9 +6,9 @@ import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
 
 abstract class AbstractExecution extends ExecutionContext {
+  final FailsafeConfig<Object, ?> config;
   final RetryPolicy retryPolicy;
   final CircuitBreaker circuitBreaker;
-  final ListenerConfig<?, Object> listeners;
 
   // Mutable state
   long attemptStartTime;
@@ -25,11 +25,11 @@ abstract class AbstractExecution extends ExecutionContext {
    * 
    * @throws NullPointerException if {@code retryPolicy} is null
    */
-  AbstractExecution(RetryPolicy retryPolicy, CircuitBreaker circuitBreaker, ListenerConfig<?, Object> listeners) {
+  AbstractExecution(FailsafeConfig<Object, ?> config) {
     super(new Duration(System.nanoTime(), TimeUnit.NANOSECONDS));
-    this.retryPolicy = retryPolicy;
-    this.circuitBreaker = circuitBreaker;
-    this.listeners = listeners;
+    this.config = config;
+    retryPolicy = config.retryPolicy;
+    this.circuitBreaker = config.circuitBreaker;
     waitNanos = delayNanos = retryPolicy.getDelay().toNanos();
   }
 
@@ -122,17 +122,15 @@ abstract class AbstractExecution extends ExecutionContext {
     success = completed && !isAbortable && !isRetryable && failure == null;
 
     // Call listeners
-    if (listeners != null) {
-      if (!success)
-        listeners.handleFailedAttempt(result, failure, this);
-      if (isAbortable)
-        listeners.handleAbort(result, failure, this);
-      else {
-        if (retriesExceeded)
-          listeners.handleRetriesExceeded(result, failure, this);
-        if (completed)
-          listeners.handleComplete(result, failure, this, success);
-      }
+    if (!success)
+      config.handleFailedAttempt(result, failure, this);
+    if (isAbortable)
+      config.handleAbort(result, failure, this);
+    else {
+      if (retriesExceeded)
+        config.handleRetriesExceeded(result, failure, this);
+      if (completed)
+        config.handleComplete(result, failure, this, success);
     }
 
     return completed;

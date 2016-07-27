@@ -277,7 +277,7 @@ Or compute an alternative result such as from a backup resource:
 
 ```java
 Failsafe.with(retryPolicy)
-  .withFallback(f -> this::connectToBackup)
+  .withFallback(this::connectToBackup)
   .get(this::connectToPrimary);
 ```
 

@@ -4,34 +4,26 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import net.jodah.failsafe.Callables.AsyncCallableWrapper;
+import net.jodah.failsafe.Functions.AsyncCallableWrapper;
 import net.jodah.failsafe.function.AsyncCallable;
 import net.jodah.failsafe.function.AsyncRunnable;
-import net.jodah.failsafe.function.BiFunction;
+import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.ContextualCallable;
 import net.jodah.failsafe.function.ContextualRunnable;
-import net.jodah.failsafe.function.Function;
-import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 /**
- * Performs asynchronous executions according to a {@link RetryPolicy} and {@link CircuitBreaker}.
+ * Performs asynchronous executions with failures handled according to a configured {@link #with(RetryPolicy) retry
+ * policy}, {@link #with(CircuitBreaker) circuit breaker} and
+ * {@link #withFallback(net.jodah.failsafe.function.CheckedBiFunction) fallback}.
  * 
  * @author Jonathan Halterman
  * @param <R> listener result type
  */
-public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
-  private RetryPolicy retryPolicy;
-  private CircuitBreaker circuitBreaker;
-  private BiFunction<R, Throwable, R> fallback;
-
-  AsyncFailsafe(SyncFailsafe<R> failsafe, Scheduler scheduler) {
-    super(scheduler);
-    this.retryPolicy = failsafe.retryPolicy;
-    this.circuitBreaker = failsafe.circuitBreaker;
-    this.listeners = failsafe.listeners;
-    this.listenerRegistry = failsafe.listenerRegistry;
+public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
+  AsyncFailsafe(FailsafeConfig<R, ?> config, Scheduler scheduler) {
+    super(config, scheduler);
   }
 
   /**
@@ -46,7 +38,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
   public <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable) {
     java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response));
+    call(Functions.asyncOfFuture(callable), new FailsafeFuture<T>(response));
     return response;
   }
 
@@ -62,7 +54,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
   public <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
     java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response));
+    call(Functions.asyncOfFuture(callable), new FailsafeFuture<T>(response));
     return response;
   }
 
@@ -79,7 +71,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
   public <T> java.util.concurrent.CompletableFuture<T> futureAsync(
       AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
     java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Callables.ofFuture(callable), new FailsafeFuture<T>(response));
+    call(Functions.asyncOfFuture(callable), new FailsafeFuture<T>(response));
     return response;
   }
 
@@ -91,7 +83,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   public <T> FailsafeFuture<T> get(Callable<T> callable) {
-    return call(Callables.asyncOf(callable), null);
+    return call(Functions.asyncOf(callable), null);
   }
 
   /**
@@ -102,7 +94,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   public <T> FailsafeFuture<T> get(ContextualCallable<T> callable) {
-    return call(Callables.asyncOf(callable), null);
+    return call(Functions.asyncOf(callable), null);
   }
 
   /**
@@ -114,7 +106,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   public <T> FailsafeFuture<T> getAsync(AsyncCallable<T> callable) {
-    return call(Callables.asyncOf(callable), null);
+    return call(Functions.asyncOf(callable), null);
   }
 
   /**
@@ -125,7 +117,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   public FailsafeFuture<Void> run(CheckedRunnable runnable) {
-    return call(Callables.<Void>asyncOf(runnable), null);
+    return call(Functions.<Void>asyncOf(runnable), null);
   }
 
   /**
@@ -136,7 +128,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   public FailsafeFuture<Void> run(ContextualRunnable runnable) {
-    return call(Callables.<Void>asyncOf(runnable), null);
+    return call(Functions.<Void>asyncOf(runnable), null);
   }
 
   /**
@@ -148,81 +140,7 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   public FailsafeFuture<Void> runAsync(AsyncRunnable runnable) {
-    return call(Callables.<Void>asyncOf(runnable), null);
-  }
-
-  /**
-   * Configures the {@code circuitBreaker} to be used to control the rate of event execution.
-   * 
-   * @throws NullPointerException if {@code circuitBreaker} is null
-   * @throws IllegalStateException if a circuit breaker is already configured
-   */
-  public AsyncFailsafe<R> with(CircuitBreaker circuitBreaker) {
-    Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configurd");
-    this.circuitBreaker = Assert.notNull(circuitBreaker, "circuitBreaker");
-    return this;
-  }
-
-  /**
-   * Configures the {@code listeners} to be called as execution events occur.
-   * 
-   * @throws NullPointerException if {@code listeners} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> AsyncFailsafe<T> with(Listeners<T> listeners) {
-    this.listeners = (Listeners<R>) Assert.notNull(listeners, "listeners");
-    return (AsyncFailsafe<T>) this;
-  }
-
-  /**
-   * Configures the {@code retryPolicy} to be used for retrying failed executions.
-   * 
-   * @throws NullPointerException if {@code retryPolicy} is null
-   * @throws IllegalStateException if a retry policy is already configured
-   */
-  public AsyncFailsafe<R> with(RetryPolicy retryPolicy) {
-    Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configurd");
-    this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
-    return this;
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   * 
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called
-   */
-  @SuppressWarnings("unchecked")
-  public AsyncFailsafe<R> withFallback(BiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
-    Assert.state(this.fallback == null, "withFallback has already been called");
-    this.fallback = (BiFunction<R, Throwable, R>) Assert.notNull(fallback, "fallback");
-    return this;
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   * 
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called
-   */
-  @SuppressWarnings("unchecked")
-  public AsyncFailsafe<R> withFallback(Function<? extends Throwable, ? extends R> fallback) {
-    Assert.state(this.fallback == null, "withFallback has already been called");
-    this.fallback = (BiFunction<R, Throwable, R>) Callables
-        .<R, Throwable, R>of((Function<Throwable, R>) Assert.notNull(fallback, "fallback"));
-    return this;
-  }
-
-  /**
-   * Configures the {@code fallback} result to be returned if execution fails.
-   * 
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called
-   */
-  public AsyncFailsafe<R> withFallback(R fallback) {
-    Assert.state(this.fallback == null, "withFallback has already been called");
-    this.fallback = Callables.of(Assert.notNull(fallback, "fallback"));
-    return this;
+    return call(Functions.<Void>asyncOf(runnable), null);
   }
 
   /**
@@ -241,19 +159,18 @@ public class AsyncFailsafe<R> extends AsyncListenerConfig<AsyncFailsafe<R>, R> {
       CircuitBreakerOpenException e = new CircuitBreakerOpenException();
       if (fallback == null)
         throw e;
-      future.complete(null, e, (BiFunction<T, Throwable, T>) fallback);
+      future.complete(null, e, (CheckedBiFunction<T, Throwable, T>) fallback);
       return future;
     }
 
-    AsyncExecution execution = new AsyncExecution(callable, retryPolicy, circuitBreaker, scheduler, future,
-        (ListenerConfig<?, Object>) this, (BiFunction<T, Throwable, T>) fallback);
+    AsyncExecution execution = new AsyncExecution(callable, scheduler, future, (FailsafeConfig<Object, ?>) this);
     callable.inject(execution);
 
     try {
       future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     } catch (Throwable t) {
       handleComplete(null, t, execution, false);
-      future.complete(null, t, (BiFunction<T, Throwable, T>) fallback);
+      future.complete(null, t, (CheckedBiFunction<T, Throwable, T>) fallback);
     }
 
     return future;
