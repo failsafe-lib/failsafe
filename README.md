@@ -155,7 +155,7 @@ Failsafe.with(retryPolicy)
 
 #### Circuit Breakers
 
-[Circuit breakers][FowlerCircuitBreaker] are a way of creating systems that [fail-fast][FailFast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
+[Circuit breakers][fowler-circuit-breaker] are a way of creating systems that [fail-fast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
 
 ```java
 CircuitBreaker breaker = new CircuitBreaker()
@@ -216,7 +216,7 @@ breaker.
   .failIf((result, failure) -> result == 500 || failure instanceof NoRouteToHostException);
 ```
 
-And the breaker can be configured to recognize executions that exceed a certain timeout as failures:
+And the breaker can be configured to recognize executions that exceed a certain [timeout] as failures:
 
 ```java
 breaker.withTimeout(10, TimeUnit.SECONDS);
@@ -434,27 +434,30 @@ Failsafe is a volunteer effort. If you use it and you like it, [let us know][who
 
 Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-[whos-using]: https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe
 [backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
 [max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
 [jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-long-java.util.concurrent.TimeUnit-
 [jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
+[timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-long-java.util.concurrent.TimeUnit-
+
 [Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
 [ListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ListenerConfig.html
 [AsyncListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListenerConfig.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
 [FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
-[CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
-[RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
-[Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
 [ExecutionContext]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ExecutionContext.html
 [Execution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Execution
 [AsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncExecution
-[ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
 [Scheduler]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/util/concurrent/Scheduler.html
 [CircuitBreaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html
-[FowlerCircuitBreaker]: http://martinfowler.com/bliki/CircuitBreaker.html
-[FailFast]: https://en.wikipedia.org/wiki/Fail-fast
+
+[CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
+[ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
+[RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
+[Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
+
+[fail-fast]: https://en.wikipedia.org/wiki/Fail-fast
+[fowler-circuit-breaker]: http://martinfowler.com/bliki/CircuitBreaker.html
 [maven]: https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe

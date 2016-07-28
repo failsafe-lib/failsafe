@@ -383,7 +383,8 @@ public class CircuitBreaker {
   }
 
   /**
-   * Sets the {@code timeout} for executions. Executions that exceed this timeout are recorded as failures.
+   * Sets the {@code timeout} for executions. Executions that exceed this timeout are not interrupted, but are recorded
+   * as failures once they naturally complete.
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
