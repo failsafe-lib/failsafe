@@ -74,7 +74,7 @@ abstract class AbstractExecution extends ExecutionContext {
    * 
    * @throws IllegalStateException if the execution is already complete
    */
-  boolean complete(Object result, Throwable failure, boolean checkArgs) {
+  synchronized boolean complete(Object result, Throwable failure, boolean checkArgs) {
     Assert.state(!completed, "Execution has already been completed");
     executions++;
     lastResult = result;
