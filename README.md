@@ -143,7 +143,7 @@ Connection connection = Failsafe.with(retryPolicy).get(this::connect);
 
 #### Asynchronous Retries
 
-Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler] implementation, and return a [FailsafeFuture]. When the execution succeeds or the retry policy is exceeded, the future is completed and any registered [listeners](#event-listeners) are called:
+Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler]. They return a [FailsafeFuture] from which a result can be synchronously [retrieved][future-get]. Execution [listeners](#event-listeners) can also be registered to learn when an execution completes:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -294,23 +294,55 @@ Failsafe.with(retryPolicy).run(ctx -> {
 
 #### Event Listeners
 
-Failsafe supports a variety of execution and retry event [listeners][ListenerConfig]:
+Failsafe supports a variety of execution and retry event [listeners][FailsafeConfig].
+
+It can notify you when an execution completes:
 
 ```java
 Failsafe.with(retryPolicy)
-  .onRetry((c, f, stats) -> log.warn("Failure #{}. Retrying.", stats.getExecutions()))
-  .onFailedAttempt(failure -> log.error("Connection attempts failed", failure))
-  .onSuccess(cxn -> log.info("Connected to {}", cxn))
+  .onComplete((cxn, failure) -> {
+    if (cxn != null)
+      log.info("Connected to {}", cxn);
+    else if (failure != null)
+      log.error("Failed to create connection", e);
+  })
   .get(this::connect);
 ```
 
-[Asynchronous listeners][AsyncListenerConfig] are also supported:
+Or on an execution success or failure:
+
+```java
+Failsafe.with(retryPolicy)
+  .onSuccess(cxn -> log.info("Connected to {}", cxn))
+  .onFailure(failure -> log.error("Failed to create connection", e))
+  .get(this::connect);
+```
+
+It can notify you when an execution attempt fails and before a retry is performed:
+
+```java
+Failsafe.with(retryPolicy)
+  .onFailedAttempt(failure -> log.error("Connection attempt failed", failure))
+  .onRetry((c, f, ctx) -> log.warn("Failure #{}. Retrying.", ctx.getExecutions()))
+  .get(this::connect);
+```
+
+And it can notify you when an execution fails and the max retries are [exceeded][retries-exceeded]:
+
+```java
+Failsafe.with(retryPolicy)
+  .onRetriesExceeded(ctx -> log.warn("Failed to connect. Max retries exceeded."))
+  .get(this::connect);
+```
+
+[Asynchronous listeners][AsyncFailsafeConfig] are also supported:
 
 ```java
 Failsafe.with(retryPolicy)
   .with(executor)
   .onFailureAsync(e -> log.error("Failed to create connection", e))
   .onSuccessAsync(cxn -> log.info("Connected to {}", cxn), anotherExecutor);
+  .get(this::connect);
 ```
 
 Java 6 and 7 users can extend the [Listeners] class and override individual event handlers:
@@ -318,8 +350,8 @@ Java 6 and 7 users can extend the [Listeners] class and override individual even
 ```java
 Failsafe.with(retryPolicy)
   .with(new Listeners<Connection>() {
-    public void onRetry(Connection cxn, Throwable failure, ExecutionStats stats) {
-      log.warn("Failure #{}. Retrying.", stats.getExecutions());
+    public void onRetry(Connection cxn, Throwable failure, ExecutionContext ctx) {
+      log.warn("Failure #{}. Retrying.", ctx.getExecutions());
     }
   }).get(() -> connect());
 ```
@@ -327,12 +359,12 @@ Failsafe.with(retryPolicy)
 [CircuitBreaker] related event listeners can also be registered:
 
 ```java
-circuitBreaker.onOpen(() -> log.info("The circuit was opened"));
+circuitBreaker.onOpen(() -> log.info("The circuit breaker was opened"));
 ```
 
 #### Asynchronous API Integration
 
-Failsafe can be integrated with asynchronous code that reports completion via callbacks. The `runAsync`, `getAsync` and `futureAsync` methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
+Failsafe can be integrated with asynchronous code that reports completion via callbacks. The [runAsync], [getAsync] and [futureAsync] methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -441,10 +473,15 @@ Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2
 [jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-long-java.util.concurrent.TimeUnit-
 [jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
 [timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-long-java.util.concurrent.TimeUnit-
+[runAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#runAsync-net.jodah.failsafe.function.AsyncRunnable-
+[getAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#getAsync-net.jodah.failsafe.function.AsyncCallable-
+[futureAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#futureAsync-net.jodah.failsafe.function.AsyncCallable-
+[future-get]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html#get--
+[retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
 
 [Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
-[ListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ListenerConfig.html
-[AsyncListenerConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncListenerConfig.html
+[FailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html
+[AsyncFailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafeConfig.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
 [FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
 [ExecutionContext]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ExecutionContext.html

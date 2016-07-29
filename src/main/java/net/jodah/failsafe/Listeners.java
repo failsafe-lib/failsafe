@@ -66,7 +66,8 @@ public class Listeners<R> {
   }
 
   /**
-   * Called when an execution fails and retries are exceeded.
+   * Called when an execution fails and the {@link RetryPolicy#withMaxRetries(int) max retry attempts} or
+   * {@link RetryPolicy#withMaxDuration(long, java.util.concurrent.TimeUnit) max duration} are exceeded.
    */
   public void onRetriesExceeded(R result, Throwable failure) {
   }

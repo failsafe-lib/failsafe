@@ -278,7 +278,8 @@ public class FailsafeConfig<R, F> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution fails and the max retry attempts or duration are
+   * Registers the {@code listener} to be called when an execution fails and the {@link RetryPolicy#withMaxRetries(int)
+   * max retry attempts} or {@link RetryPolicy#withMaxDuration(long, java.util.concurrent.TimeUnit) max duration} are
    * exceeded.
    */
   public F onRetriesExceeded(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
@@ -287,7 +288,8 @@ public class FailsafeConfig<R, F> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution fails and the max retry attempts or duration are
+   * Registers the {@code listener} to be called when an execution fails and the {@link RetryPolicy#withMaxRetries(int)
+   * max retry attempts} or {@link RetryPolicy#withMaxDuration(long, java.util.concurrent.TimeUnit) max duration} are
    * exceeded.
    */
   public F onRetriesExceeded(CheckedConsumer<? extends Throwable> listener) {
@@ -297,7 +299,8 @@ public class FailsafeConfig<R, F> {
 
   /**
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and the
-   * max retry attempts or duration are exceeded.
+   * {@link RetryPolicy#withMaxRetries(int) max retry attempts} or
+   * {@link RetryPolicy#withMaxDuration(long, java.util.concurrent.TimeUnit) max duration} are exceeded.
    */
   public F onRetriesExceededAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener,
       ExecutorService executor) {
@@ -307,7 +310,8 @@ public class FailsafeConfig<R, F> {
 
   /**
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and the
-   * max retry attempts or duration are exceeded.
+   * {@link RetryPolicy#withMaxRetries(int) max retry attempts} or
+   * {@link RetryPolicy#withMaxDuration(long, java.util.concurrent.TimeUnit) max duration} are exceeded.
    */
   public F onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
     registry().retriesExceeded()

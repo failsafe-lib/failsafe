@@ -1,5 +1,6 @@
 package net.jodah.failsafe;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +37,22 @@ public class FailsafeFuture<T> implements Future<T> {
     circuit.open();
   }
 
+  /**
+   * Attempts to cancel this execution. This attempt will fail if the execution has already completed, has already been
+   * cancelled, or could not be cancelled for some other reason. If successful, and this execution has not started when
+   * {@code cancel} is called, this execution should never run. If the execution has already started, then the
+   * {@code mayInterruptIfRunning} parameter determines whether the thread executing this task should be interrupted in
+   * an attempt to stop the execution.
+   *
+   * <p>
+   * After this method returns, subsequent calls to {@link #isDone} will always return {@code true}. Subsequent calls to
+   * {@link #isCancelled} will always return {@code true} if this method returned {@code true}.
+   *
+   * @param mayInterruptIfRunning {@code true} if the thread executing this execution should be interrupted; otherwise,
+   *          in-progress executions are allowed to complete
+   * @return {@code false} if the execution could not be cancelled, typically because it has already completed normally;
+   *         {@code true} otherwise
+   */
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
     boolean result = delegate.cancel(mayInterruptIfRunning);
@@ -44,6 +61,14 @@ public class FailsafeFuture<T> implements Future<T> {
     return result;
   }
 
+  /**
+   * Waits if necessary for the execution to complete, and then returns its result.
+   *
+   * @return the execution result
+   * @throws CancellationException if the execution was cancelled
+   * @throws ExecutionException if the execution threw an exception
+   * @throws InterruptedException if the current thread was interrupted while waiting
+   */
   @Override
   public T get() throws InterruptedException, ExecutionException {
     circuit.await();
@@ -53,6 +78,16 @@ public class FailsafeFuture<T> implements Future<T> {
   }
 
   /**
+   * Waits if necessary for at most the given time for the execution to complete, and then returns its result, if
+   * available.
+   *
+   * @param timeout the maximum time to wait
+   * @param unit the time unit of the timeout argument
+   * @return the execution result
+   * @throws CancellationException if the execution was cancelled
+   * @throws ExecutionException if the execution threw an exception
+   * @throws InterruptedException if the current thread was interrupted while waiting
+   * @throws TimeoutException if the wait timed out
    * @throws NullPointerException if {@code unit} is null
    * @throws IllegalArgumentException if {@code timeout} is < 0
    */
@@ -66,11 +101,24 @@ public class FailsafeFuture<T> implements Future<T> {
     return result;
   }
 
+  /**
+   * Returns {@code true} if this execution was cancelled before it completed normally.
+   *
+   * @return {@code true} if this execution was cancelled before it completed
+   */
   @Override
   public boolean isCancelled() {
     return cancelled;
   }
 
+  /**
+   * Returns {@code true} if this execution completed.
+   *
+   * Completion may be due to normal termination, an exception, or cancellation -- in all of these cases, this method
+   * will return {@code true}.
+   *
+   * @return {@code true} if this execution completed
+   */
   @Override
   public boolean isDone() {
     return done;
