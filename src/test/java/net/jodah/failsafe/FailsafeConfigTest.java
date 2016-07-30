@@ -12,19 +12,22 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import net.jodah.concurrentunit.Waiter;
 
 @Test
-public class ListenerConfigTest {
+public class FailsafeConfigTest {
   private Service service = mock(Service.class);
-  ExecutorService executor = Executors.newFixedThreadPool(2);
+  ExecutorService executor;
 
   ListenerCounter abort;
   ListenerCounter complete;
@@ -80,6 +83,7 @@ public class ListenerConfigTest {
 
   @BeforeMethod
   void beforeMethod() {
+    executor = Executors.newFixedThreadPool(2);
     reset(service);
 
     abort = new ListenerCounter();
@@ -89,6 +93,12 @@ public class ListenerConfigTest {
     retriesExceeded = new ListenerCounter();
     retry = new ListenerCounter();
     success = new ListenerCounter();
+  }
+
+  @AfterMethod
+  void afterMethod() throws Throwable {
+    executor.shutdownNow();
+    executor.awaitTermination(5, TimeUnit.SECONDS);
   }
 
   <T> SyncFailsafe<T> registerListeners(SyncFailsafe<T> failsafe) {

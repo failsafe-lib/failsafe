@@ -9,16 +9,18 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import net.jodah.failsafe.ListenerConfigTest.ListenerCounter;
+import net.jodah.failsafe.FailsafeConfigTest.ListenerCounter;
 
 @Test
-public class AsyncListenerConfigTest {
+public class AsyncFailsafeConfigTest {
   Service service = mock(Service.class);
-  ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+  ScheduledExecutorService executor;
 
   ListenerCounter abort;
   ListenerCounter complete;
@@ -34,6 +36,7 @@ public class AsyncListenerConfigTest {
 
   @BeforeMethod
   void beforeMethod() {
+    executor = Executors.newScheduledThreadPool(2);
     reset(service);
 
     abort = new ListenerCounter();
@@ -43,6 +46,12 @@ public class AsyncListenerConfigTest {
     retriesExceeded = new ListenerCounter();
     retry = new ListenerCounter();
     success = new ListenerCounter();
+  }
+
+  @AfterMethod
+  void afterMethod() throws Throwable {
+    executor.shutdownNow();
+    executor.awaitTermination(5, TimeUnit.SECONDS);
   }
 
   <T> AsyncFailsafe<T> registerListeners(AsyncFailsafe<T> failsafe) {
