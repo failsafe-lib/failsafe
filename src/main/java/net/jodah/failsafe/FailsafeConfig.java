@@ -130,7 +130,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
    */
   public F onAbortAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    registry().abort().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -439,8 +439,9 @@ public class FailsafeConfig<R, F> {
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called
    */
+  @SuppressWarnings("rawtypes")
   public F withFallback(Callable<? extends R> fallback) {
-    return withFallback(Functions.fnOf((Callable<R>) Assert.notNull(fallback, "fallback")));
+    return (F) withFallback((CheckedBiFunction) Functions.fnOf((Callable<R>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -449,8 +450,10 @@ public class FailsafeConfig<R, F> {
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called
    */
+  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
-    return withFallback(Functions.fnOf((CheckedBiConsumer<R, Throwable>) Assert.notNull(fallback, "fallback")));
+    return (F) withFallback(
+        (CheckedBiFunction) Functions.fnOf((CheckedBiConsumer<R, Throwable>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -471,8 +474,10 @@ public class FailsafeConfig<R, F> {
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called
    */
+  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedConsumer<? extends Throwable> fallback) {
-    return withFallback(Functions.fnOf((CheckedConsumer<Throwable>) Assert.notNull(fallback, "fallback")));
+    return (F) withFallback(
+        (CheckedBiFunction) Functions.fnOf((CheckedConsumer<Throwable>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -481,8 +486,10 @@ public class FailsafeConfig<R, F> {
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called
    */
+  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedFunction<? extends Throwable, ? extends R> fallback) {
-    return withFallback(Functions.fnOf((CheckedFunction<Throwable, R>) Assert.notNull(fallback, "fallback")));
+    return (F) withFallback(
+        (CheckedBiFunction) Functions.fnOf((CheckedFunction<Throwable, R>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -491,8 +498,9 @@ public class FailsafeConfig<R, F> {
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called
    */
+  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedRunnable fallback) {
-    return withFallback(Functions.fnOf(Assert.notNull(fallback, "fallback")));
+    return (F) withFallback((CheckedBiFunction) Functions.fnOf(Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -501,8 +509,9 @@ public class FailsafeConfig<R, F> {
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called
    */
+  @SuppressWarnings("rawtypes")
   public F withFallback(R fallback) {
-    return withFallback(Functions.fnOf(Assert.notNull(fallback, "fallback")));
+    return (F) withFallback((CheckedBiFunction) Functions.fnOf(Assert.notNull(fallback, "fallback")));
   }
 
   void handleAbort(R result, Throwable failure, ExecutionContext context) {
