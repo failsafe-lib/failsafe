@@ -1,3 +1,9 @@
+# 0.9.2
+
+### New Features
+
+* Various fallback and listener API additions and improvements
+
 # 0.9.1
 
 ### New Features
