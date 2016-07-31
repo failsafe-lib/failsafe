@@ -452,7 +452,7 @@ See the [RxJava example][RxJava] for a more detailed implementation.
 * [Example Integrations](https://github.com/jhalterman/failsafe/wiki/Example-Integrations)
 * [3rd Party Tools](https://github.com/jhalterman/failsafe/wiki/3rd-Party-Tools)
 * [Comparisons](https://github.com/jhalterman/failsafe/wiki/Comparisons)
-* [Who's Using Failsafe](https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe)
+* [Who's Using Failsafe][whos-using]
 
 ## Library and API Integration
 
@@ -498,3 +498,5 @@ Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2
 [fail-fast]: https://en.wikipedia.org/wiki/Fail-fast
 [fowler-circuit-breaker]: http://martinfowler.com/bliki/CircuitBreaker.html
 [maven]: https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe
+
+[whos-using]: https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe
