@@ -245,7 +245,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Returns the max retries. Defaults to {@code 100}, which retries forever.
+   * Returns the max retries. Defaults to {@code -1}, which retries forever.
    * 
    * @see #withMaxRetries(int)
    */

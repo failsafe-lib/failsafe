@@ -216,10 +216,16 @@ breaker.
   .failIf((result, failure) -> result == 500 || failure instanceof NoRouteToHostException);
 ```
 
-And the breaker can be configured to recognize executions that exceed a certain [timeout] as failures:
+The breaker can be configured to recognize executions that exceed a certain [timeout] as failures:
 
 ```java
 breaker.withTimeout(10, TimeUnit.SECONDS);
+```
+
+And the breaker can restrict the max number of concurrent executions when in the half-open state:
+
+```java
+breaker.withMaxConcurrency(3);
 ```
 
 #### With Retries

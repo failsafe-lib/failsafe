@@ -41,6 +41,7 @@ public class CircuitBreaker {
   /** Indicates whether failures are checked by a configured failure condition */
   private boolean failuresChecked;
   private List<BiPredicate<Object, Throwable>> failureConditions;
+  private int maxConcurrency;
   CheckedRunnable onOpen;
   CheckedRunnable onHalfOpen;
   CheckedRunnable onClose;
@@ -49,6 +50,7 @@ public class CircuitBreaker {
    * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay by default.
    */
   public CircuitBreaker() {
+    maxConcurrency = -1;
     failureConditions = new ArrayList<BiPredicate<Object, Throwable>>();
     state.set(new ClosedState(this));
   }
@@ -66,7 +68,9 @@ public class CircuitBreaker {
   }
 
   /**
-   * Returns whether the circuit allows execution, possibly triggering a state transition.
+   * Returns whether the circuit allows execution, possibly triggering a state transition. Execution is not allowed when
+   * the circuit is in an open state, or when it is in a half open state and the max concurrent executions have been
+   * reached.
    */
   public boolean allowsExecution() {
     return state.get().allowsExecution(stats);
@@ -168,6 +172,16 @@ public class CircuitBreaker {
    */
   public Ratio getFailureThreshold() {
     return failureThreshold;
+  }
+
+  /**
+   * Returns the max concurrent executions that are allowed when the circuit is in a half-open state, else {@code -1} if
+   * no value has been set.
+   * 
+   * @see #withMaxConcurrency(int)
+   */
+  public int getMaxConcurrency() {
+    return maxConcurrency;
   }
 
   /**
@@ -393,6 +407,18 @@ public class CircuitBreaker {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(timeout > 0, "timeout must be greater than 0");
     this.timeout = new Duration(timeout, timeUnit);
+    return this;
+  }
+
+  /**
+   * Sets the {@code maxConcurrency} for executions when in the half-open state. This represents the max number of
+   * executions that may occur concurrently through the circuit when in the half-open state.
+   * 
+   * @throws IllegalArgumentException if {@code maxConcurrency} < 1
+   */
+  public CircuitBreaker withMaxConcurrency(int maxConcurrency) {
+    Assert.isTrue(maxConcurrency >= 1, "maxConcurrency must be greater than or equal to 1");
+    this.maxConcurrency = maxConcurrency;
     return this;
   }
 

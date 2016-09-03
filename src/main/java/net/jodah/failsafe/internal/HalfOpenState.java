@@ -90,6 +90,8 @@ public class HalfOpenState extends CircuitState {
    * Returns the max allowed concurrent executions.
    */
   int maxConcurrentExecutions() {
+    if (circuit.getMaxConcurrency() != -1)
+      return circuit.getMaxConcurrency();
     if (circuit.getSuccessThreshold() != null)
       return circuit.getSuccessThreshold().denominator;
     else if (circuit.getFailureThreshold() != null)

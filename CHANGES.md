@@ -1,3 +1,13 @@
+# 0.9.3
+
+### New Features
+
+* Added `CircuitBreaker.withMaxConcurrency(int)`.
+
+### API Changes
+
+* `CircuitBreakerOpenException` now extends `FailsafeException`.
+
 # 0.9.2
 
 ### New Features

@@ -5,6 +5,6 @@ package net.jodah.failsafe;
  * 
  * @author Jonathan Halterman
  */
-public class CircuitBreakerOpenException extends RuntimeException {
+public class CircuitBreakerOpenException extends FailsafeException {
   private static final long serialVersionUID = 1L;
 }
