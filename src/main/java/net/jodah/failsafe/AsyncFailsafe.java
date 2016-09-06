@@ -37,11 +37,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   public <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable) {
-    FailsafeFuture<T> future = new FailsafeFuture<T>();
-    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
-    future.setCompletableFuture(response);
-    call(Functions.asyncOfFuture(callable), future);
-    return response;
+    return call(Functions.asyncOfFuture(callable));
   }
 
   /**
@@ -55,11 +51,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   public <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
-    FailsafeFuture<T> future = new FailsafeFuture<T>();
-    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
-    future.setCompletableFuture(response);
-    call(Functions.asyncOfFuture(callable), future);
-    return response;
+    return call(Functions.asyncOfFuture(callable));
   }
 
   /**
@@ -74,11 +66,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   public <T> java.util.concurrent.CompletableFuture<T> futureAsync(
       AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
-    FailsafeFuture<T> future = new FailsafeFuture<T>();
-    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
-    future.setCompletableFuture(response);
-    call(Functions.asyncOfFuture(callable), future);
-    return response;
+    return call(Functions.asyncOfFuture(callable));
   }
 
   /**
@@ -150,8 +138,23 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
   }
 
   /**
-   * Calls the asynchronous {@code callable} via the {@code executor}, performing retries according to the
-   * {@code retryPolicy}.
+   * Calls the asynchronous {@code callable} via the configured Scheduler, performing retries according to the
+   * configured RetryPolicy, and returns a CompletableFuture.
+   * 
+   * @throws NullPointerException if any argument is null
+   * @throws CircuitBreakerOpenException if a configured circuit breaker is open
+   */
+  private <T> java.util.concurrent.CompletableFuture<T> call(AsyncCallableWrapper<T> callable) {
+    FailsafeFuture<T> future = new FailsafeFuture<T>();
+    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
+    future.setCompletableFuture(response);
+    call(callable, future);
+    return response;
+  }
+
+  /**
+   * Calls the asynchronous {@code callable} via the configured Scheduler, performing retries according to the
+   * configured RetryPolicy.
    * 
    * @throws NullPointerException if any argument is null
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
