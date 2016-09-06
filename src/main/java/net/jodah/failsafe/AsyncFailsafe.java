@@ -37,8 +37,10 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   public <T> java.util.concurrent.CompletableFuture<T> future(
       Callable<java.util.concurrent.CompletableFuture<T>> callable) {
-    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Functions.asyncOfFuture(callable), new FailsafeFuture<T>(response));
+    FailsafeFuture<T> future = new FailsafeFuture<T>();
+    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
+    future.setCompletableFuture(response);
+    call(Functions.asyncOfFuture(callable), future);
     return response;
   }
 
@@ -53,8 +55,10 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   public <T> java.util.concurrent.CompletableFuture<T> future(
       ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
-    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Functions.asyncOfFuture(callable), new FailsafeFuture<T>(response));
+    FailsafeFuture<T> future = new FailsafeFuture<T>();
+    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
+    future.setCompletableFuture(response);
+    call(Functions.asyncOfFuture(callable), future);
     return response;
   }
 
@@ -70,8 +74,10 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   public <T> java.util.concurrent.CompletableFuture<T> futureAsync(
       AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
-    java.util.concurrent.CompletableFuture<T> response = new java.util.concurrent.CompletableFuture<T>();
-    call(Functions.asyncOfFuture(callable), new FailsafeFuture<T>(response));
+    FailsafeFuture<T> future = new FailsafeFuture<T>();
+    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
+    future.setCompletableFuture(response);
+    call(Functions.asyncOfFuture(callable), future);
     return response;
   }
 

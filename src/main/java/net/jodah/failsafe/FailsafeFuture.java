@@ -18,7 +18,7 @@ import net.jodah.failsafe.internal.util.ReentrantCircuit;
  */
 public class FailsafeFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
-  private final java.util.concurrent.CompletableFuture<T> completableFuture;
+  private java.util.concurrent.CompletableFuture<T> completableFuture;
 
   // Mutable state
   private volatile Future<T> delegate;
@@ -28,12 +28,6 @@ public class FailsafeFuture<T> implements Future<T> {
   private volatile Throwable failure;
 
   FailsafeFuture() {
-    this.completableFuture = null;
-    circuit.open();
-  }
-
-  FailsafeFuture(java.util.concurrent.CompletableFuture<T> future) {
-    this.completableFuture = future;
     circuit.open();
   }
 
@@ -140,6 +134,10 @@ public class FailsafeFuture<T> implements Future<T> {
     if (completableFuture != null)
       completeFuture();
     circuit.close();
+  }
+
+  void setCompletableFuture(java.util.concurrent.CompletableFuture<T> future) {
+    completableFuture = future;
   }
 
   void setFuture(Future<T> delegate) {

@@ -1,6 +1,7 @@
 package net.jodah.failsafe;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 
@@ -259,6 +260,16 @@ final class Functions {
       public T call() throws Exception {
         runnable.run(context);
         return null;
+      }
+    };
+  }
+
+  static <T> CompletableFuture<T> cancellableFutureOf(final FailsafeFuture<T> future) {
+    return new CompletableFuture<T>() {
+      @Override
+      public boolean cancel(boolean mayInterruptIfRunning) {
+        future.cancel(mayInterruptIfRunning);
+        return super.cancel(mayInterruptIfRunning);
       }
     };
   }
