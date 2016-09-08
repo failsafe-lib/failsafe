@@ -118,11 +118,12 @@ public class FailsafeFuture<T> implements Future<T> {
     return done;
   }
 
-  synchronized void complete(T result, Throwable failure, CheckedBiFunction<T, Throwable, T> fallback) {
+  synchronized void complete(T result, Throwable failure, CheckedBiFunction<T, Throwable, T> fallback,
+      boolean success) {
     if (fallback == null) {
       this.result = result;
       this.failure = failure;
-    } else {
+    } else if (!success) {
       try {
         this.result = fallback.apply(result, failure);
       } catch (Throwable fallbackFailure) {

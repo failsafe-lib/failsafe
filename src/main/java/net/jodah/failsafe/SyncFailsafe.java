@@ -134,7 +134,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
 
       // Attempt to complete execution
       if (execution.complete(result, failure, true)) {
-        if (execution.success || failure == null)
+        if (execution.success || (failure == null && fallback == null))
           return result;
         if (fallback != null)
           return fallbackFor((R) result, failure);

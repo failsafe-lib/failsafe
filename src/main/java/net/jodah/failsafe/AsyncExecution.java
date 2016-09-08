@@ -117,7 +117,7 @@ public final class AsyncExecution extends AbstractExecution {
       Exception failure = new CircuitBreakerOpenException();
       if (config != null)
         config.handleComplete(null, failure, this, false);
-      future.complete(null, failure, config.fallback);
+      future.complete(null, failure, config.fallback, false);
       return;
     }
 
@@ -138,7 +138,7 @@ public final class AsyncExecution extends AbstractExecution {
   synchronized boolean complete(Object result, Throwable failure, boolean checkArgs) {
     if (!completeCalled) {
       if (super.complete(result, failure, checkArgs))
-        future.complete(result, failure, config.fallback);
+        future.complete(result, failure, config.fallback, success);
       completeCalled = true;
     }
 
@@ -160,7 +160,7 @@ public final class AsyncExecution extends AbstractExecution {
         failure = t;
         if (config != null)
           config.handleComplete(null, t, this, false);
-        future.complete(null, failure, config.fallback);
+        future.complete(null, failure, config.fallback, false);
       }
     }
 

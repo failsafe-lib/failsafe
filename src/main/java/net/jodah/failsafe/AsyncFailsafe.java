@@ -168,7 +168,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
       CircuitBreakerOpenException e = new CircuitBreakerOpenException();
       if (fallback == null)
         throw e;
-      future.complete(null, e, (CheckedBiFunction<T, Throwable, T>) fallback);
+      future.complete(null, e, (CheckedBiFunction<T, Throwable, T>) fallback, false);
       return future;
     }
 
@@ -179,7 +179,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
       future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     } catch (Throwable t) {
       handleComplete(null, t, execution, false);
-      future.complete(null, t, (CheckedBiFunction<T, Throwable, T>) fallback);
+      future.complete(null, t, (CheckedBiFunction<T, Throwable, T>) fallback, false);
     }
 
     return future;
