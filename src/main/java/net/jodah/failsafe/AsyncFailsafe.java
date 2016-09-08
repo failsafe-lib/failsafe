@@ -144,10 +144,11 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * @throws NullPointerException if any argument is null
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
+  @SuppressWarnings("unchecked")
   private <T> java.util.concurrent.CompletableFuture<T> call(AsyncCallableWrapper<T> callable) {
-    FailsafeFuture<T> future = new FailsafeFuture<T>();
+    FailsafeFuture<T> future = new FailsafeFuture<T>((FailsafeConfig<T, ?>) this);
     java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
-    future.setCompletableFuture(response);
+    future.inject(response);
     call(callable, future);
     return response;
   }
@@ -162,7 +163,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
   @SuppressWarnings("unchecked")
   private <T> FailsafeFuture<T> call(AsyncCallableWrapper<T> callable, FailsafeFuture<T> future) {
     if (future == null)
-      future = new FailsafeFuture<T>();
+      future = new FailsafeFuture<T>((FailsafeConfig<T, ?>) this);
 
     if (circuitBreaker != null && !circuitBreaker.allowsExecution()) {
       CircuitBreakerOpenException e = new CircuitBreakerOpenException();
@@ -174,9 +175,10 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
 
     AsyncExecution execution = new AsyncExecution(callable, scheduler, future, (FailsafeConfig<Object, ?>) this);
     callable.inject(execution);
+    future.inject(execution);
 
     try {
-      future.setFuture((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
+      future.inject((Future<T>) scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS));
     } catch (Throwable t) {
       handleComplete(null, t, execution, false);
       future.complete(null, t, (CheckedBiFunction<T, Throwable, T>) fallback, false);

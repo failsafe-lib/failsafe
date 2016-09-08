@@ -156,8 +156,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
     try {
       return (T) fallback.apply(result, failure);
     } catch (Exception e) {
-      throw e instanceof CircuitBreakerOpenException ? (CircuitBreakerOpenException) e
-          : e instanceof FailsafeException ? (FailsafeException) e : new FailsafeException(e);
+      throw e instanceof FailsafeException ? (FailsafeException) e : new FailsafeException(e);
     }
   }
 }

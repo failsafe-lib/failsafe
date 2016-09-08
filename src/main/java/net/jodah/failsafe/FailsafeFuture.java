@@ -18,6 +18,8 @@ import net.jodah.failsafe.internal.util.ReentrantCircuit;
  */
 public class FailsafeFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
+  private final FailsafeConfig<T, ?> config;
+  private ExecutionContext execution;
   private java.util.concurrent.CompletableFuture<T> completableFuture;
 
   // Mutable state
@@ -27,7 +29,8 @@ public class FailsafeFuture<T> implements Future<T> {
   private volatile T result;
   private volatile Throwable failure;
 
-  FailsafeFuture() {
+  FailsafeFuture(FailsafeConfig<T, ?> config) {
+    this.config = config;
     circuit.open();
   }
 
@@ -49,10 +52,15 @@ public class FailsafeFuture<T> implements Future<T> {
    */
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-    boolean result = delegate.cancel(mayInterruptIfRunning);
+    if (done)
+      return false;
+
+    boolean cancelResult = delegate.cancel(mayInterruptIfRunning);
+    failure = new CancellationException();
     cancelled = true;
-    circuit.close();
-    return result;
+    config.handleComplete(null, failure, execution, false);
+    complete(null, failure, config.fallback, false);
+    return cancelResult;
   }
 
   /**
@@ -66,8 +74,11 @@ public class FailsafeFuture<T> implements Future<T> {
   @Override
   public T get() throws InterruptedException, ExecutionException {
     circuit.await();
-    if (failure != null)
+    if (failure != null) {
+      if (failure instanceof CancellationException)
+        throw (CancellationException) failure;
       throw new ExecutionException(failure);
+    }
     return result;
   }
 
@@ -120,6 +131,9 @@ public class FailsafeFuture<T> implements Future<T> {
 
   synchronized void complete(T result, Throwable failure, CheckedBiFunction<T, Throwable, T> fallback,
       boolean success) {
+    if (done)
+      return;
+
     if (fallback == null) {
       this.result = result;
       this.failure = failure;
@@ -137,12 +151,16 @@ public class FailsafeFuture<T> implements Future<T> {
     circuit.close();
   }
 
-  void setCompletableFuture(java.util.concurrent.CompletableFuture<T> future) {
-    completableFuture = future;
+  void inject(java.util.concurrent.CompletableFuture<T> completableFuture) {
+    this.completableFuture = completableFuture;
   }
 
-  void setFuture(Future<T> delegate) {
+  void inject(Future<T> delegate) {
     this.delegate = delegate;
+  }
+
+  void inject(ExecutionContext execution) {
+    this.execution = execution;
   }
 
   private void completeFuture() {
