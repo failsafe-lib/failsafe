@@ -58,7 +58,7 @@ public class FailsafeFutureTest {
       waiter.resume();
     }).get(() -> "test");
 
-    waiter.await(1000);
+    waiter.await(5000);
     assertFalse(future.cancel(true));
     assertFalse(future.isCancelled());
     assertTrue(future.isDone());
