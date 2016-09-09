@@ -135,14 +135,16 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   @Override
-  synchronized boolean complete(Object result, Throwable failure, boolean checkArgs) {
-    if (!completeCalled) {
-      if (super.complete(result, failure, checkArgs))
-        future.complete(result, failure, config.fallback, success);
-      completeCalled = true;
-    }
+  boolean complete(Object result, Throwable failure, boolean checkArgs) {
+    synchronized (future) {
+      if (!completeCalled) {
+        if (super.complete(result, failure, checkArgs))
+          future.complete(result, failure, config.fallback, success);
+        completeCalled = true;
+      }
 
-    return completed;
+      return completed;
+    }
   }
 
   /**
@@ -151,19 +153,21 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  synchronized boolean completeOrRetry(Object result, Throwable failure) {
-    if (!complete(result, failure, true) && !future.isDone() && !future.isCancelled()) {
-      try {
-        future.inject((Future) scheduler.schedule(callable, delayNanos, TimeUnit.NANOSECONDS));
-        return true;
-      } catch (Throwable t) {
-        failure = t;
-        if (config != null)
-          config.handleComplete(null, t, this, false);
-        future.complete(null, failure, config.fallback, false);
+  boolean completeOrRetry(Object result, Throwable failure) {
+    synchronized (future) {
+      if (!complete(result, failure, true) && !future.isDone() && !future.isCancelled()) {
+        try {
+          future.inject((Future) scheduler.schedule(callable, delayNanos, TimeUnit.NANOSECONDS));
+          return true;
+        } catch (Throwable t) {
+          failure = t;
+          if (config != null)
+            config.handleComplete(null, t, this, false);
+          future.complete(null, failure, config.fallback, false);
+        }
       }
-    }
 
-    return false;
+      return false;
+    }
   }
 }
