@@ -3,15 +3,16 @@
 ### New Features
 
 * Added OSGi support.
+* `FailsafeFutuer.cancel` calls completion handlers. `.get` after cancel throws `CancellationException`.
 
 ### Bug Fixes
 
 * Fixed #52 - FailsafeFuture.cancel not working as expected.
 * Fixed #55 - Fallback always called for asynchronous executions.
 
-### Enhancements
+### API Changes
 
-* `FailsafeFutuer.cancel` calls completion handlers. `.get` after cancel throws `CancellationException`.
+* `CircuitBreakerOpenException` now extends `FailsafeException`.
 
 # 0.9.2
 
