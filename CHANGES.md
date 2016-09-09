@@ -1,3 +1,18 @@
+# 0.9.3
+
+### New Features
+
+* Added OSGi support.
+
+### Bug Fixes
+
+* Fixed #52 - FailsafeFuture.cancel not working as expected.
+* Fixed #55 - Fallback always called for asynchronous executions.
+
+### Enhancements
+
+* `FailsafeFutuer.cancel` calls completion handlers. `.get` after cancel throws `CancellationException`.
+
 # 0.9.2
 
 ### New Features
