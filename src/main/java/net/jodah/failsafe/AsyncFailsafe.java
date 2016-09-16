@@ -147,7 +147,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
   @SuppressWarnings("unchecked")
   private <T> java.util.concurrent.CompletableFuture<T> call(AsyncCallableWrapper<T> callable) {
     FailsafeFuture<T> future = new FailsafeFuture<T>((FailsafeConfig<T, ?>) this);
-    java.util.concurrent.CompletableFuture<T> response = Functions.cancellableFutureOf(future);
+    java.util.concurrent.CompletableFuture<T> response = new net.jodah.failsafe.internal.util.CancellableFuture<T>(future);
     future.inject(response);
     call(callable, future);
     return response;
