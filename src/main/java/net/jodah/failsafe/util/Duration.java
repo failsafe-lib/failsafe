@@ -1,6 +1,9 @@
 package net.jodah.failsafe.util;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * Duration, consisting of length of a time unit.
@@ -14,6 +17,23 @@ public class Duration {
   public Duration(long length, TimeUnit timeUnit) {
     this.length = length;
     this.timeUnit = timeUnit;
+  }
+
+  @Override public boolean equals(Object o)
+  {
+    return this == o 
+        || Duration.class.isInstance(o)
+           && toNanos() == Duration.class.cast(o).toNanos();
+  }
+
+  @Override public int hashCode()
+  {
+    return Arrays.hashCode(new Object[] {toNanos(), NANOSECONDS});
+  }
+
+  @Override public String toString()
+  {
+    return "Duration{" + "length=" + length + ", timeUnit=" + timeUnit + '}';
   }
 
   /**
