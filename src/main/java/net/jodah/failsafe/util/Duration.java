@@ -1,5 +1,6 @@
 package net.jodah.failsafe.util;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,6 +15,23 @@ public class Duration {
   public Duration(long length, TimeUnit timeUnit) {
     this.length = length;
     this.timeUnit = timeUnit;
+  }
+
+  @Override public boolean equals(Object o)
+  {
+    return this == o 
+        || Duration.class.isInstance(o)
+           && toNanos() == Duration.class.cast(o).toNanos();
+  }
+
+  @Override public int hashCode()
+  {
+    return Objects.hash(toNanos(), TimeUnit.NANOSECONDS);
+  }
+    
+  @Override public String toString()
+  {
+    return "Duration{" + "length=" + length + ", timeUnit=" + timeUnit + '}';
   }
 
   /**
