@@ -1,3 +1,10 @@
+# 0.9.4
+
+### Bug Fixes
+
+* Fixed #63 - Proper handling of thread interrupts during synchronous execution delays.
+* Fixed #54 - Added hashCode and equals implementations to Duration.
+
 # 0.9.3
 
 ### New Features
