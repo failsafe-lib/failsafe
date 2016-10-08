@@ -129,6 +129,9 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
         failure = null;
         result = callable.call();
       } catch (Throwable t) {
+        // Re-throw nested execution interruptions
+        if (t instanceof FailsafeException && InterruptedException.class.isInstance(t.getCause()))
+          throw (FailsafeException) t;
         failure = t;
       }
 
