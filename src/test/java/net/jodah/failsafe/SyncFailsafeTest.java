@@ -182,6 +182,8 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     } catch (Exception e) {
       assertTrue(e instanceof FailsafeException);
       assertTrue(e.getCause() instanceof InterruptedException);
+      // Clear interrupt flag
+      Thread.interrupted();
     }
   }
 
