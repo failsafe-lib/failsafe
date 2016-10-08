@@ -143,6 +143,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
         try {
           Thread.sleep(execution.getWaitTime().toMillis());
         } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
           throw new FailsafeException(e);
         }
 
