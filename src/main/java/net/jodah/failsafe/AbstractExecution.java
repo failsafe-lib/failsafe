@@ -111,7 +111,7 @@ abstract class AbstractExecution extends ExecutionContext {
         waitNanos = 0;
     }
 
-    boolean maxRetriesExceeded = retryPolicy.getMaxRetries() != -1 && executions > retryPolicy.getMaxRetries();
+    boolean maxRetriesExceeded = retryPolicy.getMaxRetries() != -1 && executions >= retryPolicy.getMaxRetries();
     boolean maxDurationExceeded = retryPolicy.getMaxDuration() != null
         && elapsedNanos > retryPolicy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
