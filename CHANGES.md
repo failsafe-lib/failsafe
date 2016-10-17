@@ -1,3 +1,9 @@
+# 0.9.5
+
+### Bug Fixes
+
+* Fixed #59 - Classloading issue on Java 6/7.
+
 # 0.9.4
 
 ### Bug Fixes
