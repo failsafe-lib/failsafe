@@ -1,9 +1,7 @@
 package net.jodah.failsafe;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
-import java.util.function.BiConsumer;
 
 import net.jodah.failsafe.function.AsyncCallable;
 import net.jodah.failsafe.function.AsyncRunnable;
@@ -155,7 +153,7 @@ final class Functions {
         try {
           execution.before();
           asyncFutureLock.acquire();
-          callable.call(execution).whenComplete(new BiConsumer<T, Throwable>() {
+          callable.call(execution).whenComplete(new java.util.function.BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
               try {
@@ -187,7 +185,7 @@ final class Functions {
       public T call() throws Exception {
         try {
           execution.before();
-          callable.call().whenComplete(new BiConsumer<T, Throwable>() {
+          callable.call().whenComplete(new java.util.function.BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
               // Unwrap CompletionException cause
@@ -213,7 +211,7 @@ final class Functions {
       public T call() throws Exception {
         try {
           execution.before();
-          callable.call(execution).whenComplete(new BiConsumer<T, Throwable>() {
+          callable.call(execution).whenComplete(new java.util.function.BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
               // Unwrap CompletionException cause
@@ -260,16 +258,6 @@ final class Functions {
       public T call() throws Exception {
         runnable.run(context);
         return null;
-      }
-    };
-  }
-
-  static <T> CompletableFuture<T> cancellableFutureOf(final FailsafeFuture<T> future) {
-    return new CompletableFuture<T>() {
-      @Override
-      public boolean cancel(boolean mayInterruptIfRunning) {
-        future.cancel(mayInterruptIfRunning);
-        return super.cancel(mayInterruptIfRunning);
       }
     };
   }
