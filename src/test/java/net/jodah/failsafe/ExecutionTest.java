@@ -213,7 +213,7 @@ public class ExecutionTest {
     Execution exec = new Execution(new RetryPolicy().withMaxDuration(100, TimeUnit.MILLISECONDS));
     assertTrue(exec.canRetryOn(e));
     assertTrue(exec.canRetryOn(e));
-    Thread.sleep(100);
+    Thread.sleep(105);
     assertFalse(exec.canRetryOn(e));
     assertTrue(exec.isComplete());
   }
