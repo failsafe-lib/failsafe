@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.BeforeMethod;
@@ -44,10 +45,10 @@ import net.jodah.failsafe.function.ContextualRunnable;
 public class SyncFailsafeTest extends AbstractFailsafeTest {
   // Results from a synchronous Failsafe call
   private @SuppressWarnings("unchecked") Class<? extends Throwable>[] syncThrowables = new Class[] {
-      FailsafeException.class, ConnectException.class };
+      ConnectException.class };
   // Results from a get against a future that wraps a synchronous Failsafe call
   private @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureSyncThrowables = new Class[] {
-      ExecutionException.class, FailsafeException.class, ConnectException.class };
+      ExecutionException.class, ConnectException.class };
 
   @BeforeMethod
   protected void beforeMethod() {
@@ -78,7 +79,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     // When / Then
     assertThrows(() -> {
       run(Failsafe.with(retryTwice), runnable);
-    } , syncThrowables);
+    }, syncThrowables);
     verify(service, times(3)).connect();
   }
 
@@ -158,8 +159,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(ConnectException.class);
 
     // When / Then
-    assertThrows(() -> Failsafe.with(retryPolicy).get(() -> service.connect()), FailsafeException.class,
-        IllegalStateException.class);
+    assertThrows(() -> Failsafe.with(retryPolicy).get(() -> service.connect()), IllegalStateException.class);
     verify(service, times(3)).connect();
   }
 
@@ -249,6 +249,12 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
       return service.connect();
     }), Boolean.FALSE);
     verify(service).connect();
+  }
+
+  public void shouldWrapCheckedExceptions() throws Throwable {
+    assertThrows(() -> Failsafe.with(new RetryPolicy().withMaxRetries(1)).run(() -> {
+      throw new TimeoutException();
+    }), FailsafeException.class, TimeoutException.class);
   }
 
   private void run(SyncFailsafe<?> failsafe, Object runnable) {

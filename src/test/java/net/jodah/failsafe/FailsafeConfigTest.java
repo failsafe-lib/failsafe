@@ -205,7 +205,7 @@ public class FailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(IllegalStateException.class).withMaxRetries(10);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable), FailsafeException.class,
+    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
         IllegalArgumentException.class);
 
     // Then
@@ -230,7 +230,7 @@ public class FailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable), FailsafeException.class,
+    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
         IllegalStateException.class);
 
     // Then
@@ -256,7 +256,7 @@ public class FailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable), FailsafeException.class,
+    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
         IllegalArgumentException.class);
 
     // Then

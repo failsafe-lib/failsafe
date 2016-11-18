@@ -1,3 +1,9 @@
+# 1.0.0
+
+### API Changes
+
+* Failsafe will now only throw `FailsafeException` when an execution fails with a checked `Exception`. See [issue #66](https://github.com/jhalterman/failsafe/issues/66) for details.
+
 # 0.9.5
 
 ### Bug Fixes
