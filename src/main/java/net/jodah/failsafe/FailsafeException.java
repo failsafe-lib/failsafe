@@ -24,10 +24,10 @@ package net.jodah.failsafe;
 public class FailsafeException extends RuntimeException {
   private static final long serialVersionUID = 1L;
 
-  FailsafeException() {
+  public FailsafeException() {
   }
 
-  FailsafeException(Throwable t) {
+  public FailsafeException(Throwable t) {
     super(t);
   }
 }
