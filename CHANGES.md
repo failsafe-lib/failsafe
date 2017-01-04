@@ -1,3 +1,9 @@
+# 1.0.1
+
+### Changes
+
+* `FailsafeException` now has public constructors, for easier mocking and testing.
+
 # 1.0.0
 
 ### API Changes
