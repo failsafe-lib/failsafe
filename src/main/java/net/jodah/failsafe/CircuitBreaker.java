@@ -351,7 +351,7 @@ public class CircuitBreaker {
   /**
    * Sets the ratio of successive failures that must occur when in a closed state in order to open the circuit. For
    * example: 5, 10 would open the circuit if 5 out of the last 10 executions result in a failure. The circuit will not
-   * be opened until at least {@code executions} executions have taken place.
+   * be opened until at least the given number of {@code executions} have taken place.
    * 
    * @param failures The number of failures that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code failures} against
@@ -381,7 +381,7 @@ public class CircuitBreaker {
   /**
    * Sets the ratio of successive successful executions that must occur when in a half-open state in order to close the
    * circuit. For example: 5, 10 would close the circuit if 5 out of the last 10 executions were successful. The circuit
-   * will not be closed until at least {@code executions} executions have taken place.
+   * will not be closed until at least the given number of {@code executions} have taken place.
    * 
    * @param successes The number of successful executions that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code successes} against
