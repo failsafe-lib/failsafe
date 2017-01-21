@@ -149,10 +149,10 @@ public class FailsafeFuture<T> implements Future<T> {
     if (done)
       return;
 
-    if (fallback == null) {
+    if (success || fallback == null) {
       this.result = result;
       this.failure = failure;
-    } else if (!success) {
+    } else {
       try {
         this.result = fallback.apply(result, failure);
       } catch (Throwable fallbackFailure) {
