@@ -1,3 +1,9 @@
+# 1.0.2
+
+### Bug Fixes
+
+* Fixed #75 - Incorrect future completion when a fallback is present.
+
 # 1.0.1
 
 ### Changes
