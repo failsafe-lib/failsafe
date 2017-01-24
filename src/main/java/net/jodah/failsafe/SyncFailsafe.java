@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License
+ */
 package net.jodah.failsafe;
 
 import java.util.concurrent.Callable;
@@ -33,8 +48,8 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
    * exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
-   * @throws FailsafeException if the {@code callable} fails with a Throwable and the retry policy is exceeded, or if
-   *           interrupted while waiting to perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
+   *           perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public <T> T get(Callable<T> callable) {
@@ -46,8 +61,8 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
    * exceeded.
    * 
    * @throws NullPointerException if the {@code callable} is null
-   * @throws FailsafeException if the {@code callable} fails with a Throwable and the retry policy is exceeded, or if
-   *           interrupted while waiting to perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
+   *           perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public <T> T get(ContextualCallable<T> callable) {
@@ -58,8 +73,8 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code callable} fails with a Throwable and the retry policy is exceeded, or if
-   *           interrupted while waiting to perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
+   *           perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(CheckedRunnable runnable) {
@@ -70,8 +85,8 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    * 
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code callable} fails with a Throwable and the retry policy is exceeded, or if
-   *           interrupted while waiting to perform a retry.
+   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or if interrupted while waiting to
+   *           perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(ContextualRunnable runnable) {
@@ -101,8 +116,8 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
   /**
    * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
    * 
-   * @throws FailsafeException if the {@code callable} fails with a Throwable and the retry policy is exceeded or if
-   *           interrupted while waiting to perform a retry
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
+   *           perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   @SuppressWarnings("unchecked")
@@ -129,6 +144,9 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
         failure = null;
         result = callable.call();
       } catch (Throwable t) {
+        // Re-throw nested execution interruptions
+        if (t instanceof FailsafeException && InterruptedException.class.isInstance(t.getCause()))
+          throw (FailsafeException) t;
         failure = t;
       }
 
@@ -138,11 +156,12 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
           return result;
         if (fallback != null)
           return fallbackFor((R) result, failure);
-        throw failure instanceof FailsafeException ? (FailsafeException) failure : new FailsafeException(failure);
+        throw failure instanceof RuntimeException ? (RuntimeException) failure : new FailsafeException(failure);
       } else {
         try {
           Thread.sleep(execution.getWaitTime().toMillis());
         } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
           throw new FailsafeException(e);
         }
 
@@ -156,7 +175,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
     try {
       return (T) fallback.apply(result, failure);
     } catch (Exception e) {
-      throw e instanceof FailsafeException ? (FailsafeException) e : new FailsafeException(e);
+      throw e instanceof RuntimeException ? (RuntimeException) e : new FailsafeException(e);
     }
   }
 }

@@ -1,3 +1,34 @@
+# 1.0.2
+
+### Bug Fixes
+
+* Fixed #75 - Incorrect future completion when a fallback is present.
+
+# 1.0.1
+
+### Changes
+
+* `FailsafeException` now has public constructors, for easier mocking and testing.
+
+# 1.0.0
+
+### API Changes
+
+* Failsafe will now only throw `FailsafeException` when an execution fails with a checked `Exception`. See [issue #66](https://github.com/jhalterman/failsafe/issues/66) for details.
+
+# 0.9.5
+
+### Bug Fixes
+
+* Fixed #59 - Classloading issue on Java 6/7.
+
+# 0.9.4
+
+### Bug Fixes
+
+* Fixed #63 - Proper handling of thread interrupts during synchronous execution delays.
+* Fixed #54 - Added hashCode and equals implementations to Duration.
+
 # 0.9.3
 
 ### New Features
