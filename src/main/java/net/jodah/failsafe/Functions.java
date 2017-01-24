@@ -60,7 +60,7 @@ final class Functions {
           execution.before();
           T result = callable.call(execution);
           return result;
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
           return null;
         }
@@ -76,7 +76,7 @@ final class Functions {
         try {
           execution.before();
           runnable.run(execution);
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
         }
 
@@ -95,7 +95,7 @@ final class Functions {
           T result = callable.call();
           execution.completeOrRetry(result, null);
           return result;
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
           return null;
         }
@@ -112,7 +112,7 @@ final class Functions {
           execution.before();
           runnable.run();
           execution.completeOrRetry(null, null);
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
         }
 
@@ -131,7 +131,7 @@ final class Functions {
           T result = callable.call(execution);
           execution.completeOrRetry(result, null);
           return result;
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
           return null;
         }
@@ -148,7 +148,7 @@ final class Functions {
           execution.before();
           runnable.run(execution);
           execution.completeOrRetry(null, null);
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
         }
 
@@ -180,7 +180,7 @@ final class Functions {
               }
             }
           });
-        } catch (Exception e) {
+        } catch (Throwable e) {
           try {
             execution.completeOrRetry(null, e);
           } finally {
@@ -209,7 +209,7 @@ final class Functions {
               execution.completeOrRetry(innerResult, failure);
             }
           });
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
         }
 
@@ -235,7 +235,7 @@ final class Functions {
               execution.completeOrRetry(innerResult, failure);
             }
           });
-        } catch (Exception e) {
+        } catch (Throwable e) {
           execution.completeOrRetry(null, e);
         }
 
