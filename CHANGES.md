@@ -1,3 +1,9 @@
+# 1.0.3
+
+### Bug Fixes
+
+* Fixed #76 - Make sure AsyncExecution.completeOrRetry is called when Error is thrown.
+
 # 1.0.2
 
 ### Bug Fixes
