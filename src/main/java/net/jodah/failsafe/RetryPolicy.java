@@ -101,6 +101,17 @@ public class RetryPolicy {
   }
 
   /**
+   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failure} will be result
+   * in retries being aborted.
+   * 
+   * @throws NullPointerException if {@code failure} is null
+   */
+  public RetryPolicy abortOn(Class<? extends Throwable> failure) {
+    Assert.notNull(failure, "failure");
+    return abortOn(Arrays.asList(failure));
+  }
+  
+  /**
    * Specifies when retries should be aborted. Any failure that is assignable from the {@code failures} will be result
    * in retries being aborted.
    * 
@@ -294,6 +305,16 @@ public class RetryPolicy {
     return this;
   }
 
+  /**
+   * Specifies the failure to retry on. Any failure that is assignable from the {@code failure} will be retried.
+   * 
+   * @throws NullPointerException if {@code failure} is null
+   */
+  public RetryPolicy retryOn(Class<? extends Throwable> failure) {
+    Assert.notNull(failure, "failure");
+    return retryOn(Arrays.asList(failure));
+  }
+  
   /**
    * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
    * 

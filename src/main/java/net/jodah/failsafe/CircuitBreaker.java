@@ -119,6 +119,16 @@ public class CircuitBreaker {
   }
 
   /**
+   * Specifies the type to fail on. Applies to any type that is assignable from the {@code failure}.
+   * 
+   * @throws NullPointerException if {@code failure} is null
+   */
+  public CircuitBreaker failOn(Class<? extends Throwable> failure) {
+    Assert.notNull(failure, "failure");
+    return failOn(Arrays.asList(failure));
+  }
+  
+  /**
    * Specifies the types to fail on. Applies to any type that is assignable from the {@code failures}.
    * 
    * @throws NullPointerException if {@code failures} is null
