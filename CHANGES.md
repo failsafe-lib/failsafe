@@ -1,3 +1,9 @@
+# 1.0.4
+
+### Improvements
+
+* Issue #81 - Added single argument failure configuration to avoid varargs related warnings.
+
 # 1.0.3
 
 ### Bug Fixes
