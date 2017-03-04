@@ -274,22 +274,25 @@ public class CircuitBreaker {
   /**
    * Calls the {@code runnable} when the circuit is closed.
    */
-  public void onClose(CheckedRunnable runnable) {
+  public CircuitBreaker onClose(CheckedRunnable runnable) {
     onClose = runnable;
+    return this;
   }
 
   /**
    * Calls the {@code runnable} when the circuit is half-opened.
    */
-  public void onHalfOpen(CheckedRunnable runnable) {
+  public CircuitBreaker onHalfOpen(CheckedRunnable runnable) {
     onHalfOpen = runnable;
+    return this;
   }
 
   /**
    * Calls the {@code runnable} when the circuit is opened.
    */
-  public void onOpen(CheckedRunnable runnable) {
+  public CircuitBreaker onOpen(CheckedRunnable runnable) {
     onOpen = runnable;
+    return this;
   }
 
   /**
