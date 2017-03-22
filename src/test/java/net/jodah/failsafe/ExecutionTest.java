@@ -93,7 +93,6 @@ public class ExecutionTest {
     assertTrue(exec.isComplete());
   }
 
-  @SuppressWarnings("unchecked")
   public void testCanRetryOn() {
     // Given retry on IllegalArgumentException
     Execution exec = new Execution(new RetryPolicy().retryOn(IllegalArgumentException.class));

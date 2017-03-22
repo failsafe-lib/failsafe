@@ -30,7 +30,6 @@ import net.jodah.failsafe.RetryPolicy;
  * https://github.com/jhalterman/failsafe/issues/36
  */
 @Test
-@SuppressWarnings("unchecked")
 public class Issue36 {
   RetryPolicy retryPolicy = new RetryPolicy().retryIf((Boolean r) -> r == null || !r)
       .retryOn(Exception.class)

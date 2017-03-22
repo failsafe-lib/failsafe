@@ -195,7 +195,6 @@ public class FailsafeConfigTest {
   /**
    * Asserts that listeners are called the expected number of times for an unhandled failure.
    */
-  @SuppressWarnings("unchecked")
   public void testListenersForUnhandledFailure() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
@@ -221,7 +220,6 @@ public class FailsafeConfigTest {
   /**
    * Asserts that listeners are called the expected number of times when retries are exceeded.
    */
-  @SuppressWarnings("unchecked")
   public void testListenersForRetriesExceeded() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
@@ -246,7 +244,6 @@ public class FailsafeConfigTest {
   /**
    * Asserts that listeners are called the expected number of times for an aborted execution.
    */
-  @SuppressWarnings("unchecked")
   public void testListenersForAbort() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
@@ -272,7 +269,6 @@ public class FailsafeConfigTest {
   /**
    * Asserts that a failure listener is not called on an abort.
    */
-  @SuppressWarnings("unchecked")
   public void testFailureListenerNotCalledOnAbort() {
     // Given
     RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class);

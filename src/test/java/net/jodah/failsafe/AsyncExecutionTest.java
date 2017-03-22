@@ -172,7 +172,6 @@ public class AsyncExecutionTest {
     verify(future).complete(null, e, null, false);
   }
 
-  @SuppressWarnings("unchecked")
   public void testRetryOn() {
     // Given retry on IllegalArgumentException
     exec = new AsyncExecution(callable, scheduler, future,

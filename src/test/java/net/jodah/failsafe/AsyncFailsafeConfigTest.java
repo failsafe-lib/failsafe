@@ -131,7 +131,6 @@ public class AsyncFailsafeConfigTest {
   /**
    * Asserts that listeners are called the expected number of times for an unhandled failure.
    */
-  @SuppressWarnings("unchecked")
   public void testListenersForUnhandledFailure() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 
@@ -179,7 +178,6 @@ public class AsyncFailsafeConfigTest {
   /**
    * Asserts that listeners are called the expected number of times for an aborted execution.
    */
-  @SuppressWarnings("unchecked")
   public void testListenersForAbort() throws Throwable {
     Callable<Boolean> callable = () -> service.connect();
 

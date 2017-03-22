@@ -334,7 +334,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When
-    @SuppressWarnings("unchecked")
     FailsafeFuture<Void> future = Failsafe.with(new RetryPolicy().retryWhen(null).retryOn(Exception.class))
         .with(executor)
         .run(() -> waiter.fail("Should not execute callable since executor has been shutdown"));
@@ -351,7 +350,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     AtomicInteger counter = new AtomicInteger();
 
     // When
-    @SuppressWarnings("unchecked")
     FailsafeFuture<String> future = Failsafe.with(new RetryPolicy().retryWhen(null).retryOn(Exception.class))
         .with(executor)
         .get(() -> {
