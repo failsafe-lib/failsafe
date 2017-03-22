@@ -1,4 +1,6 @@
 # Failsafe
+
+[![Join the chat at https://gitter.im/jhalterman/failsafe](https://badges.gitter.im/jhalterman/failsafe.svg)](https://gitter.im/jhalterman/failsafe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/jhalterman/failsafe.svg)](https://travis-ci.org/jhalterman/failsafe)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe/badge.svg)][maven] 
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
