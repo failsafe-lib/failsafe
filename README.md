@@ -1,8 +1,10 @@
 # Failsafe
+
 [![Build Status](https://travis-ci.org/jhalterman/failsafe.svg)](https://travis-ci.org/jhalterman/failsafe)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe/badge.svg)][maven] 
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![JavaDoc](http://javadoc-badge.appspot.com/net.jodah/failsafe.svg?label=javadoc)](https://jhalterman.github.com/failsafe/javadoc)
+[![Join the chat at https://gitter.im/jhalterman/failsafe](https://badges.gitter.im/jhalterman/failsafe.svg)][gitter]
 
 *Simple, sophisticated failure handling.*
 
@@ -448,6 +450,7 @@ See the [RxJava example][RxJava] for a more detailed implementation.
 
 ## Additional Resources
 
+* [Gitter Chat Room][gitter]
 * [Javadocs](https://jhalterman.github.com/failsafe/javadoc)
 * [Example Integrations](https://github.com/jhalterman/failsafe/wiki/Example-Integrations)
 * [3rd Party Tools](https://github.com/jhalterman/failsafe/wiki/3rd-Party-Tools)
@@ -500,3 +503,4 @@ Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2
 [maven]: https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe
 
 [whos-using]: https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe
+[gitter]: https://gitter.im/jhalterman/failsafe
