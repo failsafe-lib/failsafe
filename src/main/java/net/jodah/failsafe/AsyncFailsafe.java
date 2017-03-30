@@ -182,8 +182,6 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
 
     if (circuitBreaker != null && !circuitBreaker.allowsExecution()) {
       CircuitBreakerOpenException e = new CircuitBreakerOpenException();
-      if (fallback == null)
-        throw e;
       future.complete(null, e, (CheckedBiFunction<T, Throwable, T>) fallback, false);
       return future;
     }

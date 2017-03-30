@@ -68,6 +68,15 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
+   * Does a failsafe get with an optional executor.
+   */
+  <T> T failsafeGet(CircuitBreaker circuitBreaker, Callable<T> callable) throws ExecutionException, InterruptedException {
+    ScheduledExecutorService executor = getExecutor();
+    return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(circuitBreaker).get(callable)
+        : (T) Failsafe.with(circuitBreaker).with(executor).get(callable).get());
+  }
+
+  /**
    * Does a failsafe run with an optional executor.
    */
   void failsafeRun(CircuitBreaker breaker, CheckedRunnable runnable) throws ExecutionException, InterruptedException {
@@ -142,7 +151,7 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     waiter.await(10000, 3);
     for (int i = 0; i < 5; i++)
-      assertThrows(() -> failsafeRun(breaker, Testing::noop), CircuitBreakerOpenException.class);
+      assertThrows(() -> failsafeGet(breaker, () -> null), CircuitBreakerOpenException.class);
   }
 
   /**
@@ -160,7 +169,7 @@ public abstract class AbstractFailsafeTest {
       waiter.assertNull(r);
       waiter.assertEquals(failure, f);
       return false;
-    } , () -> service.connect()), Boolean.FALSE);
+    }, () -> service.connect()), Boolean.FALSE);
     verify(service, times(3)).connect();
 
     // Given
@@ -172,7 +181,7 @@ public abstract class AbstractFailsafeTest {
       waiter.assertNull(r);
       waiter.assertEquals(failure, f);
       throw new RuntimeException(f);
-    } , () -> service.connect()), RuntimeException.class, ConnectException.class);
+    }, () -> service.connect()), RuntimeException.class, ConnectException.class);
     verify(service, times(3)).connect();
   }
 
@@ -191,7 +200,7 @@ public abstract class AbstractFailsafeTest {
       waiter.assertNull(r);
       waiter.assertEquals(failure, f);
       return false;
-    } , () -> service.connect()), Boolean.FALSE);
+    }, () -> service.connect()), Boolean.FALSE);
     verify(service).connect();
 
     // Given
@@ -204,7 +213,7 @@ public abstract class AbstractFailsafeTest {
       waiter.assertNull(r);
       waiter.assertEquals(failure, f);
       throw new RuntimeException(f);
-    } , () -> service.connect()), RuntimeException.class, ConnectException.class);
+    }, () -> service.connect()), RuntimeException.class, ConnectException.class);
     verify(service).connect();
   }
 
@@ -224,7 +233,7 @@ public abstract class AbstractFailsafeTest {
       waiter.assertNull(r);
       waiter.assertTrue(f instanceof CircuitBreakerOpenException);
       return false;
-    } , service::connect), Boolean.FALSE);
+    }, service::connect), Boolean.FALSE);
     verify(service, times(0)).connect();
   }
 
@@ -234,7 +243,8 @@ public abstract class AbstractFailsafeTest {
     } catch (ExecutionException e) {
       throw (RuntimeException) e.getCause();
     } catch (FailsafeException e) {
-      throw (RuntimeException) e.getCause();
+      RuntimeException cause = (RuntimeException) e.getCause();
+      throw cause == null ? e : cause;
     } catch (Exception e) {
       throw (RuntimeException) e;
     }

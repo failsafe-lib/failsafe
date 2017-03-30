@@ -59,9 +59,6 @@ public class Testing {
     new Thread(() -> ignoreExceptions(runnable)).start();
   }
 
-  public static void noop() {
-  }
-
   @SuppressWarnings("unchecked")
   public static <T extends CircuitState> T stateFor(CircuitBreaker breaker) {
     Field stateField;
