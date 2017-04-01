@@ -1,5 +1,9 @@
 # 1.0.4
 
+### API Changes
+
+* Asynchronous execution attempts no longer throw `CircuitBreakerOpenException` if a configured `CircuitBreaker` is open when an execution is first attempted. Instead, the resulting `Future` is completed exceptionally with `CircuitBreakerOpenException`. See [issue #84](https://github.com/jhalterman/failsafe/issues/84).
+
 ### Improvements
 
 * Issue #81 - Added single argument failure configuration to avoid varargs related warnings.
