@@ -101,16 +101,17 @@ public class RetryPolicy {
   }
 
   /**
-   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failure} will be result
-   * in retries being aborted.
+   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failure} will be result in
+   * retries being aborted.
    * 
    * @throws NullPointerException if {@code failure} is null
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public RetryPolicy abortOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return abortOn(Arrays.asList(failure));
+    return abortOn((List) Arrays.asList(failure));
   }
-  
+
   /**
    * Specifies when retries should be aborted. Any failure that is assignable from the {@code failures} will be result
    * in retries being aborted.
@@ -310,11 +311,12 @@ public class RetryPolicy {
    * 
    * @throws NullPointerException if {@code failure} is null
    */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public RetryPolicy retryOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return retryOn(Arrays.asList(failure));
+    return retryOn((List) Arrays.asList(failure));
   }
-  
+
   /**
    * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
    * 
@@ -449,7 +451,8 @@ public class RetryPolicy {
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code jitter} is <= 0
-   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(double)} has already been called
+   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(double)} has already been
+   *           called
    */
   public RetryPolicy withJitter(long jitter, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");

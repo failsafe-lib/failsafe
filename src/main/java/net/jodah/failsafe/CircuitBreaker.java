@@ -123,9 +123,10 @@ public class CircuitBreaker {
    * 
    * @throws NullPointerException if {@code failure} is null
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public CircuitBreaker failOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return failOn(Arrays.asList(failure));
+    return failOn((List)Arrays.asList(failure));
   }
   
   /**
