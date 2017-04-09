@@ -428,7 +428,7 @@ In addition to automatically performing retries, Failsafe can be used to track e
 Execution execution = new Execution(retryPolicy);
 while (!execution.isComplete()) {
   try {
-	doSomething();
+    doSomething();
     execution.complete();
   } catch (ConnectException e) {
     execution.recordFailure(e);
