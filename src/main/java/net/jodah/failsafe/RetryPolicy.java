@@ -245,7 +245,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Returns the jitter factor, else {@code 0.0} is none has been configured.
+   * Returns the jitter factor, else {@code 0.0} if none has been configured.
    * 
    * @see #withJitter(double)
    */
