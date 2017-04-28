@@ -142,7 +142,7 @@ abstract class AbstractExecution extends ExecutionContext {
     if (isAbortable)
       config.handleAbort(result, failure, this);
     else {
-      if (retriesExceeded)
+      if (!success && retriesExceeded)
         config.handleRetriesExceeded(result, failure, this);
       if (completed)
         config.handleComplete(result, failure, this, success);
