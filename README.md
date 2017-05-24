@@ -68,7 +68,7 @@ A policy can allow retries on particular failures:
 
 ```java
 RetryPolicy retryPolicy = new RetryPolicy()
-  .retryOn(ConnectException.class, SocketException.class);
+  .retryOn(ConnectException.class, SocketException.class)
   .retryOn(failure -> failure instanceof ConnectException);
 ```
 
@@ -76,7 +76,7 @@ And for particular results or conditions:
 
 ```java
 retryPolicy
-  .retryWhen(null);
+  .retryWhen(null)
   .retryIf(result -> result == null);  
 ```
 
@@ -343,7 +343,7 @@ Failsafe.with(retryPolicy)
 Failsafe.with(retryPolicy)
   .with(executor)
   .onFailureAsync(e -> log.error("Failed to create connection", e))
-  .onSuccessAsync(cxn -> log.info("Connected to {}", cxn), anotherExecutor);
+  .onSuccessAsync(cxn -> log.info("Connected to {}", cxn), anotherExecutor)
   .get(this::connect);
 ```
 
