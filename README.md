@@ -44,10 +44,10 @@ Then use your [RetryPolicy] to execute a `Runnable` or `Callable` *with* retries
 
 ```java
 // Run with retries
-Failsafe.with(retryPolicy).run(() -> connect());
+Failsafe.with(retryPolicy).run(this::connect);
 
 // Get with retries
-Connection connection = Failsafe.with(retryPolicy).get(() -> connect());
+Connection connection = Failsafe.with(retryPolicy).get(this::connect);
 ```
 
 Java 6 and 7 are also supported:
