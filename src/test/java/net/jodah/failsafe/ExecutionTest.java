@@ -189,6 +189,8 @@ public class ExecutionTest {
     Execution exec = new Execution(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS));
     assertEquals(exec.getWaitTime().toNanos(), 1);
     exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 1);
+    exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 2);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 4);

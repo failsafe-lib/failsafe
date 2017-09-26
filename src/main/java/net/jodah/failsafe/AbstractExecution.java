@@ -32,7 +32,7 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile boolean completed;
   volatile boolean retriesExceeded;
   volatile boolean success;
-  volatile long delayNanos;
+  volatile long delayNanos = -1;
   volatile long waitNanos;
 
   /**
@@ -45,7 +45,7 @@ abstract class AbstractExecution extends ExecutionContext {
     this.config = config;
     retryPolicy = config.retryPolicy;
     this.circuitBreaker = config.circuitBreaker;
-    waitNanos = delayNanos = retryPolicy.getDelay().toNanos();
+    waitNanos = retryPolicy.getDelay().toNanos();
   }
 
   /**
@@ -106,8 +106,10 @@ abstract class AbstractExecution extends ExecutionContext {
         circuitBreaker.recordSuccess();
     }
 
-    // Adjust the delay for backoffs
-    if (retryPolicy.getMaxDelay() != null)
+    // Initialize or adjust the delay for backoffs
+    if (delayNanos == -1)
+      delayNanos = retryPolicy.getDelay().toNanos();
+    else if (retryPolicy.getMaxDelay() != null)
       delayNanos = (long) Math.min(delayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
 
     // Calculate the wait time with jitter
