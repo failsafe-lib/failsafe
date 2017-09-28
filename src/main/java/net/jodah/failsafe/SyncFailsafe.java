@@ -23,6 +23,7 @@ import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.ContextualCallable;
 import net.jodah.failsafe.function.ContextualRunnable;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.proxy.FailsafeInvocationHandler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 import net.jodah.failsafe.util.concurrent.Schedulers;
 
@@ -111,6 +112,27 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
    */
   public AsyncFailsafe<R> with(Scheduler scheduler) {
     return new AsyncFailsafe<R>(this, Assert.notNull(scheduler, "scheduler"));
+  }
+
+  /**
+   * Creates a proxy instance of the provided {@link T} instance such that all public methods
+   * use the {@link RetryPolicy} and {@link CircuitBreaker} set.
+   * The returned proxy adheres to the interface provided except for two cases:
+   * <ol>
+   *     <li>CircuitBreakerException: The methods may throw this type of
+   *     exception if the circuit breaker is open.</li>
+   *     <li>UndeclaredThrowableException: If you provide a fallback which throws
+   *     an exception undeclared by the interface.</li>
+   * </ol>
+   * @param instance the instance to wrap a proxy around
+   * @param clazz the type of the parameter needed due to erasure. This should be an interface.
+   * @param <T> the type to proxy, must be an interface.
+   * @return an object that delegates to the instance but retries
+   * @throws IllegalArgumentException if clazz is not an interface
+   *
+   */
+  public <T> T proxy(T instance, Class<T> clazz) {
+    return FailsafeInvocationHandler.retryingProxy(instance, clazz, this);
   }
 
   /**
