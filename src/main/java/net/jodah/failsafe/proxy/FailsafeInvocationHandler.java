@@ -10,7 +10,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-/** Proxy class that retries operations and has a circuit breaker. */
+/**
+ * Proxy class that retries method calls to the underlying instance
+ * under the policies and settings configured for the given {@link net.jodah.failsafe.Failsafe}.
+ */
 public class FailsafeInvocationHandler implements InvocationHandler {
 
     private final Object underlying;
@@ -54,10 +57,10 @@ public class FailsafeInvocationHandler implements InvocationHandler {
      * Unwrap the exception that Failsafe throws.
      */
     private static Throwable unwrapException(FailsafeException ex) {
-        // There are two possibly layers of indirection here.
+        // There are two possible layers of indirection here.
         //  1) Fail-safe wraps exceptions with FailsafeException
         //  2) Proxy clients use reflection to invoke methods, which wraps
-        //     exceptions in InvocationTargetExceptions.
+        //     exceptions with InvocationTargetExceptions.
         Throwable inner = ex.getCause();
         if (inner instanceof InvocationTargetException) {
             inner = inner.getCause();

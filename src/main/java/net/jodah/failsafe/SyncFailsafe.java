@@ -122,12 +122,13 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
    *     <li>CircuitBreakerException: The methods may throw this type of
    *     exception if the circuit breaker is open.</li>
    *     <li>UndeclaredThrowableException: If you provide a fallback which throws
-   *     an exception undeclared by the interface.</li>
+   *     an exception not declared by the interface.</li>
    * </ol>
    * @param instance the instance to wrap a proxy around
-   * @param clazz the type of the parameter needed due to erasure. This should be an interface.
-   * @param <T> the type to proxy, must be an interface.
-   * @return an object that delegates to the instance but retries
+   * @param clazz the type of the parameter needed due to erasure. This must be an interface.
+   * @param <T> the type to proxy. This must be an interface.
+   * @return an object that delegates to the instance but retries and fails according to the policies configured
+   * in this {@link Failsafe instance}
    * @throws IllegalArgumentException if clazz is not an interface
    *
    */
