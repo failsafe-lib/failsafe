@@ -115,7 +115,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
   }
 
   /**
-   * Creates a proxy instance of the provided {@link T} instance such that all public methods
+   * Creates a proxy instance of the provided {@link T} instance such that all methods
    * use the {@link RetryPolicy} and {@link CircuitBreaker} set.
    * The returned proxy adheres to the interface provided except for two cases:
    * <ol>
