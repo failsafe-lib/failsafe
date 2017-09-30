@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.dyndelay;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import java.util.concurrent.TimeUnit;
 
+import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.util.Duration;
 
 import org.testng.annotations.Test;

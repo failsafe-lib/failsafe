@@ -112,12 +112,13 @@ abstract class AbstractExecution extends ExecutionContext {
     if (delayFunction != null) {
         try {
             Duration dynamicDelay = delayFunction.apply(result, failure);
-            if (dynamicDelay != null && dynamicDelay.toNanos() >= 0) {
+            if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
                 delayNanos = dynamicDelay.toNanos();
-            }
         } catch (Exception ex) {
-            // Swallow all exceptions thrown while computing delay
-            // and behave as if no delay function was present.
+            if (ex instanceof RuntimeException)
+                throw (RuntimeException) ex;
+            else
+                throw new RuntimeException("unexpected exception in dynamic delay function", ex);
         }
     }
     if (delayNanos == -1)
