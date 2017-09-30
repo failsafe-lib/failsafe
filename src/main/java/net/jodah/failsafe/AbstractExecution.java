@@ -17,6 +17,7 @@ package net.jodah.failsafe;
 
 import java.util.concurrent.TimeUnit;
 
+import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
 
@@ -107,6 +108,18 @@ abstract class AbstractExecution extends ExecutionContext {
     }
 
     // Initialize or adjust the delay for backoffs
+    CheckedBiFunction<Object, Throwable, Duration> delayFunction = retryPolicy.getDelayFunction();
+    if (delayFunction != null) {
+        try {
+            Duration dynamicDelay = delayFunction.apply(result, failure);
+            if (dynamicDelay != null && dynamicDelay.toNanos() >= 0) {
+                delayNanos = dynamicDelay.toNanos();
+            }
+        } catch (Exception ex) {
+            // Swallow all exceptions thrown while computing delay
+            // and behave as if no delay function was present.
+        }
+    }
     if (delayNanos == -1)
       delayNanos = retryPolicy.getDelay().toNanos();
     else if (retryPolicy.getMaxDelay() != null)
