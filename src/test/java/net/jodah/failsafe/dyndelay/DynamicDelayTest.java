@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class DynamicDelayTest {
 
@@ -43,6 +44,20 @@ public class DynamicDelayTest {
         public Duration getDuration() {
             return duration;
         }
+    }
+
+    static class UncheckedExpectedException extends RuntimeException {
+    }
+
+    static class CheckedExpectedException extends Exception {
+    }
+
+
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testNullDelayFunction() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withDelayFunction(null);
+        fail("Null delay function");
     }
 
     @Test
@@ -69,12 +84,48 @@ public class DynamicDelayTest {
             });
 
         assertEquals(executionTimes.size(), 2, "Should have exactly two executions");
+        
         long t0 = executionTimes.get(0);
         long t1 = executionTimes.get(1);
+        
         //System.out.printf("actual delay %d, expected %d%n",
         //    TimeUnit.NANOSECONDS.toMillis(t1 - t0),
         //    TimeUnit.NANOSECONDS.toMillis(DELAY));
+        
         assertTrue(t1 - t0 > DELAY - PAD, "Time between executions less than expected");
         assertTrue(t1 - t0 < DELAY + PAD, "Time between executions more than expected");
+    }
+
+
+    @Test(expectedExceptions = UncheckedExpectedException.class)
+    public void testUncheckedExceptionComputingDelay() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withDelayFunction((result, exception) -> {
+                throw new UncheckedExpectedException();
+            });
+
+        Failsafe.with(retryPolicy)
+            .run((ExecutionContext context) -> {
+                throw new RuntimeException("try again");
+            });
+    }
+
+
+    @Test
+    public void testCheckedExceptionComputingDelay() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withDelayFunction((result, exception) -> {
+                throw new CheckedExpectedException();
+            });
+
+        try {
+            Failsafe.with(retryPolicy)
+                .run((ExecutionContext context) -> {
+                    throw new RuntimeException("try again");
+                });
+            fail("Expecting wrapped checked exception to be thrown");
+        } catch (RuntimeException ex) {
+            assertTrue(ex.getCause() instanceof CheckedExpectedException);
+        }
     }
 }
