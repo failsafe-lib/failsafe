@@ -108,18 +108,11 @@ abstract class AbstractExecution extends ExecutionContext {
     }
 
     // Initialize or adjust the delay for backoffs
-    CheckedBiFunction<Object, Throwable, Duration> delayFunction = retryPolicy.getDelayFunction();
+    RetryPolicy.DelayFunction delayFunction = retryPolicy.getDelayFunction();
     if (delayFunction != null) {
-        try {
-            Duration dynamicDelay = delayFunction.apply(result, failure);
-            if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
-                delayNanos = dynamicDelay.toNanos();
-        } catch (Exception ex) {
-            if (ex instanceof RuntimeException)
-                throw (RuntimeException) ex;
-            else
-                throw new RuntimeException("unexpected exception in dynamic delay function", ex);
-        }
+        Duration dynamicDelay = delayFunction.calculateDelay(result, failure);
+        if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
+            delayNanos = dynamicDelay.toNanos();
     }
     if (delayNanos == -1)
       delayNanos = retryPolicy.getDelay().toNanos();

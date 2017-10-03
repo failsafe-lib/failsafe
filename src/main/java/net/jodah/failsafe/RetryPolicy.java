@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.failsafe.function.BiPredicate;
-import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
@@ -38,11 +37,16 @@ import net.jodah.failsafe.util.Duration;
  * @author Jonathan Halterman
  */
 public class RetryPolicy {
+  @FunctionalInterface
+  public interface DelayFunction {
+      Duration calculateDelay(Object result, Throwable exception);
+  }
+
   static final RetryPolicy NEVER = new RetryPolicy().withMaxRetries(0);
 
   private Duration delay;
   private double delayFactor;
-  private CheckedBiFunction<Object, Throwable, Duration> delayFunction;
+  private DelayFunction delayFunction;
   private Duration jitter;
   private double jitterFactor;
   private Duration maxDelay;
@@ -232,7 +236,7 @@ public class RetryPolicy {
    * Returns the function that determines the next delay given
    * a failed attempt with the given {@link Throwable}.
    */
-  public CheckedBiFunction<Object, Throwable, Duration> getDelayFunction() {
+  public DelayFunction getDelayFunction() {
     return delayFunction;
   }
 
@@ -433,12 +437,9 @@ public class RetryPolicy {
   /**
    * Sets the function that determines the next delay before retrying.
    *
-   * @throws NullPointerException if {@code d} is null
-   * @throws IllegalArgumentException if {@code delay} <= 0
-   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(long, TimeUnit)
-   *           maxDuration}
+   * @throws NullPointerException if {@code delayFunction} is null
    */
-  public RetryPolicy withDelayFunction(CheckedBiFunction<Object, Throwable, Duration> delayFunction) {
+  public RetryPolicy withDelayFunction(DelayFunction delayFunction) {
     Assert.notNull(delayFunction, "delayFunction");
     this.delayFunction = delayFunction;
     return this;

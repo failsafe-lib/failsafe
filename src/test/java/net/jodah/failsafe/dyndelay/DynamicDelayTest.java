@@ -49,9 +49,6 @@ public class DynamicDelayTest {
     static class UncheckedExpectedException extends RuntimeException {
     }
 
-    static class CheckedExpectedException extends Exception {
-    }
-
 
     @Test(expectedExceptions = NullPointerException.class)
     public void testNullDelayFunction() {
@@ -108,24 +105,5 @@ public class DynamicDelayTest {
             .run((ExecutionContext context) -> {
                 throw new RuntimeException("try again");
             });
-    }
-
-
-    @Test
-    public void testCheckedExceptionComputingDelay() {
-        RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, exception) -> {
-                throw new CheckedExpectedException();
-            });
-
-        try {
-            Failsafe.with(retryPolicy)
-                .run((ExecutionContext context) -> {
-                    throw new RuntimeException("try again");
-                });
-            fail("Expecting wrapped checked exception to be thrown");
-        } catch (RuntimeException ex) {
-            assertTrue(ex.getCause() instanceof CheckedExpectedException);
-        }
     }
 }
