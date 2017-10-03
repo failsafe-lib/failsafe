@@ -17,7 +17,6 @@ package net.jodah.failsafe;
 
 import java.util.concurrent.TimeUnit;
 
-import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
 
