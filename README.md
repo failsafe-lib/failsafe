@@ -17,6 +17,7 @@ Failsafe is a lightweight, zero-dependency library for handling failures. It was
 * [Fallbacks](#fallbacks)
 * [Execution context](#execution-context)
 * [Event listeners](#event-listeners)
+* [Proxies](#proxies)
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletableFuture](#completablefuture-integration) and [functional interface](#functional-interface-integration) integration
 * [Execution tracking](#execution-tracking)
@@ -362,6 +363,19 @@ Failsafe.with(retryPolicy)
 
 ```java
 circuitBreaker.onOpen(() -> log.info("The circuit breaker was opened"));
+```
+
+#### Proxies
+
+Failsafe allows easily wrapping an interface with a circuit breaker and retries.
+
+Any exceptions that the underlying implementation throws that exceed the retries are thrown as-is without any wrapping.
+However if you throw a different checked exception through the use of a fallback, a *UndeclaredThrowableException* will
+be thrown that wraps the checked exception.
+
+```java
+MyInterface object = new MyImplementation();
+MyInterface proxy = Failsafe.with(retryPolicy).proxy(object, MyInterface.class);
 ```
 
 #### Asynchronous API Integration

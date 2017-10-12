@@ -4,10 +4,13 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class FailsafeInvocationHandlerTest {
 
@@ -62,6 +65,23 @@ public class FailsafeInvocationHandlerTest {
     public void testCreatingConcreteProxy() {
         Failsafe.with(new RetryPolicy().withMaxRetries(3))
                 .proxy(new LongAdder(), LongAdder.class);
+    }
+
+    @Test
+    public void testUndeclaredException() {
+        FailingCounter failingCounter = new FailingCounter(3);
+        Counter counter = Failsafe.with(new RetryPolicy().withMaxRetries(1))
+                .withFallback(() -> {
+                    throw new IOException("This is a checked exception.");
+                })
+                .proxy(failingCounter, Counter.class);
+        try {
+            counter.increment();
+            throw new IllegalStateException("This line should be hit.");
+        } catch (Throwable t) {
+            assertTrue(t instanceof UndeclaredThrowableException);
+            assertTrue(t.getCause() instanceof IOException);
+        }
     }
 
 }
