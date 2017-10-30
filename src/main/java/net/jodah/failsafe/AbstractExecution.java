@@ -108,7 +108,9 @@ abstract class AbstractExecution extends ExecutionContext {
         circuitBreaker.recordSuccess();
     }
 
-    // Initialize or adjust the delay for backoffs
+    // If there's a delay function configured with the appropriate result and failure
+    // types and it returns a non-negative duration, use it to initialize the delay
+    // instead of the static delay value.
     DelayFunction<?, ? extends Throwable> delayFunction = retryPolicy.getDelayFunction();
     Class<?> resultType = retryPolicy.getDelayFunctionResultType();
     Class<? extends Throwable> failureType = retryPolicy.getDelayFunctionFailureType();
@@ -117,9 +119,15 @@ abstract class AbstractExecution extends ExecutionContext {
         @SuppressWarnings("unchecked")
         DelayFunction<Object, Throwable> f = (DelayFunction<Object, Throwable>) (DelayFunction) delayFunction;
         Duration dynamicDelay = f.calculateDelay(result, failure, this);
-        if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
+        if (dynamicDelay == null || dynamicDelay.toNanos() < 0)
+            delayNanos = -1;
+        else
             delayNanos = dynamicDelay.toNanos();
     }
+    // Initialize or adjust the delay for backoffs. Delay functions and backoff are
+    // mutually exclusive, so if the delay function above returns null or a negative
+    // duration, the delay will just be the fixed static delay value without any
+    // adjustments due to max delay or delay factor.
     if (delayNanos == -1)
       delayNanos = retryPolicy.getDelay().toNanos();
     else if (retryPolicy.getMaxDelay() != null)

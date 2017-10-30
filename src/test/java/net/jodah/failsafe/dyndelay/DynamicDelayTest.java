@@ -57,15 +57,22 @@ public class DynamicDelayTest {
     @Test(expectedExceptions = NullPointerException.class)
     public void testNullDelayFunction() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction(null);
+            .withDelay(null);
         fail("Null delay function");
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void testNullResultType() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+            .withDelay((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
         fail("Null delay function result type");
+    }
+
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testNullFailureType() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withDelayThrowing((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+        fail("Null delay function failure type");
     }
 
     @Test
@@ -74,7 +81,7 @@ public class DynamicDelayTest {
         long PAD = TimeUnit.MILLISECONDS.toNanos(25);
 
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, failure, context) -> {
+            .withDelay((result, failure, context) -> {
                 if (failure instanceof DynamicDelayException)
                     return ((DynamicDelayException) failure).getDuration();
                 else
@@ -108,7 +115,7 @@ public class DynamicDelayTest {
     @Test(expectedExceptions = UncheckedExpectedException.class)
     public void testUncheckedExceptionComputingDelay() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, failure, context) -> {
+            .withDelay((result, failure, context) -> {
                 throw new UncheckedExpectedException();
             });
 
@@ -121,7 +128,7 @@ public class DynamicDelayTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testSettingBackoffWhenDelayFunctionAlreadySet() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS))
+            .withDelay((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS))
             .withBackoff(1L, 3L, TimeUnit.SECONDS);
         fail("Delay function already set");
     }
@@ -130,7 +137,7 @@ public class DynamicDelayTest {
     public void testSettingDelayFunctionWhenBackoffAlreadySet() {
         RetryPolicy retryPolicy = new RetryPolicy()
             .withBackoff(1L, 3L, TimeUnit.SECONDS)
-            .withDelayFunction((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS));
+            .withDelay((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS));
         fail("Backoff delays already set");
     }
 
@@ -140,7 +147,7 @@ public class DynamicDelayTest {
         RetryPolicy retryPolicy = new RetryPolicy()
             .retryIf(result -> true)
             .withMaxRetries(4)
-            .withDelayFunction((String r, Throwable f, ExecutionContext c) -> {
+            .withDelay((String r, Throwable f, ExecutionContext c) -> {
                 delays.incrementAndGet(); // side-effect for test purposes
                 return new Duration(1L, TimeUnit.MICROSECONDS);
             }, String.class);
@@ -168,10 +175,10 @@ public class DynamicDelayTest {
         RetryPolicy retryPolicy = new RetryPolicy()
             .retryOn(UncheckedExpectedException.class)
             .withMaxRetries(4)
-            .withDelayFunction((Object r, DelayException f, ExecutionContext c) -> {
+            .withDelayThrowing((Object r, DelayException f, ExecutionContext c) -> {
                 delays.incrementAndGet(); // side-effect for test purposes
                 return new Duration(1L, TimeUnit.MICROSECONDS);
-            }, Object.class, DelayException.class);
+            }, DelayException.class);
 
         AtomicInteger attempts = new AtomicInteger(0);
         int result = Failsafe.with(retryPolicy)

@@ -39,7 +39,7 @@ import net.jodah.failsafe.util.Duration;
 public class RetryPolicy {
   /**
    * A functional interface for dynamically computing delays between retries
-   * in conjunction with {@link #withDelayFunction(DelayFunction)}.
+   * in conjunction with {@link #withDelay(DelayFunction)}.
    */
   @FunctionalInterface
   public interface DelayFunction<R, F extends Throwable> {
@@ -55,8 +55,8 @@ public class RetryPolicy {
        * @param failure the {@link Throwable} thrown, if any, during the last attempt
        * @param context the {@link ExecutionContext} that describes executions so far
        * @return a non-negative duration to be used as the delay before next retry,
-       *         otherwise (a negative duration or null) means fall back the fixed
-       *         delay configured for the retry policy
+       *         otherwise (null or negative duration) means fall back to the fixed
+       *         static delay for next retry
        */
       Duration calculateDelay(R result, F failure, ExecutionContext context);
   }
@@ -257,9 +257,8 @@ public class RetryPolicy {
    * Returns the function that determines the next delay given
    * a failed attempt with the given {@link Throwable}.
    */
-  @SuppressWarnings("unchecked")
-  public <R, F extends Throwable> DelayFunction<R, F> getDelayFunction() {
-    return (DelayFunction<R, F>)(DelayFunction)delayFunction;
+  public DelayFunction<?, ? extends Throwable> getDelayFunction() {
+    return delayFunction;
   }
 
   /**
@@ -475,10 +474,10 @@ public class RetryPolicy {
    * Sets the function that determines the next delay before retrying.
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @throws NullPointerException if {@code delayFunction} is null
-   * @throws IllegalStateException if backoff delay has already been set
+   * @throws IllegalStateException if backoff delays have already been set
    */
-  public RetryPolicy withDelayFunction(DelayFunction<Object, Throwable> delayFunction) {
-      return withDelayFunction(delayFunction, Object.class);
+  public RetryPolicy withDelay(DelayFunction<Object, Throwable> delayFunction) {
+      return withDelay(delayFunction, Object.class, Throwable.class);
   }
 
   /**
@@ -486,10 +485,21 @@ public class RetryPolicy {
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @param resultType the type of result from the previous attempt expected by the delay function
    * @throws NullPointerException if {@code delayFunction} is null or {@code resultType} is null
-   * @throws IllegalStateException if backoff delay has already been set
+   * @throws IllegalStateException if backoff delays have already been set
    */
-  public <R> RetryPolicy withDelayFunction(DelayFunction<R, Throwable> delayFunction, Class<R> resultType) {
-      return withDelayFunction(delayFunction, resultType, Throwable.class);
+  public <R> RetryPolicy withDelay(DelayFunction<R, Throwable> delayFunction, Class<R> resultType) {
+      return withDelay(delayFunction, resultType, Throwable.class);
+  }
+
+  /**
+   * Sets the function that determines the next delay before retrying.
+   * @param delayFunction the function to use to compute the delay before a next attempt
+   * @param failureType the type of failure from the previous attempt expected by the delay function
+   * @throws NullPointerException if {@code delayFunction} is null or {@code failureType} is null
+   * @throws IllegalStateException if backoff delays have already been set
+   */
+  public <F extends Throwable> RetryPolicy withDelayThrowing(DelayFunction<Object, F> delayFunction, Class<F> failureType) {
+      return withDelay(delayFunction, Object.class, failureType);
   }
 
   /**
@@ -497,10 +507,11 @@ public class RetryPolicy {
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @param resultType the type of result from the previous attempt expected by the delay function
    * @param failureType the type of failure from the previous attempt expected by the delay function
-   * @throws NullPointerException if {@code delayFunction} is null or {@code resultType} is null
-   * @throws IllegalStateException if backoff delay has already been set
+   * @throws NullPointerException if {@code delayFunction} is null, {@code resultType} is null, or
+   *     {@code failureType} is null
+   * @throws IllegalStateException if backoff delays have already been set
    */
-  public <R, F extends Throwable> RetryPolicy withDelayFunction(DelayFunction<R, F> delayFunction,
+  public <R, F extends Throwable> RetryPolicy withDelay(DelayFunction<R, F> delayFunction,
           Class<R> resultType, Class<F> failureType) {
     Assert.notNull(delayFunction, "delayFunction");
     Assert.notNull(resultType, "resultType");
