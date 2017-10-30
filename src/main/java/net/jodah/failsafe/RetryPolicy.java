@@ -484,28 +484,6 @@ public class RetryPolicy {
    * Sets the function that determines the next delay before retrying.
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @param resultType the type of result from the previous attempt expected by the delay function
-   * @throws NullPointerException if {@code delayFunction} is null or {@code resultType} is null
-   * @throws IllegalStateException if backoff delays have already been set
-   */
-  public <R> RetryPolicy withDelay(DelayFunction<R, Throwable> delayFunction, Class<R> resultType) {
-      return withDelay(delayFunction, resultType, Throwable.class);
-  }
-
-  /**
-   * Sets the function that determines the next delay before retrying.
-   * @param delayFunction the function to use to compute the delay before a next attempt
-   * @param failureType the type of failure from the previous attempt expected by the delay function
-   * @throws NullPointerException if {@code delayFunction} is null or {@code failureType} is null
-   * @throws IllegalStateException if backoff delays have already been set
-   */
-  public <F extends Throwable> RetryPolicy withDelayThrowing(DelayFunction<Object, F> delayFunction, Class<F> failureType) {
-      return withDelay(delayFunction, Object.class, failureType);
-  }
-
-  /**
-   * Sets the function that determines the next delay before retrying.
-   * @param delayFunction the function to use to compute the delay before a next attempt
-   * @param resultType the type of result from the previous attempt expected by the delay function
    * @param failureType the type of failure from the previous attempt expected by the delay function
    * @throws NullPointerException if {@code delayFunction} is null, {@code resultType} is null, or
    *     {@code failureType} is null

@@ -64,14 +64,14 @@ public class DynamicDelayTest {
     @Test(expectedExceptions = NullPointerException.class)
     public void testNullResultType() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelay((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+            .withDelay((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null, Throwable.class);
         fail("Null delay function result type");
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void testNullFailureType() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayThrowing((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+            .withDelay((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), Object.class, null);
         fail("Null delay function failure type");
     }
 
@@ -81,12 +81,9 @@ public class DynamicDelayTest {
         long PAD = TimeUnit.MILLISECONDS.toNanos(25);
 
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelay((result, failure, context) -> {
-                if (failure instanceof DynamicDelayException)
-                    return ((DynamicDelayException) failure).getDuration();
-                else
-                    return null;
-            })
+            .withDelay((Object result, DynamicDelayException failure, ExecutionContext context) -> {
+                return failure == null ? null : failure.getDuration();
+            }, Object.class, DynamicDelayException.class)
             .withMaxRetries(2);
 
         List<Long> executionTimes = new ArrayList<>();
@@ -150,7 +147,7 @@ public class DynamicDelayTest {
             .withDelay((String r, Throwable f, ExecutionContext c) -> {
                 delays.incrementAndGet(); // side-effect for test purposes
                 return new Duration(1L, TimeUnit.MICROSECONDS);
-            }, String.class);
+            }, String.class, Throwable.class);
 
         AtomicInteger attempts = new AtomicInteger(0);
         Object result = Failsafe.with(retryPolicy)
@@ -175,10 +172,10 @@ public class DynamicDelayTest {
         RetryPolicy retryPolicy = new RetryPolicy()
             .retryOn(UncheckedExpectedException.class)
             .withMaxRetries(4)
-            .withDelayThrowing((Object r, DelayException f, ExecutionContext c) -> {
+            .withDelay((Object r, DelayException f, ExecutionContext c) -> {
                 delays.incrementAndGet(); // side-effect for test purposes
                 return new Duration(1L, TimeUnit.MICROSECONDS);
-            }, DelayException.class);
+            }, Object.class, DelayException.class);
 
         AtomicInteger attempts = new AtomicInteger(0);
         int result = Failsafe.with(retryPolicy)
