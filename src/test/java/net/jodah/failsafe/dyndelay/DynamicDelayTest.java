@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
@@ -49,6 +50,9 @@ public class DynamicDelayTest {
     static class UncheckedExpectedException extends RuntimeException {
     }
 
+    static class DelayException extends UncheckedExpectedException {
+    }
+
 
     @Test(expectedExceptions = NullPointerException.class)
     public void testNullDelayFunction() {
@@ -57,15 +61,22 @@ public class DynamicDelayTest {
         fail("Null delay function");
     }
 
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testNullResultType() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withDelayFunction((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+        fail("Null delay function result type");
+    }
+
     @Test
     public void testDynamicDelay() {
         long DELAY = TimeUnit.MILLISECONDS.toNanos(500);
         long PAD = TimeUnit.MILLISECONDS.toNanos(25);
 
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, exception) -> {
-                if (exception instanceof DynamicDelayException)
-                    return ((DynamicDelayException) exception).getDuration();
+            .withDelayFunction((result, failure, context) -> {
+                if (failure instanceof DynamicDelayException)
+                    return ((DynamicDelayException) failure).getDuration();
                 else
                     return null;
             })
@@ -81,14 +92,14 @@ public class DynamicDelayTest {
             });
 
         assertEquals(executionTimes.size(), 2, "Should have exactly two executions");
-        
+
         long t0 = executionTimes.get(0);
         long t1 = executionTimes.get(1);
-        
+
         //System.out.printf("actual delay %d, expected %d%n",
         //    TimeUnit.NANOSECONDS.toMillis(t1 - t0),
         //    TimeUnit.NANOSECONDS.toMillis(DELAY));
-        
+
         assertTrue(t1 - t0 > DELAY - PAD, "Time between executions less than expected");
         assertTrue(t1 - t0 < DELAY + PAD, "Time between executions more than expected");
     }
@@ -97,7 +108,7 @@ public class DynamicDelayTest {
     @Test(expectedExceptions = UncheckedExpectedException.class)
     public void testUncheckedExceptionComputingDelay() {
         RetryPolicy retryPolicy = new RetryPolicy()
-            .withDelayFunction((result, exception) -> {
+            .withDelayFunction((result, failure, context) -> {
                 throw new UncheckedExpectedException();
             });
 
@@ -105,5 +116,76 @@ public class DynamicDelayTest {
             .run((ExecutionContext context) -> {
                 throw new RuntimeException("try again");
             });
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testSettingBackoffWhenDelayFunctionAlreadySet() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withDelayFunction((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS))
+            .withBackoff(1L, 3L, TimeUnit.SECONDS);
+        fail("Delay function already set");
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testSettingDelayFunctionWhenBackoffAlreadySet() {
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .withBackoff(1L, 3L, TimeUnit.SECONDS)
+            .withDelayFunction((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS));
+        fail("Backoff delays already set");
+    }
+
+    @Test
+    public void testDelayOnMatchingReturnType() {
+        AtomicInteger delays = new AtomicInteger(0);
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .retryIf(result -> true)
+            .withMaxRetries(4)
+            .withDelayFunction((String r, Throwable f, ExecutionContext c) -> {
+                delays.incrementAndGet(); // side-effect for test purposes
+                return new Duration(1L, TimeUnit.MICROSECONDS);
+            }, String.class);
+
+        AtomicInteger attempts = new AtomicInteger(0);
+        Object result = Failsafe.with(retryPolicy)
+            .withFallback(123)
+            .get(() -> {
+                int i = attempts.getAndIncrement();
+                switch (i) {
+                    case 0:
+                    case 3: return "" + i;
+                    default: return i;
+                }
+            });
+
+        assertEquals(result, 123, "Fallback should be used");
+        assertEquals(attempts.get(), 5, "Expecting five attempts (1 + 4 retries)");
+        assertEquals(delays.get(), 2, "Expecting two dynamic delays matching String result");
+    }
+
+    @Test
+    public void testDelayOnMatchingFailureType() {
+        AtomicInteger delays = new AtomicInteger(0);
+        RetryPolicy retryPolicy = new RetryPolicy()
+            .retryOn(UncheckedExpectedException.class)
+            .withMaxRetries(4)
+            .withDelayFunction((Object r, DelayException f, ExecutionContext c) -> {
+                delays.incrementAndGet(); // side-effect for test purposes
+                return new Duration(1L, TimeUnit.MICROSECONDS);
+            }, Object.class, DelayException.class);
+
+        AtomicInteger attempts = new AtomicInteger(0);
+        int result = Failsafe.with(retryPolicy)
+            .withFallback(123)
+            .get(() -> {
+                int i = attempts.getAndIncrement();
+                switch (i) {
+                    case 0:
+                    case 2: throw new DelayException();
+                    default: throw new UncheckedExpectedException();
+                }
+            });
+        assertEquals(result, 123, "Fallback should be used");
+        assertEquals(attempts.get(), 5, "Expecting five attempts (1 + 4 retries)");
+        assertEquals(delays.get(), 2, "Expecting two dynamic delays matching DelayException failure");
     }
 }

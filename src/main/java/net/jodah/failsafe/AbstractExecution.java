@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
 
+import static net.jodah.failsafe.RetryPolicy.DelayFunction;
+
 abstract class AbstractExecution extends ExecutionContext {
   final FailsafeConfig<Object, ?> config;
   final RetryPolicy retryPolicy;
@@ -107,9 +109,14 @@ abstract class AbstractExecution extends ExecutionContext {
     }
 
     // Initialize or adjust the delay for backoffs
-    RetryPolicy.DelayFunction delayFunction = retryPolicy.getDelayFunction();
-    if (delayFunction != null) {
-        Duration dynamicDelay = delayFunction.calculateDelay(result, failure);
+    DelayFunction<?, ? extends Throwable> delayFunction = retryPolicy.getDelayFunction();
+    Class<?> resultType = retryPolicy.getDelayFunctionResultType();
+    Class<? extends Throwable> failureType = retryPolicy.getDelayFunctionFailureType();
+    if (delayFunction != null && (result == null || resultType.isInstance(result))
+            && (failure == null || failureType.isInstance(failure))) {
+        @SuppressWarnings("unchecked")
+        DelayFunction<Object, Throwable> f = (DelayFunction<Object, Throwable>) (DelayFunction) delayFunction;
+        Duration dynamicDelay = f.calculateDelay(result, failure, this);
         if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
             delayNanos = dynamicDelay.toNanos();
     }
