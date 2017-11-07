@@ -164,6 +164,15 @@ public class ExecutionTest {
     Thread.sleep(150);
     assertTrue(exec.getElapsedTime().toMillis() > 100);
   }
+  
+  public void testAttemptTimeIsNullIfExecutionNeverStarted() throws Throwable {
+    Execution exec = new Execution(new RetryPolicy());
+    assertNull(exec.getAttemptStartTime());
+    assertNull(exec.getElapsedAttemptTime());
+    Thread.sleep(150);
+    assertNull(exec.getAttemptStartTime());
+    assertNull(exec.getElapsedAttemptTime());
+  }
 
   @SuppressWarnings("unchecked")
   public void testIsComplete() {

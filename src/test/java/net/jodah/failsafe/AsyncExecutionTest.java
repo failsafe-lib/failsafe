@@ -89,6 +89,15 @@ public class AsyncExecutionTest {
     exec.retryOn(e);
     assertEquals(exec.getExecutions(), 2);
   }
+  
+  public void testGetElapsedMillis() throws Throwable {
+    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy()));
+    assertNull(exec.getElapsedAttemptTime());
+    exec.retryOn(e);
+    exec.before();
+    assertTrue(exec.getElapsedAttemptTime() != null);
+    assertTrue(exec.getAttemptStartTime() != null);
+  }
 
   public void testRetryForResult() {
     // Given retry for null
