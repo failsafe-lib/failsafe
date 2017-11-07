@@ -26,6 +26,9 @@ import net.jodah.failsafe.util.Duration;
  */
 public class ExecutionContext {
   final Duration startTime;
+  
+  Duration attemptStartTime;
+
   /** Number of execution attempts */
   volatile int executions;
 
@@ -36,6 +39,7 @@ public class ExecutionContext {
   ExecutionContext(ExecutionContext context) {
     this.startTime = context.startTime;
     this.executions = context.executions;
+    this.attemptStartTime = context.attemptStartTime;
   }
 
   /**
@@ -43,6 +47,13 @@ public class ExecutionContext {
    */
   public Duration getElapsedTime() {
     return new Duration(System.nanoTime() - startTime.toNanos(), TimeUnit.NANOSECONDS);
+  }
+  
+  /**
+   * Returns the elapsed time since current execution began.
+   */
+  public Duration getElapsedAttemptTime() {
+    return new Duration(System.nanoTime() - attemptStartTime.toNanos(), TimeUnit.NANOSECONDS);
   }
 
   /**
@@ -57,6 +68,20 @@ public class ExecutionContext {
    */
   public Duration getStartTime() {
     return startTime;
+  }
+  
+  /**
+   * Returns the time that the attempt execution started. If it never started, this will be null.
+   */
+  public Duration getAttemptStartTime() {
+    return attemptStartTime;
+  }
+  
+  /**
+   * Record attempt start time
+   */
+  void before() {
+	  attemptStartTime = new Duration(System.nanoTime(), TimeUnit.NANOSECONDS);
   }
 
   ExecutionContext copy() {

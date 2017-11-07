@@ -26,7 +26,6 @@ abstract class AbstractExecution extends ExecutionContext {
   final CircuitBreaker circuitBreaker;
 
   // Mutable state
-  long attemptStartTime;
   volatile Object lastResult;
   volatile Throwable lastFailure;
   volatile boolean completed;
@@ -70,13 +69,6 @@ abstract class AbstractExecution extends ExecutionContext {
   public Duration getWaitTime() {
     return new Duration(waitNanos, TimeUnit.NANOSECONDS);
   }
-  
-  /**
-   * Returns the elapsed time since attempt execution began.
-   */
-  public Duration getElapsedAttemptTime() {
-    return new Duration(System.nanoTime() - attemptStartTime, TimeUnit.NANOSECONDS);
-  }
 
   /**
    * Returns whether the execution is complete.
@@ -88,7 +80,7 @@ abstract class AbstractExecution extends ExecutionContext {
   void before() {
     if (circuitBreaker != null)
       circuitBreaker.before();
-    attemptStartTime = System.nanoTime();
+    super.before();
   }
 
   /**
