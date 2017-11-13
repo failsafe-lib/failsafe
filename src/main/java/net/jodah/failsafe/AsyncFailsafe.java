@@ -53,7 +53,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * @throws NullPointerException if the {@code callable} is null
    */
   public <T> java.util.concurrent.CompletableFuture<T> future(
-      Callable<java.util.concurrent.CompletableFuture<T>> callable) {
+      Callable<? extends java.util.concurrent.CompletionStage<T>> callable) {
     return call(Functions.asyncOfFuture(callable));
   }
 
@@ -69,7 +69,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * @throws NullPointerException if the {@code callable} is null
    */
   public <T> java.util.concurrent.CompletableFuture<T> future(
-      ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+      ContextualCallable<? extends java.util.concurrent.CompletionStage<T>> callable) {
     return call(Functions.asyncOfFuture(callable));
   }
 
@@ -86,7 +86,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * @throws NullPointerException if the {@code callable} is null
    */
   public <T> java.util.concurrent.CompletableFuture<T> futureAsync(
-      AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+      AsyncCallable<? extends java.util.concurrent.CompletionStage<T>> callable) {
     return call(Functions.asyncOfFuture(callable));
   }
 

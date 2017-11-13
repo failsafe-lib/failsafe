@@ -158,7 +158,7 @@ final class Functions {
   }
 
   static <T> AsyncCallableWrapper<T> asyncOfFuture(
-      final AsyncCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+      final AsyncCallable<? extends java.util.concurrent.CompletionStage<T>> callable) {
     Assert.notNull(callable, "callable");
     return new AsyncCallableWrapper<T>() {
       Semaphore asyncFutureLock = new Semaphore(1);
@@ -193,7 +193,7 @@ final class Functions {
     };
   }
 
-  static <T> AsyncCallableWrapper<T> asyncOfFuture(final Callable<java.util.concurrent.CompletableFuture<T>> callable) {
+  static <T> AsyncCallableWrapper<T> asyncOfFuture(final Callable<? extends java.util.concurrent.CompletionStage<T>> callable) {
     Assert.notNull(callable, "callable");
     return new AsyncCallableWrapper<T>() {
       @Override
@@ -219,7 +219,7 @@ final class Functions {
   }
 
   static <T> AsyncCallableWrapper<T> asyncOfFuture(
-      final ContextualCallable<java.util.concurrent.CompletableFuture<T>> callable) {
+      final ContextualCallable<? extends java.util.concurrent.CompletionStage<T>> callable) {
     Assert.notNull(callable, "callable");
     return new AsyncCallableWrapper<T>() {
       @Override
