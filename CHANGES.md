@@ -1,3 +1,10 @@
+# 1.0.5
+
+### Bug Fixes
+
+* Issue #97 - Should not increment exponential backoff time on first attempt
+* Issue #92 - `handleRetriesExceeded` called incorrectly.
+
 # 1.0.4
 
 ### API Changes
