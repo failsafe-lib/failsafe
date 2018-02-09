@@ -29,7 +29,7 @@ import net.jodah.failsafe.util.concurrent.Schedulers;
 /**
  * Performs synchronous executions with failures handled according to a configured {@link #with(RetryPolicy) retry
  * policy}, {@link #with(CircuitBreaker) circuit breaker} and
- * {@link #withFallback(net.jodah.failsafe.function.BiFunction) fallback}.
+ * {@link #withFallback(net.jodah.failsafe.function.CheckedBiFunction) fallback}.
  * 
  * @author Jonathan Halterman
  * @param <R> listener result type
