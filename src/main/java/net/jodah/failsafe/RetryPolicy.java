@@ -429,12 +429,12 @@ public class RetryPolicy {
    * Jitter should be combined with {@link #withDelay(long, TimeUnit) fixed} or
    * {@link #withBackoff(long, long, TimeUnit) exponential backoff} delays.
    * 
-   * @throws IllegalArgumentException if {@code duration} is <= 0 or > 1
+   * @throws IllegalArgumentException if {@code jitterFactor} is < 0 or > 1
    * @throws IllegalStateException if no delay has been configured or {@link #withJitter(long, TimeUnit)} has already
    *           been called
    */
   public RetryPolicy withJitter(double jitterFactor) {
-    Assert.isTrue(jitterFactor > 0 && jitterFactor <= 1, "jitterFactor must be > 0 and <= 1");
+    Assert.isTrue(jitterFactor >= 0.0 && jitterFactor <= 1.0, "jitterFactor must be >= 0 and <= 1");
     Assert.state(delay != null, "A fixed or exponential backoff delay must be configured");
     Assert.state(jitter == null, "withJitter(long, timeUnit) has already been called");
     this.jitterFactor = jitterFactor;
