@@ -383,7 +383,7 @@ Failsafe can also perform asynchronous executions and retries on 3rd party sched
 
 #### CompletableFuture Integration
 
-Java 8 users can use Failsafe to retry [CompletableFuture] calls:
+Java 8 users can use Failsafe to retry [CompletableFuture] or [CompletionStage] calls:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -494,6 +494,7 @@ Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2
 [CircuitBreaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html
 
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
+[CompletionStage]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html 
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
 [RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
 [Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
