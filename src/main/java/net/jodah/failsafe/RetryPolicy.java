@@ -458,7 +458,7 @@ public class RetryPolicy {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(jitter > 0, "jitter must be > 0");
     Assert.state(delay != null, "A fixed or exponential backoff delay must be configured");
-    Assert.state(jitterFactor == 0.0, "withJitter(long) has already been called");
+    Assert.state(jitterFactor == 0.0, "withJitter(double) has already been called");
     this.jitter = new Duration(jitter, timeUnit);
     return this;
   }
