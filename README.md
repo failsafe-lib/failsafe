@@ -271,7 +271,7 @@ Throw a custom exception:
 
 ```java
 Failsafe.with(retryPolicy)
-  .withFallback(failure -> { throw new CustomException(failure); })
+  .withFallback(() -> { throw new CustomException(); })
   .get(this::connect);
 ```
 
