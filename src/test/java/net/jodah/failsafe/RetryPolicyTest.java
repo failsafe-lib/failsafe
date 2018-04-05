@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.Test;
 
-import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.util.Duration;
 
 @Test
 public class RetryPolicyTest {
@@ -76,7 +76,7 @@ public class RetryPolicyTest {
     policy = new RetryPolicy().retryOn(Exception.class);
     assertTrue(policy.canRetryFor(null, new Exception()));
     assertTrue(policy.canRetryFor(null, new IllegalArgumentException()));
-    
+
     policy = new RetryPolicy().retryOn(RuntimeException.class);
     assertTrue(policy.canRetryFor(null, new IllegalArgumentException()));
     assertFalse(policy.canRetryFor(null, new Exception()));
@@ -150,6 +150,29 @@ public class RetryPolicyTest {
     assertTrue(policy.canAbortFor(10, null));
     assertFalse(policy.canAbortFor(5, null));
     assertFalse(policy.canAbortFor(5, new IllegalArgumentException()));
+  }
+
+  public void testWithDelayFunction() {
+    RetryPolicy retryPolicy = new RetryPolicy();
+    assertTrue(retryPolicy.canDelayFor("expected", new IllegalArgumentException()));
+    retryPolicy.withDelay((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS));
+    assertTrue(retryPolicy.canDelayFor("expected", new IllegalArgumentException()));
+  }
+
+  public void testWithDelayOn() {
+    RetryPolicy retryPolicy = new RetryPolicy().withDelayOn((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS),
+        IllegalStateException.class);
+    assertTrue(retryPolicy.canDelayFor("foo", new IllegalStateException()));
+    assertFalse(retryPolicy.canDelayFor("foo", null));
+    assertFalse(retryPolicy.canDelayFor("foo", new IllegalArgumentException()));
+  }
+
+  public void testWithDelayWhen() {
+    RetryPolicy retryPolicy = new RetryPolicy().withDelayWhen((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS),
+        "expected");
+    assertTrue(retryPolicy.canDelayFor("expected", new IllegalStateException()));
+    assertFalse(retryPolicy.canDelayFor(null, new IllegalStateException()));
+    assertFalse(retryPolicy.canDelayFor("not expected", new IllegalStateException()));
   }
 
   public void shouldRequireValidBackoff() {
