@@ -155,7 +155,7 @@ public class RetryPolicyTest {
   public void testWithDelayFunction() {
     RetryPolicy retryPolicy = new RetryPolicy();
     assertTrue(retryPolicy.canDelayFor("expected", new IllegalArgumentException()));
-    retryPolicy.withDelay((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS));
+    retryPolicy.withDelayFn((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS));
     assertTrue(retryPolicy.canDelayFor("expected", new IllegalArgumentException()));
   }
 

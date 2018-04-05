@@ -53,7 +53,7 @@ public class DynamicDelayTest {
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullDelayFunction() {
-    new RetryPolicy().withDelay(null);
+    new RetryPolicy().withDelayFn(null);
   }
 
   @Test(expectedExceptions = NullPointerException.class)
@@ -68,7 +68,7 @@ public class DynamicDelayTest {
 
   @Test(expectedExceptions = UncheckedExpectedException.class)
   public void testUncheckedExceptionInDelayFunction() {
-    RetryPolicy retryPolicy = new RetryPolicy().withDelay((result, failure, context) -> {
+    RetryPolicy retryPolicy = new RetryPolicy().withDelayFn((result, failure, context) -> {
       throw new UncheckedExpectedException();
     });
 
@@ -108,7 +108,7 @@ public class DynamicDelayTest {
     long pad = TimeUnit.MILLISECONDS.toNanos(25);
 
     RetryPolicy retryPolicy = new RetryPolicy()
-        .withDelay((Object result, DynamicDelayException failure, ExecutionContext context) -> failure == null ? null : failure.getDuration())
+        .withDelayFn((Object result, DynamicDelayException failure, ExecutionContext context) -> failure == null ? null : failure.getDuration())
         .withMaxRetries(2);
 
     List<Long> executionTimes = new ArrayList<>();

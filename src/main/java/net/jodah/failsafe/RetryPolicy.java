@@ -39,7 +39,7 @@ import net.jodah.failsafe.util.Duration;
 public class RetryPolicy {
   /**
    * A functional interface for dynamically computing delays between retries in conjunction with
-   * {@link #withDelay(DelayFunction)}.
+   * {@link #withDelayFn(DelayFunction)}.
    * 
    * @param <R> result type
    * @param <F> failure type
@@ -59,7 +59,7 @@ public class RetryPolicy {
      * @param context the {@link ExecutionContext} that describes executions so far
      * @return a non-negative duration to be used as the delay before next retry, otherwise (null or negative duration)
      *         means fall back to the fixed or backoff delay for next retry
-     * @see #withDelay(DelayFunction)
+     * @see #withDelayFn(DelayFunction)
      * @see #withDelayOn(DelayFunction, Class)
      * @see #withDelayWhen(DelayFunction, Object)
      */
@@ -243,7 +243,7 @@ public class RetryPolicy {
   /**
    * Returns whether a delay can be applied for an execution result.
    * 
-   * @see #withDelay(DelayFunction)
+   * @see #withDelayFn(DelayFunction)
    * @see #withDelayOn(DelayFunction, Class)
    * @see #withDelayWhen(DelayFunction, Object)
    */
@@ -273,7 +273,7 @@ public class RetryPolicy {
   /**
    * Returns the function that determines the next delay given a failed attempt with the given {@link Throwable}.
    * 
-   * @see #withDelay(DelayFunction)
+   * @see #withDelayFn(DelayFunction)
    * @see #withDelayOn(DelayFunction, Class)
    * @see #withDelayWhen(DelayFunction, Object)
    */
@@ -482,7 +482,7 @@ public class RetryPolicy {
    * @throws NullPointerException if {@code delayFunction} is null
    * @see {@link DelayFunction}
    */
-  public RetryPolicy withDelay(DelayFunction<?, ? extends Throwable> delayFunction) {
+  public RetryPolicy withDelayFn(DelayFunction<?, ? extends Throwable> delayFunction) {
     Assert.notNull(delayFunction, "delayFunction");
     this.delayFunction = delayFunction;
     return this;
@@ -499,7 +499,7 @@ public class RetryPolicy {
    * @see {@link DelayFunction}
    */
   public <F extends Throwable> RetryPolicy withDelayOn(DelayFunction<Object, F> delayFunction, Class<F> failure) {
-    withDelay(delayFunction);
+    withDelayFn(delayFunction);
     Assert.notNull(failure, "failure");
     this.delayFailure = failure;
     return this;
@@ -516,7 +516,7 @@ public class RetryPolicy {
    * @see {@link DelayFunction}
    */
   public <R> RetryPolicy withDelayWhen(DelayFunction<R, ? extends Throwable> delayFunction, R result) {
-    withDelay(delayFunction);
+    withDelayFn(delayFunction);
     Assert.notNull(result, "result");
     this.delayResult = result;
     return this;
