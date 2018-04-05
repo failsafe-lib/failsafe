@@ -37,10 +37,37 @@ import net.jodah.failsafe.util.Duration;
  * @author Jonathan Halterman
  */
 public class RetryPolicy {
+  /**
+   * A functional interface for dynamically computing delays between retries
+   * in conjunction with {@link #withDelay(DelayFunction)}.
+   */
+  @FunctionalInterface
+  public interface DelayFunction<R, F extends Throwable> {
+      /**
+       * Returns the amount of delay before the next retry based on
+       * the result or failure of the last attempt and the execution
+       * context (executions so far).
+       * This method must complete quickly and should not have side-effects.
+       * Unchecked exceptions thrown by this method will <strong>not</strong>
+       * be treated as part of the fail-safe processing and will instead abort
+       * that processing.
+       * @param result the result, if any, of the last attempt
+       * @param failure the {@link Throwable} thrown, if any, during the last attempt
+       * @param context the {@link ExecutionContext} that describes executions so far
+       * @return a non-negative duration to be used as the delay before next retry,
+       *         otherwise (null or negative duration) means fall back to the fixed
+       *         static delay for next retry
+       */
+      Duration calculateDelay(R result, F failure, ExecutionContext context);
+  }
+
   static final RetryPolicy NEVER = new RetryPolicy().withMaxRetries(0);
 
   private Duration delay;
   private double delayFactor;
+  private DelayFunction<?, ? extends Throwable> delayFunction;
+  private Class<?> delayFunctionResultType;
+  private Class<? extends Throwable> delayFunctionFailureType;
   private Duration jitter;
   private double jitterFactor;
   private Duration maxDelay;
@@ -227,6 +254,28 @@ public class RetryPolicy {
   }
 
   /**
+   * Returns the function that determines the next delay given
+   * a failed attempt with the given {@link Throwable}.
+   */
+  public DelayFunction<?, ? extends Throwable> getDelayFunction() {
+    return delayFunction;
+  }
+
+  /**
+   * Returns the type of result expected by the delay function.
+   */
+  public Class<?> getDelayFunctionResultType() {
+      return delayFunctionResultType;
+  }
+
+  /**
+   * Returns the type of failure expected by the delay function.
+   */
+  public Class<? extends Throwable> getDelayFunctionFailureType() {
+      return delayFunctionFailureType;
+  }
+
+  /**
    * Returns the delay factor for backoff retries.
    * 
    * @see #withBackoff(long, long, TimeUnit, double)
@@ -372,7 +421,7 @@ public class RetryPolicy {
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(long, TimeUnit)
-   *           maxDuration}
+   *           maxDuration}, or if a delay function has already been set
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
    */
   public RetryPolicy withBackoff(long delay, long maxDelay, TimeUnit timeUnit) {
@@ -385,7 +434,7 @@ public class RetryPolicy {
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(long, TimeUnit)
-   *           maxDuration}
+   *           maxDuration}, or if a delay function has already been set
    * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the
    *           {@code delayFactor} is <= 1
    */
@@ -394,6 +443,7 @@ public class RetryPolicy {
     Assert.isTrue(timeUnit.toNanos(delay) > 0, "The delay must be greater than 0");
     Assert.state(maxDuration == null || timeUnit.toNanos(delay) < maxDuration.toNanos(),
         "delay must be less than the maxDuration");
+    Assert.state(delayFunction == null, "Delay function has already been set");
     Assert.isTrue(timeUnit.toNanos(delay) < timeUnit.toNanos(maxDelay), "delay must be less than the maxDelay");
     Assert.isTrue(delayFactor > 1, "delayFactor must be greater than 1");
     this.delay = new Duration(delay, timeUnit);
@@ -408,7 +458,7 @@ public class RetryPolicy {
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(long, TimeUnit)
-   *           maxDuration}
+   *           maxDuration}, or if backoff delays have already been set
    */
   public RetryPolicy withDelay(long delay, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
@@ -417,6 +467,37 @@ public class RetryPolicy {
         "delay must be less than the maxDuration");
     Assert.state(maxDelay == null, "Backoff delays have already been set");
     this.delay = new Duration(delay, timeUnit);
+    return this;
+  }
+
+  /**
+   * Sets the function that determines the next delay before retrying.
+   * @param delayFunction the function to use to compute the delay before a next attempt
+   * @throws NullPointerException if {@code delayFunction} is null
+   * @throws IllegalStateException if backoff delays have already been set
+   */
+  public RetryPolicy withDelay(DelayFunction<Object, Throwable> delayFunction) {
+      return withDelay(delayFunction, Object.class, Throwable.class);
+  }
+
+  /**
+   * Sets the function that determines the next delay before retrying.
+   * @param delayFunction the function to use to compute the delay before a next attempt
+   * @param resultType the type of result from the previous attempt expected by the delay function
+   * @param failureType the type of failure from the previous attempt expected by the delay function
+   * @throws NullPointerException if {@code delayFunction} is null, {@code resultType} is null, or
+   *     {@code failureType} is null
+   * @throws IllegalStateException if backoff delays have already been set
+   */
+  public <R, F extends Throwable> RetryPolicy withDelay(DelayFunction<R, F> delayFunction,
+          Class<R> resultType, Class<F> failureType) {
+    Assert.notNull(delayFunction, "delayFunction");
+    Assert.notNull(resultType, "resultType");
+    Assert.notNull(failureType, "failureType");
+    Assert.state(maxDelay == null, "Backoff delays have already been set");
+    this.delayFunction = delayFunction;
+    this.delayFunctionResultType = resultType;
+    this.delayFunctionFailureType = failureType;
     return this;
   }
 
