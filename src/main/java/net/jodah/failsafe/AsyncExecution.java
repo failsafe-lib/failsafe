@@ -172,7 +172,7 @@ public final class AsyncExecution extends AbstractExecution {
     synchronized (future) {
       if (!complete(result, failure, true) && !future.isDone() && !future.isCancelled()) {
         try {
-          future.inject((Future) scheduler.schedule(callable, staticDelayNanos, TimeUnit.NANOSECONDS));
+          future.inject((Future) scheduler.schedule(callable, waitNanos, TimeUnit.NANOSECONDS));
           return true;
         } catch (Throwable t) {
           failure = t;

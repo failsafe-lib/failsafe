@@ -34,8 +34,8 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile boolean completed;
   volatile boolean retriesExceeded;
   volatile boolean success;
-  volatile long staticDelayNanos = -1;
-  volatile long dynamicDelayNanos = -1;
+  private volatile long staticDelayNanos = -1;
+  private volatile long dynamicDelayNanos = -1;
   volatile long waitNanos;
 
   /**
