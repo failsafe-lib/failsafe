@@ -34,7 +34,8 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile boolean completed;
   volatile boolean retriesExceeded;
   volatile boolean success;
-  volatile long delayNanos = -1;
+  volatile long staticDelayNanos = -1;
+  volatile long dynamicDelayNanos = -1;
   volatile long waitNanos;
 
   /**
@@ -91,7 +92,8 @@ abstract class AbstractExecution extends ExecutionContext {
    * 
    * @throws IllegalStateException if the execution is already complete
    */
-   boolean complete(Object result, Throwable failure, boolean checkArgs) {
+  @SuppressWarnings("unchecked")
+  boolean complete(Object result, Throwable failure, boolean checkArgs) {
     Assert.state(!completed, "Execution has already been completed");
     executions++;
     lastResult = result;
@@ -108,30 +110,24 @@ abstract class AbstractExecution extends ExecutionContext {
         circuitBreaker.recordSuccess();
     }
 
-    // If there's a delay function configured with the appropriate result and failure
-    // types and it returns a non-negative duration, use it to initialize the delay
-    // instead of the static delay value.
-    DelayFunction<?, ? extends Throwable> delayFunction = retryPolicy.getDelayFunction();
-    Class<?> resultType = retryPolicy.getDelayFunctionResultType();
-    Class<? extends Throwable> failureType = retryPolicy.getDelayFunctionFailureType();
-    if (delayFunction != null && (result == null || resultType.isInstance(result))
-            && (failure == null || failureType.isInstance(failure))) {
-        @SuppressWarnings("unchecked")
-        DelayFunction<Object, Throwable> f = (DelayFunction<Object, Throwable>) (DelayFunction) delayFunction;
-        Duration dynamicDelay = f.calculateDelay(result, failure, this);
-        if (dynamicDelay == null || dynamicDelay.toNanos() < 0)
-            delayNanos = -1;
-        else
-            delayNanos = dynamicDelay.toNanos();
+    // Determine the dynamic delay
+    dynamicDelayNanos = -1;
+    DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFunction();
+    if (delayFunction != null && retryPolicy.canDelayFor(result, failure)) {
+      Duration dynamicDelay = delayFunction.calculateDelay(result, failure, this);
+      if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
+        dynamicDelayNanos = dynamicDelay.toNanos();
     }
-    // Initialize or adjust the delay for backoffs. Delay functions and backoff are
-    // mutually exclusive, so if the delay function above returns null or a negative
-    // duration, the delay will just be the fixed static delay value without any
-    // adjustments due to max delay or delay factor.
-    if (delayNanos == -1)
-      delayNanos = retryPolicy.getDelay().toNanos();
-    else if (retryPolicy.getMaxDelay() != null)
-      delayNanos = (long) Math.min(delayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
+
+    // Determine the static (fixed or backoff) delay
+    if (dynamicDelayNanos == -1) {
+      if (staticDelayNanos == -1)
+        staticDelayNanos = retryPolicy.getDelay().toNanos();
+      else if (retryPolicy.getMaxDelay() != null)
+        staticDelayNanos = (long) Math.min(staticDelayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
+    }
+    
+    long delayNanos = dynamicDelayNanos != -1 ? dynamicDelayNanos : staticDelayNanos; 
 
     // Calculate the wait time with jitter
     if (retryPolicy.getJitter() != null)
