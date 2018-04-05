@@ -247,7 +247,7 @@ public class RetryPolicy {
    * @see #withDelayOn(DelayFunction, Class)
    * @see #withDelayWhen(DelayFunction, Object)
    */
-  public boolean canDelayFor(Object result, Throwable failure) {
+  public boolean canApplyDelayFn(Object result, Throwable failure) {
     return (delayResult == null || delayResult.equals(result))
         && (delayFailure == null || (failure != null && delayFailure.isAssignableFrom(failure.getClass())));
   }
@@ -277,7 +277,7 @@ public class RetryPolicy {
    * @see #withDelayOn(DelayFunction, Class)
    * @see #withDelayWhen(DelayFunction, Object)
    */
-  public DelayFunction<?, ? extends Throwable> getDelayFunction() {
+  public DelayFunction<?, ? extends Throwable> getDelayFn() {
     return delayFunction;
   }
 

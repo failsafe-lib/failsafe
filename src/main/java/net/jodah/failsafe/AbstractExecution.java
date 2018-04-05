@@ -112,8 +112,8 @@ abstract class AbstractExecution extends ExecutionContext {
 
     // Determine the dynamic delay
     dynamicDelayNanos = -1;
-    DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFunction();
-    if (delayFunction != null && retryPolicy.canDelayFor(result, failure)) {
+    DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFn();
+    if (delayFunction != null && retryPolicy.canApplyDelayFn(result, failure)) {
       Duration dynamicDelay = delayFunction.calculateDelay(result, failure, this);
       if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
         dynamicDelayNanos = dynamicDelay.toNanos();

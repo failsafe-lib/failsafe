@@ -154,25 +154,25 @@ public class RetryPolicyTest {
 
   public void testWithDelayFunction() {
     RetryPolicy retryPolicy = new RetryPolicy();
-    assertTrue(retryPolicy.canDelayFor("expected", new IllegalArgumentException()));
+    assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
     retryPolicy.withDelay((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS));
-    assertTrue(retryPolicy.canDelayFor("expected", new IllegalArgumentException()));
+    assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
   }
 
   public void testWithDelayOn() {
     RetryPolicy retryPolicy = new RetryPolicy().withDelayOn((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS),
         IllegalStateException.class);
-    assertTrue(retryPolicy.canDelayFor("foo", new IllegalStateException()));
-    assertFalse(retryPolicy.canDelayFor("foo", null));
-    assertFalse(retryPolicy.canDelayFor("foo", new IllegalArgumentException()));
+    assertTrue(retryPolicy.canApplyDelayFn("foo", new IllegalStateException()));
+    assertFalse(retryPolicy.canApplyDelayFn("foo", null));
+    assertFalse(retryPolicy.canApplyDelayFn("foo", new IllegalArgumentException()));
   }
 
   public void testWithDelayWhen() {
     RetryPolicy retryPolicy = new RetryPolicy().withDelayWhen((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS),
         "expected");
-    assertTrue(retryPolicy.canDelayFor("expected", new IllegalStateException()));
-    assertFalse(retryPolicy.canDelayFor(null, new IllegalStateException()));
-    assertFalse(retryPolicy.canDelayFor("not expected", new IllegalStateException()));
+    assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalStateException()));
+    assertFalse(retryPolicy.canApplyDelayFn(null, new IllegalStateException()));
+    assertFalse(retryPolicy.canApplyDelayFn("not expected", new IllegalStateException()));
   }
 
   public void shouldRequireValidBackoff() {
