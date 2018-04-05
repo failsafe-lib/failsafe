@@ -21,6 +21,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.Test;
@@ -32,19 +33,6 @@ import net.jodah.failsafe.util.Duration;
 
 @Test
 public class DynamicDelayTest {
-  static class DynamicDelayException extends Exception {
-    final Duration duration;
-
-    DynamicDelayException(long time, TimeUnit unit) {
-      super(String.format("Dynamic delay of %s %s", time, unit));
-      this.duration = new Duration(time, unit);
-    }
-
-    public Duration getDuration() {
-      return duration;
-    }
-  }
-
   static class UncheckedExpectedException extends RuntimeException {
   }
 
@@ -78,20 +66,17 @@ public class DynamicDelayTest {
   }
 
   public void testDynamicDelay() {
-    long delay = TimeUnit.MILLISECONDS.toNanos(500);
-    long pad = TimeUnit.MILLISECONDS.toNanos(25);
+    long dynamicDelay = TimeUnit.MILLISECONDS.toNanos(100);
 
-    RetryPolicy retryPolicy = new RetryPolicy()
-        .withDelayOn((result, failure, context) -> failure == null ? null : failure.getDuration(),
-            DynamicDelayException.class)
-        .withMaxRetries(2);
+    RetryPolicy retryPolicy = new RetryPolicy().withDelayOn(
+        (result, failure, context) -> new Duration(dynamicDelay, TimeUnit.NANOSECONDS), TimeoutException.class);
 
     List<Long> executionTimes = new ArrayList<>();
 
     Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
       executionTimes.add(System.nanoTime());
       if (context.getExecutions() == 0)
-        throw new DynamicDelayException(delay, TimeUnit.NANOSECONDS);
+        throw new TimeoutException();
     });
 
     assertEquals(executionTimes.size(), 2, "Should have exactly two executions");
@@ -99,33 +84,65 @@ public class DynamicDelayTest {
     long t0 = executionTimes.get(0);
     long t1 = executionTimes.get(1);
 
-    assertTrue(t1 - t0 > delay - pad, "Time between executions less than expected");
-    assertTrue(t1 - t0 < delay + pad, "Time between executions more than expected");
+    assertDelay(t1 - t0, dynamicDelay);
   }
-  
-  public void testFallbackToStaticDelay() {
-    long delay = TimeUnit.MILLISECONDS.toNanos(500);
-    long pad = TimeUnit.MILLISECONDS.toNanos(25);
+
+  public void shouldFallbackToStaticDelay() {
+    long fixedDelay = TimeUnit.MILLISECONDS.toNanos(100);
+    long dynamicDelay = TimeUnit.MILLISECONDS.toNanos(300);
 
     RetryPolicy retryPolicy = new RetryPolicy()
-        .withDelay((Object result, DynamicDelayException failure, ExecutionContext context) -> failure == null ? null : failure.getDuration())
-        .withMaxRetries(2);
+        .retryIf(r -> r != null)
+        .withDelay(fixedDelay, TimeUnit.NANOSECONDS)
+        .withDelay((result, failure, ctx) -> new Duration(ctx.getExecutions() % 2 == 1 ? dynamicDelay : -1,
+            TimeUnit.NANOSECONDS));
 
     List<Long> executionTimes = new ArrayList<>();
 
     Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
       executionTimes.add(System.nanoTime());
-      if (context.getExecutions() == 0)
-        throw new DynamicDelayException(delay, TimeUnit.NANOSECONDS);
+      if (context.getExecutions() != 2)
+        throw new TimeoutException();
     });
 
-    assertEquals(executionTimes.size(), 2, "Should have exactly two executions");
+    assertEquals(executionTimes.size(), 3, "Should have exactly three executions");
 
     long t0 = executionTimes.get(0);
     long t1 = executionTimes.get(1);
+    long t2 = executionTimes.get(2);
 
-    assertTrue(t1 - t0 > delay - pad, "Time between executions less than expected");
-    assertTrue(t1 - t0 < delay + pad, "Time between executions more than expected");
+    assertDelay(t1 - t0, dynamicDelay);
+    assertDelay(t2 - t1, fixedDelay);
+  }
+
+  public void shouldFallbackToBackoffDelay() {
+    long backoffDelay = TimeUnit.MILLISECONDS.toNanos(100);
+    long dynamicDelay = TimeUnit.MILLISECONDS.toNanos(300);
+
+    RetryPolicy retryPolicy = new RetryPolicy()
+        .retryIf(r -> r != null)
+        .withBackoff(backoffDelay, backoffDelay * 100, TimeUnit.NANOSECONDS)
+        .withDelay((result, failure, ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? dynamicDelay : -1,
+            TimeUnit.NANOSECONDS));
+
+    List<Long> executionTimes = new ArrayList<>();
+
+    Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
+      executionTimes.add(System.nanoTime());
+      if (context.getExecutions() != 3)
+        throw new TimeoutException();
+    });
+
+    assertEquals(executionTimes.size(), 4, "Should have exactly four executions");
+
+    long t0 = executionTimes.get(0);
+    long t1 = executionTimes.get(1);
+    long t2 = executionTimes.get(2);
+    long t3 = executionTimes.get(3);
+
+    assertDelay(t1 - t0, backoffDelay);
+    assertDelay(t2 - t1, dynamicDelay);
+    assertDelay(t3 - t2, backoffDelay * 2);
   }
 
   public void shouldDelayOnMatchingResult() {
@@ -177,5 +194,11 @@ public class DynamicDelayTest {
     assertEquals(result, 123, "Fallback should be used");
     assertEquals(attempts.get(), 5, "Expecting five attempts (1 + 4 retries)");
     assertEquals(delays.get(), 2, "Expecting two dynamic delays matching DelayException failure");
+  }
+
+  private void assertDelay(long elapsedNanos, long expectedDelayNanos) {
+    long pad = TimeUnit.MILLISECONDS.toNanos(25);
+    assertTrue(elapsedNanos > expectedDelayNanos - pad, "Time between executions less than expected");
+    assertTrue(elapsedNanos < expectedDelayNanos + pad, "Time between executions more than expected");
   }
 }
