@@ -98,13 +98,7 @@ A delay that [backs off][backoff] exponentially:
 retryPolicy.withBackoff(1, 30, TimeUnit.SECONDS);
 ```
 
-Or a [computed delay][computed-delay] based on an execution:
-
-```java
-retryPolicy.withDelay((result, failure, ctx) -> new Duration(result == 500 ? 10 : 1, TimeUnit.SECONDS);
-```
-
-It can add a random [jitter factor][jitter-factor] to a delay:
+Or a [computed delay][computed-delay] based on an execution. It can add a random [jitter factor][jitter-factor] to a delay:
 
 ```java
 retryPolicy.withJitter(.1);
