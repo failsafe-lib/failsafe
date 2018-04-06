@@ -28,7 +28,7 @@ import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.util.Duration;
 
 @Test
-public class DynamicDelayTest {
+public class ComputedDelayTest {
   static class UncheckedExpectedException extends RuntimeException {
   }
 

@@ -38,8 +38,7 @@ import net.jodah.failsafe.util.Duration;
  */
 public class RetryPolicy {
   /**
-   * A functional interface for dynamically computing delays between retries in conjunction with
-   * {@link #withDelay(DelayFunction)}.
+   * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
    * 
    * @param <R> result type
    * @param <F> failure type
@@ -68,7 +67,7 @@ public class RetryPolicy {
      * @see #withDelayOn(DelayFunction, Class)
      * @see #withDelayWhen(DelayFunction, Object)
      */
-    Duration calculateDelay(R result, F failure, ExecutionContext context);
+    Duration computeDelay(R result, F failure, ExecutionContext context);
   }
 
   static final RetryPolicy NEVER = new RetryPolicy().withMaxRetries(0);
@@ -527,7 +526,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the {@code delayFunction} that determines the next delay before retrying.
+   * Sets the {@code delayFunction} that computes the next delay before retrying.
    * 
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @throws NullPointerException if {@code delayFunction} is null
@@ -540,7 +539,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the {@code delayFunction} that determines the next delay before retrying. Delays will only occur for failures
+   * Sets the {@code delayFunction} that computes the next delay before retrying. Delays will only occur for failures
    * that are assignable from the {@code failure}.
    * 
    * @param delayFunction the function to use to compute the delay before a next attempt
@@ -557,7 +556,7 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the {@code delayFunction} that determines the next delay before retrying. Delays will only occur for results
+   * Sets the {@code delayFunction} that computes the next delay before retrying. Delays will only occur for results
    * that equal the {@code result}.
    * 
    * @param delayFunction the function to use to compute the delay before a next attempt

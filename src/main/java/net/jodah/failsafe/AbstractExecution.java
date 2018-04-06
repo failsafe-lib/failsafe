@@ -33,7 +33,7 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile boolean completed;
   volatile boolean retriesExceeded;
   volatile boolean success;
-  /** The fixed, backoff, random or dynamic delay time in nanoseconds. */
+  /** The fixed, backoff, random or computed delay time in nanoseconds. */
   private volatile long delayNanos = -1;
   /** The wait time, which is the delay time adjusted for jitter and max duration, in nanoseconds. */
   volatile long waitNanos;
@@ -109,17 +109,17 @@ abstract class AbstractExecution extends ExecutionContext {
         circuitBreaker.recordSuccess();
     }
 
-    // Determine the dynamic delay
-    long dynamicDelayNanos = -1;
+    // Determine the computed delay
+    long computedDelayNanos = -1;
     DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFn();
     if (delayFunction != null && retryPolicy.canApplyDelayFn(result, failure)) {
-      Duration dynamicDelay = delayFunction.calculateDelay(result, failure, this);
-      if (dynamicDelay != null && dynamicDelay.toNanos() >= 0)
-        dynamicDelayNanos = dynamicDelay.toNanos();
+      Duration computedDelay = delayFunction.computeDelay(result, failure, this);
+      if (computedDelay != null && computedDelay.toNanos() >= 0)
+        computedDelayNanos = computedDelay.toNanos();
     }
 
-    // Determine the non-dynamic delay
-    if (dynamicDelayNanos == -1) {
+    // Determine the non-computed delay
+    if (computedDelayNanos == -1) {
       Duration delay = retryPolicy.getDelay();
       Duration delayMin = retryPolicy.getDelayMin();
       Duration delayMax = retryPolicy.getDelayMax();
@@ -134,7 +134,7 @@ abstract class AbstractExecution extends ExecutionContext {
         delayNanos = (long) Math.min(delayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
     }
 
-    waitNanos = dynamicDelayNanos != -1 ? dynamicDelayNanos : delayNanos;
+    waitNanos = computedDelayNanos != -1 ? computedDelayNanos : delayNanos;
 
     // Adjust the wait time for jitter
     if (retryPolicy.getJitter() != null)

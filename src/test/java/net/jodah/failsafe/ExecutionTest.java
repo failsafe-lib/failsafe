@@ -204,7 +204,7 @@ public class ExecutionTest {
     assertEquals(exec.getWaitTime().toNanos(), 10);
   }
 
-  public void shouldAdjustWaitTimeForDynamicDelay() {
+  public void shouldAdjustWaitTimeForComputedDelay() {
     Execution exec = new Execution(
         new RetryPolicy().withDelay((r, f, ctx) -> new Duration(ctx.getExecutions() * 2, TimeUnit.NANOSECONDS)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
@@ -218,7 +218,7 @@ public class ExecutionTest {
     assertEquals(exec.getWaitTime().toNanos(), 8);
   }
 
-  public void shouldFallbackWaitTimeFromDynamicToFixedDelay() {
+  public void shouldFallbackWaitTimeFromComputedToFixedDelay() {
     Execution exec = new Execution(new RetryPolicy().withDelay(5, TimeUnit.NANOSECONDS).withDelay((r, f,
         ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1, TimeUnit.NANOSECONDS)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
@@ -236,7 +236,7 @@ public class ExecutionTest {
     assertEquals(exec.getWaitTime().toNanos(), 12);
   }
 
-  public void shouldFallbackWaitTimeFromDynamicToBackoffDelay() {
+  public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
     Execution exec = new Execution(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS).withDelay((r, f,
         ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1, TimeUnit.NANOSECONDS)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
