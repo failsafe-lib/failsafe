@@ -86,13 +86,25 @@ It can add a fixed delay between retries:
 retryPolicy.withDelay(1, TimeUnit.SECONDS);
 ```
 
-Or a delay that [backs off][backoff] exponentially:
+A random delay for some range:
+
+```java
+retryPolicy.withDelay(1, 10, TimeUnit.SECONDS);
+```
+
+A delay that [backs off][backoff] exponentially:
 
 ```java
 retryPolicy.withBackoff(1, 30, TimeUnit.SECONDS);
 ```
 
-It can add a random [jitter factor][jitter-factor] to the delay:
+Or a [computed delay][computed-delay] based on an execution:
+
+```java
+retryPolicy.withDelay((result, failure, ctx) -> new Duration(result == 500 ? 10 : 1, TimeUnit.SECONDS);
+```
+
+It can add a random [jitter factor][jitter-factor] to a delay:
 
 ```java
 retryPolicy.withJitter(.1);
@@ -470,6 +482,7 @@ Failsafe is a volunteer effort. If you use it and you like it, [let us know][who
 Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 [backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
+[computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.RetryPolicy.DelayFunction-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
 [max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
