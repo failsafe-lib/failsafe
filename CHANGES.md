@@ -1,3 +1,16 @@
+# 1.1.0
+
+### Bug Fixes
+
+* Issue #115 - Jitter bigger than Delay causes a (random) failure at runtime
+* Issue #116 - Setting jitter without a delay works fine bug
+* Issue #123 - Ability to reset the jitterFactor
+
+### Improvements
+
+* Issue #110 - Added support for computed delays: `RetryPolicy.withDelay(DelayFunction)`
+* Issue #126 - Added support for random delays: `RetryPolicy.withDelay(1, 10, TimeUnit.MILLISECONDS)`
+
 # 1.0.5
 
 ### Bug Fixes
