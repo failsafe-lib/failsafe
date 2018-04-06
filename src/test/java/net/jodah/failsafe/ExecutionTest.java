@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.Test;
 
+import net.jodah.failsafe.util.Duration;
+
 /**
  * @author Jonathan Halterman
  */
@@ -187,7 +189,7 @@ public class ExecutionTest {
 
   public void shouldAdjustWaitTimeForBackoff() {
     Execution exec = new Execution(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS));
-    assertEquals(exec.getWaitTime().toNanos(), 1);
+    assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);
     exec.recordFailure(e);
@@ -200,6 +202,58 @@ public class ExecutionTest {
     assertEquals(exec.getWaitTime().toNanos(), 10);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 10);
+  }
+
+  public void shouldAdjustWaitTimeForDynamicDelay() {
+    Execution exec = new Execution(
+        new RetryPolicy().withDelay((r, f, ctx) -> new Duration(ctx.getExecutions() * 2, TimeUnit.NANOSECONDS)));
+    assertEquals(exec.getWaitTime().toNanos(), 0);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 2);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 4);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 6);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 8);
+  }
+
+  public void shouldFallbackWaitTimeFromDynamicToFixedDelay() {
+    Execution exec = new Execution(new RetryPolicy().withDelay(5, TimeUnit.NANOSECONDS).withDelay((r, f,
+        ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1, TimeUnit.NANOSECONDS)));
+    assertEquals(exec.getWaitTime().toNanos(), 0);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 5);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 4);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 5);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 8);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 5);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 12);
+  }
+
+  public void shouldFallbackWaitTimeFromDynamicToBackoffDelay() {
+    Execution exec = new Execution(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS).withDelay((r, f,
+        ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1, TimeUnit.NANOSECONDS)));
+    assertEquals(exec.getWaitTime().toNanos(), 0);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 1);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 4);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 2);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 8);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 4);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 12);
+    exec.recordFailure(e);
+    assertEquals(exec.getWaitTime().toNanos(), 8);
   }
 
   public void shouldAdjustWaitTimeForMaxDuration() throws Throwable {
@@ -229,10 +283,11 @@ public class ExecutionTest {
   }
 
   public void shouldGetWaitMillis() throws Throwable {
-    Execution exec = new Execution(new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
+    Execution exec = new Execution(new RetryPolicy()
+        .withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(101, TimeUnit.MILLISECONDS)
         .retryWhen(null));
-    assertEquals(exec.getWaitTime().toMillis(), 100);
+    assertEquals(exec.getWaitTime().toMillis(), 0);
     exec.canRetryFor(null);
     assertTrue(exec.getWaitTime().toMillis() <= 100);
     Thread.sleep(150);

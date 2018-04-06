@@ -16,12 +16,8 @@
 package net.jodah.failsafe.functional;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.Test;
@@ -63,86 +59,6 @@ public class DynamicDelayTest {
     Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
       throw new RuntimeException("try again");
     });
-  }
-
-  public void testDynamicDelay() {
-    long dynamicDelay = TimeUnit.MILLISECONDS.toNanos(100);
-
-    RetryPolicy retryPolicy = new RetryPolicy().withDelayOn(
-        (result, failure, context) -> new Duration(dynamicDelay, TimeUnit.NANOSECONDS), TimeoutException.class);
-
-    List<Long> executionTimes = new ArrayList<>();
-
-    Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
-      executionTimes.add(System.nanoTime());
-      if (context.getExecutions() == 0)
-        throw new TimeoutException();
-    });
-
-    assertEquals(executionTimes.size(), 2, "Should have exactly two executions");
-
-    long t0 = executionTimes.get(0);
-    long t1 = executionTimes.get(1);
-
-    assertDelay(t1 - t0, dynamicDelay);
-  }
-
-  public void shouldFallbackToStaticDelay() {
-    long fixedDelay = TimeUnit.MILLISECONDS.toNanos(100);
-    long dynamicDelay = TimeUnit.MILLISECONDS.toNanos(300);
-
-    RetryPolicy retryPolicy = new RetryPolicy()
-        .retryIf(r -> r != null)
-        .withDelay(fixedDelay, TimeUnit.NANOSECONDS)
-        .withDelay((result, failure, ctx) -> new Duration(ctx.getExecutions() % 2 == 1 ? dynamicDelay : -1,
-            TimeUnit.NANOSECONDS));
-
-    List<Long> executionTimes = new ArrayList<>();
-
-    Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
-      executionTimes.add(System.nanoTime());
-      if (context.getExecutions() != 2)
-        throw new TimeoutException();
-    });
-
-    assertEquals(executionTimes.size(), 3, "Should have exactly three executions");
-
-    long t0 = executionTimes.get(0);
-    long t1 = executionTimes.get(1);
-    long t2 = executionTimes.get(2);
-
-    assertDelay(t1 - t0, dynamicDelay);
-    assertDelay(t2 - t1, fixedDelay);
-  }
-
-  public void shouldFallbackToBackoffDelay() {
-    long backoffDelay = TimeUnit.MILLISECONDS.toNanos(100);
-    long dynamicDelay = TimeUnit.MILLISECONDS.toNanos(300);
-
-    RetryPolicy retryPolicy = new RetryPolicy()
-        .retryIf(r -> r != null)
-        .withBackoff(backoffDelay, backoffDelay * 100, TimeUnit.NANOSECONDS)
-        .withDelay((result, failure, ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? dynamicDelay : -1,
-            TimeUnit.NANOSECONDS));
-
-    List<Long> executionTimes = new ArrayList<>();
-
-    Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
-      executionTimes.add(System.nanoTime());
-      if (context.getExecutions() != 3)
-        throw new TimeoutException();
-    });
-
-    assertEquals(executionTimes.size(), 4, "Should have exactly four executions");
-
-    long t0 = executionTimes.get(0);
-    long t1 = executionTimes.get(1);
-    long t2 = executionTimes.get(2);
-    long t3 = executionTimes.get(3);
-
-    assertDelay(t1 - t0, backoffDelay);
-    assertDelay(t2 - t1, dynamicDelay);
-    assertDelay(t3 - t2, backoffDelay * 2);
   }
 
   public void shouldDelayOnMatchingResult() {
@@ -194,11 +110,5 @@ public class DynamicDelayTest {
     assertEquals(result, 123, "Fallback should be used");
     assertEquals(attempts.get(), 5, "Expecting five attempts (1 + 4 retries)");
     assertEquals(delays.get(), 2, "Expecting two dynamic delays matching DelayException failure");
-  }
-
-  private void assertDelay(long elapsedNanos, long expectedDelayNanos) {
-    long pad = TimeUnit.MILLISECONDS.toNanos(25);
-    assertTrue(elapsedNanos > expectedDelayNanos - pad, "Time between executions less than expected");
-    assertTrue(elapsedNanos < expectedDelayNanos + pad, "Time between executions more than expected");
   }
 }

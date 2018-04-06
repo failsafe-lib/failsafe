@@ -17,10 +17,9 @@ package net.jodah.failsafe;
 
 import java.util.concurrent.TimeUnit;
 
+import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
-
-import static net.jodah.failsafe.RetryPolicy.DelayFunction;
 
 abstract class AbstractExecution extends ExecutionContext {
   final FailsafeConfig<Object, ?> config;
@@ -34,8 +33,9 @@ abstract class AbstractExecution extends ExecutionContext {
   volatile boolean completed;
   volatile boolean retriesExceeded;
   volatile boolean success;
-  private volatile long staticDelayNanos = -1;
-  private volatile long dynamicDelayNanos = -1;
+  /** The fixed, backoff, random or dynamic delay time in nanoseconds. */
+  private volatile long delayNanos = -1;
+  /** The wait time, which is the delay time adjusted for jitter and max duration, in nanoseconds. */
   volatile long waitNanos;
 
   /**
@@ -48,7 +48,6 @@ abstract class AbstractExecution extends ExecutionContext {
     this.config = config;
     retryPolicy = config.retryPolicy;
     this.circuitBreaker = config.circuitBreaker;
-    waitNanos = retryPolicy.getDelay().toNanos();
   }
 
   /**
@@ -68,7 +67,7 @@ abstract class AbstractExecution extends ExecutionContext {
   }
 
   /**
-   * Returns the time to wait before the next execution attempt.
+   * Returns the time to wait before the next execution attempt. Returns {@code 0} if an execution has not yet occurred.
    */
   public Duration getWaitTime() {
     return new Duration(waitNanos, TimeUnit.NANOSECONDS);
@@ -111,7 +110,7 @@ abstract class AbstractExecution extends ExecutionContext {
     }
 
     // Determine the dynamic delay
-    dynamicDelayNanos = -1;
+    long dynamicDelayNanos = -1;
     DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFn();
     if (delayFunction != null && retryPolicy.canApplyDelayFn(result, failure)) {
       Duration dynamicDelay = delayFunction.calculateDelay(result, failure, this);
@@ -119,23 +118,29 @@ abstract class AbstractExecution extends ExecutionContext {
         dynamicDelayNanos = dynamicDelay.toNanos();
     }
 
-    // Determine the static (fixed or backoff) delay
+    // Determine the non-dynamic delay
     if (dynamicDelayNanos == -1) {
-      if (staticDelayNanos == -1)
-        staticDelayNanos = retryPolicy.getDelay().toNanos();
-      else if (retryPolicy.getMaxDelay() != null)
-        staticDelayNanos = (long) Math.min(staticDelayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
-    }
-    
-    long delayNanos = dynamicDelayNanos != -1 ? dynamicDelayNanos : staticDelayNanos; 
+      Duration delay = retryPolicy.getDelay();
+      Duration delayMin = retryPolicy.getDelayMin();
+      Duration delayMax = retryPolicy.getDelayMax();
 
-    // Calculate the wait time with jitter
+      if (delayNanos == -1 && delay != null && !delay.equals(Duration.NONE))
+        delayNanos = delay.toNanos();
+      else if (delayMin != null && delayMax != null)
+        delayNanos = randomDelayInRange(delayMin.toNanos(), delayMin.toNanos(), Math.random());
+
+      // Adjust for backoff
+      if (executions != 1 && retryPolicy.getMaxDelay() != null)
+        delayNanos = (long) Math.min(delayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
+    }
+
+    waitNanos = dynamicDelayNanos != -1 ? dynamicDelayNanos : delayNanos;
+
+    // Adjust the wait time for jitter
     if (retryPolicy.getJitter() != null)
-      waitNanos = randomizeDelay(delayNanos, retryPolicy.getJitter().toNanos(), Math.random());
+      waitNanos = randomDelay(waitNanos, retryPolicy.getJitter().toNanos(), Math.random());
     else if (retryPolicy.getJitterFactor() > 0.0)
-      waitNanos = randomizeDelay(delayNanos, retryPolicy.getJitterFactor(), Math.random());
-    else
-      waitNanos = delayNanos;
+      waitNanos = randomDelay(waitNanos, retryPolicy.getJitterFactor(), Math.random());
 
     // Adjust the wait time for max duration
     if (retryPolicy.getMaxDuration() != null) {
@@ -170,12 +175,16 @@ abstract class AbstractExecution extends ExecutionContext {
     return completed;
   }
 
-  static long randomizeDelay(long delay, long jitter, double random) {
+  static long randomDelayInRange(long delayMin, long delayMax, double random) {
+    return (long) (random * (delayMax - delayMin)) + delayMin;
+  }
+
+  static long randomDelay(long delay, long jitter, double random) {
     double randomAddend = (1 - random * 2) * jitter;
     return (long) (delay + randomAddend);
   }
 
-  static long randomizeDelay(long delay, double jitterFactor, double random) {
+  static long randomDelay(long delay, double jitterFactor, double random) {
     double randomFactor = 1 + (1 - random * 2) * jitterFactor;
     return (long) (delay * randomFactor);
   }
