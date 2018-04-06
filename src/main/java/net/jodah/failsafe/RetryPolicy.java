@@ -530,7 +530,7 @@ public class RetryPolicy {
    * 
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @throws NullPointerException if {@code delayFunction} is null
-   * @see {@link DelayFunction}
+   * @see DelayFunction
    */
   public RetryPolicy withDelay(DelayFunction<?, ? extends Throwable> delayFunction) {
     Assert.notNull(delayFunction, "delayFunction");
@@ -546,7 +546,7 @@ public class RetryPolicy {
    * @param failure the execution failure that is expected in order to trigger the delay
    * @param <F> failure type
    * @throws NullPointerException if {@code delayFunction} or {@code failure} are null
-   * @see {@link DelayFunction}
+   * @see DelayFunction
    */
   public <F extends Throwable> RetryPolicy withDelayOn(DelayFunction<Object, F> delayFunction, Class<F> failure) {
     withDelay(delayFunction);
@@ -563,7 +563,7 @@ public class RetryPolicy {
    * @param result the execution result that is expected in order to trigger the delay
    * @param <R> result type
    * @throws NullPointerException if {@code delayFunction} or {@code result} are null
-   * @see {@link DelayFunction}
+   * @see DelayFunction
    */
   public <R> RetryPolicy withDelayWhen(DelayFunction<R, ? extends Throwable> delayFunction, R result) {
     withDelay(delayFunction);
