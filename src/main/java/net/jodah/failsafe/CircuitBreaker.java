@@ -425,7 +425,10 @@ public class CircuitBreaker {
     return this;
   }
 
-  void before() {
+  /**
+   * Increase execution counter.
+  */
+  public void before() {
     currentExecutions.incrementAndGet();
   }
 
