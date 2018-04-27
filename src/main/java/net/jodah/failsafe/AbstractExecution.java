@@ -103,6 +103,21 @@ abstract class AbstractExecution extends ExecutionContext {
     if (circuitBreaker != null) {
       Duration timeout = circuitBreaker.getTimeout();
       boolean timeoutExceeded = timeout != null && elapsedNanos >= timeout.toNanos();
+      /*
+       * circuitBreaker.isFailure() is about to invoke a bunch of user-supplied BiPredicates.
+       *
+       * Concern 2) What happens if the user-supplied Predicates/BiPredicates throw?
+       * 2.1: Should this halt execution of the operation?
+       * I'd lean towards 'definitely not', operation should complete unhindered by a confused predicate.
+       *
+       * 2.2: Can it be considered a failure?
+       * I'd say probably not. That'd mean that a predicate bug or exceptional scenario
+       * could open the circuit breaker halting the operation and causing an outage.
+       *
+       * 2.3: Should it just be ignored?
+       * This seems the best of the options I've considered so far.
+       * Logging it or communicating the failure somehow would be nice.
+       */
       if (circuitBreaker.isFailure(result, failure) || timeoutExceeded)
         circuitBreaker.recordFailure();
       else

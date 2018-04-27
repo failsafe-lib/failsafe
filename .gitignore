@@ -5,3 +5,5 @@ target/
 .settings/
 test-output/
 docs/
+.idea
+*.iml

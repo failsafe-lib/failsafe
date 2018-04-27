@@ -113,6 +113,18 @@ public class CircuitBreaker {
    * @throws NullPointerException if {@code resultPredicate} is null
    */
   public <T> CircuitBreaker failIf(Predicate<T> resultPredicate) {
+    /*
+     * Concern 1) We're adapting a Predicate which is defined over only the success type
+     * into a BiPredicate which is also expected to handle the failure type.
+     *
+     * Currently failure is translated into null of the success type.
+     * Dilemma 1.1) How is the caller meant to know that this is the behavior?
+     * Dilemma 1.2) How can the caller distiguish a null/failure from a null/success return value?
+     *
+     * Seems like it might be better to avoid invoking the resultPredicate at all in the failure case
+     * since you have other methods like .failIf(BiPredicate) and .failOn(...)
+     * to explicitly handle those failure scenarios.
+     */
     Assert.notNull(resultPredicate, "resultPredicate");
     failureConditions.add(Predicates.resultPredicateFor(resultPredicate));
     return this;
