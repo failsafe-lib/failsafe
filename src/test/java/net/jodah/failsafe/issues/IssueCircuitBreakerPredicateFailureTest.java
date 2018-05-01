@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 import static org.testng.Assert.assertFalse;
 
 @Test
-public class IssueCircuitBreakerPredicateFailure {
+public class IssueCircuitBreakerPredicateFailureTest {
 
     /**
      * This predicate is invoked in failure scenarios with an arg of null,
