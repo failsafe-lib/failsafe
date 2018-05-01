@@ -33,7 +33,8 @@ import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.RetryPolicy;
 
 @Test
-public class Issue52 {
+public class Issue52Test {
+  @Test(expectedExceptions = CancellationException.class)
   public void shouldCancelExecutionViaFuture() throws Throwable {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     FailsafeFuture<String> proxyFuture = Failsafe.with(new RetryPolicy().withDelay(10, TimeUnit.MILLISECONDS))
@@ -45,7 +46,7 @@ public class Issue52 {
     Thread.sleep(100);
     proxyFuture.cancel(true);
 
-    assertNull(proxyFuture.get());
+    proxyFuture.get(); // should throw CancellationException per .get() javadoc.
   }
 
   public void shouldCancelExecutionViaCompletableFuture() throws Throwable {

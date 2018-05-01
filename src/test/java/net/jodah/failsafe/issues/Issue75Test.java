@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 
-public class Issue75 {
+public class Issue75Test {
   @Test
   public void testThatFailSafeIsBrokenWithFallback() throws Exception {
     CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(10, 100).withSuccessThreshold(2).withDelay(100,

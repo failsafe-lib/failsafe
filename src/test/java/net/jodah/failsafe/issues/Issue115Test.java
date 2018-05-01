@@ -10,7 +10,7 @@ import net.jodah.failsafe.RetryPolicy;
  * Tests https://github.com/jhalterman/failsafe/issues/115 and https://github.com/jhalterman/failsafe/issues/116
  */
 @Test
-public class Issue115 {
+public class Issue115Test {
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterLargerThanDelay() {
     new RetryPolicy().retryOn(IllegalArgumentException.class).withDelay(100, TimeUnit.MILLISECONDS).withJitter(200,

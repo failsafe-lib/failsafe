@@ -26,7 +26,7 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 
 @Test
-public class Issue5 {
+public class Issue5Test {
   /**
    * Asserts that a failure is handled as expected by a listener registered via whenFailure.
    */
