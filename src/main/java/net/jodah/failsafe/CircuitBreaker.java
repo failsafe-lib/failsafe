@@ -262,8 +262,12 @@ public class CircuitBreaker {
    */
   public boolean isFailure(Object result, Throwable failure) {
     for (BiPredicate<Object, Throwable> predicate : failureConditions) {
-      if (predicate.test(result, failure))
-        return true;
+      try {
+        if (predicate.test(result, failure))
+          return true;
+      } catch (Exception t) {
+        // Ignore confused predicates.
+      }
     }
 
     // Return true if the failure is not checked by a configured condition

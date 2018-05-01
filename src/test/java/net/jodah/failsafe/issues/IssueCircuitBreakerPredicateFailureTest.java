@@ -27,9 +27,9 @@ public class IssueCircuitBreakerPredicateFailureTest {
 
     /**
      * Simple synchronous case throwing a {@link NullPointerException}
-     * instead of the expected {@link IOException}.
+     * instead of the expected {@link FailsafeException}.
      */
-    @Test(expectedExceptions = IOException.class)
+    @Test(expectedExceptions = FailsafeException.class)
     public void syncShouldThrowTheUnderlyingIOException() throws Throwable {
         CircuitBreaker circuitBreaker = new CircuitBreaker().failIf(failIfEqualsIgnoreCaseFoo);
         SyncFailsafe<String> failsafe = Failsafe.<String>with(circuitBreaker);
