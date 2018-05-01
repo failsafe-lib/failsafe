@@ -27,7 +27,7 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 
 @Test
-public class Issue55 {
+public class Issue55Test {
   public void shouldOnlyFallbackOnFailure() throws Throwable {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 

@@ -15,7 +15,7 @@ import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.RetryPolicy;
 
 @Test
-public class Issue76 {
+public class Issue76Test {
   public void shouldAbortOnSyncError() throws Exception {
     AssertionError error = new AssertionError();
     try {

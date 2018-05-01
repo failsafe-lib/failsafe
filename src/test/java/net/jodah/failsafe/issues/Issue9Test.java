@@ -35,7 +35,7 @@ import net.jodah.failsafe.Listeners;
 import net.jodah.failsafe.RetryPolicy;
 
 @Test
-public class Issue9 {
+public class Issue9Test {
   public interface Service {
     boolean connect();
   }

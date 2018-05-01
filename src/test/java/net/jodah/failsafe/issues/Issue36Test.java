@@ -30,7 +30,7 @@ import net.jodah.failsafe.RetryPolicy;
  * https://github.com/jhalterman/failsafe/issues/36
  */
 @Test
-public class Issue36 {
+public class Issue36Test {
   RetryPolicy retryPolicy = new RetryPolicy().retryIf((Boolean r) -> r == null || !r)
       .retryOn(Exception.class)
       .withMaxRetries(3);

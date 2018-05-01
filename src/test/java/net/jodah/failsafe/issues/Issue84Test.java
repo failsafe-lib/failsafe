@@ -17,7 +17,7 @@ import net.jodah.failsafe.CircuitBreakerOpenException;
 import net.jodah.failsafe.Failsafe;
 
 @Test
-public class Issue84 {
+public class Issue84Test {
   public void shouldHandleCircuitBreakerOpenException() throws Throwable {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
     CircuitBreaker circuitBreaker = new CircuitBreaker().withDelay(10, TimeUnit.MINUTES).failWhen(false);
