@@ -65,9 +65,9 @@ final class Predicates {
         if (u == null) {
           return ((Predicate<Object>) resultPredicate).test(t);
         } else {
-          // resultPredicate is only defined over the success type, R2.
+          // resultPredicate is only defined over the success type.
           // It doesn't know how to handle a failure of type Throwable,
-          // So we return false here.
+          // so we return false here.
           return false;
         }
       }
