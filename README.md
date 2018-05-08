@@ -322,7 +322,7 @@ Or on an execution success or failure:
 ```java
 Failsafe.with(retryPolicy)
   .onSuccess(cxn -> log.info("Connected to {}", cxn))
-  .onFailure(failure -> log.error("Failed to create connection", e))
+  .onFailure(failure -> log.error("Failed to create connection", failure))
   .get(this::connect);
 ```
 
