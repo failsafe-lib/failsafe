@@ -109,7 +109,8 @@ public class CircuitBreaker {
 
   /**
    * Specifies that a failure should be recorded if the {@code resultPredicate} matches the result.
-   * 
+   * Predicate is not invoked when the operation fails.
+   *
    * @throws NullPointerException if {@code resultPredicate} is null
    */
   public <T> CircuitBreaker failIf(Predicate<T> resultPredicate) {
@@ -250,8 +251,13 @@ public class CircuitBreaker {
    */
   public boolean isFailure(Object result, Throwable failure) {
     for (BiPredicate<Object, Throwable> predicate : failureConditions) {
-      if (predicate.test(result, failure))
-        return true;
+      try {
+        if (predicate.test(result, failure))
+          return true;
+      } catch (Exception t) {
+        // Ignore confused user-supplied predicates.
+        // They should not be allowed to halt execution of the operation.
+      }
     }
 
     // Return true if the failure is not checked by a configured condition

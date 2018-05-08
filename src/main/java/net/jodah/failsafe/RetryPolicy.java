@@ -129,7 +129,8 @@ public class RetryPolicy {
 
   /**
    * Specifies that retries should be aborted if the {@code resultPredicate} matches the result.
-   * 
+   * Predicate is not invoked when the operation fails.
+   *
    * @throws NullPointerException if {@code resultPredicate} is null
    */
   public <T> RetryPolicy abortIf(Predicate<T> resultPredicate) {
@@ -220,8 +221,13 @@ public class RetryPolicy {
    */
   public boolean canAbortFor(Object result, Throwable failure) {
     for (BiPredicate<Object, Throwable> predicate : abortConditions) {
-      if (predicate.test(result, failure))
-        return true;
+      try {
+        if (predicate.test(result, failure))
+          return true;
+      } catch (Exception t) {
+        // Ignore confused user-supplied predicates.
+        // They should not be allowed to halt execution of the operation.
+      }
     }
     return false;
   }
@@ -238,8 +244,13 @@ public class RetryPolicy {
    */
   public boolean canRetryFor(Object result, Throwable failure) {
     for (BiPredicate<Object, Throwable> predicate : retryConditions) {
-      if (predicate.test(result, failure))
-        return true;
+      try {
+        if (predicate.test(result, failure))
+          return true;
+      } catch (Exception t) {
+        // Ignore confused user-supplied predicates.
+        // They should not be allowed to halt execution of the operation.
+      }
     }
 
     // Retry by default if a failure is not checked by a retry condition
@@ -376,6 +387,7 @@ public class RetryPolicy {
   /**
    * Specifies that a retry should occur if the {@code resultPredicate} matches the result and the retry policy is not
    * exceeded.
+   * Predicate is not invoked when the operation fails.
    * 
    * @throws NullPointerException if {@code resultPredicate} is null
    */

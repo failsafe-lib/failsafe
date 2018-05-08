@@ -24,6 +24,7 @@ import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import net.jodah.failsafe.function.BiPredicate;
 import org.testng.annotations.Test;
 
 @Test
@@ -43,6 +44,27 @@ public class CircuitBreakerTest {
     CircuitBreaker breaker = new CircuitBreaker().failIf((Integer result) -> result > 100);
     assertTrue(breaker.isFailure(110, null));
     assertFalse(breaker.isFailure(50, null));
+  }
+
+  public void testIgnoresThrowingPredicate() {
+    CircuitBreaker breaker = new CircuitBreaker().failIf(new BiPredicate<Integer, Throwable>() {
+      @Override
+      public boolean test(Integer integer, Throwable throwable) {
+        throw new NullPointerException();
+      }
+    });
+    assertFalse(breaker.isFailure(1, null));
+  }
+
+  @Test(expectedExceptions = OutOfMemoryError.class)
+  public void testThrowsFatalErrors() {
+    CircuitBreaker breaker = new CircuitBreaker().failIf(new BiPredicate<String, Throwable>() {
+      @Override
+      public boolean test(String integer, Throwable throwable) {
+        throw new OutOfMemoryError();
+      }
+    });
+    breaker.isFailure("result", null);
   }
 
   @SuppressWarnings("unchecked")

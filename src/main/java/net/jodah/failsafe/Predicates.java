@@ -52,14 +52,24 @@ final class Predicates {
   }
 
   /**
-   * Returns a predicate that evaluates the {@code resultPredicate} against a result.
+   * Returns a predicate that evaluates the {@code resultPredicate} against a result, when present.
+   *
+   * Short-circuts to false without invoking {@code resultPredicate},
+   * when result is not present (i.e. biPredicate.test(null, Throwable)).
    */
   @SuppressWarnings("unchecked")
   static <T> BiPredicate<Object, Throwable> resultPredicateFor(final Predicate<T> resultPredicate) {
     return new BiPredicate<Object, Throwable>() {
       @Override
       public boolean test(Object t, Throwable u) {
-        return ((Predicate<Object>) resultPredicate).test(t);
+        if (u == null) {
+          return ((Predicate<Object>) resultPredicate).test(t);
+        } else {
+          // resultPredicate is only defined over the success type.
+          // It doesn't know how to handle a failure of type Throwable,
+          // so we return false here.
+          return false;
+        }
       }
     };
   }
