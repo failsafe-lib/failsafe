@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import net.jodah.failsafe.util.Duration;
@@ -54,7 +53,10 @@ public class ExecutionContext {
    * Returns the elapsed time since current execution began. If it never started, this will be null.
    */
   public Duration getElapsedAttemptTime() {
-    return Optional.ofNullable(attemptStartTime).map(x -> new Duration(System.nanoTime() - x.toNanos(), TimeUnit.NANOSECONDS)).orElse(null);
+    if (attemptStartTime == null) {
+      return null;
+    }
+    return new Duration(System.nanoTime() - attemptStartTime.toNanos(), TimeUnit.NANOSECONDS);
   }
 
   /**
