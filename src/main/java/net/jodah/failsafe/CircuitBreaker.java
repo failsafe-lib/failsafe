@@ -31,6 +31,8 @@ import net.jodah.failsafe.internal.ClosedState;
 import net.jodah.failsafe.internal.HalfOpenState;
 import net.jodah.failsafe.internal.OpenState;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.metrics.MetricsCollector;
+import net.jodah.failsafe.metrics.NoOpMetricsCollector;
 import net.jodah.failsafe.util.Duration;
 import net.jodah.failsafe.util.Ratio;
 
@@ -43,6 +45,7 @@ public class CircuitBreaker {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<CircuitState>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
+  private MetricsCollector metricsCollector = new NoOpMetricsCollector();
   private final CircuitBreakerStats stats = new CircuitBreakerStats() {
     @Override
     public int getCurrentExecutions() {
@@ -428,6 +431,17 @@ public class CircuitBreaker {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(timeout > 0, "timeout must be greater than 0");
     this.timeout = new Duration(timeout, timeUnit);
+    return this;
+  }
+
+  /**
+   * Sets the {@link MetricsCollector} to track what's happening in the circuit breaker.
+   *
+   * @throws NullPointerException if {@code metricsCollector} is null
+   */
+  public CircuitBreaker withMetricsCollector(MetricsCollector metricsCollector) {
+    Assert.notNull(metricsCollector, "metricsCollector");
+    this.metricsCollector = metricsCollector;
     return this;
   }
 
