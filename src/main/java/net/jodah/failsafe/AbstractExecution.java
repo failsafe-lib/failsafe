@@ -15,11 +15,12 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.TimeUnit;
-
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 abstract class AbstractExecution extends ExecutionContext {
   final FailsafeConfig<Object, ?> config;
@@ -103,10 +104,18 @@ abstract class AbstractExecution extends ExecutionContext {
     if (circuitBreaker != null) {
       Duration timeout = circuitBreaker.getTimeout();
       boolean timeoutExceeded = timeout != null && elapsedNanos >= timeout.toNanos();
-      if (circuitBreaker.isFailure(result, failure) || timeoutExceeded)
-        circuitBreaker.recordFailure();
-      else
-        circuitBreaker.recordSuccess();
+      if (timeoutExceeded) {
+        circuitBreaker.recordResult(
+            null,
+            new TimeoutException(String.format(
+                "Timeout exceeded; elapsed: %d, timeout: %d",
+                elapsedNanos,
+                timeout.toNanos()
+            ))
+        );
+      } else {
+        circuitBreaker.recordResult(result, failure);
+      }
     }
 
     // Determine the computed delay
