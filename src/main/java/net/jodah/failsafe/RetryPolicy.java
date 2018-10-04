@@ -629,7 +629,11 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the max duration to perform retries for, else the execution will be failed.
+   * Sets the maximum allowed total time for retries. 
+   * If more than this amount of time has elapsed, no more retries will be attempted and ...WHAT HAPPENS THEN?...
+   * Set this option together with, or as an alternative to, {@link #withMaxRetries maximum retries}.
+   * To not limit the execution time, set this to {@code null}.
+   * The default value is {@code null}.
    * 
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalStateException if {@code maxDuration} is <= the {@link RetryPolicy#withDelay(long, TimeUnit) delay}
@@ -642,9 +646,13 @@ public class RetryPolicy {
   }
 
   /**
-   * Sets the max number of retries to perform. {@code -1} indicates to retry forever.
+   * Sets the maximum allowed number of retries. 
+   * If this number of retries have occurred, no more retries will be attempted and ...WHAT HAPPENS THEN?...
+   * Set this option together with, or as an alternative to, {@link #withMaxDuration maximum duration}.
+   * To not limit the number of retries, set this to {@code -1}.
+   * The default value is {@code -1}.
    * 
-   * @throws IllegalArgumentException if {@code maxRetries} < -1
+   * @throws IllegalArgumentException if {@code maxRetries} is less than {@code -1}
    */
   public RetryPolicy withMaxRetries(int maxRetries) {
     Assert.isTrue(maxRetries >= -1, "maxRetries must be greater than or equal to -1");
