@@ -449,7 +449,7 @@ Execution execution = new Execution(retryPolicy);
 
 // On failure
 if (execution.canRetryOn(someFailure))
-  service.scheduleRetry(execution.getWaitMillis(), TimeUnit.MILLISECONDS);
+  service.scheduleRetry(execution.getWaitTime(), TimeUnit.MILLISECONDS);
 ```
 
 See the [RxJava example][RxJava] for a more detailed implementation.
