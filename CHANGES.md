@@ -1,3 +1,9 @@
+# 1.1.1
+
+### Bug Fixes
+
+* Issue #131 - Fix interaction between CircuitBreaker + Predicate + failure.
+
 # 1.1.0
 
 ### Bug Fixes
