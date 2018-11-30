@@ -127,7 +127,7 @@ abstract class AbstractExecution extends ExecutionContext {
       if (delayNanos == -1 && delay != null && !delay.equals(Duration.NONE))
         delayNanos = delay.toNanos();
       else if (delayMin != null && delayMax != null)
-        delayNanos = randomDelayInRange(delayMin.toNanos(), delayMin.toNanos(), Math.random());
+        delayNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
 
       // Adjust for backoff
       if (executions != 1 && retryPolicy.getMaxDelay() != null)
