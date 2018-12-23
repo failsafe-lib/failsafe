@@ -255,6 +255,7 @@ breaker.close();
 
 if (breaker.allowsExecution()) {
   try {
+    breaker.preExecute();
     doSomething();
     breaker.recordSuccess();
   } catch (Exception e) {

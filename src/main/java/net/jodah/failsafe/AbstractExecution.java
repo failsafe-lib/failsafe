@@ -15,11 +15,11 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.TimeUnit;
-
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
+
+import java.util.concurrent.TimeUnit;
 
 abstract class AbstractExecution extends ExecutionContext {
   final FailsafeConfig<Object, ?> config;
@@ -82,7 +82,7 @@ abstract class AbstractExecution extends ExecutionContext {
 
   void before() {
     if (circuitBreaker != null)
-      circuitBreaker.before();
+      circuitBreaker.preExecute();
     attemptStartTime = System.nanoTime();
   }
 

@@ -15,24 +15,20 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.function.BiPredicate;
+import net.jodah.failsafe.function.CheckedRunnable;
+import net.jodah.failsafe.function.Predicate;
+import net.jodah.failsafe.internal.*;
+import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.util.Duration;
+import net.jodah.failsafe.util.Ratio;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import net.jodah.failsafe.function.BiPredicate;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.Predicate;
-import net.jodah.failsafe.internal.CircuitBreakerStats;
-import net.jodah.failsafe.internal.CircuitState;
-import net.jodah.failsafe.internal.ClosedState;
-import net.jodah.failsafe.internal.HalfOpenState;
-import net.jodah.failsafe.internal.OpenState;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Duration;
-import net.jodah.failsafe.util.Ratio;
 
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
@@ -431,7 +427,11 @@ public class CircuitBreaker {
     return this;
   }
 
-  void before() {
+  /**
+   * Recods an execution that is about to take place by incrementing the internal executions count. Useful for standalone
+   * usage.
+   */
+  public void preExecute() {
     currentExecutions.incrementAndGet();
   }
 
