@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,13 @@
  */
 package net.jodah.failsafe;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import net.jodah.failsafe.function.BiPredicate;
-
-@Test
-public class PredicatesTest {
-  public void testResultPredicateOnlyHandlesResults() {
-    BiPredicate<Object, Throwable> resultPredicate = Predicates.resultPredicateFor(result -> true);
-    Assert.assertTrue(resultPredicate.test("result", null));
-    Assert.assertFalse(resultPredicate.test(null, new RuntimeException()));
-  }
+/**
+ * A policy for handling execution failures.
+ * <p>
+ * Part of the Failsafe SPI.
+ *
+ * @author Jonathan Halterman
+ */
+public interface FailsafePolicy {
+  PolicyExecutor toExecutor();
 }

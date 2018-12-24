@@ -63,7 +63,7 @@ public class ReentrantCircuitTest {
     assertTrue(circuit.isClosed());
   }
 
-  public void shouldReturnWhenAwaitAndAlreadyClosed() throws Throwable {
+  public void shouldReturnWhenAwaitAndAlreadyClosed() {
     long t = System.currentTimeMillis();
     circuit.await();
     circuit.await(3, TimeUnit.MINUTES);

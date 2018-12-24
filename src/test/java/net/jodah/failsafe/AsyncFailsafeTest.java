@@ -15,37 +15,21 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.function.*;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static net.jodah.failsafe.Asserts.assertThrows;
 import static net.jodah.failsafe.Asserts.matches;
 import static net.jodah.failsafe.Testing.failures;
 import static net.jodah.failsafe.Testing.ignoreExceptions;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.function.AsyncCallable;
-import net.jodah.failsafe.function.AsyncRunnable;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.ContextualCallable;
-import net.jodah.failsafe.function.ContextualRunnable;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.*;
 
 @Test
 public class AsyncFailsafeTest extends AbstractFailsafeTest {
@@ -174,7 +158,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       try {
         boolean result = service.connect();
         if (!exec.complete(result))
-          exec.retryFor(result);
+          exec.retry();
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
@@ -249,7 +233,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     }));
   }
 
-  public void shouldCancelFuture() throws Throwable {
+  public void shouldCancelFuture() {
     FailsafeFuture<?> future = Failsafe.with(retryAlways)
         .with(executor)
         .run(() -> ignoreExceptions(() -> Thread.sleep(10000)));
@@ -301,7 +285,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       } catch (Exception e) {
         waiter.fail(e);
       }
-    } , 100, TimeUnit.MILLISECONDS));
+    }, 100, TimeUnit.MILLISECONDS));
 
     waiter.await(5000);
   }
@@ -323,10 +307,24 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertTrue(breaker.isOpen());
   }
 
+  public void shouldSkipExecutionWhenCircuitOpen() {
+    // Given
+    CircuitBreaker breaker = new CircuitBreaker().withDelay(10, TimeUnit.MINUTES);
+    breaker.open();
+    AtomicBoolean executed = new AtomicBoolean();
+
+    // When
+    Future future = Failsafe.with(breaker).with(executor).run(() -> executed.set(true));
+
+    // Then
+    assertFalse(executed.get());
+    assertThrows(future::get, ExecutionException.class, CircuitBreakerOpenException.class);
+  }
+
   /**
    * Asserts that Failsafe handles an initial scheduling failure.
    */
-  public void shouldHandleInitialSchedulingFailure() throws Throwable {
+  public void shouldHandleInitialSchedulingFailure() {
     // Given
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(0);
     executor.shutdownNow();
@@ -334,11 +332,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When
-    FailsafeFuture<Void> future = Failsafe.with(new RetryPolicy().retryWhen(null).retryOn(Exception.class))
+    Future future = Failsafe.with(new CircuitBreaker())
+        .with(new RetryPolicy())
+        .withFallback(false)
         .with(executor)
         .run(() -> waiter.fail("Should not execute callable since executor has been shutdown"));
 
-    assertThrows(() -> future.get(), ExecutionException.class, RejectedExecutionException.class);
+    assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
   }
 
   /**
@@ -350,7 +350,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     AtomicInteger counter = new AtomicInteger();
 
     // When
-    FailsafeFuture<String> future = Failsafe.with(new RetryPolicy().retryWhen(null).retryOn(Exception.class))
+    Future future = Failsafe.with(new RetryPolicy().retryWhen(null).retryOn(Exception.class))
         .with(executor)
         .get(() -> {
           counter.incrementAndGet();
@@ -360,7 +360,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     Thread.sleep(150);
     executor.shutdownNow();
-    assertThrows(() -> future.get(), ExecutionException.class, RejectedExecutionException.class);
+    assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
     assertEquals(counter.get(), 1, "Callable should have been executed before executor was shutdown");
   }
 

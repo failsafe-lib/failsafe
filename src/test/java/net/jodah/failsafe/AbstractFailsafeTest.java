@@ -15,26 +15,23 @@
  */
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.failures;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
+import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.function.CheckedBiFunction;
+import net.jodah.failsafe.function.CheckedRunnable;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.testng.annotations.Test;
-
-import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.function.CheckedBiFunction;
-import net.jodah.failsafe.function.CheckedRunnable;
+import static net.jodah.failsafe.Asserts.assertThrows;
+import static net.jodah.failsafe.Testing.failures;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.assertEquals;
 
 @Test
 public abstract class AbstractFailsafeTest {
@@ -58,6 +55,11 @@ public abstract class AbstractFailsafeTest {
 
   abstract ScheduledExecutorService getExecutor();
 
+  @BeforeMethod
+  void beforeMethod(Method method) {
+    System.out.println("Testing " + method);
+  }
+
   /**
    * Does a failsafe get with an optional executor.
    */
@@ -70,7 +72,8 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker circuitBreaker, Callable<T> callable) throws ExecutionException, InterruptedException {
+  <T> T failsafeGet(CircuitBreaker circuitBreaker, Callable<T> callable)
+      throws ExecutionException, InterruptedException {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(circuitBreaker).get(callable)
         : (T) Failsafe.with(circuitBreaker).with(executor).get(callable).get());

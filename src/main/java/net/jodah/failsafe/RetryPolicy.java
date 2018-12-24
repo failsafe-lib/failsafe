@@ -15,15 +15,16 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.function.BiPredicate;
+import net.jodah.failsafe.function.Predicate;
+import net.jodah.failsafe.internal.executor.RetryPolicyExecutor;
+import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.util.Duration;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import net.jodah.failsafe.function.BiPredicate;
-import net.jodah.failsafe.function.Predicate;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Duration;
 
 /**
  * A policy that defines when retries should be performed.
@@ -33,10 +34,12 @@ import net.jodah.failsafe.util.Duration;
  * method describes when a retry should be performed for a particular result. If multiple {@code retryOn} or
  * {@code retryWhen} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
  * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
+ * <p>
+ * An {@link Execution} is marked as {@code completed} when the {@code RetryPolicy}
  * 
  * @author Jonathan Halterman
  */
-public class RetryPolicy {
+public class RetryPolicy implements FailsafePolicy {
   /**
    * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
    * 
@@ -128,8 +131,8 @@ public class RetryPolicy {
   }
 
   /**
-   * Specifies that retries should be aborted if the {@code resultPredicate} matches the result.
-   * Predicate is not invoked when the operation fails.
+   * Specifies that retries should be aborted if the {@code resultPredicate} matches the result. Predicate is not
+   * invoked when the operation fails.
    *
    * @throws NullPointerException if {@code resultPredicate} is null
    */
@@ -386,8 +389,7 @@ public class RetryPolicy {
 
   /**
    * Specifies that a retry should occur if the {@code resultPredicate} matches the result and the retry policy is not
-   * exceeded.
-   * Predicate is not invoked when the operation fails.
+   * exceeded. Predicate is not invoked when the operation fails.
    * 
    * @throws NullPointerException if {@code resultPredicate} is null
    */
@@ -650,5 +652,10 @@ public class RetryPolicy {
     Assert.isTrue(maxRetries >= -1, "maxRetries must be greater than or equal to -1");
     this.maxRetries = maxRetries;
     return this;
+  }
+
+  @Override
+  public PolicyExecutor toExecutor() {
+    return new RetryPolicyExecutor(this);
   }
 }

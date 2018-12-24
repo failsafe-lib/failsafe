@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.event;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import net.jodah.failsafe.ExecutionContext;
 
-import net.jodah.failsafe.function.BiPredicate;
+public interface EventHandler<R> {
+  void handleAbort(R result, Throwable failure, ExecutionContext context);
 
-@Test
-public class PredicatesTest {
-  public void testResultPredicateOnlyHandlesResults() {
-    BiPredicate<Object, Throwable> resultPredicate = Predicates.resultPredicateFor(result -> true);
-    Assert.assertTrue(resultPredicate.test("result", null));
-    Assert.assertFalse(resultPredicate.test(null, new RuntimeException()));
-  }
+  void handleComplete(R result, Throwable failure, ExecutionContext context, boolean success);
+
+  void handleFailedAttempt(R result, Throwable failure, ExecutionContext context);
+
+  void handleRetriesExceeded(R result, Throwable failure, ExecutionContext context);
+
+  void handleRetry(R result, Throwable failure, ExecutionContext context);
 }

@@ -15,15 +15,10 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.ReentrantCircuit;
+
+import java.util.concurrent.*;
 
 /**
  * The future result of an asynchronous Failsafe execution.
@@ -73,8 +68,8 @@ public class FailsafeFuture<T> implements Future<T> {
     boolean cancelResult = delegate.cancel(mayInterruptIfRunning);
     failure = new CancellationException();
     cancelled = true;
-    config.handleComplete(null, failure, execution, false);
-    complete(null, failure, config.fallback, false);
+    config.eventHandler.handleComplete(null, failure, execution, false);
+    complete(null, failure);
     return cancelResult;
   }
 
@@ -92,7 +87,7 @@ public class FailsafeFuture<T> implements Future<T> {
     if (failure != null) {
       if (failure instanceof CancellationException)
         throw (CancellationException) failure;
-      throw new ExecutionException(failure);
+        throw new ExecutionException(failure);
     }
     return result;
   }
@@ -144,22 +139,12 @@ public class FailsafeFuture<T> implements Future<T> {
     return done;
   }
 
-  synchronized void complete(T result, Throwable failure, CheckedBiFunction<T, Throwable, T> fallback,
-      boolean success) {
+  synchronized void complete(T result, Throwable failure) {
     if (done)
       return;
 
-    if (success || fallback == null) {
-      this.result = result;
-      this.failure = failure;
-    } else {
-      try {
-        this.result = fallback.apply(result, failure);
-      } catch (Throwable fallbackFailure) {
-        this.failure = fallbackFailure;
-      }
-    }
-
+    this.result = result;
+    this.failure = failure;
     done = true;
     if (completableFuture != null)
       completeFuture();

@@ -15,19 +15,11 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.internal.util.Assert;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
-
-import net.jodah.failsafe.function.AsyncCallable;
-import net.jodah.failsafe.function.AsyncRunnable;
-import net.jodah.failsafe.function.CheckedBiConsumer;
-import net.jodah.failsafe.function.CheckedBiFunction;
-import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.function.CheckedFunction;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.ContextualCallable;
-import net.jodah.failsafe.function.ContextualRunnable;
-import net.jodah.failsafe.internal.util.Assert;
 
 /**
  * Utilities and adapters for creating functions.
@@ -57,7 +49,7 @@ final class Functions {
       @Override
       public synchronized T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           T result = callable.call(execution);
           return result;
         } catch (Throwable e) {
@@ -74,7 +66,7 @@ final class Functions {
       @Override
       public synchronized T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           runnable.run(execution);
         } catch (Throwable e) {
           execution.completeOrRetry(null, e);
@@ -91,7 +83,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           T result = callable.call();
           execution.completeOrRetry(result, null);
           return result;
@@ -109,7 +101,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           runnable.run();
           execution.completeOrRetry(null, null);
         } catch (Throwable e) {
@@ -127,7 +119,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           T result = callable.call(execution);
           execution.completeOrRetry(result, null);
           return result;
@@ -145,7 +137,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           runnable.run(execution);
           execution.completeOrRetry(null, null);
         } catch (Throwable e) {
@@ -166,7 +158,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           asyncFutureLock.acquire();
           callable.call(execution).whenComplete(new java.util.function.BiConsumer<T, Throwable>() {
             @Override
@@ -199,7 +191,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           callable.call().whenComplete(new java.util.function.BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {
@@ -225,7 +217,7 @@ final class Functions {
       @Override
       public T call() throws Exception {
         try {
-          execution.before();
+          execution.preExecute();
           callable.call(execution).whenComplete(new java.util.function.BiConsumer<T, Throwable>() {
             @Override
             public void accept(T innerResult, Throwable failure) {

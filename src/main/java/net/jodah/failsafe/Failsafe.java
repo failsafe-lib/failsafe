@@ -17,16 +17,18 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
 
+import java.util.Arrays;
+
 /**
  * Simple, sophisticated failure handling.
- * 
+ *
  * @author Jonathan Halterman
  */
 public class Failsafe {
   /**
-   * Creates and returns a new SyncFailsafe instance that will perform executions and retries synchronously according to
-   * the {@code retryPolicy}.
-   * 
+   * Creates and returns a new {@link SyncFailsafe} instance that will perform executions and retries synchronously
+   * according to the {@code retryPolicy}.
+   *
    * @param <T> result type
    * @throws NullPointerException if {@code retryPolicy} is null
    */
@@ -35,13 +37,27 @@ public class Failsafe {
   }
 
   /**
-   * Creates and returns a new SyncFailsafe instance that will perform executions and retries synchronously according to
-   * the {@code circuitBreaker}.
-   * 
+   * Creates and returns a new {@link SyncFailsafe} instance that will perform executions and retries synchronously
+   * according to the {@code circuitBreaker}.
+   *
    * @param <T> result type
    * @throws NullPointerException if {@code circuitBreaker} is null
    */
   public static <T> SyncFailsafe<T> with(CircuitBreaker circuitBreaker) {
     return new SyncFailsafe<T>(Assert.notNull(circuitBreaker, "circuitBreaker"));
+  }
+
+  /**
+   * Creates and returns a new {@link SyncFailsafe} instance that will perform executions and retries synchronously
+   * according to the {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
+   *
+   * @param <T> result type
+   * @throws NullPointerException if {@code policies} is null
+   * @throws IllegalArgumentException if {@code policies} is empty
+   */
+  public static <T> SyncFailsafe<T> with(FailsafePolicy... policies) {
+    Assert.notNull(policies, "policies");
+    Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
+    return new SyncFailsafe<T>(Arrays.asList(policies));
   }
 }

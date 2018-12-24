@@ -15,12 +15,12 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.ScheduledExecutorService;
-
 import net.jodah.failsafe.event.ContextualResultListener;
 import net.jodah.failsafe.function.CheckedBiConsumer;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.util.concurrent.Scheduler;
+
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Async Failsafe configuration.
@@ -44,6 +44,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
    * execution is aborted according to the retry policy.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
     registry().abort().add(Listeners.of(listener, null, scheduler));
@@ -53,6 +55,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
    * execution is aborted according to the retry policy.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(CheckedConsumer<? extends Throwable> listener) {
     registry().abort().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
@@ -62,6 +66,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
    * execution is aborted according to the retry policy.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
     registry().abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
@@ -143,6 +149,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
    * execution fails and the max retry attempts or duration are exceeded.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener) {
     registry().retriesExceeded().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
@@ -152,6 +160,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
    * execution fails and the max retry attempts or duration are exceeded.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetriesExceededAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
     registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
@@ -161,6 +171,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before a
    * retry is attempted.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
     registry().retry().add(Listeners.of(listener, null, scheduler));
@@ -170,6 +182,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before a
    * retry is attempted.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(CheckedConsumer<? extends Throwable> listener) {
     registry().retry().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
@@ -179,6 +193,8 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   /**
    * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before a
    * retry is attempted.
+   * 
+   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
     registry().retry().add(Listeners.of(Listeners.of(listener), null, scheduler));

@@ -19,6 +19,7 @@ import net.jodah.failsafe.function.BiPredicate;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.*;
+import net.jodah.failsafe.internal.executor.CircuitBreakerExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
 import net.jodah.failsafe.util.Ratio;
@@ -35,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 
  * @author Jonathan Halterman
  */
-public class CircuitBreaker {
+public class CircuitBreaker implements FailsafePolicy {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<CircuitState>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
@@ -73,7 +74,7 @@ public class CircuitBreaker {
     /* The circuit is opened and not allowing executions to occur. */
     OPEN,
     /* The circuit is temporarily allowing executions to occur. */
-    HALF_OPEN;
+    HALF_OPEN
   }
 
   /**
@@ -104,8 +105,8 @@ public class CircuitBreaker {
   }
 
   /**
-   * Specifies that a failure should be recorded if the {@code resultPredicate} matches the result.
-   * Predicate is not invoked when the operation fails.
+   * Specifies that a failure should be recorded if the {@code resultPredicate} matches the result. Predicate is not
+   * invoked when the operation fails.
    *
    * @throws NullPointerException if {@code resultPredicate} is null
    */
@@ -123,9 +124,9 @@ public class CircuitBreaker {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public CircuitBreaker failOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return failOn((List)Arrays.asList(failure));
+    return failOn((List) Arrays.asList(failure));
   }
-  
+
   /**
    * Specifies the types to fail on. Applies to any type that is assignable from the {@code failures}.
    * 
@@ -306,6 +307,25 @@ public class CircuitBreaker {
   }
 
   /**
+   * Recods an execution that is about to take place by incrementing the internal executions count. Useful for standalone
+   * usage.
+   */
+  public void preExecute() {
+    currentExecutions.incrementAndGet();
+  }
+
+  /**
+   * Records an execution failure.
+   */
+  public void recordFailure() {
+    try {
+      state.get().recordFailure();
+    } finally {
+      currentExecutions.decrementAndGet();
+    }
+  }
+
+  /**
    * Records an execution {@code failure} as a success or failure based on the failure configuration as determined by
    * {@link #isFailure(Object, Throwable)}.
    * 
@@ -427,25 +447,6 @@ public class CircuitBreaker {
     return this;
   }
 
-  /**
-   * Recods an execution that is about to take place by incrementing the internal executions count. Useful for standalone
-   * usage.
-   */
-  public void preExecute() {
-    currentExecutions.incrementAndGet();
-  }
-
-  /**
-   * Records an execution failure.
-   */
-  void recordFailure() {
-    try {
-      state.get().recordFailure();
-    } finally {
-      currentExecutions.decrementAndGet();
-    }
-  }
-
   void recordResult(Object result, Throwable failure) {
     try {
       if (isFailure(result, failure))
@@ -485,5 +486,10 @@ public class CircuitBreaker {
       } catch (Exception ignore) {
       }
     }
+  }
+
+  @Override
+  public PolicyExecutor toExecutor() {
+    return new CircuitBreakerExecutor(this);
   }
 }

@@ -1,8 +1,13 @@
-# 1.1.1
+# Next
 
-### Bug Fixes
+### Improvements
 
-* Issue #131 - Fix interaction between CircuitBreaker + Predicate + failure.
+* Issue #21 - Support failure strategy precedence
+  - This change respects the order that a `RetryPolicy`, `CircuitBreaker`, or fallback are configured in, and will apply them to any failures in order. The first policy strategy that is configured will handle a failure first, and so on.
+
+### API Changes
+
+* Retry related listener methods such as `onRetry`, `onAbort`, and `onRetriesExceeded`, along with their async variants, will throw `IllegalStateException` if they're used when a `RetryPolicy` is not configured.
 
 # 1.1.0
 

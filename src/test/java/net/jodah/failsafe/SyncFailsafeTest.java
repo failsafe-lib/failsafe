@@ -15,31 +15,20 @@
  */
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.failures;
-import static net.jodah.failsafe.Testing.ignoreExceptions;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.ContextualCallable;
 import net.jodah.failsafe.function.ContextualRunnable;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.jodah.failsafe.Asserts.assertThrows;
+import static net.jodah.failsafe.Testing.failures;
+import static net.jodah.failsafe.Testing.ignoreExceptions;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.*;
 
 @Test
 public class SyncFailsafeTest extends AbstractFailsafeTest {
@@ -61,7 +50,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     return null;
   }
 
-  private void assertRun(Object runnable) throws Throwable {
+  private void assertRun(Object runnable) {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(true);
 
@@ -83,18 +72,18 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(3)).connect();
   }
 
-  public void shouldRun() throws Throwable {
+  public void shouldRun() {
     assertRun((CheckedRunnable) () -> service.connect());
   }
 
-  public void shouldRunContextual() throws Throwable {
+  public void shouldRunContextual() {
     assertRun((ContextualRunnable) context -> {
       assertEquals(context.getExecutions(), counter.getAndIncrement());
       service.connect();
     });
   }
 
-  private void assertGet(Object callable) throws Throwable {
+  private void assertGet(Object callable) {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
     RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
@@ -112,11 +101,11 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(3)).connect();
   }
 
-  public void shouldGet() throws Throwable {
+  public void shouldGet() {
     assertGet((Callable<Boolean>) () -> service.connect());
   }
 
-  public void shouldGetContextual() throws Throwable {
+  public void shouldGetContextual() {
     assertGet((ContextualCallable<Boolean>) context -> {
       assertEquals(context.getExecutions(), counter.getAndIncrement());
       return service.connect();
@@ -153,7 +142,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
    * Asserts that retries are performed then a non-retryable failure is thrown.
    */
   @SuppressWarnings("unchecked")
-  public void shouldThrowOnNonRetriableFailure() throws Throwable {
+  public void shouldThrowOnNonRetriableFailure() {
     // Given
     when(service.connect()).thenThrow(ConnectException.class, ConnectException.class, IllegalStateException.class);
     RetryPolicy retryPolicy = new RetryPolicy().retryOn(ConnectException.class);
@@ -163,7 +152,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(3)).connect();
   }
 
-  public void shouldOpenCircuitWhenTimeoutExceeded() throws Throwable {
+  public void shouldOpenCircuitWhenTimeoutExceeded() {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withTimeout(10, TimeUnit.MILLISECONDS);
     assertTrue(breaker.isClosed());
@@ -180,7 +169,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   /**
    * Asserts that Failsafe throws when interrupting a waiting thread.
    */
-  public void shouldThrowWhenInterruptedDuringSynchronousDelay() throws Throwable {
+  public void shouldThrowWhenInterruptedDuringSynchronousDelay() {
     Thread mainThread = Thread.currentThread();
     new Thread(() -> {
       try {
@@ -209,7 +198,8 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(20, new ConnectException())).thenReturn(true);
 
     // When
-    assertThrows(() -> Failsafe.with(retryAlways).with(circuit).run(() -> service.connect()),
+    assertThrows(
+        () -> Failsafe.with(circuit).with(retryAlways.retryOn(ConnectException.class)).run(() -> service.connect()),
         CircuitBreakerOpenException.class);
 
     // Then
@@ -237,7 +227,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   /**
    * Asserts that an execution is failed when the max duration is exceeded.
    */
-  public void shouldCompleteWhenMaxDurationExceeded() throws Throwable {
+  public void shouldCompleteWhenMaxDurationExceeded() {
     when(service.connect()).thenReturn(false);
     RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false).withMaxDuration(100, TimeUnit.MILLISECONDS);
 
@@ -251,7 +241,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     verify(service).connect();
   }
 
-  public void shouldWrapCheckedExceptions() throws Throwable {
+  public void shouldWrapCheckedExceptions() {
     assertThrows(() -> Failsafe.with(new RetryPolicy().withMaxRetries(1)).run(() -> {
       throw new TimeoutException();
     }), FailsafeException.class, TimeoutException.class);

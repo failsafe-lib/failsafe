@@ -15,30 +15,27 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import net.jodah.failsafe.PolicyExecutor.PolicyResult;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
+import java.util.concurrent.Callable;
+
 /**
  * Tracks asynchronous executions and allows retries to be scheduled according to a {@link RetryPolicy}.
- * 
+ *
  * @author Jonathan Halterman
  */
 public final class AsyncExecution extends AbstractExecution {
-  private final Callable<Object> callable;
   private final FailsafeFuture<Object> future;
   private final Scheduler scheduler;
-  volatile boolean completeCalled;
-  volatile boolean retryCalled;
+  private volatile boolean completeCalled;
+  private volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
   <T> AsyncExecution(Callable<T> callable, Scheduler scheduler, FailsafeFuture<T> future,
       FailsafeConfig<Object, ?> config) {
-    super(config);
-    this.callable = (Callable<Object>) callable;
+    super((Callable<Object>) callable, config);
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
   }
@@ -49,7 +46,7 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public void complete() {
-    complete(null, null, false);
+    complete(null, null, true);
   }
 
   /**
@@ -59,13 +56,13 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
-    return complete(result, null, true);
+    return complete(result, null, false);
   }
 
   /**
-   * Attempts to complete the execution and the associated {@code FutureResult} with the {@code result} and
-   * {@code failure}. Returns true on success, else false if completion failed and the execution should be retried via
-   * {@link #retry()}.
+   * Attempts to complete the execution and the associated {@code FutureResult} with the {@code result} and {@code
+   * failure}. Returns true on success, else false if completion failed and the execution should be retried via {@link
+   * #retry()}.
    * <p>
    * Note: the execution may be completed even when the {@code failure} is not {@code null}, such as when the
    * RetryPolicy does not allow retries for the {@code failure}.
@@ -73,7 +70,7 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result, Throwable failure) {
-    return complete(result, failure, true);
+    return complete(result, failure, false);
   }
 
   /**
@@ -83,9 +80,7 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
   public boolean retry() {
-    Assert.state(!retryCalled, "Retry has already been called");
-    retryCalled = true;
-    return completeOrRetry(lastResult, lastFailure);
+    return retryFor(lastResult, lastFailure);
   }
 
   /**
@@ -101,7 +96,7 @@ public final class AsyncExecution extends AbstractExecution {
   /**
    * Records an execution and returns true if a retry has been scheduled for the {@code result} or {@code failure}, else
    * returns false and marks the execution and associated {@code FutureResult} as complete.
-   * 
+   *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
   public boolean retryFor(Object result, Throwable failure) {
@@ -123,38 +118,25 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Prepares for an execution retry by recording the start time, checking if the circuit is open, resetting internal
-   * flags, and calling the retry listeners.
+   * Prepares for an execution by resetting internal flags.
    */
-  void before() {
-    if (config.circuitBreaker != null && !config.circuitBreaker.allowsExecution()) {
-      completed = true;
-      Exception failure = new CircuitBreakerOpenException();
-      if (config != null)
-        config.handleComplete(null, failure, this, false);
-      future.complete(null, failure, config.fallback, false);
-      return;
-    }
-
-    if (completeCalled && config != null)
-      config.handleRetry(lastResult, lastFailure, this);
-
-    super.before();
+  void preExecute() {
     completeCalled = false;
     retryCalled = false;
   }
 
   /**
    * Attempts to complete the parent execution, calls failure handlers, and completes the future if needed.
-   * 
+   *
    * @throws IllegalStateException if the execution is already complete
    */
-  @Override
-  boolean complete(Object result, Throwable failure, boolean checkArgs) {
+  boolean complete(Object result, Throwable failure, boolean noResult) {
     synchronized (future) {
       if (!completeCalled) {
-        if (super.complete(result, failure, checkArgs))
-          future.complete(result, failure, config.fallback, success);
+        if (super.postExecute(new PolicyResult(result, failure, noResult))) {
+          future.complete(result, failure);
+          eventHandler.handleComplete(result, failure, this, success);
+        }
         completeCalled = true;
       }
 
@@ -164,25 +146,38 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Attempts to complete the execution else schedule a retry, returning whether a retry has been scheduled or not.
-   * 
+   *
    * @throws IllegalStateException if the execution is already complete
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   boolean completeOrRetry(Object result, Throwable failure) {
     synchronized (future) {
-      if (!complete(result, failure, true) && !future.isDone() && !future.isCancelled()) {
-        try {
-          future.inject((Future) scheduler.schedule(callable, waitNanos, TimeUnit.NANOSECONDS));
-          return true;
-        } catch (Throwable t) {
-          failure = t;
-          if (config != null)
-            config.handleComplete(null, t, this, false);
-          future.complete(null, failure, config.fallback, false);
-        }
+      PolicyResult pr = new PolicyResult(result, failure);
+
+      if (!completeCalled) {
+        completeCalled = true;
+        record(pr);
       }
 
-      return false;
+      return executeAsync(pr, scheduler, future) == null;
     }
+  }
+
+  /**
+   * Begins or continues an asynchronous execution from the last PolicyExecutor given the {@code pr}.
+   *
+   * @return null if an execution has been scheduled
+   */
+  PolicyResult executeAsync(PolicyResult pr, Scheduler scheduler, FailsafeFuture<Object> future) {
+    boolean shouldExecute = lastExecuted == null;
+    pr = head.executeAsync(pr, scheduler, future, shouldExecute);
+
+    if (pr != null) {
+      completed = true;
+      success = !pr.noResult && pr.success;
+      eventHandler.handleComplete(pr.result, pr.failure, this, success);
+      future.complete(pr.result, pr.failure);
+    }
+
+    return pr;
   }
 }

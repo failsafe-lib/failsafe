@@ -15,22 +15,15 @@
  */
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Testing.failures;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import net.jodah.failsafe.FailsafeConfigTest.ListenerCounter;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import net.jodah.failsafe.FailsafeConfigTest.ListenerCounter;
+import java.util.concurrent.*;
+
+import static net.jodah.failsafe.Testing.failures;
+import static org.mockito.Mockito.*;
 
 @Test
 public class AsyncFailsafeConfigTest {
@@ -192,9 +185,9 @@ public class AsyncFailsafeConfigTest {
 
     // Then
     abort.assertEquals(1);
-    complete.assertEquals(0);
+    complete.assertEquals(1);
     failedAttempt.assertEquals(4);
-    failure.assertEquals(0);
+    failure.assertEquals(1);
     retriesExceeded.assertEquals(0);
     retry.assertEquals(3);
     success.assertEquals(0);

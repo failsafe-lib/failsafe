@@ -15,28 +15,20 @@
  */
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Testing.failures;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.fail;
-
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import net.jodah.concurrentunit.Waiter;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import net.jodah.concurrentunit.Waiter;
+import java.util.Map;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.jodah.failsafe.Testing.failures;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.*;
 
 @Test
 public class FailsafeConfigTest {
@@ -258,9 +250,9 @@ public class FailsafeConfigTest {
 
     // Then
     abort.assertEquals(1);
-    complete.assertEquals(0);
+    complete.assertEquals(1);
     failedAttempt.assertEquals(4);
-    failure.assertEquals(0);
+    failure.assertEquals(1);
     retriesExceeded.assertEquals(0);
     retry.assertEquals(3);
     success.assertEquals(0);
@@ -269,7 +261,7 @@ public class FailsafeConfigTest {
   /**
    * Asserts that a failure listener is not called on an abort.
    */
-  public void testFailureListenerNotCalledOnAbort() {
+  public void testFailureListenerCalledOnAbort() {
     // Given
     RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class);
     AtomicBoolean called = new AtomicBoolean();
@@ -286,6 +278,6 @@ public class FailsafeConfigTest {
     } catch (Exception expected) {
     }
 
-    assertFalse(called.get());
+    assertTrue(called.get());
   }
 }

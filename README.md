@@ -255,7 +255,6 @@ breaker.close();
 
 if (breaker.allowsExecution()) {
   try {
-    breaker.preExecute();
     doSomething();
     breaker.recordSuccess();
   } catch (Exception e) {
@@ -450,7 +449,7 @@ Execution execution = new Execution(retryPolicy);
 
 // On failure
 if (execution.canRetryOn(someFailure))
-  service.scheduleRetry(execution.getWaitTime(), TimeUnit.MILLISECONDS);
+  service.scheduleRetry(execution.getWaitTime().toNanos(), TimeUnit.MILLISECONDS);
 ```
 
 See the [RxJava example][RxJava] for a more detailed implementation.
@@ -474,7 +473,7 @@ Failsafe is a volunteer effort. If you use it and you like it, [let us know][who
 
 ## License
 
-Copyright 2015-2016 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
+Copyright 2015-2018 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 [backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
 [computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.RetryPolicy.DelayFunction-
