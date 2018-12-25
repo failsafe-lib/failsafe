@@ -32,7 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * @param <R> result type
  * @param <F> failsafe type - {@link SyncFailsafe} or {@link AsyncFailsafe}
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"WeakerAccess", "unchecked"})
 public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   final Scheduler scheduler;
 
@@ -59,7 +59,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
+    registry().abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -106,7 +106,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failed execution attempt.
    */
   public F onFailedAttemptAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
+    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -133,7 +133,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failure occurs that cannot be retried.
    */
   public F onFailureAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
+    registry().failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -153,7 +153,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
+    registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -186,7 +186,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(Listeners.<R>of(listener), null, scheduler));
+    registry().retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 

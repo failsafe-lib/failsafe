@@ -32,14 +32,13 @@ import java.util.concurrent.ExecutorService;
  * @param <R> result type
  * @param <F> failsafe type - {@link SyncFailsafe} or {@link AsyncFailsafe}
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"WeakerAccess", "unchecked"})
 public class FailsafeConfig<R, F> {
   RetryPolicy retryPolicy = RetryPolicy.NEVER;
   CircuitBreaker circuitBreaker;
   Fallback fallback;
   /** Policies sorted outer-most first */
   List<FailsafePolicy> policies;
-  Listeners<R> listeners;
   ListenerRegistry<R> listenerRegistry;
 
   FailsafeConfig() {
@@ -55,7 +54,6 @@ public class FailsafeConfig<R, F> {
     circuitBreaker = config.circuitBreaker;
     fallback = config.fallback;
     policies = config.policies;
-    listeners = config.listeners;
     listenerRegistry = config.listenerRegistry;
   }
 
@@ -70,37 +68,37 @@ public class FailsafeConfig<R, F> {
 
     List<ContextualResultListener<T, Throwable>> abort() {
       return abortListeners != null ? abortListeners
-          : (abortListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (abortListeners = new ArrayList<>(2));
     }
 
     List<ContextualResultListener<T, Throwable>> complete() {
       return completeListeners != null ? completeListeners
-          : (completeListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (completeListeners = new ArrayList<>(2));
     }
 
     List<ContextualResultListener<T, Throwable>> failedAttempt() {
       return failedAttemptListeners != null ? failedAttemptListeners
-          : (failedAttemptListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (failedAttemptListeners = new ArrayList<>(2));
     }
 
     List<ContextualResultListener<T, Throwable>> failure() {
       return failureListeners != null ? failureListeners
-          : (failureListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (failureListeners = new ArrayList<>(2));
     }
 
     List<ContextualResultListener<T, Throwable>> retriesExceeded() {
       return retriesExceededListeners != null ? retriesExceededListeners
-          : (retriesExceededListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (retriesExceededListeners = new ArrayList<>(2));
     }
 
     List<ContextualResultListener<T, Throwable>> retry() {
       return retryListeners != null ? retryListeners
-          : (retryListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (retryListeners = new ArrayList<>(2));
     }
 
     List<ContextualResultListener<T, Throwable>> success() {
       return successListeners != null ? successListeners
-          : (successListeners = new ArrayList<ContextualResultListener<T, Throwable>>(2));
+          : (successListeners = new ArrayList<>(2));
     }
   }
 
@@ -126,7 +124,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution is aborted.
    */
   public F onAbort(CheckedConsumer<? extends Throwable> listener) {
-    registry().abort().add(Listeners.<R>of(listener));
+    registry().abort().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -150,7 +148,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
    */
   public F onAbortAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().abort().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
+    registry().abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -207,7 +205,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution attempt fails.
    */
   public F onFailedAttempt(CheckedConsumer<? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.<R>of(listener));
+    registry().failedAttempt().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -232,7 +230,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution attempt fails.
    */
   public F onFailedAttemptAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().failedAttempt().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
+    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -259,7 +257,7 @@ public class FailsafeConfig<R, F> {
    * are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailure(CheckedConsumer<? extends Throwable> listener) {
-    registry().failure().add(Listeners.<R>of(listener));
+    registry().failure().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -286,7 +284,7 @@ public class FailsafeConfig<R, F> {
    * cannot be retried. If multiple policies, are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailureAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().failure().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
+    registry().failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -316,7 +314,7 @@ public class FailsafeConfig<R, F> {
    * exceeded.
    */
   public F onRetriesExceeded(CheckedConsumer<? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.<R>of(listener));
+    registry().retriesExceeded().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -338,7 +336,7 @@ public class FailsafeConfig<R, F> {
    */
   public F onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
     registry().retriesExceeded()
-        .add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
+        .add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -354,7 +352,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called before an execution is retried.
    */
   public F onRetry(CheckedConsumer<? extends Throwable> listener) {
-    registry().retry().add(Listeners.<R>of(listener));
+    registry().retry().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -378,7 +376,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
    */
   public F onRetryAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().retry().add(Listeners.of(Listeners.<R>of(listener), Assert.notNull(executor, "executor"), null));
+    registry().retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -430,8 +428,7 @@ public class FailsafeConfig<R, F> {
    * Configures the {@code circuitBreaker} to be used to control the rate of event execution.
    *
    * @throws NullPointerException if {@code circuitBreaker} is null
-   * @throws IllegalStateException if a circuit breaker is already configured or if {@link #with(FailsafePolicy...)
-   * ordered policies} have been configured
+   * @throws IllegalStateException if a circuit breaker is already configured or if ordered policies have been configured
    */
   public F with(CircuitBreaker circuitBreaker) {
     Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configured");
@@ -441,21 +438,10 @@ public class FailsafeConfig<R, F> {
   }
 
   /**
-   * Configures the {@code listeners} to be called as execution events occur.
-   *
-   * @throws NullPointerException if {@code listeners} is null
-   */
-  public <T> F with(Listeners<T> listeners) {
-    this.listeners = (Listeners<R>) Assert.notNull(listeners, "listeners");
-    return (F) this;
-  }
-
-  /**
    * Configures the {@code retryPolicy} to be used for retrying failed executions.
    *
    * @throws NullPointerException if {@code retryPolicy} is null
-   * @throws IllegalStateException if a retry policy is already configured or if {@link #with(FailsafePolicy...)
-   * ordered policies} have been configured
+   * @throws IllegalStateException if a retry policy is already configured or if ordered policies have been configured
    */
   public F with(RetryPolicy retryPolicy) {
     Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configurd");
@@ -469,7 +455,8 @@ public class FailsafeConfig<R, F> {
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   @SuppressWarnings("rawtypes")
   public F withFallback(Callable<? extends R> fallback) {
@@ -481,7 +468,8 @@ public class FailsafeConfig<R, F> {
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   @SuppressWarnings("rawtypes")
   public F withFallback(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
@@ -493,8 +481,8 @@ public class FailsafeConfig<R, F> {
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   public F withFallback(CheckedBiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
     Assert.state(this.fallback == null, "withFallback has already been called");
@@ -508,7 +496,8 @@ public class FailsafeConfig<R, F> {
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   @SuppressWarnings("rawtypes")
   public F withFallback(CheckedConsumer<? extends Throwable> fallback) {
@@ -521,7 +510,8 @@ public class FailsafeConfig<R, F> {
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   @SuppressWarnings("rawtypes")
   public F withFallback(CheckedFunction<? extends Throwable, ? extends R> fallback) {
@@ -534,7 +524,8 @@ public class FailsafeConfig<R, F> {
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   @SuppressWarnings("rawtypes")
   public F withFallback(CheckedRunnable fallback) {
@@ -546,7 +537,8 @@ public class FailsafeConfig<R, F> {
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if
-   * {@link #with(FailsafePolicy...) ordered policies} have been configured
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
    */
   @SuppressWarnings("rawtypes")
   public F withFallback(R fallback) {
@@ -554,27 +546,14 @@ public class FailsafeConfig<R, F> {
   }
 
   ListenerRegistry<R> registry() {
-    return listenerRegistry != null ? listenerRegistry : (listenerRegistry = new ListenerRegistry<R>());
+    return listenerRegistry != null ? listenerRegistry : (listenerRegistry = new ListenerRegistry<>());
   }
 
   EventHandler<R> eventHandler = new EventHandler<R>() {
     @Override
     public void handleAbort(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.abortListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.abortListeners, result, failure, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onAbort(result, failure);
-        } catch (Exception ignore) {
-        }
-        try {
-          listeners.onAbort(result, failure, context);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.abortListeners != null)
+        call(listenerRegistry.abortListeners, result, failure, context.copy());
     }
 
     @Override
@@ -588,109 +567,35 @@ public class FailsafeConfig<R, F> {
 
     @Override
     public void handleFailedAttempt(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.failedAttemptListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.failedAttemptListeners, result, failure, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onFailedAttempt(result, failure);
-        } catch (Exception ignore) {
-        }
-        try {
-          listeners.onFailedAttempt(result, failure, context);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.failedAttemptListeners != null)
+        call(listenerRegistry.failedAttemptListeners, result, failure, context.copy());
     }
 
     @Override
     public void handleRetriesExceeded(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.retriesExceededListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.retriesExceededListeners, result, failure, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onRetriesExceeded(result, failure);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.retriesExceededListeners != null)
+        call(listenerRegistry.retriesExceededListeners, result, failure,context.copy());
     }
 
     @Override
     public void handleRetry(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.retryListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.retryListeners, result, failure, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onRetry(result, failure);
-        } catch (Exception ignore) {
-        }
-        try {
-          listeners.onRetry(result, failure, context);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.retryListeners != null)
+        call(listenerRegistry.retryListeners, result, failure, context.copy());
     }
 
     private void handleComplete(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.completeListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.completeListeners, result, failure, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onComplete(result, failure);
-        } catch (Exception ignore) {
-        }
-        try {
-          listeners.onComplete(result, failure, context);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.completeListeners != null)
+        call(listenerRegistry.completeListeners, result, failure, context.copy());
     }
 
     private void handleFailure(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.failureListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.failureListeners, result, failure, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onFailure(result, failure);
-        } catch (Exception ignore) {
-        }
-        try {
-          listeners.onFailure(result, failure, context);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.failureListeners != null)
+        call(listenerRegistry.failureListeners, result, failure, context.copy());
     }
 
     private void handleSuccess(R result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.successListeners != null) {
-        context = context.copy();
-        call(listenerRegistry.successListeners, result, null, context);
-      }
-
-      if (listeners != null) {
-        try {
-          listeners.onSuccess(result);
-        } catch (Exception ignore) {
-        }
-        try {
-          listeners.onSuccess(result, context);
-        } catch (Exception ignore) {
-        }
-      }
+      if (listenerRegistry != null && listenerRegistry.successListeners != null)
+        call(listenerRegistry.successListeners, result, null, context.copy());
     }
   };
 }

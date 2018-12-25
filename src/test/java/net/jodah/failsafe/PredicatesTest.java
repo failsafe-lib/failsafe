@@ -18,7 +18,7 @@ package net.jodah.failsafe;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.jodah.failsafe.function.BiPredicate;
+import java.util.function.BiPredicate;
 
 @Test
 public class PredicatesTest {

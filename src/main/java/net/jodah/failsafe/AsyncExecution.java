@@ -33,11 +33,15 @@ public final class AsyncExecution extends AbstractExecution {
   private volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
-  <T> AsyncExecution(Callable<T> callable, Scheduler scheduler, FailsafeFuture<T> future,
-      FailsafeConfig<Object, ?> config) {
-    super((Callable<Object>) callable, config);
+  <T> AsyncExecution(Scheduler scheduler, FailsafeFuture<T> future, FailsafeConfig<?, ?> config) {
+    super((FailsafeConfig<Object, ?>) config);
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
+  }
+
+  <T> AsyncExecution(Callable<T> callable, Scheduler scheduler, FailsafeFuture<T> future, FailsafeConfig<?, ?> config) {
+    this(scheduler, future, config);
+    inject(callable);
   }
 
   /**

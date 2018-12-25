@@ -30,7 +30,7 @@ public class FailsafeFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
   private final FailsafeConfig<T, ?> config;
   private ExecutionContext execution;
-  private java.util.concurrent.CompletableFuture<T> completableFuture;
+  private CompletableFuture<T> completableFuture;
 
   // Mutable state
   private volatile Future<T> delegate;
@@ -151,7 +151,7 @@ public class FailsafeFuture<T> implements Future<T> {
     circuit.close();
   }
 
-  void inject(java.util.concurrent.CompletableFuture<T> completableFuture) {
+  void inject(CompletableFuture<T> completableFuture) {
     this.completableFuture = completableFuture;
   }
 

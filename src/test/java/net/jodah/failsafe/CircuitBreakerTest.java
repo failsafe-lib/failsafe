@@ -15,17 +15,17 @@
  */
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Asserts.assertThrows;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
 
-import net.jodah.failsafe.function.BiPredicate;
-import org.testng.annotations.Test;
+import static net.jodah.failsafe.Asserts.assertThrows;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class CircuitBreakerTest {
@@ -47,22 +47,16 @@ public class CircuitBreakerTest {
   }
 
   public void testIgnoresThrowingPredicate() {
-    CircuitBreaker breaker = new CircuitBreaker().failIf(new BiPredicate<Integer, Throwable>() {
-      @Override
-      public boolean test(Integer integer, Throwable throwable) {
-        throw new NullPointerException();
-      }
+    CircuitBreaker breaker = new CircuitBreaker().failIf((BiPredicate<Integer, Throwable>) (integer, throwable) -> {
+      throw new NullPointerException();
     });
     assertFalse(breaker.isFailure(1, null));
   }
 
   @Test(expectedExceptions = OutOfMemoryError.class)
   public void testThrowsFatalErrors() {
-    CircuitBreaker breaker = new CircuitBreaker().failIf(new BiPredicate<String, Throwable>() {
-      @Override
-      public boolean test(String integer, Throwable throwable) {
-        throw new OutOfMemoryError();
-      }
+    CircuitBreaker breaker = new CircuitBreaker().failIf((BiPredicate<String, Throwable>) (integer, throwable) -> {
+      throw new OutOfMemoryError();
     });
     breaker.isFailure("result", null);
   }

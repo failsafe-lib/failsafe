@@ -19,13 +19,13 @@ import net.jodah.failsafe.PolicyExecutor.PolicyResult;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 
 /**
  * Tracks executions and determines when an execution can be performed for a {@link RetryPolicy}.
  *
  * @author Jonathan Halterman
  */
+@SuppressWarnings("WeakerAccess")
 public class Execution extends AbstractExecution {
   /**
    * Creates a new {@link Execution} that will use the {@code policies} to handle failures. Policies are applied in
@@ -38,8 +38,9 @@ public class Execution extends AbstractExecution {
     super(new FailsafeConfig<Object, FailsafeConfig<Object, ?>>(Arrays.asList(Assert.notNull(policies, "policies"))));
   }
 
-  Execution(Callable<Object> callable, FailsafeConfig<Object, ?> config) {
-    super(callable, config);
+  @SuppressWarnings("unchecked")
+  Execution(FailsafeConfig<?, ?> config) {
+    super((FailsafeConfig<Object, ?>) config);
   }
 
   /**

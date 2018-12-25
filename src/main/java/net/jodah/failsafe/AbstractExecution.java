@@ -25,9 +25,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractExecution extends ExecutionContext {
-  final FailsafeConfig<Object, ?> config;
   final EventHandler<Object> eventHandler;
-  final Callable<Object> callable;
+  Callable<Object> callable;
 
   // Internally mutable state
   volatile Object lastResult;
@@ -42,19 +41,10 @@ public abstract class AbstractExecution extends ExecutionContext {
   volatile boolean success;
 
   /**
-   * Creates a new standalone AbstractExecution for the {@code config}.
-   */
-  AbstractExecution(FailsafeConfig<Object, ?> config) {
-    this(null, config);
-  }
-
-  /**
    * Creates a new AbstractExecution for the {@code callable} and {@code config}.
    */
-  AbstractExecution(Callable<Object> callable, FailsafeConfig<Object, ?> config) {
+  AbstractExecution(FailsafeConfig<Object, ?> config) {
     super(new Duration(System.nanoTime(), TimeUnit.NANOSECONDS));
-    this.config = config;
-    this.callable = callable;
     eventHandler = config.eventHandler;
 
     PolicyExecutor next = null;
@@ -76,8 +66,9 @@ public abstract class AbstractExecution extends ExecutionContext {
     head = next;
   }
 
-  void addPolicy(FailsafePolicy policy) {
-    head = buildPolicyExecutor(policy, head);
+  @SuppressWarnings("unchecked")
+  void inject(Callable<?> callable) {
+    this.callable = (Callable<Object>) callable;
   }
 
   private PolicyExecutor buildPolicyExecutor(FailsafePolicy policy, PolicyExecutor next) {

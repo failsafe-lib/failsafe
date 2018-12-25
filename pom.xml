@@ -14,11 +14,6 @@
   <name>Failsafe</name>
   <url>http://github.com/jhalterman/failsafe/</url>
 
-  <properties>
-    <devCompileVersion>1.8</devCompileVersion>
-    <releaseCompileVersion>1.6</releaseCompileVersion>
-  </properties>
-
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -89,8 +84,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.2</version>
         <configuration>
-          <source>${devCompileVersion}</source>
-          <target>${devCompileVersion}</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
       <plugin>
@@ -188,22 +183,6 @@
       <id>release</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.2</version>
-            <executions>
-              <execution>
-                <id>default-compile</id>
-                <configuration>
-                  <compilerArguments>
-                    <source>${releaseCompileVersion}</source>
-                    <target>${releaseCompileVersion}</target>
-                  </compilerArguments>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>

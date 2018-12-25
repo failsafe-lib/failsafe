@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Part of the Failsafe SPI.
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class PolicyExecutor {
   protected AbstractExecution execution;
   protected EventHandler<Object> eventHandler;

@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.BiPredicate;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.*;
@@ -30,22 +29,19 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiPredicate;
 
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
  * 
  * @author Jonathan Halterman
  */
+@SuppressWarnings("WeakerAccess")
 public class CircuitBreaker implements FailsafePolicy {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<CircuitState>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
-  private final CircuitBreakerStats stats = new CircuitBreakerStats() {
-    @Override
-    public int getCurrentExecutions() {
-      return currentExecutions.get();
-    }
-  };
+  private final CircuitBreakerStats stats = currentExecutions::get;
   private Duration delay = Duration.NONE;
   private Duration timeout;
   private Ratio failureThreshold;
@@ -61,7 +57,7 @@ public class CircuitBreaker implements FailsafePolicy {
    * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay by default.
    */
   public CircuitBreaker() {
-    failureConditions = new ArrayList<BiPredicate<Object, Throwable>>();
+    failureConditions = new ArrayList<>();
     state.set(new ClosedState(this));
   }
 
@@ -121,10 +117,10 @@ public class CircuitBreaker implements FailsafePolicy {
    * 
    * @throws NullPointerException if {@code failure} is null
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({ "rawtypes" })
   public CircuitBreaker failOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return failOn((List) Arrays.asList(failure));
+    return failOn(Arrays.asList(failure));
   }
 
   /**

@@ -33,7 +33,7 @@ public class Failsafe {
    * @throws NullPointerException if {@code retryPolicy} is null
    */
   public static <T> SyncFailsafe<T> with(RetryPolicy retryPolicy) {
-    return new SyncFailsafe<T>(Assert.notNull(retryPolicy, "retryPolicy"));
+    return new SyncFailsafe<>(Assert.notNull(retryPolicy, "retryPolicy"));
   }
 
   /**
@@ -44,7 +44,7 @@ public class Failsafe {
    * @throws NullPointerException if {@code circuitBreaker} is null
    */
   public static <T> SyncFailsafe<T> with(CircuitBreaker circuitBreaker) {
-    return new SyncFailsafe<T>(Assert.notNull(circuitBreaker, "circuitBreaker"));
+    return new SyncFailsafe<>(Assert.notNull(circuitBreaker, "circuitBreaker"));
   }
 
   /**
@@ -58,6 +58,6 @@ public class Failsafe {
   public static <T> SyncFailsafe<T> with(FailsafePolicy... policies) {
     Assert.notNull(policies, "policies");
     Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
-    return new SyncFailsafe<T>(Arrays.asList(policies));
+    return new SyncFailsafe<>(Arrays.asList(policies));
   }
 }

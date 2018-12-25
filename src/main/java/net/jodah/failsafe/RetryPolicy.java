@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.BiPredicate;
 import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.executor.RetryPolicyExecutor;
 import net.jodah.failsafe.internal.util.Assert;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
 
 /**
  * A policy that defines when retries should be performed.
@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
  * 
  * @author Jonathan Halterman
  */
+@SuppressWarnings("WeakerAccess")
 public class RetryPolicy implements FailsafePolicy {
   /**
    * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
@@ -98,8 +99,8 @@ public class RetryPolicy implements FailsafePolicy {
   public RetryPolicy() {
     delay = Duration.NONE;
     maxRetries = -1;
-    retryConditions = new ArrayList<BiPredicate<Object, Throwable>>();
-    abortConditions = new ArrayList<BiPredicate<Object, Throwable>>();
+    retryConditions = new ArrayList<>();
+    abortConditions = new ArrayList<>();
   }
 
   /**
@@ -107,15 +108,20 @@ public class RetryPolicy implements FailsafePolicy {
    */
   public RetryPolicy(RetryPolicy rp) {
     this.delay = rp.delay;
+    this.delayMin = rp.delayMin;
+    this.delayMax = rp.delayMax;
     this.delayFactor = rp.delayFactor;
     this.maxDelay = rp.maxDelay;
+    this.delayFn = rp.delayFn;
+    this.delayResult = rp.delayResult;
+    this.delayFailure = rp.delayFailure;
     this.maxDuration = rp.maxDuration;
     this.maxRetries = rp.maxRetries;
     this.jitter = rp.jitter;
     this.jitterFactor = rp.jitterFactor;
     this.failuresChecked = rp.failuresChecked;
-    this.retryConditions = new ArrayList<BiPredicate<Object, Throwable>>(rp.retryConditions);
-    this.abortConditions = new ArrayList<BiPredicate<Object, Throwable>>(rp.abortConditions);
+    this.retryConditions = new ArrayList<>(rp.retryConditions);
+    this.abortConditions = new ArrayList<>(rp.abortConditions);
   }
 
   /**
@@ -148,10 +154,10 @@ public class RetryPolicy implements FailsafePolicy {
    * 
    * @throws NullPointerException if {@code failure} is null
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({ "rawtypes" })
   public RetryPolicy abortOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return abortOn((List) Arrays.asList(failure));
+    return abortOn(Arrays.asList(failure));
   }
 
   /**
@@ -404,10 +410,10 @@ public class RetryPolicy implements FailsafePolicy {
    * 
    * @throws NullPointerException if {@code failure} is null
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({ "rawtypes" })
   public RetryPolicy retryOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
-    return retryOn((List) Arrays.asList(failure));
+    return retryOn(Arrays.asList(failure));
   }
 
   /**

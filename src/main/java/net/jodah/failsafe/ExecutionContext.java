@@ -15,9 +15,9 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.TimeUnit;
-
 import net.jodah.failsafe.util.Duration;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Contextual execution information.
@@ -33,7 +33,7 @@ public class ExecutionContext {
     this.startTime = startTime;
   }
 
-  ExecutionContext(ExecutionContext context) {
+  private ExecutionContext(ExecutionContext context) {
     this.startTime = context.startTime;
     this.executions = context.executions;
   }
