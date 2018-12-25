@@ -57,7 +57,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(true);
 
     // When / Then
-    FailsafeFuture<?> future = run(Failsafe.with(retryAlways).with(executor).onComplete((result, failure) -> {
+    Future<?> future = run(Failsafe.with(retryAlways).with(executor).onComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertNull(failure);
       waiter.resume();
@@ -72,14 +72,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When
-    FailsafeFuture<?> future2 = run(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
+    Future<?> future2 = run(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(failure instanceof ConnectException);
       waiter.resume();
     }), runnable);
 
     // Then
-    assertThrows(() -> future2.get(), futureAsyncThrowables);
+    assertThrows(future2::get, futureAsyncThrowables);
     waiter.await(3000);
     verify(service, times(3)).connect();
   }
@@ -116,7 +116,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
 
     // When / Then
-    FailsafeFuture<Boolean> future = get(
+    Future<Boolean> future = get(
         Failsafe.<Boolean>with(retryPolicy).with(executor).onComplete((result, failure) -> {
           waiter.assertTrue(result);
           waiter.assertNull(failure);
@@ -132,12 +132,12 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When / Then
-    FailsafeFuture<Boolean> future2 = get(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
+    Future<Boolean> future2 = get(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
       waiter.assertNull(result);
       waiter.assertTrue(failure instanceof ConnectException);
       waiter.resume();
     }), callable);
-    assertThrows(() -> future2.get(), futureAsyncThrowables);
+    assertThrows(future2::get, futureAsyncThrowables);
     waiter.await(3000);
     verify(service, times(3)).connect();
   }
@@ -202,7 +202,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       waiter.assertTrue(matches(failure, ConnectException.class));
       waiter.resume();
     });
-    assertThrows(() -> future2.get(), futureAsyncThrowables);
+    assertThrows(future2::get, futureAsyncThrowables);
     waiter.await(3000);
     verify(service, times(3)).connect();
   }
@@ -234,7 +234,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelFuture() {
-    FailsafeFuture<?> future = Failsafe.with(retryAlways)
+    Future<?> future = Failsafe.with(retryAlways)
         .with(executor)
         .run(() -> ignoreExceptions(() -> Thread.sleep(10000)));
     future.cancel(true);
@@ -367,10 +367,10 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   @SuppressWarnings("unused")
   public void shouldSupportCovariance() {
     FastService fastService = mock(FastService.class);
-    FailsafeFuture<Service> future = Failsafe.with(new RetryPolicy()).with(executor).get(() -> fastService);
+    Future<Service> future = Failsafe.with(new RetryPolicy()).with(executor).get(() -> fastService);
   }
 
-  private FailsafeFuture<?> run(AsyncFailsafe<?> failsafe, Object runnable) {
+  private Future<?> run(AsyncFailsafe<?> failsafe, Object runnable) {
     if (runnable instanceof CheckedRunnable)
       return failsafe.run((CheckedRunnable) runnable);
     else if (runnable instanceof ContextualRunnable)
@@ -380,7 +380,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> FailsafeFuture<T> get(AsyncFailsafe<?> failsafe, Object callable) {
+  private <T> Future<T> get(AsyncFailsafe<?> failsafe, Object callable) {
     if (callable instanceof Callable)
       return failsafe.get((Callable<T>) callable);
     else if (callable instanceof ContextualCallable)

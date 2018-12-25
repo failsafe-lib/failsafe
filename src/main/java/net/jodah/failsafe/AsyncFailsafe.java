@@ -22,6 +22,7 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 
 /**
@@ -85,7 +86,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    *
    * @throws NullPointerException if the {@code callable} is null
    */
-  public <T> FailsafeFuture<T> get(Callable<T> callable) {
+  public <T> Future<T> get(Callable<T> callable) {
     return call(execution -> Functions.asyncOf(callable, execution), null);
   }
 
@@ -98,7 +99,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    *
    * @throws NullPointerException if the {@code callable} is null
    */
-  public <T> FailsafeFuture<T> get(ContextualCallable<T> callable) {
+  public <T> Future<T> get(ContextualCallable<T> callable) {
     return call(execution -> Functions.asyncOf(callable, execution), null);
   }
 
@@ -112,7 +113,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    *
    * @throws NullPointerException if the {@code callable} is null
    */
-  public <T> FailsafeFuture<T> getAsync(AsyncCallable<T> callable) {
+  public <T> Future<T> getAsync(AsyncCallable<T> callable) {
     return call(execution -> Functions.asyncOf(callable, execution), null);
   }
 
@@ -125,7 +126,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    *
    * @throws NullPointerException if the {@code runnable} is null
    */
-  public FailsafeFuture<Void> run(CheckedRunnable runnable) {
+  public Future<Void> run(CheckedRunnable runnable) {
     return call(execution -> Functions.asyncOf(runnable, execution), null);
   }
 
@@ -138,7 +139,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    *
    * @throws NullPointerException if the {@code runnable} is null
    */
-  public FailsafeFuture<Void> run(ContextualRunnable runnable) {
+  public Future<Void> run(ContextualRunnable runnable) {
     return call(execution -> Functions.asyncOf(runnable, execution), null);
   }
 
@@ -152,7 +153,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    *
    * @throws NullPointerException if the {@code runnable} is null
    */
-  public FailsafeFuture<Void> runAsync(AsyncRunnable runnable) {
+  public Future<Void> runAsync(AsyncRunnable runnable) {
     return call(execution -> Functions.asyncOf(runnable, execution), null);
   }
 

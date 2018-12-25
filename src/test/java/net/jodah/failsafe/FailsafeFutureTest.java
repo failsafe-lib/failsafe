@@ -15,19 +15,12 @@
  */
 package net.jodah.failsafe;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import net.jodah.concurrentunit.Waiter;
 import org.testng.annotations.Test;
 
-import net.jodah.concurrentunit.Waiter;
+import java.util.concurrent.*;
+
+import static org.testng.Assert.*;
 
 @Test
 public class FailsafeFutureTest {
@@ -44,7 +37,7 @@ public class FailsafeFutureTest {
 
   public void shouldCompleteFutureOnCancel() throws Throwable {
     Waiter waiter = new Waiter();
-    FailsafeFuture<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete((r, f) -> {
+    Future<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete((r, f) -> {
       waiter.assertNull(r);
       waiter.assertTrue(f instanceof CancellationException);
       waiter.resume();
@@ -59,7 +52,7 @@ public class FailsafeFutureTest {
 
     assertTrue(future.isCancelled());
     assertTrue(future.isDone());
-    Asserts.assertThrows(() -> future.get(), CancellationException.class);
+    Asserts.assertThrows(future::get, CancellationException.class);
   }
 
   /**
@@ -67,7 +60,7 @@ public class FailsafeFutureTest {
    */
   public void shouldNotCancelCompletedExecution() throws Throwable {
     Waiter waiter = new Waiter();
-    FailsafeFuture<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete((r, f) -> {
+    Future<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete((r, f) -> {
       waiter.assertEquals("test", r);
       waiter.assertNull(f);
       waiter.resume();

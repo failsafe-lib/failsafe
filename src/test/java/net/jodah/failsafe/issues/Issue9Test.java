@@ -17,17 +17,18 @@ package net.jodah.failsafe.issues;
 
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Testing.failures;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class Issue9Test {
@@ -45,19 +46,19 @@ public class Issue9Test {
 
     // When
     AtomicInteger successCounter = new AtomicInteger();
-    FailsafeFuture<Boolean> future = Failsafe.with(new RetryPolicy().withMaxRetries(2))
+    Future<Boolean> future = Failsafe.with(new RetryPolicy().withMaxRetries(2))
         .with(executor)
         .onRetry((r, p) -> retryCounter.incrementAndGet())
         .onSuccess(p -> {
           successCounter.incrementAndGet();
           waiter.resume();
         })
-        .get(() -> service.connect());
+        .get(service::connect);
 
     // Then
     waiter.await(1000);
     verify(service, times(3)).connect();
-    assertEquals(future.get().booleanValue(), true);
+    assertTrue(future.get());
     assertEquals(retryCounter.get(), 2);
     assertEquals(successCounter.get(), 1);
   }
