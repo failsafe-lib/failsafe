@@ -104,6 +104,14 @@ public abstract class PolicyExecutor {
     } else {
       // End of chain
       try {
+        long waitNanos = result == null ? 0 : result.waitNanos;
+        Thread.sleep(TimeUnit.NANOSECONDS.toMillis(waitNanos));
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return new PolicyResult(null, new FailsafeException(e), true, false);
+      }
+
+      try {
         execution.preExecute();
         result = new PolicyResult(execution.callable.call(), null);
       } catch (Throwable t) {

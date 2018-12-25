@@ -15,15 +15,12 @@
  */
 package net.jodah.failsafe.internal.executor;
 
-import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.PolicyExecutor;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import net.jodah.failsafe.util.Duration;
 import net.jodah.failsafe.util.concurrent.Scheduler;
-
-import java.util.concurrent.TimeUnit;
 
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelay;
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
@@ -59,17 +56,8 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   public PolicyResult executeSync(PolicyResult result) {
     while (true) {
       result = super.executeSync(result);
-
-      if (result.completed) {
+      if (result.completed)
         return result;
-      } else {
-        try {
-          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(waitNanos));
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          return new PolicyResult(null, new FailsafeException(e), true, false);
-        }
-      }
     }
   }
 
@@ -77,7 +65,6 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   public PolicyResult executeAsync(PolicyResult result, Scheduler scheduler, FailsafeFuture<Object> future, boolean shouldExecute) {
     while (true) {
       result = super.executeAsync(result, scheduler, future, shouldExecute);
-
       if (result == null || result.completed)
         return result;
 
