@@ -214,10 +214,10 @@ public class AsyncExecutionTest {
     exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy()));
 
     // When / Then
-    exec.completeOrRetry(null, e);
+    exec.completeOrHandle(null, e);
     assertFalse(exec.isComplete());
     exec.preExecute();
-    exec.completeOrRetry(null, null);
+    exec.completeOrHandle(null, null);
 
     // Then
     assertEquals(exec.getExecutions(), 2);

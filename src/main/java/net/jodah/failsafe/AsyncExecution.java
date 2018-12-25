@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.PolicyExecutor.PolicyResult;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -26,6 +25,7 @@ import java.util.concurrent.Callable;
  *
  * @author Jonathan Halterman
  */
+@SuppressWarnings("WeakerAccess")
 public final class AsyncExecution extends AbstractExecution {
   private final FailsafeFuture<Object> future;
   private final Scheduler scheduler;
@@ -50,7 +50,7 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public void complete() {
-    complete(null, null, true);
+    postExecute(ExecutionResult.noResult());
   }
 
   /**
@@ -60,7 +60,7 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
-    return complete(result, null, false);
+    return postExecute(new ExecutionResult(result, null));
   }
 
   /**
@@ -74,7 +74,7 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result, Throwable failure) {
-    return complete(result, failure, false);
+    return postExecute(new ExecutionResult(result, failure));
   }
 
   /**
@@ -106,7 +106,7 @@ public final class AsyncExecution extends AbstractExecution {
   public boolean retryFor(Object result, Throwable failure) {
     Assert.state(!retryCalled, "Retry has already been called");
     retryCalled = true;
-    return completeOrRetry(result, failure);
+    return completeOrHandle(result, failure);
   }
 
   /**
@@ -134,12 +134,13 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  boolean complete(Object result, Throwable failure, boolean noResult) {
+  @Override
+  boolean postExecute(ExecutionResult result) {
     synchronized (future) {
       if (!completeCalled) {
-        if (super.postExecute(new PolicyResult(result, failure, noResult))) {
-          future.complete(result, failure);
-          eventHandler.handleComplete(result, failure, this, success);
+        if (super.postExecute(result)) {
+          future.complete(result.result, result.failure);
+          eventHandler.handleComplete(result, this);
         }
         completeCalled = true;
       }
@@ -149,39 +150,38 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Attempts to complete the execution else schedule a retry, returning whether a retry has been scheduled or not.
+   * Attempts to complete the execution else handle according to the configured policies.
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  boolean completeOrRetry(Object result, Throwable failure) {
+  boolean completeOrHandle(Object result, Throwable failure) {
     synchronized (future) {
-      PolicyResult pr = new PolicyResult(result, failure);
+      ExecutionResult er = new ExecutionResult(result, failure);
 
       if (!completeCalled) {
         completeCalled = true;
-        record(pr);
+        record(er);
       }
 
-      return executeAsync(pr, scheduler, future) == null;
+      return executeAsync(er, scheduler, future) == null;
     }
   }
 
   /**
-   * Begins or continues an asynchronous execution from the last PolicyExecutor given the {@code pr}.
+   * Begins or continues an asynchronous execution from the last PolicyExecutor given the {@code result}.
    *
    * @return null if an execution has been scheduled
    */
-  PolicyResult executeAsync(PolicyResult pr, Scheduler scheduler, FailsafeFuture<Object> future) {
+  ExecutionResult executeAsync(ExecutionResult result, Scheduler scheduler, FailsafeFuture<Object> future) {
     boolean shouldExecute = lastExecuted == null;
-    pr = head.executeAsync(pr, scheduler, future, shouldExecute);
+    result = head.executeAsync(result, scheduler, future, shouldExecute);
 
-    if (pr != null) {
+    if (result != null) {
       completed = true;
-      success = !pr.noResult && pr.success;
-      eventHandler.handleComplete(pr.result, pr.failure, this, success);
-      future.complete(pr.result, pr.failure);
+      eventHandler.handleComplete(result, this);
+      future.complete(result.result, result.failure);
     }
 
-    return pr;
+    return result;
   }
 }

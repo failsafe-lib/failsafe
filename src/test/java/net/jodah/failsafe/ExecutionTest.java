@@ -269,7 +269,7 @@ public class ExecutionTest {
     assertTrue(exec.isComplete());
   }
 
-  public void shouldSupportMaxRetries() throws Exception {
+  public void shouldSupportMaxRetries() {
     Execution exec = new Execution(new RetryPolicy().withMaxRetries(3));
     assertTrue(exec.canRetryOn(e));
     assertTrue(exec.canRetryOn(e));

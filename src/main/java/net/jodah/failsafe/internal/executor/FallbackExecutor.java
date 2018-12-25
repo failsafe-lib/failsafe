@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe.internal.executor;
 
+import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.PolicyExecutor;
 import net.jodah.failsafe.function.CheckedBiFunction;
 
@@ -29,14 +30,14 @@ public class FallbackExecutor extends PolicyExecutor {
   }
 
   @Override
-  public PolicyResult postExecute(PolicyResult pr) {
-    if (pr.success)
-      return pr;
+  public ExecutionResult postExecute(ExecutionResult result) {
+    if (result.success)
+      return result;
 
     try {
-      return new PolicyResult(fallback.apply(pr.result, pr.failure), null, true, true);
+      return new ExecutionResult(fallback.apply(result.result, result.failure), null, true, true);
     } catch (Exception e) {
-      return new PolicyResult(null, e, true, false);
+      return new ExecutionResult(null, e, true, false);
     }
   }
 }

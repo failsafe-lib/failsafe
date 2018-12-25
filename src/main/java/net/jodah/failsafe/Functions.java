@@ -38,7 +38,7 @@ final class Functions {
           execution.preExecute();
           return callable.call(execution);
         } catch (Throwable e) {
-          execution.completeOrRetry(null, e);
+          execution.completeOrHandle(null, e);
           return null;
         }
       }
@@ -54,7 +54,7 @@ final class Functions {
           execution.preExecute();
           runnable.run(execution);
         } catch (Throwable e) {
-          execution.completeOrRetry(null, e);
+          execution.completeOrHandle(null, e);
         }
 
         return null;
@@ -68,10 +68,10 @@ final class Functions {
       try {
         execution.preExecute();
         T result = callable.call();
-        execution.completeOrRetry(result, null);
+        execution.completeOrHandle(result, null);
         return result;
       } catch (Throwable e) {
-        execution.completeOrRetry(null, e);
+        execution.completeOrHandle(null, e);
         return null;
       }
     };
@@ -83,9 +83,9 @@ final class Functions {
       try {
         execution.preExecute();
         runnable.run();
-        execution.completeOrRetry(null, null);
+        execution.completeOrHandle(null, null);
       } catch (Throwable e) {
-        execution.completeOrRetry(null, e);
+        execution.completeOrHandle(null, e);
       }
 
       return null;
@@ -98,10 +98,10 @@ final class Functions {
       try {
         execution.preExecute();
         T result = callable.call(execution);
-        execution.completeOrRetry(result, null);
+        execution.completeOrHandle(result, null);
         return result;
       } catch (Throwable e) {
-        execution.completeOrRetry(null, e);
+        execution.completeOrHandle(null, e);
         return null;
       }
     };
@@ -113,9 +113,9 @@ final class Functions {
       try {
         execution.preExecute();
         runnable.run(execution);
-        execution.completeOrRetry(null, null);
+        execution.completeOrHandle(null, null);
       } catch (Throwable e) {
-        execution.completeOrRetry(null, e);
+        execution.completeOrHandle(null, e);
       }
 
       return null;
@@ -135,14 +135,14 @@ final class Functions {
           callable.call(execution).whenComplete((innerResult, failure) -> {
             try {
               if (failure != null)
-                execution.completeOrRetry(innerResult, failure instanceof CompletionException ? failure.getCause() : failure);
+                execution.completeOrHandle(innerResult, failure instanceof CompletionException ? failure.getCause() : failure);
             } finally {
               asyncFutureLock.release();
             }
           });
         } catch (Throwable e) {
           try {
-            execution.completeOrRetry(null, e);
+            execution.completeOrHandle(null, e);
           } finally {
             asyncFutureLock.release();
           }
@@ -162,10 +162,10 @@ final class Functions {
           // Unwrap CompletionException cause
           if (failure instanceof CompletionException)
             failure = failure.getCause();
-          execution.completeOrRetry(innerResult, failure);
+          execution.completeOrHandle(innerResult, failure);
         });
       } catch (Throwable e) {
-        execution.completeOrRetry(null, e);
+        execution.completeOrHandle(null, e);
       }
 
       return null;
@@ -181,10 +181,10 @@ final class Functions {
           // Unwrap CompletionException cause
           if (failure instanceof CompletionException)
             failure = failure.getCause();
-          execution.completeOrRetry(innerResult, failure);
+          execution.completeOrHandle(innerResult, failure);
         });
       } catch (Throwable e) {
-        execution.completeOrRetry(null, e);
+        execution.completeOrHandle(null, e);
       }
 
       return null;

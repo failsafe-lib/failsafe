@@ -19,10 +19,7 @@ import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.CancellableFuture;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 /**
@@ -45,6 +42,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code callable} is null
+   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
   public <T> CompletableFuture<T> future(Callable<? extends CompletionStage<T>> callable) {
     return call(execution -> Functions.asyncOfFuture(callable, execution));
@@ -58,6 +56,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code callable} is null
+   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
   public <T> CompletableFuture<T> future(ContextualCallable<? extends CompletionStage<T>> callable) {
     return call(execution -> Functions.asyncOfFuture(callable, execution));
@@ -72,6 +71,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code callable} is null
+   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
   public <T> CompletableFuture<T> futureAsync(AsyncCallable<? extends CompletionStage<T>> callable) {
     return call(execution -> Functions.asyncOfFuture(callable, execution));
@@ -85,6 +85,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code callable} is null
+   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
   public <T> Future<T> get(Callable<T> callable) {
     return call(execution -> Functions.asyncOf(callable, execution), null);
@@ -98,6 +99,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code callable} is null
+   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
   public <T> Future<T> get(ContextualCallable<T> callable) {
     return call(execution -> Functions.asyncOf(callable, execution), null);
@@ -112,6 +114,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code callable} is null
+   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
   public <T> Future<T> getAsync(AsyncCallable<T> callable) {
     return call(execution -> Functions.asyncOf(callable, execution), null);
@@ -125,6 +128,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code runnable} is null
+   * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public Future<Void> run(CheckedRunnable runnable) {
     return call(execution -> Functions.asyncOf(runnable, execution), null);
@@ -138,6 +142,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code runnable} is null
+   * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public Future<Void> run(ContextualRunnable runnable) {
     return call(execution -> Functions.asyncOf(runnable, execution), null);
@@ -152,6 +157,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * {@link CircuitBreakerOpenException}.
    *
    * @throws NullPointerException if the {@code runnable} is null
+   * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public Future<Void> runAsync(AsyncRunnable runnable) {
     return call(execution -> Functions.asyncOf(runnable, execution), null);
@@ -164,11 +170,12 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * If a configured circuit breaker is open, the resulting future is completed with
    * {@link CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if any argument is null
+   * @throws NullPointerException if the {@code callableFn} is null
+   * @throws RejectedExecutionException if the {@code callableFn} cannot be scheduled for execution
    */
   @SuppressWarnings("unchecked")
   private <T> CompletableFuture<T> call(Function<AsyncExecution, Callable<T>> callableFn) {
-    FailsafeFuture<T> future = new FailsafeFuture(this);
+    FailsafeFuture<T> future = new FailsafeFuture(eventHandler);
     CompletableFuture<T> response = CancellableFuture.of(future);
     future.inject(response);
     call(callableFn, future);
@@ -182,12 +189,13 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    * If a configured circuit breaker is open, the resulting future is completed with
    * {@link CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if any argument is null
+   * @throws NullPointerException if the {@code callableFn} is null
+   * @throws RejectedExecutionException if the {@code callableFn} cannot be scheduled for execution
    */
   @SuppressWarnings("unchecked")
   private <T> FailsafeFuture<T> call(Function<AsyncExecution, Callable<T>> callableFn, FailsafeFuture<T> future) {
     if (future == null)
-      future = new FailsafeFuture(this);
+      future = new FailsafeFuture(eventHandler);
 
     AsyncExecution execution = new AsyncExecution(scheduler, future, this);
     Callable<T> callable = callableFn.apply(execution);

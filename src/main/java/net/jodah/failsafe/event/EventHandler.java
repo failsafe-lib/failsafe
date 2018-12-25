@@ -16,15 +16,16 @@
 package net.jodah.failsafe.event;
 
 import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.ExecutionResult;
 
-public interface EventHandler<R> {
-  void handleAbort(R result, Throwable failure, ExecutionContext context);
+public interface EventHandler {
+  void handleAbort(ExecutionResult result, ExecutionContext context);
 
-  void handleComplete(R result, Throwable failure, ExecutionContext context, boolean success);
+  void handleComplete(ExecutionResult result, ExecutionContext context);
 
-  void handleFailedAttempt(R result, Throwable failure, ExecutionContext context);
+  void handleFailedAttempt(ExecutionResult result, ExecutionContext context);
 
-  void handleRetriesExceeded(R result, Throwable failure, ExecutionContext context);
+  void handleRetriesExceeded(ExecutionResult result, ExecutionContext context);
 
-  void handleRetry(R result, Throwable failure, ExecutionContext context);
+  void handleRetry(ExecutionResult result, ExecutionContext context);
 }

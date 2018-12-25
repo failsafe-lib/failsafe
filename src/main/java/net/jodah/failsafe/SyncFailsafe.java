@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.PolicyExecutor.PolicyResult;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.ContextualCallable;
 import net.jodah.failsafe.function.ContextualRunnable;
@@ -30,7 +29,7 @@ import java.util.function.Function;
 
 /**
  * Performs synchronous executions with failures handled according to a configured {@link FailsafePolicy).
- * 
+ *
  * @author Jonathan Halterman
  * @param <R> listener result type
  */
@@ -50,7 +49,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
   /**
    * Executes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
    * exceeded.
-   * 
+   *
    * @throws NullPointerException if the {@code callable} is null
    * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
    *           perform a retry.
@@ -63,7 +62,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
   /**
    * Executes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
    * exceeded.
-   * 
+   *
    * @throws NullPointerException if the {@code callable} is null
    * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
    *           perform a retry.
@@ -75,7 +74,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
 
   /**
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
-   * 
+   *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
    *           perform a retry.
@@ -87,7 +86,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
 
   /**
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
-   * 
+   *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception or if interrupted while waiting to
    *           perform a retry.
@@ -100,7 +99,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
   /**
    * Creates and returns a new AsyncFailsafe instance that will perform executions and retries asynchronously via the
    * {@code executor}.
-   * 
+   *
    * @throws NullPointerException if {@code executor} is null
    */
   public AsyncFailsafe<R> with(ScheduledExecutorService executor) {
@@ -110,7 +109,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
   /**
    * Creates and returns a new AsyncFailsafe instance that will perform executions and retries asynchronously via the
    * {@code scheduler}.
-   * 
+   *
    * @throws NullPointerException if {@code scheduler} is null
    */
   public AsyncFailsafe<R> with(Scheduler scheduler) {
@@ -119,7 +118,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
 
   /**
    * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
-   * 
+   *
    * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
    *           perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
@@ -130,7 +129,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
     Callable<T> callable = callableFn.apply(execution);
     execution.inject(callable);
 
-    PolicyResult result = execution.executeSync();
+    ExecutionResult result = execution.executeSync();
     if (result.failure != null)
       throw result.failure instanceof RuntimeException ? (RuntimeException) result.failure
           : new FailsafeException(result.failure);

@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.ReentrantCircuit;
 
@@ -28,7 +29,7 @@ import java.util.concurrent.*;
  */
 public class FailsafeFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
-  private final FailsafeConfig<T, ?> config;
+  private final EventHandler eventHandler;
   private ExecutionContext execution;
   private CompletableFuture<T> completableFuture;
 
@@ -39,8 +40,8 @@ public class FailsafeFuture<T> implements Future<T> {
   private volatile T result;
   private volatile Throwable failure;
 
-  FailsafeFuture(FailsafeConfig<T, ?> config) {
-    this.config = config;
+  FailsafeFuture(EventHandler eventHandler) {
+    this.eventHandler = eventHandler;
     circuit.open();
   }
 
@@ -68,7 +69,7 @@ public class FailsafeFuture<T> implements Future<T> {
     boolean cancelResult = delegate.cancel(mayInterruptIfRunning);
     failure = new CancellationException();
     cancelled = true;
-    config.eventHandler.handleComplete(null, failure, execution, false);
+    eventHandler.handleComplete(new ExecutionResult(null, failure, true, false), execution);
     complete(null, failure);
     return cancelResult;
   }

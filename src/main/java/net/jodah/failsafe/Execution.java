@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.PolicyExecutor.PolicyResult;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.util.Arrays;
@@ -50,7 +49,7 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryFor(Object result) {
-    return !complete(result, null, false);
+    return !postExecute(new ExecutionResult(result, null));
   }
 
   /**
@@ -60,7 +59,7 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryFor(Object result, Throwable failure) {
-    return !complete(result, failure, false);
+    return !postExecute(new ExecutionResult(result, failure));
   }
 
   /**
@@ -72,16 +71,16 @@ public class Execution extends AbstractExecution {
    */
   public boolean canRetryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
-    return !complete(null, failure, false);
+    return !postExecute(new ExecutionResult(null, failure));
   }
 
   /**
-   * Records and completes the execution.
+   * Records and completes the execution successfully.
    *
    * @throws IllegalStateException if the execution is already complete
    */
   public void complete() {
-    complete(null, null, true);
+    postExecute(ExecutionResult.noResult());
   }
 
   /**
@@ -91,17 +90,12 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
-    return complete(result, null, false);
-  }
-
-  private boolean complete(Object result, Throwable failure, boolean noResult) {
-    return postExecute(new PolicyResult(result, failure, noResult));
+    return postExecute(new ExecutionResult(result, null));
   }
 
   /**
    * Records a failed execution and returns true if a retry can be performed for the {@code failure}, else returns false
    * and completes the execution.
-   *
    * <p>
    * Alias of {@link #canRetryOn(Throwable)}
    *

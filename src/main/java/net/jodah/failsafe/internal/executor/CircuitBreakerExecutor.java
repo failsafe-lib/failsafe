@@ -17,6 +17,7 @@ package net.jodah.failsafe.internal.executor;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreakerOpenException;
+import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.PolicyExecutor;
 import net.jodah.failsafe.util.Duration;
 
@@ -34,25 +35,25 @@ public class CircuitBreakerExecutor extends PolicyExecutor {
   }
 
   @Override
-  public PolicyResult preExecute(PolicyResult result) {
+  public ExecutionResult preExecute(ExecutionResult result) {
     boolean allowsExecution = circuitBreaker.allowsExecution();
     if (allowsExecution)
       circuitBreaker.preExecute();
-    return allowsExecution ? result : new PolicyResult(null, new CircuitBreakerOpenException(), true, false);
+    return allowsExecution ? result : new ExecutionResult(null, new CircuitBreakerOpenException(), true, false);
   }
 
   @Override
-  public PolicyResult postExecute(PolicyResult pr) {
+  public ExecutionResult postExecute(ExecutionResult result) {
     long elapsedNanos = execution.getElapsedTime().toNanos();
     Duration timeout = circuitBreaker.getTimeout();
     boolean timeoutExceeded = timeout != null && elapsedNanos >= timeout.toNanos();
 
-    if (circuitBreaker.isFailure(pr.result, pr.failure) || timeoutExceeded) {
+    if (timeoutExceeded || (!result.noResult && circuitBreaker.isFailure(result.result, result.failure))) {
       circuitBreaker.recordFailure();
-      return pr.with(true, false);
+      return result.with(true, false);
     } else {
       circuitBreaker.recordSuccess();
-      return pr.with(true, true);
+      return result.with(true, true);
     }
   }
 }

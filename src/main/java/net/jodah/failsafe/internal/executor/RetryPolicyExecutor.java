@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe.internal.executor;
 
+import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.PolicyExecutor;
 import net.jodah.failsafe.RetryPolicy;
@@ -46,14 +47,14 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   }
 
   @Override
-  public PolicyResult preExecute(PolicyResult result) {
+  public ExecutionResult preExecute(ExecutionResult result) {
     if (result != null && execution.getExecutions() > 0)
-      eventHandler.handleRetry(result.result, result.failure, execution);
+      eventHandler.handleRetry(result, execution);
     return result;
   }
 
   @Override
-  public PolicyResult executeSync(PolicyResult result) {
+  public ExecutionResult executeSync(ExecutionResult result) {
     while (true) {
       result = super.executeSync(result);
       if (result.completed)
@@ -62,7 +63,7 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   }
 
   @Override
-  public PolicyResult executeAsync(PolicyResult result, Scheduler scheduler, FailsafeFuture<Object> future, boolean shouldExecute) {
+  public ExecutionResult executeAsync(ExecutionResult result, Scheduler scheduler, FailsafeFuture<Object> future, boolean shouldExecute) {
     while (true) {
       result = super.executeAsync(result, scheduler, future, shouldExecute);
       if (result == null || result.completed)
@@ -75,12 +76,15 @@ public class RetryPolicyExecutor extends PolicyExecutor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public PolicyResult postExecute(PolicyResult pr) {
+  public ExecutionResult postExecute(ExecutionResult result) {
+    if (result.noResult)
+      return result;
+
     // Determine the computed delay
     long computedDelayNanos = -1;
     DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFn();
-    if (delayFunction != null && retryPolicy.canApplyDelayFn(pr.result, pr.failure)) {
-      Duration computedDelay = delayFunction.computeDelay(pr.result, pr.failure, execution);
+    if (delayFunction != null && retryPolicy.canApplyDelayFn(result.result, result.failure)) {
+      Duration computedDelay = delayFunction.computeDelay(result.result, result.failure, execution);
       if (computedDelay != null && computedDelay.toNanos() >= 0)
         computedDelayNanos = computedDelay.toNanos();
     }
@@ -124,21 +128,20 @@ public class RetryPolicyExecutor extends PolicyExecutor {
     boolean maxDurationExceeded = retryPolicy.getMaxDuration() != null
         && elapsedNanos > retryPolicy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean isAbortable = retryPolicy.canAbortFor(pr.result, pr.failure);
-    boolean isRetryable = retryPolicy.canRetryFor(pr.result, pr.failure);
-    boolean shouldRetry = !retriesExceeded && !pr.noResult && !isAbortable && retryPolicy.allowsRetries()
-        && isRetryable;
+    boolean isAbortable = retryPolicy.canAbortFor(result.result, result.failure);
+    boolean isRetryable = retryPolicy.canRetryFor(result.result, result.failure);
+    boolean shouldRetry = !retriesExceeded && !isAbortable && retryPolicy.allowsRetries() && isRetryable;
     boolean completed = isAbortable || !shouldRetry;
-    boolean success = completed && !isAbortable && !isRetryable && pr.failure == null;
+    boolean success = completed && !isAbortable && !isRetryable && result.failure == null;
 
     // Call listeners
     if (!success)
-      eventHandler.handleFailedAttempt(pr.result, pr.failure, execution);
+      eventHandler.handleFailedAttempt(result, execution);
     if (isAbortable)
-      eventHandler.handleAbort(pr.result, pr.failure, execution);
+      eventHandler.handleAbort(result, execution);
     else if (!success && retriesExceeded)
-      eventHandler.handleRetriesExceeded(pr.result, pr.failure, execution);
+      eventHandler.handleRetriesExceeded(result, execution);
 
-    return pr.with(waitNanos, completed, success);
+    return result.with(waitNanos, completed, success);
   }
 }

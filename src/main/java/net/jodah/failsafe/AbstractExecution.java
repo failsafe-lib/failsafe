@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.PolicyExecutor.PolicyResult;
 import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Duration;
@@ -24,8 +23,9 @@ import java.util.ListIterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("WeakerAccess")
 public abstract class AbstractExecution extends ExecutionContext {
-  final EventHandler<Object> eventHandler;
+  final EventHandler eventHandler;
   Callable<Object> callable;
 
   // Internally mutable state
@@ -33,12 +33,9 @@ public abstract class AbstractExecution extends ExecutionContext {
   volatile Throwable lastFailure;
   PolicyExecutor head;
   volatile PolicyExecutor lastExecuted;
-
-  // Externally mutable state
   /** The wait time in nanoseconds. */
   private volatile long waitNanos;
   volatile boolean completed;
-  volatile boolean success;
 
   /**
    * Creates a new AbstractExecution for the {@code callable} and {@code config}.
@@ -84,11 +81,11 @@ public abstract class AbstractExecution extends ExecutionContext {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  void record(PolicyResult pr) {
+  void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
     executions++;
-    lastResult = pr.noResult ? null : pr.result;
-    lastFailure = pr.failure;
+    lastResult = result.result;
+    lastFailure = result.failure;
   }
 
   void preExecute() {
@@ -99,16 +96,15 @@ public abstract class AbstractExecution extends ExecutionContext {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  synchronized boolean postExecute(PolicyResult pr) {
-    record(pr);
-    pr = postExecute(pr, head);
-    waitNanos = pr.waitNanos;
-    completed = pr.completed;
-    success = pr.success;
+  synchronized boolean postExecute(ExecutionResult result) {
+    record(result);
+    result = postExecute(result, head);
+    waitNanos = result.waitNanos;
+    completed = result.completed;
     return completed;
   }
 
-  private PolicyResult postExecute(PolicyResult result, PolicyExecutor policyExecutor) {
+  private ExecutionResult postExecute(ExecutionResult result, PolicyExecutor policyExecutor) {
     // Traverse to the last executor
     if (policyExecutor.next != null)
       postExecute(result, policyExecutor.next);
@@ -119,12 +115,11 @@ public abstract class AbstractExecution extends ExecutionContext {
   /**
    * Performs a synchronous execution.
    */
-  PolicyResult executeSync() {
-    PolicyResult pr = head.executeSync(null);
-    completed = pr.completed;
-    success = pr.success;
-    eventHandler.handleComplete(pr.result, pr.failure, this, success);
-    return pr;
+  ExecutionResult executeSync() {
+    ExecutionResult result = head.executeSync(null);
+    completed = result.completed;
+    eventHandler.handleComplete(result, this);
+    return result;
   }
 
   /**

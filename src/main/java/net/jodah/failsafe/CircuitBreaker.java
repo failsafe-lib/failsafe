@@ -39,7 +39,7 @@ import java.util.function.BiPredicate;
 @SuppressWarnings("WeakerAccess")
 public class CircuitBreaker implements FailsafePolicy {
   /** Writes guarded by "this" */
-  private final AtomicReference<CircuitState> state = new AtomicReference<CircuitState>();
+  private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
   private final CircuitBreakerStats stats = currentExecutions::get;
   private Duration delay = Duration.NONE;

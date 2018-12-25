@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutorService;
  * @param <R> result type
  * @param <F> failsafe type - {@link SyncFailsafe} or {@link AsyncFailsafe}
  */
-@SuppressWarnings({"WeakerAccess", "unchecked"})
+@SuppressWarnings({"WeakerAccess", "UnusedReturnValue", "unchecked"})
 public class FailsafeConfig<R, F> {
   RetryPolicy retryPolicy = RetryPolicy.NEVER;
   CircuitBreaker circuitBreaker;
@@ -102,11 +102,11 @@ public class FailsafeConfig<R, F> {
     }
   }
 
-  static <T> void call(List<ContextualResultListener<T, Throwable>> listeners, T result, Throwable failure,
+  static <T> void call(List<ContextualResultListener<T, Throwable>> listeners, ExecutionResult result,
       ExecutionContext context) {
     for (ContextualResultListener<T, Throwable> listener : listeners) {
       try {
-        listener.onResult(result, failure, context);
+        listener.onResult((T) result.result, result.failure, context);
       } catch (Exception ignore) {
       }
     }
@@ -454,27 +454,22 @@ public class FailsafeConfig<R, F> {
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
    * been configured
    */
-  @SuppressWarnings("rawtypes")
   public F withFallback(Callable<? extends R> fallback) {
-    return (F) withFallback((CheckedBiFunction) Functions.fnOf((Callable<R>) Assert.notNull(fallback, "fallback")));
+    return withFallback(Fallback.of(fallback));
   }
 
   /**
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
    * been configured
    */
-  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
-    return (F) withFallback(
-        (CheckedBiFunction) Functions.fnOf((CheckedBiConsumer<R, Throwable>) Assert.notNull(fallback, "fallback")));
+    return withFallback(Fallback.of(fallback));
   }
 
   /**
@@ -485,9 +480,7 @@ public class FailsafeConfig<R, F> {
    * been configured
    */
   public F withFallback(CheckedBiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
-    Assert.state(this.fallback == null, "withFallback has already been called");
-    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
-    this.fallback = Fallback.of(fallback);
+    withFallback(Fallback.of(fallback));
     return (F) this;
   }
 
@@ -495,107 +488,108 @@ public class FailsafeConfig<R, F> {
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
    * been configured
    */
-  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedConsumer<? extends Throwable> fallback) {
-    return (F) withFallback(
-        (CheckedBiFunction) Functions.fnOf((CheckedConsumer<Throwable>) Assert.notNull(fallback, "fallback")));
+    return withFallback(Fallback.of(fallback));
   }
 
   /**
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
    * been configured
    */
-  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedFunction<? extends Throwable, ? extends R> fallback) {
-    return (F) withFallback(
-        (CheckedBiFunction) Functions.fnOf((CheckedFunction<Throwable, R>) Assert.notNull(fallback, "fallback")));
+    return withFallback(Fallback.of(fallback));
   }
 
   /**
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
    * been configured
    */
-  @SuppressWarnings("rawtypes")
   public F withFallback(CheckedRunnable fallback) {
-    return (F) withFallback((CheckedBiFunction) Functions.fnOf(Assert.notNull(fallback, "fallback")));
+    return withFallback(Fallback.of(fallback));
   }
 
   /**
    * Configures the {@code fallback} result to be returned if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
    * been configured
    */
-  @SuppressWarnings("rawtypes")
   public F withFallback(R fallback) {
-    return (F) withFallback((CheckedBiFunction) Functions.fnOf(Assert.notNull(fallback, "fallback")));
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} result to be returned if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies have
+   * been configured
+   */
+  public F withFallback(Fallback fallback) {
+    Assert.state(this.fallback == null, "withFallback has already been called");
+    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
+    this.fallback = Assert.notNull(fallback, "fallback");
+    return (F) this;
   }
 
   ListenerRegistry<R> registry() {
     return listenerRegistry != null ? listenerRegistry : (listenerRegistry = new ListenerRegistry<>());
   }
 
-  EventHandler<R> eventHandler = new EventHandler<R>() {
+  EventHandler eventHandler = new EventHandler() {
     @Override
-    public void handleAbort(R result, Throwable failure, ExecutionContext context) {
+    public void handleAbort(ExecutionResult result, ExecutionContext context) {
       if (listenerRegistry != null && listenerRegistry.abortListeners != null)
-        call(listenerRegistry.abortListeners, result, failure, context.copy());
+        call(listenerRegistry.abortListeners, result, context.copy());
     }
 
     @Override
-    public void handleComplete(R result, Throwable failure, ExecutionContext context, boolean success) {
-      if (success)
+    public void handleComplete(ExecutionResult result, ExecutionContext context) {
+      if (result.success)
         handleSuccess(result, context);
       else
-        handleFailure(result, failure, context);
-      handleComplete(result, failure, context);
-    }
+        handleFailure(result, context);
 
-    @Override
-    public void handleFailedAttempt(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.failedAttemptListeners != null)
-        call(listenerRegistry.failedAttemptListeners, result, failure, context.copy());
-    }
-
-    @Override
-    public void handleRetriesExceeded(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.retriesExceededListeners != null)
-        call(listenerRegistry.retriesExceededListeners, result, failure,context.copy());
-    }
-
-    @Override
-    public void handleRetry(R result, Throwable failure, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.retryListeners != null)
-        call(listenerRegistry.retryListeners, result, failure, context.copy());
-    }
-
-    private void handleComplete(R result, Throwable failure, ExecutionContext context) {
       if (listenerRegistry != null && listenerRegistry.completeListeners != null)
-        call(listenerRegistry.completeListeners, result, failure, context.copy());
+        call(listenerRegistry.completeListeners, result, context.copy());
     }
 
-    private void handleFailure(R result, Throwable failure, ExecutionContext context) {
+    @Override
+    public void handleFailedAttempt(ExecutionResult result, ExecutionContext context) {
+      if (listenerRegistry != null && listenerRegistry.failedAttemptListeners != null)
+        call(listenerRegistry.failedAttemptListeners, result, context.copy());
+    }
+
+    @Override
+    public void handleRetriesExceeded(ExecutionResult result, ExecutionContext context) {
+      if (listenerRegistry != null && listenerRegistry.retriesExceededListeners != null)
+        call(listenerRegistry.retriesExceededListeners, result, context.copy());
+    }
+
+    @Override
+    public void handleRetry(ExecutionResult result, ExecutionContext context) {
+      if (listenerRegistry != null && listenerRegistry.retryListeners != null)
+        call(listenerRegistry.retryListeners, result, context.copy());
+    }
+
+    private void handleFailure(ExecutionResult result, ExecutionContext context) {
       if (listenerRegistry != null && listenerRegistry.failureListeners != null)
-        call(listenerRegistry.failureListeners, result, failure, context.copy());
+        call(listenerRegistry.failureListeners, result, context.copy());
     }
 
-    private void handleSuccess(R result, ExecutionContext context) {
+    private void handleSuccess(ExecutionResult result, ExecutionContext context) {
       if (listenerRegistry != null && listenerRegistry.successListeners != null)
-        call(listenerRegistry.successListeners, result, null, context.copy());
+        call(listenerRegistry.successListeners, result, context.copy());
     }
   };
 }
