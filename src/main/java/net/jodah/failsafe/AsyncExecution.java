@@ -174,7 +174,7 @@ public final class AsyncExecution extends AbstractExecution {
    */
   ExecutionResult executeAsync(ExecutionResult result, Scheduler scheduler, FailsafeFuture<Object> future) {
     boolean shouldExecute = lastExecuted == null;
-    result = head.executeAsync(result, scheduler, future, shouldExecute);
+    result = head.executeAsync(result, shouldExecute, scheduler, future);
 
     if (result != null) {
       completed = true;

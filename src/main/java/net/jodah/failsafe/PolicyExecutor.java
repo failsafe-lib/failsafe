@@ -50,7 +50,8 @@ public abstract class PolicyExecutor {
         long waitNanos = result == null ? 0 : result.waitNanos;
         Thread.sleep(TimeUnit.NANOSECONDS.toMillis(waitNanos));
       } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+        Thread.currentThread()
+            .interrupt();
         return new ExecutionResult(null, new FailsafeException(e), true, false);
       }
 
@@ -75,8 +76,8 @@ public abstract class PolicyExecutor {
    * @return null if an execution has been scheduled
    */
   @SuppressWarnings("unchecked")
-  public ExecutionResult executeAsync(ExecutionResult result, Scheduler scheduler, FailsafeFuture<Object> future,
-    boolean shouldExecute) {
+  public ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler,
+      FailsafeFuture<Object> future) {
 
     boolean shouldExecuteNext = shouldExecute || this.equals(execution.lastExecuted);
     execution.lastExecuted = this;
@@ -89,7 +90,7 @@ public abstract class PolicyExecutor {
 
     if (next != null) {
       // Move right
-      result = next.executeAsync(result, scheduler, future, shouldExecuteNext);
+      result = next.executeAsync(result, shouldExecuteNext, scheduler, future);
     } else if (shouldExecute) {
       // End of chain
       try {

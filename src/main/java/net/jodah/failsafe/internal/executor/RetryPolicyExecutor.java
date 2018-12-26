@@ -63,9 +63,9 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   }
 
   @Override
-  public ExecutionResult executeAsync(ExecutionResult result, Scheduler scheduler, FailsafeFuture<Object> future, boolean shouldExecute) {
+  public ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler, FailsafeFuture<Object> future) {
     while (true) {
-      result = super.executeAsync(result, scheduler, future, shouldExecute);
+      result = super.executeAsync(result, shouldExecute, scheduler, future);
       if (result == null || result.completed)
         return result;
 

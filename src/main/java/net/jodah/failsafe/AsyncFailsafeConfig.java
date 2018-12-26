@@ -32,7 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * @param <R> result type
  * @param <F> failsafe type - {@link SyncFailsafe} or {@link AsyncFailsafe}
  */
-@SuppressWarnings({"WeakerAccess", "unchecked"})
+@SuppressWarnings({"WeakerAccess", "UnusedReturnValue", "unchecked"})
 public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
   final Scheduler scheduler;
 
