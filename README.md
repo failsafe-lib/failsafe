@@ -139,7 +139,7 @@ Connection connection = Failsafe.with(retryPolicy).get(this::connect);
 
 #### Asynchronous Retries
 
-Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler]. They return a [FailsafeFuture] from which a result can be synchronously [retrieved][future-get]. Execution [listeners](#event-listeners) can also be registered to learn when an execution completes:
+Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler]. They return a Future from which a result can be synchronously retrieved. Execution [listeners](#event-listeners) can also be registered to learn when an execution completes:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -464,14 +464,12 @@ Copyright 2015-2018 Jonathan Halterman and friends. Released under the [Apache 2
 [runAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#runAsync-net.jodah.failsafe.function.AsyncRunnable-
 [getAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#getAsync-net.jodah.failsafe.function.AsyncCallable-
 [futureAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#futureAsync-net.jodah.failsafe.function.AsyncCallable-
-[future-get]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html#get--
 [retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
 
 [Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
 [FailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html
 [AsyncFailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafeConfig.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
-[FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
 [ExecutionContext]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ExecutionContext.html
 [Execution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Execution
 [AsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncExecution
