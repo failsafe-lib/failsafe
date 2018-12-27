@@ -18,8 +18,9 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.executor.RetryPolicyExecutor;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Duration;
+import net.jodah.failsafe.util.Durations;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -97,7 +98,7 @@ public class RetryPolicy implements FailsafePolicy {
    * Creates a retry policy that always retries with no delay.
    */
   public RetryPolicy() {
-    delay = Duration.NONE;
+    delay = Duration.ZERO;
     maxRetries = -1;
     retryConditions = new ArrayList<>();
     abortConditions = new ArrayList<>();
@@ -495,10 +496,10 @@ public class RetryPolicy implements FailsafePolicy {
         "delay must be less than the maxDuration");
     Assert.isTrue(timeUnit.toNanos(delay) < timeUnit.toNanos(maxDelay), "delay must be less than the maxDelay");
     Assert.isTrue(delayFactor > 1, "delayFactor must be greater than 1");
-    Assert.state(this.delay == null || this.delay.equals(Duration.NONE), "Delays have already been set");
+    Assert.state(this.delay == null || this.delay.equals(Duration.ZERO), "Delays have already been set");
     Assert.state(delayMin == null, "Random delays have already been set");
-    this.delay = new Duration(delay, timeUnit);
-    this.maxDelay = new Duration(maxDelay, timeUnit);
+    this.delay = Durations.of(delay, timeUnit);
+    this.maxDelay = Durations.of(maxDelay, timeUnit);
     this.delayFactor = delayFactor;
     return this;
   }
@@ -518,7 +519,7 @@ public class RetryPolicy implements FailsafePolicy {
         "delay must be less than the maxDuration");
     Assert.state(delayMin == null, "Random delays have already been set");
     Assert.state(maxDelay == null, "Backoff delays have already been set");
-    this.delay = new Duration(delay, timeUnit);
+    this.delay = Durations.of(delay, timeUnit);
     return this;
   }
 
@@ -538,10 +539,10 @@ public class RetryPolicy implements FailsafePolicy {
     Assert.isTrue(timeUnit.toNanos(delayMin) < timeUnit.toNanos(delayMax), "delayMin must be less than delayMax");
     Assert.state(maxDuration == null || timeUnit.toNanos(delayMax) < maxDuration.toNanos(),
         "delayMax must be less than the maxDuration");
-    Assert.state(delay == null || delay.equals(Duration.NONE), "Delays have already been set");
+    Assert.state(delay == null || delay.equals(Duration.ZERO), "Delays have already been set");
     Assert.state(maxDelay == null, "Backoff delays have already been set");
-    this.delayMin = new Duration(delayMin, timeUnit);
-    this.delayMax = new Duration(delayMax, timeUnit);
+    this.delayMin = Durations.of(delayMin, timeUnit);
+    this.delayMax = Durations.of(delayMax, timeUnit);
     return this;
   }
 
@@ -632,7 +633,7 @@ public class RetryPolicy implements FailsafePolicy {
     Assert.state(delay != null || delayMin != null, "A delay must be configured");
     Assert.state(jitterFactor == 0.0, "withJitter(double) has already been called");
     Assert.state(timeUnit.toNanos(jitter) <= delay.toNanos(), "jitter must be less than the configured delay");
-    this.jitter = new Duration(jitter, timeUnit);
+    this.jitter = Durations.of(jitter, timeUnit);
     return this;
   }
 
@@ -645,7 +646,7 @@ public class RetryPolicy implements FailsafePolicy {
   public RetryPolicy withMaxDuration(long maxDuration, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.state(timeUnit.toNanos(maxDuration) > delay.toNanos(), "maxDuration must be greater than the delay");
-    this.maxDuration = new Duration(maxDuration, timeUnit);
+    this.maxDuration = Durations.of(maxDuration, timeUnit);
     return this;
   }
 

@@ -15,9 +15,7 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.util.Duration;
-
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * Contextual execution information.
@@ -42,7 +40,7 @@ public class ExecutionContext {
    * Returns the elapsed time since initial execution began.
    */
   public Duration getElapsedTime() {
-    return new Duration(System.nanoTime() - startTime.toNanos(), TimeUnit.NANOSECONDS);
+    return Duration.ofNanos(System.nanoTime() - startTime.toNanos());
   }
 
   /**

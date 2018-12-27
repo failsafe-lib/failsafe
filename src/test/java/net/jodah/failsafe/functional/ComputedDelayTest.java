@@ -15,17 +15,15 @@
  */
 package net.jodah.failsafe.functional;
 
-import static org.testng.Assert.assertEquals;
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.testng.annotations.Test;
-
 import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.util.Duration;
+import org.testng.annotations.Test;
+
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.testng.Assert.assertEquals;
 
 @Test
 public class ComputedDelayTest {
@@ -42,12 +40,12 @@ public class ComputedDelayTest {
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullResult() {
-    new RetryPolicy().withDelayWhen((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+    new RetryPolicy().withDelayWhen((result, failure, context) -> Duration.ofSeconds(1), null);
   }
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullFailureType() {
-    new RetryPolicy().withDelayOn((result, failure, context) -> new Duration(1L, TimeUnit.SECONDS), null);
+    new RetryPolicy().withDelayOn((result, failure, context) -> Duration.ofSeconds(1), null);
   }
 
   @Test(expectedExceptions = UncheckedExpectedException.class)
@@ -65,7 +63,7 @@ public class ComputedDelayTest {
     AtomicInteger delays = new AtomicInteger(0);
     RetryPolicy retryPolicy = new RetryPolicy().retryIf(result -> true).withMaxRetries(4).withDelayWhen((r, f, c) -> {
       delays.incrementAndGet(); // side-effect for test purposes
-      return new Duration(1L, TimeUnit.MICROSECONDS);
+      return Duration.ofNanos(1);
     }, "expected");
 
     AtomicInteger attempts = new AtomicInteger(0);
@@ -92,7 +90,7 @@ public class ComputedDelayTest {
         .withMaxRetries(4)
         .withDelayOn((r, f, c) -> {
           delays.incrementAndGet(); // side-effect for test purposes
-          return new Duration(1L, TimeUnit.MICROSECONDS);
+          return Duration.ofNanos(1);
         }, DelayException.class);
 
     AtomicInteger attempts = new AtomicInteger(0);

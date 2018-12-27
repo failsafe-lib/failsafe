@@ -17,11 +17,10 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Duration;
 
+import java.time.Duration;
 import java.util.ListIterator;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractExecution extends ExecutionContext {
@@ -41,7 +40,7 @@ public abstract class AbstractExecution extends ExecutionContext {
    * Creates a new AbstractExecution for the {@code callable} and {@code config}.
    */
   AbstractExecution(FailsafeConfig<Object, ?> config) {
-    super(new Duration(System.nanoTime(), TimeUnit.NANOSECONDS));
+    super(Duration.ofNanos(System.nanoTime()));
     eventHandler = config.listeners;
 
     PolicyExecutor next = null;
@@ -143,7 +142,7 @@ public abstract class AbstractExecution extends ExecutionContext {
    * occurred.
    */
   public Duration getWaitTime() {
-    return new Duration(waitNanos, TimeUnit.NANOSECONDS);
+    return Duration.ofNanos(waitNanos);
   }
 
   /**

@@ -20,9 +20,10 @@ import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.*;
 import net.jodah.failsafe.internal.executor.CircuitBreakerExecutor;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Duration;
+import net.jodah.failsafe.util.Durations;
 import net.jodah.failsafe.util.Ratio;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ public class CircuitBreaker implements FailsafePolicy {
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
   private final CircuitBreakerStats stats = currentExecutions::get;
-  private Duration delay = Duration.NONE;
+  private Duration delay = Duration.ZERO;
   private Duration timeout;
   private Ratio failureThreshold;
   private Ratio successThreshold;
@@ -366,7 +367,7 @@ public class CircuitBreaker implements FailsafePolicy {
   public CircuitBreaker withDelay(long delay, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(delay > 0, "delay must be greater than 0");
-    this.delay = new Duration(delay, timeUnit);
+    this.delay = Durations.of(delay, timeUnit);
     return this;
   }
 
@@ -439,7 +440,7 @@ public class CircuitBreaker implements FailsafePolicy {
   public CircuitBreaker withTimeout(long timeout, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(timeout > 0, "timeout must be greater than 0");
-    this.timeout = new Duration(timeout, timeUnit);
+    this.timeout = Durations.of(timeout, timeUnit);
     return this;
   }
 

@@ -15,19 +15,15 @@
  */
 package net.jodah.failsafe;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import org.testng.annotations.Test;
-
-import net.jodah.failsafe.util.Duration;
+import static org.testng.Assert.*;
 
 @Test
 public class RetryPolicyTest {
@@ -155,12 +151,12 @@ public class RetryPolicyTest {
   public void testWithDelayFunction() {
     RetryPolicy retryPolicy = new RetryPolicy();
     assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
-    retryPolicy.withDelay((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS));
+    retryPolicy.withDelay((r, f, ctx) -> Duration.ofMillis(10));
     assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
   }
 
   public void testWithDelayOn() {
-    RetryPolicy retryPolicy = new RetryPolicy().withDelayOn((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS),
+    RetryPolicy retryPolicy = new RetryPolicy().withDelayOn((r, f, ctx) -> Duration.ofMillis(10),
         IllegalStateException.class);
     assertTrue(retryPolicy.canApplyDelayFn("foo", new IllegalStateException()));
     assertFalse(retryPolicy.canApplyDelayFn("foo", null));
@@ -168,7 +164,7 @@ public class RetryPolicyTest {
   }
 
   public void testWithDelayWhen() {
-    RetryPolicy retryPolicy = new RetryPolicy().withDelayWhen((r, f, ctx) -> new Duration(10, TimeUnit.MILLISECONDS),
+    RetryPolicy retryPolicy = new RetryPolicy().withDelayWhen((r, f, ctx) -> Duration.ofMillis(10),
         "expected");
     assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalStateException()));
     assertFalse(retryPolicy.canApplyDelayFn(null, new IllegalStateException()));

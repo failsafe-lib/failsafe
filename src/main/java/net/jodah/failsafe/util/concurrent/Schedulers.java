@@ -15,12 +15,9 @@
  */
 package net.jodah.failsafe.util.concurrent;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
 import net.jodah.failsafe.internal.util.Assert;
+
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * {@link Scheduler} utilities.
@@ -39,11 +36,6 @@ public final class Schedulers {
    */
   public static Scheduler of(final ScheduledExecutorService executor) {
     Assert.notNull(executor, "executor");
-    return new Scheduler() {
-      @Override
-      public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
-        return executor.schedule(callable, delay, unit);
-      }
-    };
+    return executor::schedule;
   }
 }

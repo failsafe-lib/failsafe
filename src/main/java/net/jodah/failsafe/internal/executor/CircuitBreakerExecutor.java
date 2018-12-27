@@ -19,12 +19,12 @@ import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreakerOpenException;
 import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.PolicyExecutor;
-import net.jodah.failsafe.util.Duration;
+
+import java.time.Duration;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link CircuitBreaker}.
  *
- * @param <T> result type
  * @author Jonathan Halterman
  */
 public class CircuitBreakerExecutor extends PolicyExecutor {

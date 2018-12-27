@@ -15,10 +15,10 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.util.Duration;
 import org.testng.annotations.Test;
 
 import java.net.ConnectException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -202,7 +202,7 @@ public class ExecutionTest {
 
   public void shouldAdjustWaitTimeForComputedDelay() {
     Execution exec = new Execution(
-        new RetryPolicy().withDelay((r, f, ctx) -> new Duration(ctx.getExecutions() * 2, TimeUnit.NANOSECONDS)));
+        new RetryPolicy().withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getExecutions() * 2)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 2);
@@ -216,7 +216,7 @@ public class ExecutionTest {
 
   public void shouldFallbackWaitTimeFromComputedToFixedDelay() {
     Execution exec = new Execution(new RetryPolicy().withDelay(5, TimeUnit.NANOSECONDS).withDelay((r, f,
-        ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1, TimeUnit.NANOSECONDS)));
+        ctx) -> Duration.ofNanos(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 5);
@@ -234,7 +234,7 @@ public class ExecutionTest {
 
   public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
     Execution exec = new Execution(new RetryPolicy().withBackoff(1, 10, TimeUnit.NANOSECONDS).withDelay((r, f,
-        ctx) -> new Duration(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1, TimeUnit.NANOSECONDS)));
+        ctx) -> Duration.ofNanos(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);

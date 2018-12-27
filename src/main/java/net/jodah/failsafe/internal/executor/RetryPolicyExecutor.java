@@ -20,8 +20,9 @@ import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.PolicyExecutor;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
-import net.jodah.failsafe.util.Duration;
 import net.jodah.failsafe.util.concurrent.Scheduler;
+
+import java.time.Duration;
 
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelay;
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
@@ -95,7 +96,7 @@ public class RetryPolicyExecutor extends PolicyExecutor {
       Duration delayMin = retryPolicy.getDelayMin();
       Duration delayMax = retryPolicy.getDelayMax();
 
-      if (delayNanos == -1 && delay != null && !delay.equals(Duration.NONE))
+      if (delayNanos == -1 && delay != null && !delay.equals(Duration.ZERO))
         delayNanos = delay.toNanos();
       else if (delayMin != null && delayMax != null)
         delayNanos = randomDelayInRange(delayMin.toNanos(), delayMin.toNanos(), Math.random());
