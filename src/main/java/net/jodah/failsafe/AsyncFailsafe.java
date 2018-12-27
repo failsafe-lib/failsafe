@@ -175,7 +175,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
    */
   @SuppressWarnings("unchecked")
   private <T> CompletableFuture<T> call(Function<AsyncExecution, Callable<T>> callableFn) {
-    FailsafeFuture<T> future = new FailsafeFuture(eventHandler);
+    FailsafeFuture<T> future = new FailsafeFuture(listeners);
     CompletableFuture<T> response = CancellableFuture.of(future);
     future.inject(response);
     call(callableFn, future);
@@ -195,7 +195,7 @@ public class AsyncFailsafe<R> extends AsyncFailsafeConfig<R, AsyncFailsafe<R>> {
   @SuppressWarnings("unchecked")
   private <T> FailsafeFuture<T> call(Function<AsyncExecution, Callable<T>> callableFn, FailsafeFuture<T> future) {
     if (future == null)
-      future = new FailsafeFuture(eventHandler);
+      future = new FailsafeFuture(listeners);
 
     AsyncExecution execution = new AsyncExecution(scheduler, future, this);
     Callable<T> callable = callableFn.apply(execution);

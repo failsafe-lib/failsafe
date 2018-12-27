@@ -15,12 +15,11 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.Listeners.ListenerRegistry;
 import net.jodah.failsafe.event.ContextualResultListener;
-import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -39,7 +38,7 @@ public class FailsafeConfig<R, F> {
   Fallback fallback;
   /** Policies sorted outer-most first */
   List<FailsafePolicy> policies;
-  ListenerRegistry<R> listenerRegistry;
+  ListenerRegistry<R> listeners = new ListenerRegistry<>();
 
   FailsafeConfig() {
   }
@@ -54,69 +53,14 @@ public class FailsafeConfig<R, F> {
     circuitBreaker = config.circuitBreaker;
     fallback = config.fallback;
     policies = config.policies;
-    listenerRegistry = config.listenerRegistry;
-  }
-
-  static class ListenerRegistry<T> {
-    private List<ContextualResultListener<T, Throwable>> abortListeners;
-    private List<ContextualResultListener<T, Throwable>> completeListeners;
-    private List<ContextualResultListener<T, Throwable>> failedAttemptListeners;
-    private List<ContextualResultListener<T, Throwable>> failureListeners;
-    private List<ContextualResultListener<T, Throwable>> retriesExceededListeners;
-    private List<ContextualResultListener<T, Throwable>> retryListeners;
-    private List<ContextualResultListener<T, Throwable>> successListeners;
-
-    List<ContextualResultListener<T, Throwable>> abort() {
-      return abortListeners != null ? abortListeners
-          : (abortListeners = new ArrayList<>(2));
-    }
-
-    List<ContextualResultListener<T, Throwable>> complete() {
-      return completeListeners != null ? completeListeners
-          : (completeListeners = new ArrayList<>(2));
-    }
-
-    List<ContextualResultListener<T, Throwable>> failedAttempt() {
-      return failedAttemptListeners != null ? failedAttemptListeners
-          : (failedAttemptListeners = new ArrayList<>(2));
-    }
-
-    List<ContextualResultListener<T, Throwable>> failure() {
-      return failureListeners != null ? failureListeners
-          : (failureListeners = new ArrayList<>(2));
-    }
-
-    List<ContextualResultListener<T, Throwable>> retriesExceeded() {
-      return retriesExceededListeners != null ? retriesExceededListeners
-          : (retriesExceededListeners = new ArrayList<>(2));
-    }
-
-    List<ContextualResultListener<T, Throwable>> retry() {
-      return retryListeners != null ? retryListeners
-          : (retryListeners = new ArrayList<>(2));
-    }
-
-    List<ContextualResultListener<T, Throwable>> success() {
-      return successListeners != null ? successListeners
-          : (successListeners = new ArrayList<>(2));
-    }
-  }
-
-  static <T> void call(List<ContextualResultListener<T, Throwable>> listeners, ExecutionResult result,
-      ExecutionContext context) {
-    for (ContextualResultListener<T, Throwable> listener : listeners) {
-      try {
-        listener.onResult((T) result.result, result.failure, context);
-      } catch (Exception ignore) {
-      }
-    }
+    listeners = config.listeners;
   }
 
   /**
    * Registers the {@code listener} to be called when an execution is aborted.
    */
   public F onAbort(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(listener));
+    listeners.abort().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -124,7 +68,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution is aborted.
    */
   public F onAbort(CheckedConsumer<? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(listener));
+    listeners.abort().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -132,7 +76,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution is aborted.
    */
   public F onAbort(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().abort().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
+    listeners.abort().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
     return (F) this;
   }
 
@@ -140,7 +84,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
    */
   public F onAbortAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -148,7 +92,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
    */
   public F onAbortAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -156,7 +100,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
    */
   public F onAbortAsync(ContextualResultListener<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    registry().abort().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.abort().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -164,7 +108,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution is completed.
    */
   public F onComplete(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().complete().add(Listeners.of(listener));
+    listeners.complete().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -172,7 +116,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution is completed.
    */
   public F onComplete(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().complete().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
+    listeners.complete().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
     return (F) this;
   }
 
@@ -180,7 +124,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is completed.
    */
   public F onCompleteAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    registry().complete().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.complete().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -189,7 +133,7 @@ public class FailsafeConfig<R, F> {
    */
   public F onCompleteAsync(ContextualResultListener<? extends R, ? extends Throwable> listener,
       ExecutorService executor) {
-    registry().complete().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.complete().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -197,7 +141,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution attempt fails.
    */
   public F onFailedAttempt(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(listener));
+    listeners.failedAttempt().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -205,7 +149,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution attempt fails.
    */
   public F onFailedAttempt(CheckedConsumer<? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(listener));
+    listeners.failedAttempt().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -213,7 +157,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called when an execution attempt fails.
    */
   public F onFailedAttempt(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().failedAttempt().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
+    listeners.failedAttempt().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
     return (F) this;
   }
 
@@ -222,7 +166,7 @@ public class FailsafeConfig<R, F> {
    */
   public F onFailedAttemptAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener,
       ExecutorService executor) {
-    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -230,7 +174,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution attempt fails.
    */
   public F onFailedAttemptAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -239,7 +183,7 @@ public class FailsafeConfig<R, F> {
    */
   public F onFailedAttemptAsync(ContextualResultListener<? extends R, ? extends Throwable> listener,
       ExecutorService executor) {
-    registry().failedAttempt().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.failedAttempt().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -248,7 +192,7 @@ public class FailsafeConfig<R, F> {
    * are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailure(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(listener));
+    listeners.failure().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -257,7 +201,7 @@ public class FailsafeConfig<R, F> {
    * are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailure(CheckedConsumer<? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(listener));
+    listeners.failure().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -266,7 +210,7 @@ public class FailsafeConfig<R, F> {
    * are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailure(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().failure().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
+    listeners.failure().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
     return (F) this;
   }
 
@@ -275,7 +219,7 @@ public class FailsafeConfig<R, F> {
    * cannot be retried. If multiple policies, are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailureAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    registry().failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -284,7 +228,7 @@ public class FailsafeConfig<R, F> {
    * cannot be retried. If multiple policies, are configured, this handler is called when the outer-most policy fails.
    */
   public F onFailureAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -294,7 +238,7 @@ public class FailsafeConfig<R, F> {
    */
   public F onFailureAsync(ContextualResultListener<? extends R, ? extends Throwable> listener,
       ExecutorService executor) {
-    registry().failure().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.failure().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -304,7 +248,7 @@ public class FailsafeConfig<R, F> {
    * exceeded.
    */
   public F onRetriesExceeded(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(listener));
+    listeners.retriesExceeded().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -314,7 +258,7 @@ public class FailsafeConfig<R, F> {
    * exceeded.
    */
   public F onRetriesExceeded(CheckedConsumer<? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(listener));
+    listeners.retriesExceeded().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -325,7 +269,7 @@ public class FailsafeConfig<R, F> {
    */
   public F onRetriesExceededAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener,
       ExecutorService executor) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -335,7 +279,7 @@ public class FailsafeConfig<R, F> {
    * {@link RetryPolicy#withMaxDuration(long, java.util.concurrent.TimeUnit) max duration} are exceeded.
    */
   public F onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().retriesExceeded()
+    listeners.retriesExceeded()
         .add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
@@ -344,7 +288,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called before an execution is retried.
    */
   public F onRetry(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(listener));
+    listeners.retry().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -352,7 +296,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called before an execution is retried.
    */
   public F onRetry(CheckedConsumer<? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(listener));
+    listeners.retry().add(Listeners.of(listener));
     return (F) this;
   }
 
@@ -360,7 +304,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called before an execution is retried.
    */
   public F onRetry(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().retry().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
+    listeners.retry().add((ContextualResultListener<R, Throwable>) Assert.notNull(listener, "listener"));
     return (F) this;
   }
 
@@ -368,7 +312,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
    */
   public F onRetryAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    registry().retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -376,7 +320,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
    */
   public F onRetryAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    registry().retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -384,7 +328,7 @@ public class FailsafeConfig<R, F> {
    * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
    */
   public F onRetryAsync(ContextualResultListener<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    registry().retry().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.retry().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -393,7 +337,7 @@ public class FailsafeConfig<R, F> {
    * this handler is called when the outer-most policy succeeds.
    */
   public F onSuccess(CheckedBiConsumer<? extends R, ExecutionContext> listener) {
-    registry().success().add(Listeners.ofResult(listener));
+    listeners.success().add(Listeners.ofResult(listener));
     return (F) this;
   }
 
@@ -402,7 +346,7 @@ public class FailsafeConfig<R, F> {
    * this handler is called when the outer-most policy succeeds.
    */
   public F onSuccess(CheckedConsumer<? extends R> listener) {
-    registry().success().add(Listeners.ofResult(listener));
+    listeners.success().add(Listeners.ofResult(listener));
     return (F) this;
   }
 
@@ -411,7 +355,7 @@ public class FailsafeConfig<R, F> {
    * If multiple policies, are configured, this handler is called when the outer-most policy succeeds.
    */
   public F onSuccessAsync(CheckedBiConsumer<? extends R, ExecutionContext> listener, ExecutorService executor) {
-    registry().success().add(Listeners.of(Listeners.ofResult(listener), Assert.notNull(executor, "executor"), null));
+    listeners.success().add(Listeners.of(Listeners.ofResult(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -420,7 +364,7 @@ public class FailsafeConfig<R, F> {
    * If multiple policies, are configured, this handler is called when the outer-most policy succeeds.
    */
   public F onSuccessAsync(CheckedConsumer<? extends R> listener, ExecutorService executor) {
-    registry().success().add(Listeners.of(Listeners.ofResult(listener), Assert.notNull(executor, "executor"), null));
+    listeners.success().add(Listeners.of(Listeners.ofResult(listener), Assert.notNull(executor, "executor"), null));
     return (F) this;
   }
 
@@ -541,55 +485,4 @@ public class FailsafeConfig<R, F> {
     this.fallback = Assert.notNull(fallback, "fallback");
     return (F) this;
   }
-
-  ListenerRegistry<R> registry() {
-    return listenerRegistry != null ? listenerRegistry : (listenerRegistry = new ListenerRegistry<>());
-  }
-
-  EventHandler eventHandler = new EventHandler() {
-    @Override
-    public void handleAbort(ExecutionResult result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.abortListeners != null)
-        call(listenerRegistry.abortListeners, result, context.copy());
-    }
-
-    @Override
-    public void handleComplete(ExecutionResult result, ExecutionContext context) {
-      if (result.success)
-        handleSuccess(result, context);
-      else
-        handleFailure(result, context);
-
-      if (listenerRegistry != null && listenerRegistry.completeListeners != null)
-        call(listenerRegistry.completeListeners, result, context.copy());
-    }
-
-    @Override
-    public void handleFailedAttempt(ExecutionResult result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.failedAttemptListeners != null)
-        call(listenerRegistry.failedAttemptListeners, result, context.copy());
-    }
-
-    @Override
-    public void handleRetriesExceeded(ExecutionResult result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.retriesExceededListeners != null)
-        call(listenerRegistry.retriesExceededListeners, result, context.copy());
-    }
-
-    @Override
-    public void handleRetry(ExecutionResult result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.retryListeners != null)
-        call(listenerRegistry.retryListeners, result, context.copy());
-    }
-
-    private void handleFailure(ExecutionResult result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.failureListeners != null)
-        call(listenerRegistry.failureListeners, result, context.copy());
-    }
-
-    private void handleSuccess(ExecutionResult result, ExecutionContext context) {
-      if (listenerRegistry != null && listenerRegistry.successListeners != null)
-        call(listenerRegistry.successListeners, result, context.copy());
-    }
-  };
 }

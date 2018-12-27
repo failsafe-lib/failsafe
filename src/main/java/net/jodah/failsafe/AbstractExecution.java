@@ -42,7 +42,7 @@ public abstract class AbstractExecution extends ExecutionContext {
    */
   AbstractExecution(FailsafeConfig<Object, ?> config) {
     super(new Duration(System.nanoTime(), TimeUnit.NANOSECONDS));
-    eventHandler = config.eventHandler;
+    eventHandler = config.listeners;
 
     PolicyExecutor next = null;
     if (config.policies == null || config.policies.isEmpty()) {

@@ -48,7 +48,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(listener, null, scheduler));
+    listeners.abort().add(Listeners.of(listener, null, scheduler));
     return (F) this;
   }
 
@@ -59,7 +59,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -70,7 +70,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onAbortAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -79,7 +79,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * execution is completed.
    */
   public F onCompleteAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().complete().add(Listeners.of(listener, null, scheduler));
+    listeners.complete().add(Listeners.of(listener, null, scheduler));
     return (F) this;
   }
 
@@ -88,7 +88,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * execution is completed.
    */
   public F onCompleteAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().complete().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.complete().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -97,7 +97,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failed execution attempt.
    */
   public F onFailedAttemptAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(listener, null, scheduler));
+    listeners.failedAttempt().add(Listeners.of(listener, null, scheduler));
     return (F) this;
   }
 
@@ -106,7 +106,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failed execution attempt.
    */
   public F onFailedAttemptAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -115,7 +115,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failed execution attempt.
    */
   public F onFailedAttemptAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -124,7 +124,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failure occurs that cannot be retried.
    */
   public F onFailureAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(listener, null, scheduler));
+    listeners.failure().add(Listeners.of(listener, null, scheduler));
     return (F) this;
   }
 
@@ -133,7 +133,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failure occurs that cannot be retried.
    */
   public F onFailureAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -142,7 +142,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * failure occurs that cannot be retried.
    */
   public F onFailureAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -153,7 +153,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -164,7 +164,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetriesExceededAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -175,7 +175,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(listener, null, scheduler));
+    listeners.retry().add(Listeners.of(listener, null, scheduler));
     return (F) this;
   }
 
@@ -186,7 +186,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(CheckedConsumer<? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -197,7 +197,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public F onRetryAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    registry().retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
     return (F) this;
   }
 
@@ -206,7 +206,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * successful execution.
    */
   public F onSuccessAsync(CheckedBiConsumer<? extends R, ExecutionContext> listener) {
-    registry().success().add(Listeners.of(Listeners.ofResult(listener), null, scheduler));
+    listeners.success().add(Listeners.of(Listeners.ofResult(listener), null, scheduler));
     return (F) this;
   }
 
@@ -215,7 +215,7 @@ public class AsyncFailsafeConfig<R, F> extends FailsafeConfig<R, F> {
    * successful execution.
    */
   public F onSuccessAsync(CheckedConsumer<? extends R> listener) {
-    registry().success().add(Listeners.of(Listeners.ofResult(listener), null, scheduler));
+    listeners.success().add(Listeners.of(Listeners.ofResult(listener), null, scheduler));
     return (F) this;
   }
 }
