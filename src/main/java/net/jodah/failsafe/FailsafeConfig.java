@@ -37,13 +37,13 @@ public class FailsafeConfig<R, F> {
   CircuitBreaker circuitBreaker;
   Fallback fallback;
   /** Policies sorted outer-most first */
-  List<FailsafePolicy> policies;
+  List<Policy> policies;
   ListenerRegistry<R> listeners = new ListenerRegistry<>();
 
   FailsafeConfig() {
   }
 
-  FailsafeConfig(List<FailsafePolicy> policies) {
+  FailsafeConfig(List<Policy> policies) {
     Assert.isTrue(policies.size() > 0, "At least one policy must be supplied");
     this.policies = policies;
   }

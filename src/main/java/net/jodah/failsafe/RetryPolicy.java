@@ -41,7 +41,7 @@ import java.util.function.BiPredicate;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class RetryPolicy implements FailsafePolicy {
+public class RetryPolicy implements Policy {
   /**
    * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
    * 

@@ -23,7 +23,7 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 
 /**
- * Performs asynchronous executions with failures handled according to a configured {@link FailsafePolicy).
+ * Performs asynchronous executions with failures handled according to a configured {@link Policy).
  *
  * @author Jonathan Halterman
  * @param <R> listener result type

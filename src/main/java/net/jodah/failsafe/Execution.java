@@ -33,7 +33,7 @@ public class Execution extends AbstractExecution {
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
-  public Execution(FailsafePolicy... policies) {
+  public Execution(Policy... policies) {
     super(new FailsafeConfig<Object, FailsafeConfig<Object, ?>>(Arrays.asList(Assert.notNull(policies, "policies"))));
   }
 

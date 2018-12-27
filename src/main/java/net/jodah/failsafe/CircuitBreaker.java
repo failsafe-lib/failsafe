@@ -38,7 +38,7 @@ import java.util.function.BiPredicate;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class CircuitBreaker implements FailsafePolicy {
+public class CircuitBreaker implements Policy {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();

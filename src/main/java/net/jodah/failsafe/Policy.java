@@ -22,6 +22,6 @@ package net.jodah.failsafe;
  *
  * @author Jonathan Halterman
  */
-public interface FailsafePolicy {
+public interface Policy {
   PolicyExecutor toExecutor();
 }

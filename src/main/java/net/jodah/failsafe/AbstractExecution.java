@@ -54,7 +54,7 @@ public abstract class AbstractExecution extends ExecutionContext {
         next = buildPolicyExecutor(config.fallback, next);
     } else {
       // Add policies in user-defined order
-      ListIterator<FailsafePolicy> policyIterator = config.policies.listIterator(config.policies.size());
+      ListIterator<Policy> policyIterator = config.policies.listIterator(config.policies.size());
       while (policyIterator.hasPrevious())
         next = buildPolicyExecutor(policyIterator.previous(), next);
     }
@@ -67,7 +67,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     this.callable = (Callable<Object>) callable;
   }
 
-  private PolicyExecutor buildPolicyExecutor(FailsafePolicy policy, PolicyExecutor next) {
+  private PolicyExecutor buildPolicyExecutor(Policy policy, PolicyExecutor next) {
     PolicyExecutor policyExecutor = policy.toExecutor();
     policyExecutor.execution = this;
     policyExecutor.eventHandler = eventHandler;

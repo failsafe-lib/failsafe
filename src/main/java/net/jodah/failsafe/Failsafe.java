@@ -55,7 +55,7 @@ public class Failsafe {
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
-  public static <T> SyncFailsafe<T> with(FailsafePolicy... policies) {
+  public static <T> SyncFailsafe<T> with(Policy... policies) {
     Assert.notNull(policies, "policies");
     Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
     return new SyncFailsafe<>(Arrays.asList(policies));

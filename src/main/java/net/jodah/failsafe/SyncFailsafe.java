@@ -28,7 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 /**
- * Performs synchronous executions with failures handled according to a configured {@link FailsafePolicy).
+ * Performs synchronous executions with failures handled according to a configured {@link Policy).
  *
  * @author Jonathan Halterman
  * @param <R> listener result type
@@ -42,7 +42,7 @@ public class SyncFailsafe<R> extends FailsafeConfig<R, SyncFailsafe<R>> {
     this.retryPolicy = retryPolicy;
   }
 
-  SyncFailsafe(List<FailsafePolicy> policies) {
+  SyncFailsafe(List<Policy> policies) {
     super(policies);
   }
 

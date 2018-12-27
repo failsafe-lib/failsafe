@@ -22,11 +22,11 @@ import net.jodah.failsafe.internal.util.Assert;
 import java.util.concurrent.Callable;
 
 /**
- * A FailsafePolicy that handles failures using a fallback.
+ * A Policy that handles failures using a fallback.
  *
  * @author Jonathan Halterman
  */
-public class Fallback implements FailsafePolicy {
+public class Fallback implements Policy {
   private final CheckedBiFunction<Object, Throwable, Object> fallback;
 
   /**
