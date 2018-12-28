@@ -21,9 +21,9 @@ import org.testng.annotations.Test;
 import java.util.function.BiPredicate;
 
 @Test
-public class PredicatesTest {
+public class AbstractPolicyTest {
   public void testResultPredicateOnlyHandlesResults() {
-    BiPredicate<Object, Throwable> resultPredicate = Predicates.resultPredicateFor(result -> true);
+    BiPredicate<Object, Throwable> resultPredicate = AbstractPolicy.resultPredicateFor(result -> true);
     Assert.assertTrue(resultPredicate.test("result", null));
     Assert.assertFalse(resultPredicate.test(null, new RuntimeException()));
   }

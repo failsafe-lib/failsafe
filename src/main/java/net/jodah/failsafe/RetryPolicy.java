@@ -141,7 +141,7 @@ public class RetryPolicy extends AbstractPolicy<RetryPolicy> {
    */
   public <T> RetryPolicy abortIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    abortConditions.add(Predicates.resultPredicateFor(resultPredicate));
+    abortConditions.add(resultPredicateFor(resultPredicate));
     return this;
   }
 
@@ -181,7 +181,7 @@ public class RetryPolicy extends AbstractPolicy<RetryPolicy> {
   public RetryPolicy abortOn(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    abortConditions.add(Predicates.failurePredicateFor(failures));
+    abortConditions.add(failurePredicateFor(failures));
     return this;
   }
 
@@ -192,7 +192,7 @@ public class RetryPolicy extends AbstractPolicy<RetryPolicy> {
    */
   public RetryPolicy abortOn(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    abortConditions.add(Predicates.failurePredicateFor(failurePredicate));
+    abortConditions.add(failurePredicateFor(failurePredicate));
     return this;
   }
 
@@ -200,7 +200,7 @@ public class RetryPolicy extends AbstractPolicy<RetryPolicy> {
    * Specifies that retries should be aborted if the execution result matches the {@code result}.
    */
   public RetryPolicy abortWhen(Object result) {
-    abortConditions.add(Predicates.resultPredicateFor(result));
+    abortConditions.add(resultPredicateFor(result));
     return this;
   }
 

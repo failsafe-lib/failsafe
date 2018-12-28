@@ -6,6 +6,7 @@ import net.jodah.failsafe.internal.util.Assert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiPredicate;
 
 /**
@@ -64,7 +65,7 @@ public abstract class AbstractPolicy<R> implements Policy {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
     failuresChecked = true;
-    failureConditions.add(Predicates.failurePredicateFor(failures));
+    failureConditions.add(failurePredicateFor(failures));
     return (R) this;
   }
 
@@ -76,7 +77,7 @@ public abstract class AbstractPolicy<R> implements Policy {
   public R handleIf(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
     failuresChecked = true;
-    failureConditions.add(Predicates.failurePredicateFor(failurePredicate));
+    failureConditions.add(failurePredicateFor(failurePredicate));
     return (R) this;
   }
 
@@ -97,7 +98,7 @@ public abstract class AbstractPolicy<R> implements Policy {
    * Specifies that a failure has occurred if the {@code result} matches the execution result.
    */
   public R handleResult(Object result) {
-    failureConditions.add(Predicates.resultPredicateFor(result));
+    failureConditions.add(resultPredicateFor(result));
     return (R) this;
   }
 
@@ -108,7 +109,7 @@ public abstract class AbstractPolicy<R> implements Policy {
    */
   public <T> R handleResultIf(Predicate<T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    failureConditions.add(Predicates.resultPredicateFor(resultPredicate));
+    failureConditions.add(resultPredicateFor(resultPredicate));
     return (R) this;
   }
 
@@ -149,5 +150,54 @@ public abstract class AbstractPolicy<R> implements Policy {
 
     // Fail by default if a failure is not checked by a condition
     return failure != null && !failuresChecked;
+  }
+
+  /**
+   * Returns a predicate that evaluates whether the {@code result} equals an execution result.
+   */
+  static BiPredicate<Object, Throwable> resultPredicateFor(final Object result) {
+    return (t, u) -> Objects.equals(result, t);
+  }
+
+  /**
+   * Returns a predicate that evaluates the {@code failurePredicate} against a failure.
+   */
+  @SuppressWarnings("unchecked")
+  static BiPredicate<Object, Throwable> failurePredicateFor(final Predicate<? extends Throwable> failurePredicate) {
+    return (t, u) -> u != null && ((Predicate<Throwable>) failurePredicate).test(u);
+  }
+
+  /**
+   * Returns a predicate that evaluates the {@code resultPredicate} against a result, when present.
+   *
+   * Short-circuts to false without invoking {@code resultPredicate},
+   * when result is not present (i.e. BiPredicate.test(null, Throwable)).
+   */
+  @SuppressWarnings("unchecked")
+  static <T> BiPredicate<Object, Throwable> resultPredicateFor(final Predicate<T> resultPredicate) {
+    return (t, u) -> {
+      if (u == null) {
+        return ((Predicate<Object>) resultPredicate).test(t);
+      } else {
+        // resultPredicate is only defined over the success type.
+        // It doesn't know how to handle a failure of type Throwable,
+        // so we return false here.
+        return false;
+      }
+    };
+  }
+
+  /**
+   * Returns a predicate that returns whether any of the {@code failures} are assignable from an execution failure.
+   */
+  static BiPredicate<Object, Throwable> failurePredicateFor(final List<Class<? extends Throwable>> failures) {
+    return (t, u) -> {
+      if (u == null)
+        return false;
+      for (Class<? extends Throwable> failureType : failures)
+        if (failureType.isAssignableFrom(u.getClass()))
+          return true;
+      return false;
+    };
   }
 }
