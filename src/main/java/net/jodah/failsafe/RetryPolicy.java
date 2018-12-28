@@ -538,7 +538,7 @@ public class RetryPolicy extends AbstractPolicy<RetryPolicy> {
   /**
    * Sets the max number of retries to perform. {@code -1} indicates to retry forever.
    * 
-   * @throws IllegalArgumentException if {@code maxRetries} < -1
+   * @throws IllegalArgumentException if {@code maxRetries} &lt -1
    */
   public RetryPolicy withMaxRetries(int maxRetries) {
     Assert.isTrue(maxRetries >= -1, "maxRetries must be greater than or equal to -1");
