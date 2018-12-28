@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.executor.RetryPolicyExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Durations;
@@ -26,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 /**
  * A policy that defines when retries should be performed.

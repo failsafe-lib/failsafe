@@ -1,6 +1,5 @@
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.util.ArrayList;
@@ -8,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 /**
  * Base Policy implementation that captures conditions to determine whether an execution is a failure. If no failure

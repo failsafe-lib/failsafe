@@ -16,14 +16,13 @@
 package net.jodah.failsafe.issues;
 
 import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.*;
-import net.jodah.failsafe.function.Predicate;
-import org.testng.annotations.Test;
+import net.jodah.failsafe.*;import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 
 @Test
 public class Issue131Test {
