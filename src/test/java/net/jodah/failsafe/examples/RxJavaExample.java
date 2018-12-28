@@ -15,13 +15,13 @@
  */
 package net.jodah.failsafe.examples;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import net.jodah.failsafe.Execution;
 import net.jodah.failsafe.RetryPolicy;
 import rx.Observable;
 import rx.Subscriber;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RxJavaExample {
   public static void main(String... args) {
@@ -41,7 +41,7 @@ public class RxJavaExample {
         if (execution.canRetryOn(failure))
           return Observable.timer(execution.getWaitTime().toNanos(), TimeUnit.NANOSECONDS);
         else
-          return Observable.error(failure);
+          return Observable.<Long>error(failure);
       });
     }).toBlocking().forEach(System.out::println);
   }
