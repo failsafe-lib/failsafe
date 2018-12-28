@@ -35,7 +35,7 @@ public class Issue5Test {
     RetryPolicy retryPolicy = new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(2, TimeUnit.SECONDS)
         .withMaxRetries(3)
-        .retryWhen(null);
+        .handleResult(null);
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     Failsafe.with(retryPolicy).with(executor).onFailure((result, failure) -> {

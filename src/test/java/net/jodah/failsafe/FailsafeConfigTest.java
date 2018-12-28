@@ -169,7 +169,7 @@ public class FailsafeConfigTest {
 
     // Given - Fail 4 times then succeed
     when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().handleResult(false);
 
     // When
     registerListeners(Failsafe.with(retryPolicy)).get(callable);
@@ -193,7 +193,7 @@ public class FailsafeConfigTest {
     // Given - Fail 2 times then don't match policy
     when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
         .thenThrow(IllegalArgumentException.class);
-    RetryPolicy retryPolicy = new RetryPolicy().retryOn(IllegalStateException.class).withMaxRetries(10);
+    RetryPolicy retryPolicy = new RetryPolicy().handle(IllegalStateException.class).withMaxRetries(10);
 
     // When
     Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
@@ -202,11 +202,11 @@ public class FailsafeConfigTest {
     // Then
     abort.assertEquals(0);
     complete.assertEquals(1);
-    failedAttempt.assertEquals(3);
-    failure.assertEquals(1);
+    failedAttempt.assertEquals(2);
+    failure.assertEquals(0);
     retriesExceeded.assertEquals(0);
     retry.assertEquals(2);
-    success.assertEquals(0);
+    success.assertEquals(1);
   }
 
   /**

@@ -113,7 +113,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   private void assertGetWithExecutor(Object callable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().handleResult(false);
 
     // When / Then
     Future<Boolean> future = get(
@@ -174,7 +174,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   private void assertGetFuture(Object callable) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().retryWhen(false);
+    RetryPolicy retryPolicy = new RetryPolicy().handleResult(false);
 
     // When
     CompletableFuture<Boolean> future = future(Failsafe.with(retryPolicy).with(executor), callable);
@@ -350,7 +350,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     AtomicInteger counter = new AtomicInteger();
 
     // When
-    Future future = Failsafe.with(new RetryPolicy().retryWhen(null).retryOn(Exception.class))
+    Future future = Failsafe.with(new RetryPolicy().handleResult(null).handle(Exception.class))
         .with(executor)
         .get(() -> {
           counter.incrementAndGet();

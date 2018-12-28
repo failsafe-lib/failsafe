@@ -16,7 +16,6 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.Predicate;
 import net.jodah.failsafe.internal.*;
 import net.jodah.failsafe.internal.executor.CircuitBreakerExecutor;
 import net.jodah.failsafe.internal.util.Assert;
@@ -25,12 +24,9 @@ import net.jodah.failsafe.util.Ratio;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiPredicate;
 
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
@@ -38,7 +34,7 @@ import java.util.function.BiPredicate;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class CircuitBreaker implements Policy {
+public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
@@ -47,9 +43,6 @@ public class CircuitBreaker implements Policy {
   private Duration timeout;
   private Ratio failureThreshold;
   private Ratio successThreshold;
-  /** Indicates whether failures are checked by a configured failure condition */
-  private boolean failuresChecked;
-  private List<BiPredicate<Object, Throwable>> failureConditions;
   CheckedRunnable onOpen;
   CheckedRunnable onHalfOpen;
   CheckedRunnable onClose;
@@ -66,11 +59,11 @@ public class CircuitBreaker implements Policy {
    * The state of the circuit.
    */
   public enum State {
-    /* The circuit is closed and fully functional, allowing executions to occur. */
+    /** The circuit is closed and fully functional, allowing executions to occur. */
     CLOSED,
-    /* The circuit is opened and not allowing executions to occur. */
+    /** The circuit is opened and not allowing executions to occur. */
     OPEN,
-    /* The circuit is temporarily allowing executions to occur. */
+    /** The circuit is temporarily allowing executions to occur. */
     HALF_OPEN
   }
 
@@ -89,90 +82,7 @@ public class CircuitBreaker implements Policy {
   }
 
   /**
-   * Specifies that a failure should be recorded if the {@code completionPredicate} matches the completion result.
-   * 
-   * @throws NullPointerException if {@code completionPredicate} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> CircuitBreaker failIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
-    Assert.notNull(completionPredicate, "completionPredicate");
-    failuresChecked = true;
-    failureConditions.add((BiPredicate<Object, Throwable>) completionPredicate);
-    return this;
-  }
-
-  /**
-   * Specifies that a failure should be recorded if the {@code resultPredicate} matches the result. Predicate is not
-   * invoked when the operation fails.
-   *
-   * @throws NullPointerException if {@code resultPredicate} is null
-   */
-  public <T> CircuitBreaker failIf(Predicate<T> resultPredicate) {
-    Assert.notNull(resultPredicate, "resultPredicate");
-    failureConditions.add(Predicates.resultPredicateFor(resultPredicate));
-    return this;
-  }
-
-  /**
-   * Specifies the type to fail on. Applies to any type that is assignable from the {@code failure}.
-   * 
-   * @throws NullPointerException if {@code failure} is null
-   */
-  @SuppressWarnings({ "rawtypes" })
-  public CircuitBreaker failOn(Class<? extends Throwable> failure) {
-    Assert.notNull(failure, "failure");
-    return failOn(Arrays.asList(failure));
-  }
-
-  /**
-   * Specifies the types to fail on. Applies to any type that is assignable from the {@code failures}.
-   * 
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
-   */
-  @SuppressWarnings("unchecked")
-  public CircuitBreaker failOn(Class<? extends Throwable>... failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(failures.length > 0, "failures cannot be empty");
-    return failOn(Arrays.asList(failures));
-  }
-
-  /**
-   * Specifies the types to fail on. Applies to any type that is assignable from the {@code failures}.
-   * 
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
-   */
-  public CircuitBreaker failOn(List<Class<? extends Throwable>> failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    failuresChecked = true;
-    failureConditions.add(Predicates.failurePredicateFor(failures));
-    return this;
-  }
-
-  /**
-   * Specifies that a failure should be recorded if the {@code failurePredicate} matches the failure.
-   * 
-   * @throws NullPointerException if {@code failurePredicate} is null
-   */
-  public CircuitBreaker failOn(Predicate<? extends Throwable> failurePredicate) {
-    Assert.notNull(failurePredicate, "failurePredicate");
-    failuresChecked = true;
-    failureConditions.add(Predicates.failurePredicateFor(failurePredicate));
-    return this;
-  }
-
-  /**
-   * Specifies that a failure should be recorded if the execution result matches the {@code result}.
-   */
-  public CircuitBreaker failWhen(Object result) {
-    failureConditions.add(Predicates.resultPredicateFor(result));
-    return this;
-  }
-
-  /**
-   * Returns the delay before allowing another execution on the circuit. Defaults to {@link Duration#NONE}.
+   * Returns the delay before allowing another execution on the circuit. Defaults to {@link Duration#ZERO}.
    * 
    * @see #withDelay(long, TimeUnit)
    */
@@ -230,32 +140,6 @@ public class CircuitBreaker implements Policy {
    */
   public boolean isClosed() {
     return State.CLOSED.equals(getState());
-  }
-
-  /**
-   * Returns whether the circuit breaker considers the {@code result} or {@code throwable} a failure based on the
-   * configured conditions, or if {@code failure} is not null it is not checked by any configured condition.
-   * 
-   * @see #failIf(BiPredicate)
-   * @see #failIf(Predicate)
-   * @see #failOn(Class...)
-   * @see #failOn(List)
-   * @see #failOn(Predicate)
-   * @see #failWhen(Object)
-   */
-  public boolean isFailure(Object result, Throwable failure) {
-    for (BiPredicate<Object, Throwable> predicate : failureConditions) {
-      try {
-        if (predicate.test(result, failure))
-          return true;
-      } catch (Exception t) {
-        // Ignore confused user-supplied predicates.
-        // They should not be allowed to halt execution of the operation.
-      }
-    }
-
-    // Return true if the failure is not checked by a configured condition
-    return failure != null && !failuresChecked;
   }
 
   /**

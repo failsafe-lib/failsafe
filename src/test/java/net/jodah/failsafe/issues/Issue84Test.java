@@ -20,7 +20,7 @@ import net.jodah.failsafe.Failsafe;
 public class Issue84Test {
   public void shouldHandleCircuitBreakerOpenException() throws Throwable {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-    CircuitBreaker circuitBreaker = new CircuitBreaker().withDelay(10, TimeUnit.MINUTES).failWhen(false);
+    CircuitBreaker circuitBreaker = new CircuitBreaker().withDelay(10, TimeUnit.MINUTES).handleResult(false);
     circuitBreaker.open();
 
     // Synchronous

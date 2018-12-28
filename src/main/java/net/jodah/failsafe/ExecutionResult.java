@@ -22,8 +22,11 @@ public class ExecutionResult {
   /** Whether an async execution scheduling error occurred */
   public final boolean schedulingError;
 
+  /**
+   * Creates a new ExecutionResult where {@code success} is set to true if {@code failure} is not null.
+   */
   public ExecutionResult(Object result, Throwable failure) {
-    this(result, failure, false, 0, false, false, false);
+    this(result, failure, false, 0, false, failure == null, false);
   }
 
   public ExecutionResult(Object result, Throwable failure, boolean completed, boolean success) {
@@ -42,17 +45,32 @@ public class ExecutionResult {
   }
 
   /**
-   * Returns a copy of the ExecutionResult with the {@code completed} and {@code success} values.
+   * Returns a copy of the ExecutionResult with the {@code completed} value, else this if nothing has changed.
    */
-  public ExecutionResult with(boolean completed, boolean success) {
-    return new ExecutionResult(result, failure, noResult, waitNanos, completed, success, schedulingError);
+  public ExecutionResult with(boolean completed) {
+    return this.completed == completed ?
+        this :
+        new ExecutionResult(result, failure, noResult, waitNanos, completed, success, schedulingError);
   }
 
   /**
-   * Returns a copy of the ExecutionResult with the {@code waitNanos}, {@code completed} and {@code success} values.
+   * Returns a copy of the ExecutionResult with the {@code completed} and {@code success} values, else this if nothing
+   * has changed.
+   */
+  public ExecutionResult with(boolean completed, boolean success) {
+    return this.completed == completed && this.success == success ?
+        this :
+        new ExecutionResult(result, failure, noResult, waitNanos, completed, success, schedulingError);
+  }
+
+  /**
+   * Returns a copy of the ExecutionResult with the {@code waitNanos}, {@code completed} and {@code success} values,
+   * else this if nothing has changed.
    */
   public ExecutionResult with(long waitNanos, boolean completed, boolean success) {
-    return new ExecutionResult(result, failure, noResult, waitNanos, completed, success, schedulingError);
+    return this.waitNanos == waitNanos && this.completed == completed && this.success == success ?
+        this :
+        new ExecutionResult(result, failure, noResult, waitNanos, completed, success, schedulingError);
   }
 
   static ExecutionResult noResult() {

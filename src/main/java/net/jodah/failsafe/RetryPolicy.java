@@ -31,9 +31,9 @@ import java.util.function.BiPredicate;
  * A policy that defines when retries should be performed.
  * 
  * <p>
- * The {@code retryOn} methods describe when a retry should be performed for a particular failure. The {@code retryWhen}
- * method describes when a retry should be performed for a particular result. If multiple {@code retryOn} or
- * {@code retryWhen} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
+ * The {@code handle} methods describe when a retry should be performed for a particular failure. The {@code handleResult}
+ * methods describe when a retry should be performed for a particular result. If multiple {@code handle} or
+ * {@code handleResult} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
  * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
  * <p>
  * An {@link Execution} is marked as {@code completed} when the {@code RetryPolicy}
@@ -41,7 +41,7 @@ import java.util.function.BiPredicate;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class RetryPolicy implements Policy {
+public class RetryPolicy extends AbstractPolicy<RetryPolicy> {
   /**
    * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
    * 
@@ -89,9 +89,6 @@ public class RetryPolicy implements Policy {
   private double jitterFactor;
   private Duration maxDuration;
   private int maxRetries;
-  /** Indicates whether failures are checked by a configured retry condition */
-  private boolean failuresChecked;
-  private List<BiPredicate<Object, Throwable>> retryConditions;
   private List<BiPredicate<Object, Throwable>> abortConditions;
 
   /**
@@ -100,7 +97,6 @@ public class RetryPolicy implements Policy {
   public RetryPolicy() {
     delay = Duration.ZERO;
     maxRetries = -1;
-    retryConditions = new ArrayList<>();
     abortConditions = new ArrayList<>();
   }
 
@@ -121,7 +117,7 @@ public class RetryPolicy implements Policy {
     this.jitter = rp.jitter;
     this.jitterFactor = rp.jitterFactor;
     this.failuresChecked = rp.failuresChecked;
-    this.retryConditions = new ArrayList<>(rp.retryConditions);
+    this.failureConditions = new ArrayList<>(rp.failureConditions);
     this.abortConditions = new ArrayList<>(rp.abortConditions);
   }
 
@@ -221,15 +217,15 @@ public class RetryPolicy implements Policy {
 
   /**
    * Returns whether an execution result can be aborted given the configured abort conditions.
-   * 
-   * @see #abortIf(BiPredicate)
-   * @see #abortIf(Predicate)
+   *
    * @see #abortOn(Class...)
    * @see #abortOn(List)
    * @see #abortOn(Predicate)
+   * @see #abortIf(BiPredicate)
+   * @see #abortIf(Predicate)
    * @see #abortWhen(Object)
    */
-  public boolean canAbortFor(Object result, Throwable failure) {
+  public boolean isAbortable(Object result, Throwable failure) {
     for (BiPredicate<Object, Throwable> predicate : abortConditions) {
       try {
         if (predicate.test(result, failure))
@@ -240,31 +236,6 @@ public class RetryPolicy implements Policy {
       }
     }
     return false;
-  }
-
-  /**
-   * Returns whether an execution result can be retried given the configured abort conditions.
-   * 
-   * @see #retryIf(BiPredicate)
-   * @see #retryIf(Predicate)
-   * @see #retryOn(Class...)
-   * @see #retryOn(List)
-   * @see #retryOn(Predicate)
-   * @see #retryWhen(Object)
-   */
-  public boolean canRetryFor(Object result, Throwable failure) {
-    for (BiPredicate<Object, Throwable> predicate : retryConditions) {
-      try {
-        if (predicate.test(result, failure))
-          return true;
-      } catch (Exception t) {
-        // Ignore confused user-supplied predicates.
-        // They should not be allowed to halt execution of the operation.
-      }
-    }
-
-    // Retry by default if a failure is not checked by a retry condition
-    return failure != null && !failuresChecked;
   }
 
   /**
@@ -287,7 +258,7 @@ public class RetryPolicy implements Policy {
   }
 
   /**
-   * Returns the delay between retries. Defaults to {@link Duration#NONE}.
+   * Returns the delay between retries. Defaults to {@link Duration#ZERO}.
    * 
    * @see #withDelay(long, TimeUnit)
    * @see #withBackoff(long, long, TimeUnit)
@@ -378,92 +349,6 @@ public class RetryPolicy implements Policy {
    */
   public int getMaxRetries() {
     return maxRetries;
-  }
-
-  /**
-   * Specifies that a retry should occur if the {@code completionPredicate} matches the completion result and the retry
-   * policy is not exceeded.
-   * 
-   * @throws NullPointerException if {@code completionPredicate} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> RetryPolicy retryIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
-    Assert.notNull(completionPredicate, "completionPredicate");
-    failuresChecked = true;
-    retryConditions.add((BiPredicate<Object, Throwable>) completionPredicate);
-    return this;
-  }
-
-  /**
-   * Specifies that a retry should occur if the {@code resultPredicate} matches the result and the retry policy is not
-   * exceeded. Predicate is not invoked when the operation fails.
-   * 
-   * @throws NullPointerException if {@code resultPredicate} is null
-   */
-  public <T> RetryPolicy retryIf(Predicate<T> resultPredicate) {
-    Assert.notNull(resultPredicate, "resultPredicate");
-    retryConditions.add(Predicates.resultPredicateFor(resultPredicate));
-    return this;
-  }
-
-  /**
-   * Specifies the failure to retry on. Any failure that is assignable from the {@code failure} will be retried.
-   * 
-   * @throws NullPointerException if {@code failure} is null
-   */
-  @SuppressWarnings({ "rawtypes" })
-  public RetryPolicy retryOn(Class<? extends Throwable> failure) {
-    Assert.notNull(failure, "failure");
-    return retryOn(Arrays.asList(failure));
-  }
-
-  /**
-   * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
-   * 
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
-   */
-  @SuppressWarnings("unchecked")
-  public RetryPolicy retryOn(Class<? extends Throwable>... failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(failures.length > 0, "Failures cannot be empty");
-    return retryOn(Arrays.asList(failures));
-  }
-
-  /**
-   * Specifies the failures to retry on. Any failure that is assignable from the {@code failures} will be retried.
-   * 
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is null or empty
-   */
-  public RetryPolicy retryOn(List<Class<? extends Throwable>> failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    failuresChecked = true;
-    retryConditions.add(Predicates.failurePredicateFor(failures));
-    return this;
-  }
-
-  /**
-   * Specifies that a retry should occur if the {@code failurePredicate} matches the failure and the retry policy is not
-   * exceeded.
-   * 
-   * @throws NullPointerException if {@code failurePredicate} is null
-   */
-  public RetryPolicy retryOn(Predicate<? extends Throwable> failurePredicate) {
-    Assert.notNull(failurePredicate, "failurePredicate");
-    failuresChecked = true;
-    retryConditions.add(Predicates.failurePredicateFor(failurePredicate));
-    return this;
-  }
-
-  /**
-   * Specifies that a retry should occur if the execution result equals the {@code result} and the retry policy is not
-   * exceeded.
-   */
-  public RetryPolicy retryWhen(Object result) {
-    retryConditions.add(Predicates.resultPredicateFor(result));
-    return this;
   }
 
   /**

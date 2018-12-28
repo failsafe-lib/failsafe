@@ -13,12 +13,12 @@ import net.jodah.failsafe.RetryPolicy;
 public class Issue115Test {
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterLargerThanDelay() {
-    new RetryPolicy().retryOn(IllegalArgumentException.class).withDelay(100, TimeUnit.MILLISECONDS).withJitter(200,
+    new RetryPolicy().handle(IllegalArgumentException.class).withDelay(100, TimeUnit.MILLISECONDS).withJitter(200,
         TimeUnit.MILLISECONDS);
   }
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterWithNoDelay() {
-    new RetryPolicy().retryOn(IllegalArgumentException.class).withJitter(200, TimeUnit.MILLISECONDS);
+    new RetryPolicy().handle(IllegalArgumentException.class).withJitter(200, TimeUnit.MILLISECONDS);
   }
 }

@@ -24,7 +24,7 @@ import rx.Observable;
 import rx.Subscriber;
 
 public class RxJavaExample {
-  public static void main(String... args) throws Throwable {
+  public static void main(String... args) {
     AtomicInteger failures = new AtomicInteger();
     RetryPolicy retryPolicy = new RetryPolicy().withDelay(1, TimeUnit.SECONDS);
 

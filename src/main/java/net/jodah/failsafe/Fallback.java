@@ -26,7 +26,7 @@ import java.util.concurrent.Callable;
  *
  * @author Jonathan Halterman
  */
-public class Fallback implements Policy {
+public class Fallback extends AbstractPolicy<Fallback> {
   private final CheckedBiFunction<Object, Throwable, Object> fallback;
 
   /**
@@ -107,8 +107,12 @@ public class Fallback implements Policy {
     return new Fallback(Functions.fnOf(Assert.notNull(fallback, "fallback")));
   }
 
+  public Object apply(Object result, Throwable failure) throws Exception {
+    return fallback.apply(result, failure);
+  }
+
   @Override
   public PolicyExecutor toExecutor() {
-    return new FallbackExecutor(fallback);
+    return new FallbackExecutor(this);
   }
 }

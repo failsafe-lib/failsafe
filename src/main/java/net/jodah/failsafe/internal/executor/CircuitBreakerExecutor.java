@@ -27,33 +27,35 @@ import java.time.Duration;
  *
  * @author Jonathan Halterman
  */
-public class CircuitBreakerExecutor extends PolicyExecutor {
-  private final CircuitBreaker circuitBreaker;
-
+public class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
   public CircuitBreakerExecutor(CircuitBreaker circuitBreaker) {
-    this.circuitBreaker = circuitBreaker;
+    super(circuitBreaker);
   }
 
   @Override
-  public ExecutionResult preExecute(ExecutionResult result) {
-    boolean allowsExecution = circuitBreaker.allowsExecution();
+  protected ExecutionResult preExecute(ExecutionResult result) {
+    boolean allowsExecution = policy.allowsExecution();
     if (allowsExecution)
-      circuitBreaker.preExecute();
+      policy.preExecute();
     return allowsExecution ? result : new ExecutionResult(null, new CircuitBreakerOpenException(), true, false);
   }
 
   @Override
-  public ExecutionResult postExecute(ExecutionResult result) {
+  protected boolean isFailure(ExecutionResult result) {
     long elapsedNanos = execution.getElapsedTime().toNanos();
-    Duration timeout = circuitBreaker.getTimeout();
+    Duration timeout = policy.getTimeout();
     boolean timeoutExceeded = timeout != null && elapsedNanos >= timeout.toNanos();
+    return timeoutExceeded || super.isFailure(result);
+  }
 
-    if (timeoutExceeded || (!result.noResult && circuitBreaker.isFailure(result.result, result.failure))) {
-      circuitBreaker.recordFailure();
-      return result.with(true, false);
-    } else {
-      circuitBreaker.recordSuccess();
-      return result.with(true, true);
-    }
+  @Override
+  protected void onSuccess(ExecutionResult result) {
+    policy.recordSuccess();
+  }
+
+  @Override
+  protected ExecutionResult onFailure(ExecutionResult result) {
+    policy.recordFailure();
+    return result.with(true);
   }
 }

@@ -18,13 +18,12 @@ package net.jodah.failsafe.issues;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.*;
 import net.jodah.failsafe.function.Predicate;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.concurrent.*;
-
-import static org.testng.Assert.assertFalse;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 @Test
 public class Issue131Test {
@@ -33,11 +32,8 @@ public class Issue131Test {
    * This predicate is invoked in failure scenarios with an arg of null,
    * producing a {@link NullPointerException} yielding surpising results.
    */
-  private static Predicate<String> failIfEqualsIgnoreCaseFoo = new Predicate<String>() {
-    @Override
-    public boolean test(String s) {
-      return s.equalsIgnoreCase("foo"); // produces NPE when invoked in failing scenarios.
-    }
+  private static Predicate<String> handleIfEqualsIgnoreCaseFoo = s -> {
+    return s.equalsIgnoreCase("foo"); // produces NPE when invoked in failing scenarios.
   };
 
   /**
@@ -45,16 +41,13 @@ public class Issue131Test {
    * instead of the expected {@link FailsafeException}.
    */
   @Test(expectedExceptions = FailsafeException.class)
-  public void syncShouldThrowTheUnderlyingIOException() throws Throwable {
-    CircuitBreaker circuitBreaker = new CircuitBreaker().failIf(failIfEqualsIgnoreCaseFoo);
+  public void syncShouldThrowTheUnderlyingIOException() {
+    CircuitBreaker circuitBreaker = new CircuitBreaker().handleResultIf(handleIfEqualsIgnoreCaseFoo);
     SyncFailsafe<String> failsafe = Failsafe.<String>with(circuitBreaker);
 
     // I expect this get() to throw IOException, not NPE.
-    failsafe.get(new Callable<String>() {
-      @Override
-      public String call() throws Exception {
-        throw new IOException("let's blame it on network error");
-      }
+    failsafe.get((Callable<String>) () -> {
+      throw new IOException("let's blame it on network error");
     });
   }
 
@@ -64,19 +57,16 @@ public class Issue131Test {
    * since Failsafe does not recover from the {@link NullPointerException} thrown by the predicate.
    */
   public void asyncShouldCompleteTheFuture() throws Throwable {
-    CircuitBreaker circuitBreaker = new CircuitBreaker().failIf(failIfEqualsIgnoreCaseFoo);
+    CircuitBreaker circuitBreaker = new CircuitBreaker().handleResultIf(handleIfEqualsIgnoreCaseFoo);
     AsyncFailsafe<String> failsafe = Failsafe.<String>with(circuitBreaker).with(Executors.newSingleThreadScheduledExecutor());
 
     Waiter waiter = new Waiter();
 
     failsafe
-      .future(new Callable<CompletionStage<String>>() {
-        @Override
-        public CompletionStage<String> call() throws Exception {
-          CompletableFuture<String> future = new CompletableFuture<String>();
-          future.completeExceptionally(new IOException("let's blame it on network error"));
-          return future;
-        }
+      .future(() -> {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        future.completeExceptionally(new IOException("let's blame it on network error"));
+        return future;
       })
       .whenComplete((s, t) -> waiter.resume()); // Never invoked!
 

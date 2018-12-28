@@ -60,7 +60,7 @@ public class AsyncExecutionTest {
 
   public void testCompleteForResult() {
     // Given
-    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy().retryWhen(null)));
+    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy().handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -85,7 +85,7 @@ public class AsyncExecutionTest {
 
   public void testRetryForResult() {
     // Given retry for null
-    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy().retryWhen(null)));
+    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy().handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -104,7 +104,7 @@ public class AsyncExecutionTest {
 
     // Given 2 max retries
     exec = new AsyncExecution(callable, scheduler, future,
-        configFor(new RetryPolicy().retryWhen(null).withMaxRetries(2)));
+        configFor(new RetryPolicy().handleResult(null).withMaxRetries(2)));
 
     // When / Then
     resetMocks();
@@ -125,7 +125,7 @@ public class AsyncExecutionTest {
 
   public void testRetryForResultAndThrowable() {
     // Given retry for null
-    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy().retryWhen(null)));
+    exec = new AsyncExecution(callable, scheduler, future, configFor(new RetryPolicy().handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -146,7 +146,7 @@ public class AsyncExecutionTest {
 
     // Given 2 max retries
     exec = new AsyncExecution(callable, scheduler, future,
-        configFor(new RetryPolicy().retryWhen(null).withMaxRetries(2)));
+        configFor(new RetryPolicy().handleResult(null).withMaxRetries(2)));
 
     // When / Then
     resetMocks();
@@ -168,7 +168,7 @@ public class AsyncExecutionTest {
   public void testRetryOn() {
     // Given retry on IllegalArgumentException
     exec = new AsyncExecution(callable, scheduler, future,
-        configFor(new RetryPolicy().retryOn(IllegalArgumentException.class)));
+        configFor(new RetryPolicy().handle(IllegalArgumentException.class)));
 
     // When / Then
     assertTrue(exec.retryOn(new IllegalArgumentException()));

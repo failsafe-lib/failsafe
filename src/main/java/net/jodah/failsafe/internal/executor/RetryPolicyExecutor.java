@@ -31,11 +31,8 @@ import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
  * A PolicyExecutor that handles failures according to a {@link RetryPolicy}.
  *
  * @author Jonathan Halterman
- * @param <T> result type
  */
-public class RetryPolicyExecutor extends PolicyExecutor {
-  private final RetryPolicy retryPolicy;
-
+public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   // Mutable state
   private volatile boolean retriesExceeded;
   /** The fixed, backoff, random or computed delay time in nanoseconds. */
@@ -44,18 +41,18 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   private volatile long waitNanos;
 
   public RetryPolicyExecutor(RetryPolicy retryPolicy) {
-    this.retryPolicy = retryPolicy;
+    super(retryPolicy);
   }
 
   @Override
-  public ExecutionResult preExecute(ExecutionResult result) {
+  protected ExecutionResult preExecute(ExecutionResult result) {
     if (result != null && execution.getExecutions() > 0)
       eventHandler.handleRetry(result, execution);
     return result;
   }
 
   @Override
-  public ExecutionResult executeSync(ExecutionResult result) {
+  protected ExecutionResult executeSync(ExecutionResult result) {
     while (true) {
       result = super.executeSync(result);
       if (result.completed)
@@ -64,7 +61,7 @@ public class RetryPolicyExecutor extends PolicyExecutor {
   }
 
   @Override
-  public ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler, FailsafeFuture<Object> future) {
+  protected ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler, FailsafeFuture<Object> future) {
     while (true) {
       result = super.executeAsync(result, shouldExecute, scheduler, future);
       if (result == null || result.completed)
@@ -77,14 +74,11 @@ public class RetryPolicyExecutor extends PolicyExecutor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public ExecutionResult postExecute(ExecutionResult result) {
-    if (result.noResult)
-      return result;
-
+  protected ExecutionResult onFailure(ExecutionResult result) {
     // Determine the computed delay
     long computedDelayNanos = -1;
-    DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) retryPolicy.getDelayFn();
-    if (delayFunction != null && retryPolicy.canApplyDelayFn(result.result, result.failure)) {
+    DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) policy.getDelayFn();
+    if (delayFunction != null && policy.canApplyDelayFn(result.result, result.failure)) {
       Duration computedDelay = delayFunction.computeDelay(result.result, result.failure, execution);
       if (computedDelay != null && computedDelay.toNanos() >= 0)
         computedDelayNanos = computedDelay.toNanos();
@@ -92,9 +86,9 @@ public class RetryPolicyExecutor extends PolicyExecutor {
 
     // Determine the non-computed delay
     if (computedDelayNanos == -1) {
-      Duration delay = retryPolicy.getDelay();
-      Duration delayMin = retryPolicy.getDelayMin();
-      Duration delayMax = retryPolicy.getDelayMax();
+      Duration delay = policy.getDelay();
+      Duration delayMin = policy.getDelayMin();
+      Duration delayMax = policy.getDelayMax();
 
       if (delayNanos == -1 && delay != null && !delay.equals(Duration.ZERO))
         delayNanos = delay.toNanos();
@@ -102,38 +96,37 @@ public class RetryPolicyExecutor extends PolicyExecutor {
         delayNanos = randomDelayInRange(delayMin.toNanos(), delayMin.toNanos(), Math.random());
 
       // Adjust for backoff
-      if (execution.getExecutions() != 1 && retryPolicy.getMaxDelay() != null)
-        delayNanos = (long) Math.min(delayNanos * retryPolicy.getDelayFactor(), retryPolicy.getMaxDelay().toNanos());
+      if (execution.getExecutions() != 1 && policy.getMaxDelay() != null)
+        delayNanos = (long) Math.min(delayNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
     }
 
     waitNanos = computedDelayNanos != -1 ? computedDelayNanos : delayNanos;
 
     // Adjust the wait time for jitter
-    if (retryPolicy.getJitter() != null)
-      waitNanos = randomDelay(waitNanos, retryPolicy.getJitter().toNanos(), Math.random());
-    else if (retryPolicy.getJitterFactor() > 0.0)
-      waitNanos = randomDelay(waitNanos, retryPolicy.getJitterFactor(), Math.random());
+    if (policy.getJitter() != null)
+      waitNanos = randomDelay(waitNanos, policy.getJitter().toNanos(), Math.random());
+    else if (policy.getJitterFactor() > 0.0)
+      waitNanos = randomDelay(waitNanos, policy.getJitterFactor(), Math.random());
 
     // Adjust the wait time for max duration
     long elapsedNanos = execution.getElapsedTime().toNanos();
-    if (retryPolicy.getMaxDuration() != null) {
-      long maxRemainingWaitTime = retryPolicy.getMaxDuration().toNanos() - elapsedNanos;
+    if (policy.getMaxDuration() != null) {
+      long maxRemainingWaitTime = policy.getMaxDuration().toNanos() - elapsedNanos;
       waitNanos = Math.min(waitNanos, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
       if (waitNanos < 0)
         waitNanos = 0;
     }
 
     // Calculate result
-    boolean maxRetriesExceeded = retryPolicy.getMaxRetries() != -1
-        && execution.getExecutions() > retryPolicy.getMaxRetries();
-    boolean maxDurationExceeded = retryPolicy.getMaxDuration() != null
-        && elapsedNanos > retryPolicy.getMaxDuration().toNanos();
+    boolean maxRetriesExceeded = policy.getMaxRetries() != -1
+        && execution.getExecutions() > policy.getMaxRetries();
+    boolean maxDurationExceeded = policy.getMaxDuration() != null
+        && elapsedNanos > policy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean isAbortable = retryPolicy.canAbortFor(result.result, result.failure);
-    boolean isRetryable = retryPolicy.canRetryFor(result.result, result.failure);
-    boolean shouldRetry = !retriesExceeded && !isAbortable && retryPolicy.allowsRetries() && isRetryable;
+    boolean isAbortable = policy.isAbortable(result.result, result.failure);
+    boolean shouldRetry = !result.success && !isAbortable && !retriesExceeded && policy.allowsRetries();
     boolean completed = isAbortable || !shouldRetry;
-    boolean success = completed && !isAbortable && !isRetryable && result.failure == null;
+    boolean success = completed && result.success && !isAbortable;
 
     // Call listeners
     if (!success)

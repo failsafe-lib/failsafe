@@ -130,7 +130,7 @@ public abstract class AbstractFailsafeTest {
   public void shouldThrowOnNonRetriableFailure() throws Throwable {
     // Given
     when(service.connect()).thenThrow(ConnectException.class, ConnectException.class, IllegalStateException.class);
-    RetryPolicy retryPolicy = new RetryPolicy().retryOn(ConnectException.class);
+    RetryPolicy retryPolicy = new RetryPolicy().handle(ConnectException.class);
 
     // When / Then
     assertThrows(() -> failsafeGet(retryPolicy, service::connect), IllegalStateException.class);

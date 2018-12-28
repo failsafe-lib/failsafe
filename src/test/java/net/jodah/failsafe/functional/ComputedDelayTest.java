@@ -61,7 +61,7 @@ public class ComputedDelayTest {
 
   public void shouldDelayOnMatchingResult() {
     AtomicInteger delays = new AtomicInteger(0);
-    RetryPolicy retryPolicy = new RetryPolicy().retryIf(result -> true).withMaxRetries(4).withDelayWhen((r, f, c) -> {
+    RetryPolicy retryPolicy = new RetryPolicy().handleResultIf(result -> true).withMaxRetries(4).withDelayWhen((r, f, c) -> {
       delays.incrementAndGet(); // side-effect for test purposes
       return Duration.ofNanos(1);
     }, "expected");
@@ -86,7 +86,7 @@ public class ComputedDelayTest {
   public void shouldDelayOnMatchingFailureType() {
     AtomicInteger delays = new AtomicInteger(0);
     RetryPolicy retryPolicy = new RetryPolicy()
-        .retryOn(UncheckedExpectedException.class)
+        .handle(UncheckedExpectedException.class)
         .withMaxRetries(4)
         .withDelayOn((r, f, c) -> {
           delays.incrementAndGet(); // side-effect for test purposes

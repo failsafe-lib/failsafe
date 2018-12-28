@@ -15,9 +15,6 @@
  */
 package net.jodah.failsafe.examples;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
@@ -26,12 +23,15 @@ import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
   static RetryPolicy retryPolicy = new RetryPolicy()
-      .retryOn((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
+      .handleIf((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
           || ReplyFailure.TIMEOUT.equals(failure.failureType()));
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
@@ -55,7 +55,7 @@ public class VertxExample {
 
       @Override
       public boolean cancel(boolean mayInterruptIfRunning) {
-        return delay == 0 ? false : vertx.cancelTimer(timerId);
+        return delay != 0 && vertx.cancelTimer(timerId);
       };
     };
   };

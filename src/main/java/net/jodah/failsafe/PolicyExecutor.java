@@ -7,28 +7,27 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Executes a policy. May contain pre or post execution behaviors.
+ * Handles execution and execution results according to a policy. May contain pre and post execution behaviors.
  * <p>
  * Part of the Failsafe SPI.
+ *
+ * @param <T> policy type
  */
-public abstract class PolicyExecutor {
+public abstract class PolicyExecutor<T extends Policy> {
+  protected final T policy;
   protected AbstractExecution execution;
   protected EventHandler eventHandler;
   PolicyExecutor next;
+
+  protected PolicyExecutor(T policy) {
+    this.policy = policy;
+  }
 
   /**
    * Called before execution to return an alternative result or failure such as if execution is not allowed or needed.
    * Should return the provided {@code result} else some alternative.
    */
-  public ExecutionResult preExecute(ExecutionResult result) {
-    return result;
-  }
-
-  /**
-   * Performs post-execution handling for the {@code result}, possibly creating a new result. Should return the provided
-   * {@code result} else some alternative.
-   */
-  public ExecutionResult postExecute(ExecutionResult result) {
+  protected ExecutionResult preExecute(ExecutionResult result) {
     return result;
   }
 
@@ -36,7 +35,7 @@ public abstract class PolicyExecutor {
    * Performs an sync execution by first doing a pre-execute, calling the next executor, else calling the executor's
    * callable. This navigates to the end of the executor chain before calling the callable.
    */
-  public ExecutionResult executeSync(ExecutionResult result) {
+  protected ExecutionResult executeSync(ExecutionResult result) {
     ExecutionResult preResult = preExecute(result);
     if (preResult != result)
       return preResult;
@@ -50,8 +49,7 @@ public abstract class PolicyExecutor {
         long waitNanos = result == null ? 0 : result.waitNanos;
         Thread.sleep(TimeUnit.NANOSECONDS.toMillis(waitNanos));
       } catch (InterruptedException e) {
-        Thread.currentThread()
-            .interrupt();
+        Thread.currentThread().interrupt();
         return new ExecutionResult(null, new FailsafeException(e), true, false);
       }
 
@@ -76,7 +74,7 @@ public abstract class PolicyExecutor {
    * @return null if an execution has been scheduled
    */
   @SuppressWarnings("unchecked")
-  public ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler,
+  protected ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler,
       FailsafeFuture<Object> future) {
 
     boolean shouldExecuteNext = shouldExecute || this.equals(execution.lastExecuted);
@@ -104,9 +102,47 @@ public abstract class PolicyExecutor {
       }
     }
 
-    if (result != null && !result.schedulingError)
-      result = postExecute(result);
+    return result == null || result.schedulingError ? result : postExecute(result);
+  }
 
+  /**
+   * Performs post-execution handling for a {@code result}.
+   */
+  ExecutionResult postExecute(ExecutionResult result) {
+    if (isFailure(result)) {
+      return onFailure(result.with(false, false));
+    } else {
+      result = result.with(true, true);
+      onSuccess(result);
+      return result;
+    }
+  }
+
+  /**
+   * Returns whether the {@code result} is a success according to the policy. If the {code result} has no result, it is
+   * not a failure.
+   */
+  protected boolean isFailure(ExecutionResult result) {
+    if (result.noResult)
+      return false;
+    else if (policy instanceof AbstractPolicy)
+      return ((AbstractPolicy) policy).isFailure(result);
+    else
+      return !result.success;
+  }
+
+  /**
+   * Performs post-execution handling for a {@code result} that is considered a success according to {@link
+   * #isFailure(ExecutionResult)}.
+   */
+  protected void onSuccess(ExecutionResult result) {
+  }
+
+  /**
+   * Performs post-execution handling for a {@code result} that is considered a failure according to {@link
+   * #isFailure(ExecutionResult)}, possibly creating a new result, else returning the original {@code result}.
+   */
+  protected ExecutionResult onFailure(ExecutionResult result) {
     return result;
   }
 }

@@ -36,7 +36,7 @@ public class ExecutionTest {
 
   public void testCanRetryForResult() {
     // Given retry for null
-    Execution exec = new Execution(new RetryPolicy().retryWhen(null));
+    Execution exec = new Execution(new RetryPolicy().handleResult(null));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -50,7 +50,7 @@ public class ExecutionTest {
     assertNull(exec.getLastFailure());
 
     // Given 2 max retries
-    exec = new Execution(new RetryPolicy().retryWhen(null).withMaxRetries(2));
+    exec = new Execution(new RetryPolicy().handleResult(null).withMaxRetries(2));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -66,7 +66,7 @@ public class ExecutionTest {
 
   public void testCanRetryForResultAndThrowable() {
     // Given retry for null
-    Execution exec = new Execution(new RetryPolicy().retryWhen(null));
+    Execution exec = new Execution(new RetryPolicy().handleResult(null));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -79,7 +79,7 @@ public class ExecutionTest {
     assertTrue(exec.isComplete());
 
     // Given 2 max retries
-    exec = new Execution(new RetryPolicy().retryWhen(null).withMaxRetries(2));
+    exec = new Execution(new RetryPolicy().handleResult(null).withMaxRetries(2));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -93,7 +93,7 @@ public class ExecutionTest {
 
   public void testCanRetryOn() {
     // Given retry on IllegalArgumentException
-    Execution exec = new Execution(new RetryPolicy().retryOn(IllegalArgumentException.class));
+    Execution exec = new Execution(new RetryPolicy().handle(IllegalArgumentException.class));
 
     // When / Then
     assertTrue(exec.canRetryOn(new IllegalArgumentException()));
@@ -136,7 +136,7 @@ public class ExecutionTest {
 
   public void testCompleteForResult() {
     // Given
-    Execution exec = new Execution(new RetryPolicy().retryWhen(null));
+    Execution exec = new Execution(new RetryPolicy().handleResult(null));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -168,7 +168,7 @@ public class ExecutionTest {
     List<Object> list = mock(List.class);
     when(list.size()).thenThrow(failures(2, new IllegalStateException())).thenReturn(5);
 
-    RetryPolicy retryPolicy = new RetryPolicy().retryOn(IllegalStateException.class);
+    RetryPolicy retryPolicy = new RetryPolicy().handle(IllegalStateException.class);
     Execution exec = new Execution(retryPolicy);
 
     while (!exec.isComplete()) {
@@ -282,7 +282,7 @@ public class ExecutionTest {
     Execution exec = new Execution(new RetryPolicy()
         .withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(101, TimeUnit.MILLISECONDS)
-        .retryWhen(null));
+        .handleResult(null));
     assertEquals(exec.getWaitTime().toMillis(), 0);
     exec.canRetryFor(null);
     assertTrue(exec.getWaitTime().toMillis() <= 100);

@@ -15,24 +15,23 @@
  */
 package net.jodah.failsafe.issues;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 /**
  * https://github.com/jhalterman/failsafe/issues/36
  */
 @Test
 public class Issue36Test {
-  RetryPolicy retryPolicy = new RetryPolicy().retryIf((Boolean r) -> r == null || !r)
-      .retryOn(Exception.class)
+  RetryPolicy retryPolicy = new RetryPolicy().handleResultIf((Boolean r) -> r == null || !r)
+      .handle(Exception.class)
       .withMaxRetries(3);
   AtomicInteger calls;
   AtomicInteger failedAttempts;
@@ -70,8 +69,8 @@ public class Issue36Test {
 
   @Test
   public void failedAttemptListener_WithFailedResponses_ShouldBeCalled() throws Exception {
-    RetryPolicy policy = new RetryPolicy().retryIf((Boolean response) -> response != null && !response)
-        .retryOn(Exception.class)
+    RetryPolicy policy = new RetryPolicy().handleResultIf((Boolean response) -> response != null && !response)
+        .handle(Exception.class)
         .withMaxRetries(3);
     AtomicInteger listenerCallbacks = new AtomicInteger();
     Failsafe.<Boolean>with(policy)
@@ -82,8 +81,8 @@ public class Issue36Test {
 
   @Test
   public void retryListener_WithFailedResponses_ShouldBeCalled() throws Exception {
-    RetryPolicy policy = new RetryPolicy().retryIf((Boolean response) -> response != null && !response)
-        .retryOn(Exception.class)
+    RetryPolicy policy = new RetryPolicy().handleResultIf((Boolean response) -> response != null && !response)
+        .handle(Exception.class)
         .withMaxRetries(3);
     AtomicInteger listenerCallbacks = new AtomicInteger();
     Failsafe.<Boolean>with(policy)
@@ -94,8 +93,8 @@ public class Issue36Test {
 
   @Test
   public void failedAttemptListener_WithExceptions_ShouldBeCalled() throws Exception {
-    RetryPolicy policy = new RetryPolicy().retryIf((Boolean response) -> response != null && !response)
-        .retryOn(Exception.class)
+    RetryPolicy policy = new RetryPolicy().handleResultIf((Boolean response) -> response != null && !response)
+        .handle(Exception.class)
         .withMaxRetries(3);
     AtomicInteger listenerCallbacks = new AtomicInteger();
     try {
@@ -111,8 +110,8 @@ public class Issue36Test {
 
   @Test
   public void retryListener_WithExceptions_ShouldBeCalled() throws Exception {
-    RetryPolicy policy = new RetryPolicy().retryIf((Boolean response) -> response != null && !response)
-        .retryOn(Exception.class)
+    RetryPolicy policy = new RetryPolicy().handleResultIf((Boolean response) -> response != null && !response)
+        .handle(Exception.class)
         .withMaxRetries(3);
     AtomicInteger listenerCallbacks = new AtomicInteger();
     try {

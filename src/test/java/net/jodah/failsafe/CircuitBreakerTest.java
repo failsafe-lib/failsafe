@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiPredicate;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
 import static org.testng.Assert.assertFalse;
@@ -35,19 +34,19 @@ public class CircuitBreakerTest {
   }
 
   public void testIsFailureForFailurePredicate() {
-    CircuitBreaker breaker = new CircuitBreaker().failOn(failure -> failure instanceof ConnectException);
+    CircuitBreaker breaker = new CircuitBreaker().handleIf(failure -> failure instanceof ConnectException);
     assertTrue(breaker.isFailure(null, new ConnectException()));
     assertFalse(breaker.isFailure(null, new IllegalStateException()));
   }
 
   public void testIsFailureForResultPredicate() {
-    CircuitBreaker breaker = new CircuitBreaker().failIf((Integer result) -> result > 100);
+    CircuitBreaker breaker = new CircuitBreaker().handleResultIf((Integer result) -> result > 100);
     assertTrue(breaker.isFailure(110, null));
     assertFalse(breaker.isFailure(50, null));
   }
 
   public void testIgnoresThrowingPredicate() {
-    CircuitBreaker breaker = new CircuitBreaker().failIf((BiPredicate<Integer, Throwable>) (integer, throwable) -> {
+    CircuitBreaker breaker = new CircuitBreaker().handleIf((Integer result, Throwable throwable) -> {
       throw new NullPointerException();
     });
     assertFalse(breaker.isFailure(1, null));
@@ -55,7 +54,7 @@ public class CircuitBreakerTest {
 
   @Test(expectedExceptions = OutOfMemoryError.class)
   public void testThrowsFatalErrors() {
-    CircuitBreaker breaker = new CircuitBreaker().failIf((BiPredicate<String, Throwable>) (integer, throwable) -> {
+    CircuitBreaker breaker = new CircuitBreaker().handleIf((String result, Throwable throwable) -> {
       throw new OutOfMemoryError();
     });
     breaker.isFailure("result", null);
@@ -67,24 +66,24 @@ public class CircuitBreakerTest {
     assertTrue(breaker.isFailure(null, new Exception()));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
 
-    breaker = new CircuitBreaker().failOn(Exception.class);
+    breaker = new CircuitBreaker().handle(Exception.class);
     assertTrue(breaker.isFailure(null, new Exception()));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
 
-    breaker = new CircuitBreaker().failOn(IllegalArgumentException.class, IOException.class);
+    breaker = new CircuitBreaker().handle(IllegalArgumentException.class, IOException.class);
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
     assertTrue(breaker.isFailure(null, new IOException()));
     assertFalse(breaker.isFailure(null, new RuntimeException()));
     assertFalse(breaker.isFailure(null, new IllegalStateException()));
 
-    breaker = new CircuitBreaker().failOn(Arrays.asList(IllegalArgumentException.class));
+    breaker = new CircuitBreaker().handle(Arrays.asList(IllegalArgumentException.class));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
     assertFalse(breaker.isFailure(null, new RuntimeException()));
     assertFalse(breaker.isFailure(null, new IllegalStateException()));
   }
 
   public void testIsFailureForResult() {
-    CircuitBreaker breaker = new CircuitBreaker().failWhen(10);
+    CircuitBreaker breaker = new CircuitBreaker().handleResult(10);
     assertTrue(breaker.isFailure(10, null));
     assertFalse(breaker.isFailure(5, null));
   }
