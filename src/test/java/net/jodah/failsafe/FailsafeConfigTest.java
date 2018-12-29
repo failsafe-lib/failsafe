@@ -107,7 +107,7 @@ public class FailsafeConfigTest {
     executor.awaitTermination(5, TimeUnit.SECONDS);
   }
 
-  <T> SyncFailsafe<T> registerListeners(SyncFailsafe<T> failsafe) {
+  <T> FailsafeExecutor<T> registerListeners(FailsafeExecutor<T> failsafe) {
     failsafe.onAbort(e -> abort.sync(1));
     failsafe.onAbort((r, e) -> abort.sync(2));
     failsafe.onAbort((r, e, c) -> abort.sync(3));

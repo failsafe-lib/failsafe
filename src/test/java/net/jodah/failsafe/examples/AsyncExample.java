@@ -48,7 +48,7 @@ public class AsyncExample {
   public static void main(String... args) throws Throwable {
     Failsafe.with(retryPolicy)
         .with(executor)
-        .getAsync(execution -> service.connect().whenComplete((result, failure) -> {
+        .getAsyncExecution(execution -> service.connect().whenComplete((result, failure) -> {
           if (execution.complete(result, failure))
             System.out.println("Success");
           else if (!execution.retry())

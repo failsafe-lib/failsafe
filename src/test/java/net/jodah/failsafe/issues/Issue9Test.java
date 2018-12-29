@@ -53,7 +53,7 @@ public class Issue9Test {
           successCounter.incrementAndGet();
           waiter.resume();
         })
-        .get(service::connect);
+        .getAsync(service::connect);
 
     // Then
     waiter.await(1000);

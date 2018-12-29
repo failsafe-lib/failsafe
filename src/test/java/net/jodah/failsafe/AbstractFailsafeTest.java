@@ -61,59 +61,56 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
-   * Does a failsafe get with an optional executor.
+   * Does a failsafe getAsync with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy retryPolicy, Callable<T> callable) throws ExecutionException, InterruptedException {
+  <T> T failsafeGet(RetryPolicy retryPolicy, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(retryPolicy).get(callable)
-        : (T) Failsafe.with(retryPolicy).with(executor).get(callable).get());
+        : (T) Failsafe.with(retryPolicy).with(executor).getAsync(callable).get());
   }
 
   /**
-   * Does a failsafe get with an optional executor.
+   * Does a failsafe getAsync with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker circuitBreaker, Callable<T> callable)
-      throws ExecutionException, InterruptedException {
+  <T> T failsafeGet(CircuitBreaker circuitBreaker, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(circuitBreaker).get(callable)
-        : (T) Failsafe.with(circuitBreaker).with(executor).get(callable).get());
+        : (T) Failsafe.with(circuitBreaker).with(executor).getAsync(callable).get());
   }
 
   /**
-   * Does a failsafe run with an optional executor.
+   * Does a failsafe runAsync with an optional executor.
    */
-  void failsafeRun(CircuitBreaker breaker, CheckedRunnable runnable) throws ExecutionException, InterruptedException {
+  void failsafeRun(CircuitBreaker breaker, CheckedRunnable runnable) {
     ScheduledExecutorService executor = getExecutor();
     if (executor == null)
       Failsafe.with(breaker).run(runnable);
     else
-      Failsafe.with(breaker).with(executor).run(runnable);
+      Failsafe.with(breaker).with(executor).runAsync(runnable);
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker breaker, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable)
-      throws ExecutionException, InterruptedException {
+  <T> T failsafeGet(CircuitBreaker breaker, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(breaker).withFallback(fallback).get(callable)
-        : (T) Failsafe.with(breaker).with(executor).withFallback(fallback).get(callable).get());
+        : (T) Failsafe.with(breaker).with(executor).withFallback(fallback).getAsync(callable).get());
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable)
-      throws ExecutionException, InterruptedException {
+  <T> T failsafeGet(RetryPolicy retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(retryPolicy).withFallback(fallback).get(callable)
-        : (T) Failsafe.with(retryPolicy).with(executor).withFallback(fallback).get(callable).get());
+        : (T) Failsafe.with(retryPolicy).with(executor).withFallback(fallback).getAsync(callable).get());
   }
 
   /**
    * Asserts that retries are not attempted after a successful execution.
    */
-  public void shouldSucceedWithoutRetries() throws Throwable {
+  public void shouldSucceedWithoutRetries() {
     // Given retries not allowed
     reset(service);
     when(service.connect()).thenReturn(false);
@@ -127,7 +124,7 @@ public abstract class AbstractFailsafeTest {
    * Asserts that retries are performed then a non-retryable failure is thrown.
    */
   @SuppressWarnings("unchecked")
-  public void shouldThrowOnNonRetriableFailure() throws Throwable {
+  public void shouldThrowOnNonRetriableFailure() {
     // Given
     when(service.connect()).thenThrow(ConnectException.class, ConnectException.class, IllegalStateException.class);
     RetryPolicy retryPolicy = new RetryPolicy().handle(ConnectException.class);
@@ -160,7 +157,7 @@ public abstract class AbstractFailsafeTest {
   /**
    * Asserts that fallback works as expected after retries.
    */
-  public void shouldFallbackAfterFailureWithRetries() throws Throwable {
+  public void shouldFallbackAfterFailureWithRetries() {
     // Given
     RetryPolicy retryPolicy = new RetryPolicy().withMaxRetries(2);
     Exception failure = new ConnectException();
@@ -191,7 +188,7 @@ public abstract class AbstractFailsafeTest {
   /**
    * Asserts that fallback works after a failure with a breaker configured.
    */
-  public void shouldFallbackAfterFailureWithCircuitBreaker() throws Throwable {
+  public void shouldFallbackAfterFailureWithCircuitBreaker() {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
     Exception failure = new ConnectException();
@@ -223,7 +220,7 @@ public abstract class AbstractFailsafeTest {
   /**
    * Asserts that fallback works when a circuit breaker is open.
    */
-  public void shouldFallbackWhenCircuitBreakerIsOpen() throws Throwable {
+  public void shouldFallbackWhenCircuitBreakerIsOpen() {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
     breaker.open();

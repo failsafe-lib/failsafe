@@ -37,7 +37,7 @@ public class Issue76Test {
           waiter.assertEquals(e, error);
           waiter.resume();
         })
-        .run(() -> {
+        .runAsync(() -> {
           throw error;
         });
     waiter.await(1000);

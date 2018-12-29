@@ -42,7 +42,7 @@ public class Issue5Test {
       waiter.assertNull(result);
       waiter.assertNull(failure);
       waiter.resume();
-    }).get(() -> null);
+    }).getAsync(() -> null);
 
     waiter.await(1000);
   }

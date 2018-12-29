@@ -33,14 +33,14 @@ public class Issue52Test {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     Future<String> proxyFuture = Failsafe.with(new RetryPolicy().withDelay(10, TimeUnit.MILLISECONDS))
         .with(scheduler)
-        .get(exec -> {
+        .getAsync(exec -> {
           throw new IllegalStateException();
         });
 
     Thread.sleep(100);
     proxyFuture.cancel(true);
 
-    proxyFuture.get(); // should throw CancellationException per .get() javadoc.
+    proxyFuture.get(); // should throw CancellationException per .getAsync() javadoc.
   }
 
   public void shouldCancelExecutionViaCompletableFuture() throws Throwable {

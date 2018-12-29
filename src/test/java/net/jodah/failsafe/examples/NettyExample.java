@@ -39,7 +39,7 @@ public class NettyExample {
     Bootstrap bootstrap = createBootstrap(group);
     RetryPolicy retryPolicy = new RetryPolicy().withDelay(1, TimeUnit.SECONDS);
 
-    Failsafe.with(retryPolicy).with(group).runAsync(
+    Failsafe.with(retryPolicy).with(group).runAsyncExecution(
         execution -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
           if (channelFuture.isSuccess()) {
             System.out.println("Connected!");

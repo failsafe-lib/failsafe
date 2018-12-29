@@ -77,7 +77,7 @@ public class VertxExample {
     // Retryable sender
     Failsafe.with(retryPolicy.copy().withDelay(1, TimeUnit.SECONDS))
         .with(scheduler)
-        .runAsync(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
+        .runAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
           if (reply.succeeded())
             System.out.println("Received reply " + reply.result().body());
           else if (!execution.retryOn(reply.cause()))

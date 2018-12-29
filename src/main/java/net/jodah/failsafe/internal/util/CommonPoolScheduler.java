@@ -27,6 +27,7 @@ import java.util.concurrent.*;
  * @author Ben Manes
  */
 public final class CommonPoolScheduler implements Scheduler {
+  public static final CommonPoolScheduler INSTANCE = new CommonPoolScheduler();
   private static final ExecutorService commonPool = ForkJoinPool.commonPool();
   private static volatile ScheduledExecutorService delayer;
 

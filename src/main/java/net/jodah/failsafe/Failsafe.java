@@ -26,38 +26,38 @@ import java.util.Arrays;
  */
 public class Failsafe {
   /**
-   * Creates and returns a new {@link SyncFailsafe} instance that will perform executions and retries synchronously
-   * according to the {@code retryPolicy}.
+   * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
+   * the {@code retryPolicy}.
    *
    * @param <T> result type
    * @throws NullPointerException if {@code retryPolicy} is null
    */
-  public static <T> SyncFailsafe<T> with(RetryPolicy retryPolicy) {
-    return new SyncFailsafe<>(Assert.notNull(retryPolicy, "retryPolicy"));
+  public static <T> FailsafeExecutor<T> with(RetryPolicy retryPolicy) {
+    return new FailsafeExecutor<>(Assert.notNull(retryPolicy, "retryPolicy"));
   }
 
   /**
-   * Creates and returns a new {@link SyncFailsafe} instance that will perform executions and retries synchronously
-   * according to the {@code circuitBreaker}.
+   * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
+   * the {@code circuitBreaker}.
    *
    * @param <T> result type
    * @throws NullPointerException if {@code circuitBreaker} is null
    */
-  public static <T> SyncFailsafe<T> with(CircuitBreaker circuitBreaker) {
-    return new SyncFailsafe<>(Assert.notNull(circuitBreaker, "circuitBreaker"));
+  public static <T> FailsafeExecutor<T> with(CircuitBreaker circuitBreaker) {
+    return new FailsafeExecutor<>(Assert.notNull(circuitBreaker, "circuitBreaker"));
   }
 
   /**
-   * Creates and returns a new {@link SyncFailsafe} instance that will perform executions and retries synchronously
-   * according to the {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
+   * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
+   * the {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
    *
    * @param <T> result type
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
-  public static <T> SyncFailsafe<T> with(Policy... policies) {
+  public static <T> FailsafeExecutor<T> with(Policy... policies) {
     Assert.notNull(policies, "policies");
     Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
-    return new SyncFailsafe<>(Arrays.asList(policies));
+    return new FailsafeExecutor<>(Arrays.asList(policies));
   }
 }

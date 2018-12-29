@@ -298,7 +298,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     }), FailsafeException.class, TimeoutException.class);
   }
 
-  private void run(SyncFailsafe<?> failsafe, Object runnable) {
+  private void run(FailsafeExecutor<?> failsafe, Object runnable) {
     if (runnable instanceof CheckedRunnable)
       failsafe.run((CheckedRunnable) runnable);
     else if (runnable instanceof ContextualRunnable)
@@ -306,7 +306,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T get(SyncFailsafe<?> failsafe, Object callable) {
+  private <T> T get(FailsafeExecutor<?> failsafe, Object callable) {
     if (callable instanceof Callable)
       return (T) failsafe.get((Callable<T>) callable);
     else

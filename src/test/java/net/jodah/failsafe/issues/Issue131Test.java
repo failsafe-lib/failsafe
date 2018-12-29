@@ -42,9 +42,9 @@ public class Issue131Test {
   @Test(expectedExceptions = FailsafeException.class)
   public void syncShouldThrowTheUnderlyingIOException() {
     CircuitBreaker circuitBreaker = new CircuitBreaker().handleResultIf(handleIfEqualsIgnoreCaseFoo);
-    SyncFailsafe<String> failsafe = Failsafe.<String>with(circuitBreaker);
+    FailsafeExecutor<String> failsafe = Failsafe.<String>with(circuitBreaker);
 
-    // I expect this get() to throw IOException, not NPE.
+    // I expect this getAsync() to throw IOException, not NPE.
     failsafe.get((Callable<String>) () -> {
       throw new IOException("let's blame it on network error");
     });
@@ -57,7 +57,7 @@ public class Issue131Test {
    */
   public void asyncShouldCompleteTheFuture() throws Throwable {
     CircuitBreaker circuitBreaker = new CircuitBreaker().handleResultIf(handleIfEqualsIgnoreCaseFoo);
-    AsyncFailsafe<String> failsafe = Failsafe.<String>with(circuitBreaker).with(Executors.newSingleThreadScheduledExecutor());
+    FailsafeExecutor<String> failsafe = Failsafe.<String>with(circuitBreaker).with(Executors.newSingleThreadScheduledExecutor());
 
     Waiter waiter = new Waiter();
 

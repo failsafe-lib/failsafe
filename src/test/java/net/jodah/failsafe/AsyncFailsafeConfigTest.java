@@ -62,7 +62,7 @@ public class AsyncFailsafeConfigTest {
     executor.awaitTermination(5, TimeUnit.SECONDS);
   }
 
-  <T> AsyncFailsafe<T> registerListeners(AsyncFailsafe<T> failsafe) {
+  <T> FailsafeExecutor<T> registerListeners(FailsafeExecutor<T> failsafe) {
     failsafe.onAbortAsync(e -> abort.async(1));
     failsafe.onAbortAsync((r, e) -> abort.async(2));
     failsafe.onAbortAsync((r, e, c) -> abort.async(3));
@@ -109,7 +109,7 @@ public class AsyncFailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().handleResult(false);
 
     // When
-    registerListeners(Failsafe.with(retryPolicy).with(executor)).get(callable);
+    registerListeners(Failsafe.with(retryPolicy).with(executor)).getAsync(callable);
 
     // Then
     abort.assertEquals(0);
@@ -133,7 +133,7 @@ public class AsyncFailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().handle(IllegalStateException.class).withMaxRetries(10);
 
     // When
-    registerListeners(Failsafe.with(retryPolicy).with(executor)).get(callable);
+    registerListeners(Failsafe.with(retryPolicy).with(executor)).getAsync(callable);
 
     // Then
     abort.assertEquals(0);
@@ -156,7 +156,7 @@ public class AsyncFailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().handleResult(false).withMaxRetries(3);
 
     // When
-    registerListeners(Failsafe.with(retryPolicy).with(executor)).get(callable);
+    registerListeners(Failsafe.with(retryPolicy).with(executor)).getAsync(callable);
 
     // Then
     abort.assertEquals(0);
@@ -180,7 +180,7 @@ public class AsyncFailsafeConfigTest {
     RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy).with(executor)).get(callable).get(),
+    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy).with(executor)).getAsync(callable).get(),
         ExecutionException.class, IllegalArgumentException.class);
 
     // Then

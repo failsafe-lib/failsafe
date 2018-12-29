@@ -32,7 +32,7 @@ public class Issue55Test {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     AtomicInteger counter = new AtomicInteger();
-    Failsafe.with(new RetryPolicy()).with(executor).withFallback(() -> counter.incrementAndGet()).get(() -> null);
+    Failsafe.with(new RetryPolicy()).with(executor).withFallback(() -> counter.incrementAndGet()).getAsync(() -> null);
 
     Thread.sleep(100);
     assertEquals(counter.get(), 0);
@@ -40,7 +40,7 @@ public class Issue55Test {
     Failsafe.with(new RetryPolicy().withMaxRetries(1))
         .with(executor)
         .withFallback(() -> counter.incrementAndGet())
-        .run(() -> {
+        .runAsync(() -> {
           throw new RuntimeException();
         });
 

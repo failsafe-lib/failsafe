@@ -236,7 +236,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   public void shouldCancelFuture() {
     Future<?> future = Failsafe.with(retryAlways)
         .with(executor)
-        .run(() -> ignoreExceptions(() -> Thread.sleep(10000)));
+        .runAsync(() -> ignoreExceptions(() -> Thread.sleep(10000)));
     future.cancel(true);
     assertTrue(future.isCancelled());
   }
@@ -246,7 +246,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       waiter.assertTrue(result);
       waiter.assertNull(failure);
       waiter.resume();
-    }).getAsync(exec -> {
+    }).getAsyncExecution(exec -> {
       if (exec.getExecutions() < 2)
         exec.retryOn(new ConnectException());
       else
@@ -278,7 +278,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
    */
   public void shouldCompleteAsync() throws Throwable {
     Waiter waiter = new Waiter();
-    Failsafe.with(retryAlways).with(executor).runAsync(exec -> executor.schedule(() -> {
+    Failsafe.with(retryAlways).with(executor).runAsyncExecution(exec -> executor.schedule(() -> {
       try {
         exec.complete();
         waiter.resume();
@@ -296,7 +296,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertTrue(breaker.isClosed());
 
     // When
-    Failsafe.with(breaker).with(executor).runAsync(exec -> {
+    Failsafe.with(breaker).with(executor).runAsyncExecution(exec -> {
       Thread.sleep(20);
       exec.complete();
       waiter.resume();
@@ -314,7 +314,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     AtomicBoolean executed = new AtomicBoolean();
 
     // When
-    Future future = Failsafe.with(breaker).with(executor).run(() -> executed.set(true));
+    Future future = Failsafe.with(breaker).with(executor).runAsync(() -> executed.set(true));
 
     // Then
     assertFalse(executed.get());
@@ -336,7 +336,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         .with(new RetryPolicy())
         .withFallback(false)
         .with(executor)
-        .run(() -> waiter.fail("Should not execute callable since executor has been shutdown"));
+        .runAsync(() -> waiter.fail("Should not execute callable since executor has been shutdown"));
 
     assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
   }
@@ -352,7 +352,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When
     Future future = Failsafe.with(new RetryPolicy().handleResult(null).handle(Exception.class))
         .with(executor)
-        .get(() -> {
+        .getAsync(() -> {
           counter.incrementAndGet();
           Thread.sleep(200);
           return null;
@@ -367,30 +367,30 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   @SuppressWarnings("unused")
   public void shouldSupportCovariance() {
     FastService fastService = mock(FastService.class);
-    Future<Service> future = Failsafe.with(new RetryPolicy()).with(executor).get(() -> fastService);
+    Future<Service> future = Failsafe.with(new RetryPolicy()).with(executor).getAsync(() -> fastService);
   }
 
-  private Future<?> run(AsyncFailsafe<?> failsafe, Object runnable) {
+  private Future<?> run(FailsafeExecutor<?> failsafe, Object runnable) {
     if (runnable instanceof CheckedRunnable)
-      return failsafe.run((CheckedRunnable) runnable);
+      return failsafe.runAsync((CheckedRunnable) runnable);
     else if (runnable instanceof ContextualRunnable)
-      return failsafe.run((ContextualRunnable) runnable);
+      return failsafe.runAsync((ContextualRunnable) runnable);
     else
-      return failsafe.runAsync((AsyncRunnable) runnable);
+      return failsafe.runAsyncExecution((AsyncRunnable) runnable);
   }
 
   @SuppressWarnings("unchecked")
-  private <T> Future<T> get(AsyncFailsafe<?> failsafe, Object callable) {
+  private <T> Future<T> get(FailsafeExecutor<?> failsafe, Object callable) {
     if (callable instanceof Callable)
-      return failsafe.get((Callable<T>) callable);
+      return failsafe.getAsync((Callable<T>) callable);
     else if (callable instanceof ContextualCallable)
-      return failsafe.get((ContextualCallable<T>) callable);
+      return failsafe.getAsync((ContextualCallable<T>) callable);
     else
-      return failsafe.getAsync((AsyncCallable<T>) callable);
+      return failsafe.getAsyncExecution((AsyncCallable<T>) callable);
   }
 
   @SuppressWarnings("unchecked")
-  private <T> CompletableFuture<T> future(AsyncFailsafe<?> failsafe, Object callable) {
+  private <T> CompletableFuture<T> future(FailsafeExecutor<?> failsafe, Object callable) {
     if (callable instanceof Callable)
       return failsafe.future((Callable<CompletableFuture<T>>) callable);
     else if (callable instanceof ContextualCallable)

@@ -28,7 +28,7 @@ public class FailsafeFutureTest {
 
   @Test(expectedExceptions = TimeoutException.class)
   public void shouldGetWithTimeout() throws Throwable {
-    Failsafe.with(new RetryPolicy()).with(executor).run(() -> {
+    Failsafe.with(new RetryPolicy()).with(executor).runAsync(() -> {
       Thread.sleep(1000);
     }).get(100, TimeUnit.MILLISECONDS);
 
@@ -41,7 +41,7 @@ public class FailsafeFutureTest {
       waiter.assertNull(r);
       waiter.assertTrue(f instanceof CancellationException);
       waiter.resume();
-    }).get(() -> {
+    }).getAsync(() -> {
       Thread.sleep(5000);
       return "test";
     });
@@ -65,7 +65,7 @@ public class FailsafeFutureTest {
       waiter.assertNull(f);
       waiter.resume();
       Thread.sleep(100);
-    }).get(() -> "test");
+    }).getAsync(() -> "test");
 
     waiter.await(1000);
     assertFalse(future.cancel(true));
