@@ -151,7 +151,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> CompletableFuture<T> futureAsync(AsyncCallable<? extends CompletionStage<T>> callable) {
+  public <T> CompletableFuture<T> futureAsyncExecution(AsyncCallable<? extends CompletionStage<T>> callable) {
     return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
   }
 

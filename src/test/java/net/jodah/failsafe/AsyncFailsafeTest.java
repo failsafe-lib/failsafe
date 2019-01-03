@@ -268,7 +268,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
 
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).futureAsync(exec -> {
+    assertThrows(() -> Failsafe.with(retryTwice).with(executor).futureAsyncExecution(exec -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
   }
@@ -396,6 +396,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     else if (callable instanceof ContextualCallable)
       return failsafe.future((ContextualCallable<CompletableFuture<T>>) callable);
     else
-      return failsafe.futureAsync((AsyncCallable<CompletableFuture<T>>) callable);
+      return failsafe.futureAsyncExecution((AsyncCallable<CompletableFuture<T>>) callable);
   }
 }
