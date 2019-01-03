@@ -54,24 +54,6 @@ public class FailsafeConfigTest {
       invocations.computeIfAbsent(listener, l -> new AtomicInteger()).incrementAndGet();
     }
 
-    /** Records a sync invocation of the {@code listener} and asserts the {@code context}'s execution count. */
-    void sync(Object listener, ExecutionContext context) {
-      waiter.assertEquals(context.getExecutions(),
-          invocations.computeIfAbsent(listener, l -> new AtomicInteger()).incrementAndGet());
-    }
-
-    /** Records an async invocation of the {@code listener}. */
-    synchronized void async(Object listener) {
-      sync(listener);
-      waiter.resume();
-    }
-
-    /** Records an async invocation of the {@code listener} and asserts the {@code context}'s execution count. */
-    synchronized void async(Object listener, ExecutionContext context) {
-      sync(listener, context);
-      waiter.resume();
-    }
-
     /** Waits for the expected async invocations and asserts the expected {@code expectedInvocations}. */
     void assertEquals(int expectedInvocations) throws Throwable {
       if (expectedInvocations > 0 && asyncListeners > 0)
@@ -109,37 +91,12 @@ public class FailsafeConfigTest {
 
   <T> FailsafeExecutor<T> registerListeners(FailsafeExecutor<T> failsafe) {
     failsafe.onAbort(e -> abort.sync(1));
-    failsafe.onAbort((r, e) -> abort.sync(2));
-    failsafe.onAbort((r, e, c) -> abort.sync(3));
-    abort.asyncListeners = 0;
-
-    failsafe.onComplete((r, f) -> complete.sync(1));
-    failsafe.onComplete((r, f, s) -> complete.sync(2));
-    complete.asyncListeners = 0;
-
+    failsafe.onComplete(e -> complete.sync(1));
     failsafe.onFailedAttempt(e -> failedAttempt.sync(1));
-    failsafe.onFailedAttempt((r, f) -> failedAttempt.sync(2));
-    failsafe.onFailedAttempt((r, f, c) -> failedAttempt.sync(3, c));
-    failedAttempt.asyncListeners = 0;
-
     failsafe.onFailure(e -> failure.sync(1));
-    failsafe.onFailure((r, f) -> failure.sync(2));
-    failsafe.onFailure((r, f, s) -> failure.sync(3));
-    failure.asyncListeners = 0;
-
     failsafe.onRetriesExceeded(e -> retriesExceeded.sync(1));
-    failsafe.onRetriesExceeded((r, f) -> retriesExceeded.sync(2));
-    retriesExceeded.asyncListeners = 0;
-
     failsafe.onRetry(e -> retry.sync(1));
-    failsafe.onRetry((r, f) -> retry.sync(2));
-    failsafe.onRetry((r, f, s) -> retry.sync(3, s));
-    retry.asyncListeners = 0;
-
-    failsafe.onSuccess((r) -> success.sync(1));
-    failsafe.onSuccess((r, s) -> success.sync(2));
-    success.asyncListeners = 0;
-
+    failsafe.onSuccess(e -> success.sync(1));
     return failsafe;
   }
 

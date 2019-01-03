@@ -1,18 +1,17 @@
 package net.jodah.failsafe.issues;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
+import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.FailsafeException;
+import net.jodah.failsafe.RetryPolicy;
+import org.testng.annotations.Test;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.testng.annotations.Test;
-
-import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.FailsafeException;
-import net.jodah.failsafe.RetryPolicy;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 @Test
 public class Issue76Test {
@@ -34,7 +33,7 @@ public class Issue76Test {
     Future<?> future = Failsafe.with(new RetryPolicy().abortOn(AssertionError.class))
         .with(Executors.newSingleThreadScheduledExecutor())
         .onAbort(e -> {
-          waiter.assertEquals(e, error);
+          waiter.assertEquals(e.failure, error);
           waiter.resume();
         })
         .runAsync(() -> {

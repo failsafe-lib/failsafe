@@ -47,7 +47,7 @@ public class Issue36Test {
   public void test() {
     try {
       Failsafe.with(retryPolicy)
-          .onFailedAttempt((r, f, c) -> failedAttempts.incrementAndGet())
+          .onFailedAttempt(e -> failedAttempts.incrementAndGet())
           .onRetry(e -> retries.incrementAndGet())
           .get(() -> {
             calls.incrementAndGet();
@@ -74,7 +74,7 @@ public class Issue36Test {
         .withMaxRetries(3);
     AtomicInteger listenerCallbacks = new AtomicInteger();
     Failsafe.<Boolean>with(policy)
-        .onFailedAttempt((failedResponse, exception, context) -> listenerCallbacks.incrementAndGet())
+        .onFailedAttempt(e -> listenerCallbacks.incrementAndGet())
         .get(() -> false);
     assertEquals(listenerCallbacks.get(), 4);
   }
@@ -86,7 +86,7 @@ public class Issue36Test {
         .withMaxRetries(3);
     AtomicInteger listenerCallbacks = new AtomicInteger();
     Failsafe.<Boolean>with(policy)
-        .onRetry((failedResponse, exception, context) -> listenerCallbacks.incrementAndGet())
+        .onRetry(e -> listenerCallbacks.incrementAndGet())
         .get(() -> false);
     assertEquals(listenerCallbacks.get(), 3);
   }
@@ -99,7 +99,7 @@ public class Issue36Test {
     AtomicInteger listenerCallbacks = new AtomicInteger();
     try {
       Failsafe.<Boolean>with(policy)
-          .onFailedAttempt((failedResponse, exception, context) -> listenerCallbacks.incrementAndGet())
+          .onFailedAttempt(e -> listenerCallbacks.incrementAndGet())
           .get(() -> {
             throw new RuntimeException();
           });
@@ -116,7 +116,7 @@ public class Issue36Test {
     AtomicInteger listenerCallbacks = new AtomicInteger();
     try {
       Failsafe.<Boolean>with(policy)
-          .onRetry((failedResponse, exception, context) -> listenerCallbacks.incrementAndGet())
+          .onRetry(e -> listenerCallbacks.incrementAndGet())
           .get(() -> {
             throw new RuntimeException();
           });

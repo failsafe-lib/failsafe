@@ -15,15 +15,14 @@
  */
 package net.jodah.failsafe.issues;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.testng.annotations.Test;
-
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.testng.annotations.Test;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Test
 public class Issue5Test {
@@ -38,9 +37,9 @@ public class Issue5Test {
         .handleResult(null);
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    Failsafe.with(retryPolicy).with(executor).onFailure((result, failure) -> {
-      waiter.assertNull(result);
-      waiter.assertNull(failure);
+    Failsafe.with(retryPolicy).with(executor).onFailure(e -> {
+      waiter.assertNull(e.result);
+      waiter.assertNull(e.failure);
       waiter.resume();
     }).getAsync(() -> null);
 

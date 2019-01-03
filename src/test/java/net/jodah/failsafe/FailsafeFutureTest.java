@@ -37,9 +37,9 @@ public class FailsafeFutureTest {
 
   public void shouldCompleteFutureOnCancel() throws Throwable {
     Waiter waiter = new Waiter();
-    Future<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete((r, f) -> {
-      waiter.assertNull(r);
-      waiter.assertTrue(f instanceof CancellationException);
+    Future<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete(e -> {
+      waiter.assertNull(e.result);
+      waiter.assertTrue(e.failure instanceof CancellationException);
       waiter.resume();
     }).getAsync(() -> {
       Thread.sleep(5000);
@@ -60,9 +60,9 @@ public class FailsafeFutureTest {
    */
   public void shouldNotCancelCompletedExecution() throws Throwable {
     Waiter waiter = new Waiter();
-    Future<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete((r, f) -> {
-      waiter.assertEquals("test", r);
-      waiter.assertNull(f);
+    Future<String> future = Failsafe.with(new RetryPolicy()).with(executor).onComplete(e -> {
+      waiter.assertEquals("test", e.result);
+      waiter.assertNull(e.failure);
       waiter.resume();
       Thread.sleep(100);
     }).getAsync(() -> "test");

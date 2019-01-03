@@ -231,9 +231,9 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenReturn(false);
     RetryPolicy retryPolicy = new RetryPolicy().handleResult(false).withMaxDuration(100, TimeUnit.MILLISECONDS);
 
-    assertEquals(Failsafe.with(retryPolicy).onFailure((r, f) -> {
-      assertEquals(r, Boolean.FALSE);
-      assertNull(f);
+    assertEquals(Failsafe.with(retryPolicy).onFailure(e -> {
+      assertEquals(e.result, Boolean.FALSE);
+      assertNull(e.failure);
     }).get(() -> {
       Testing.sleep(120);
       return service.connect();
@@ -308,8 +308,8 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   @SuppressWarnings("unchecked")
   private <T> T get(FailsafeExecutor<?> failsafe, Object callable) {
     if (callable instanceof Callable)
-      return (T) failsafe.get((Callable<T>) callable);
+      return failsafe.get((Callable<T>) callable);
     else
-      return (T) failsafe.get((ContextualCallable<T>) callable);
+      return failsafe.get((ContextualCallable<T>) callable);
   }
 }

@@ -21,7 +21,8 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.concurrent.Callable;
 
 /**
- * Tracks asynchronous executions and allows retries to be scheduled according to a {@link RetryPolicy}.
+ * Tracks asynchronous executions and allows retries to be scheduled according to a {@link RetryPolicy}. May be
+ * explicitly completed or made to retry.
  *
  * @author Jonathan Halterman
  */

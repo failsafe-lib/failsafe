@@ -57,9 +57,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(true);
 
     // When / Then
-    Future<?> future = run(Failsafe.with(retryAlways).with(executor).onComplete((result, failure) -> {
-      waiter.assertNull(result);
-      waiter.assertNull(failure);
+    Future<?> future = run(Failsafe.with(retryAlways).with(executor).onComplete(e -> {
+      waiter.assertNull(e.result);
+      waiter.assertNull(e.failure);
       waiter.resume();
     }), runnable);
     assertNull(future.get());
@@ -72,9 +72,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When
-    Future<?> future2 = run(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
-      waiter.assertNull(result);
-      waiter.assertTrue(failure instanceof ConnectException);
+    Future<?> future2 = run(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
+      waiter.assertNull(e.result);
+      waiter.assertTrue(e.failure instanceof ConnectException);
       waiter.resume();
     }), runnable);
 
@@ -117,9 +117,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<Boolean> future = get(
-        Failsafe.<Boolean>with(retryPolicy).with(executor).onComplete((result, failure) -> {
-          waiter.assertTrue(result);
-          waiter.assertNull(failure);
+        Failsafe.<Boolean>with(retryPolicy).with(executor).onComplete(e -> {
+          waiter.assertTrue(e.result);
+          waiter.assertNull(e.failure);
           waiter.resume();
         }), callable);
     assertTrue(future.get());
@@ -132,9 +132,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When / Then
-    Future<Boolean> future2 = get(Failsafe.with(retryTwice).with(executor).onComplete((result, failure) -> {
-      waiter.assertNull(result);
-      waiter.assertTrue(failure instanceof ConnectException);
+    Future<Boolean> future2 = get(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
+      waiter.assertNull(e.result);
+      waiter.assertTrue(e.failure instanceof ConnectException);
       waiter.resume();
     }), callable);
     assertThrows(future2::get, futureAsyncThrowables);
@@ -242,9 +242,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldManuallyRetryAndComplete() throws Throwable {
-    Failsafe.<Boolean>with(retryAlways).with(executor).onComplete((result, failure) -> {
-      waiter.assertTrue(result);
-      waiter.assertNull(failure);
+    Failsafe.<Boolean>with(retryAlways).with(executor).onComplete(e -> {
+      waiter.assertTrue(e.result);
+      waiter.assertNull(e.failure);
       waiter.resume();
     }).getAsyncExecution(exec -> {
       if (exec.getExecutions() < 2)
