@@ -25,8 +25,8 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Utilities for creating listeners.
@@ -132,8 +132,8 @@ final class Listeners {
 
   @SuppressWarnings("unchecked")
   static <T> ContextualResultListener<T, Throwable> of(
-      final ContextualResultListener<? extends T, ? extends Throwable> listener, final ExecutorService executor,
-      final Scheduler scheduler) {
+      ContextualResultListener<? extends T, ? extends Throwable> listener, Supplier<Scheduler> schedulerSupplier) {
+    Assert.notNull(schedulerSupplier, "schedulerSupplier");
     return (result, failure, context) -> {
       Callable<T> callable = () -> {
         ((ContextualResultListener<T, Throwable>) listener).onResult(result, failure, context);
@@ -141,37 +141,32 @@ final class Listeners {
       };
 
       try {
-        if (executor != null)
-          executor.submit(callable);
-        else
-          scheduler.schedule(callable, 0, TimeUnit.MILLISECONDS);
+        schedulerSupplier.get().schedule(callable, 0, TimeUnit.MILLISECONDS);
       } catch (Exception ignore) {
       }
     };
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(final CheckedConsumer<? extends Throwable> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(CheckedConsumer<? extends Throwable> listener) {
     Assert.notNull(listener, "listener");
     return (result, failure, context) -> ((CheckedConsumer<Throwable>) listener).accept(failure);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> of(
-      final CheckedBiConsumer<? extends T, ? extends Throwable> listener) {
+  static <T> ContextualResultListener<T, Throwable> of(CheckedBiConsumer<? extends T, ? extends Throwable> listener) {
     Assert.notNull(listener, "listener");
     return (result, failure, context) -> ((CheckedBiConsumer<T, Throwable>) listener).accept(result, failure);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> ofResult(final CheckedConsumer<? extends T> listener) {
+  static <T> ContextualResultListener<T, Throwable> ofResult(CheckedConsumer<? extends T> listener) {
     Assert.notNull(listener, "listener");
     return (result, failure, context) -> ((CheckedConsumer<T>) listener).accept(result);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> ContextualResultListener<T, Throwable> ofResult(
-      final CheckedBiConsumer<? extends T, ExecutionContext> listener) {
+  static <T> ContextualResultListener<T, Throwable> ofResult(CheckedBiConsumer<? extends T, ExecutionContext> listener) {
     Assert.notNull(listener, "listener");
     return (result, failure, context) -> ((CheckedBiConsumer<T, ExecutionContext>) listener).accept(result, context);
   }

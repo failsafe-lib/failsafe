@@ -74,7 +74,7 @@ public class FailsafeConfigTest {
 
     /** Waits for the expected async invocations and asserts the expected {@code expectedInvocations}. */
     void assertEquals(int expectedInvocations) throws Throwable {
-      if (expectedInvocations > 0)
+      if (expectedInvocations > 0 && asyncListeners > 0)
         waiter.await(1000, asyncListeners * expectedInvocations);
       if (invocations.isEmpty())
         Assert.assertEquals(expectedInvocations, 0);
@@ -111,52 +111,34 @@ public class FailsafeConfigTest {
     failsafe.onAbort(e -> abort.sync(1));
     failsafe.onAbort((r, e) -> abort.sync(2));
     failsafe.onAbort((r, e, c) -> abort.sync(3));
-    failsafe.onAbortAsync(e -> abort.async(4), executor);
-    failsafe.onAbortAsync((r, e) -> abort.async(5), executor);
-    failsafe.onAbortAsync((r, e, c) -> abort.async(6), executor);
-    abort.asyncListeners = 3;
+    abort.asyncListeners = 0;
 
     failsafe.onComplete((r, f) -> complete.sync(1));
     failsafe.onComplete((r, f, s) -> complete.sync(2));
-    failsafe.onCompleteAsync((r, f) -> complete.async(3), executor);
-    failsafe.onCompleteAsync((r, f, c) -> complete.async(4), executor);
-    complete.asyncListeners = 2;
+    complete.asyncListeners = 0;
 
     failsafe.onFailedAttempt(e -> failedAttempt.sync(1));
     failsafe.onFailedAttempt((r, f) -> failedAttempt.sync(2));
     failsafe.onFailedAttempt((r, f, c) -> failedAttempt.sync(3, c));
-    failsafe.onFailedAttemptAsync(e -> failedAttempt.async(4), executor);
-    failsafe.onFailedAttemptAsync((r, f) -> failedAttempt.async(5), executor);
-    failsafe.onFailedAttemptAsync((r, f, c) -> failedAttempt.async(6, c), executor);
-    failedAttempt.asyncListeners = 3;
+    failedAttempt.asyncListeners = 0;
 
     failsafe.onFailure(e -> failure.sync(1));
     failsafe.onFailure((r, f) -> failure.sync(2));
     failsafe.onFailure((r, f, s) -> failure.sync(3));
-    failsafe.onFailureAsync(e -> failure.async(4), executor);
-    failsafe.onFailureAsync((r, f) -> failure.async(5), executor);
-    failsafe.onFailureAsync((r, f, s) -> failure.async(6), executor);
-    failure.asyncListeners = 3;
+    failure.asyncListeners = 0;
 
     failsafe.onRetriesExceeded(e -> retriesExceeded.sync(1));
     failsafe.onRetriesExceeded((r, f) -> retriesExceeded.sync(2));
-    failsafe.onRetriesExceededAsync(e -> retriesExceeded.async(3), executor);
-    failsafe.onRetriesExceededAsync((r, f) -> retriesExceeded.async(4), executor);
-    retriesExceeded.asyncListeners = 2;
+    retriesExceeded.asyncListeners = 0;
 
     failsafe.onRetry(e -> retry.sync(1));
     failsafe.onRetry((r, f) -> retry.sync(2));
     failsafe.onRetry((r, f, s) -> retry.sync(3, s));
-    failsafe.onRetryAsync(e -> retry.async(4), executor);
-    failsafe.onRetryAsync((r, f) -> retry.async(5), executor);
-    failsafe.onRetryAsync((r, f, s) -> retry.async(6), executor);
-    retry.asyncListeners = 3;
+    retry.asyncListeners = 0;
 
     failsafe.onSuccess((r) -> success.sync(1));
     failsafe.onSuccess((r, s) -> success.sync(2));
-    failsafe.onSuccessAsync((r) -> success.async(3), executor);
-    failsafe.onSuccessAsync((r, s) -> success.async(4), executor);
-    success.asyncListeners = 2;
+    success.asyncListeners = 0;
 
     return failsafe;
   }

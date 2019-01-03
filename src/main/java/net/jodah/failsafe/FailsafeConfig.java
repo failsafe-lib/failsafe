@@ -25,8 +25,8 @@ import net.jodah.failsafe.util.concurrent.Schedulers;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 
 /**
  * Failsafe configuration.
@@ -38,6 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @SuppressWarnings({ "WeakerAccess", "UnusedReturnValue", "unchecked" })
 public class FailsafeConfig<S, R> {
   Scheduler scheduler = CommonPoolScheduler.INSTANCE;
+  Supplier<Scheduler> schedulerSupplier = () -> scheduler;
   RetryPolicy retryPolicy = RetryPolicy.NEVER;
   CircuitBreaker circuitBreaker;
   Fallback fallback;
@@ -78,59 +79,35 @@ public class FailsafeConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
-   * execution is aborted according to the retry policy.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured Scheduler when an execution is
+   * aborted according to a retry policy.
    *
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public S onAbortAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    listeners.abort().add(Listeners.of(listener, null, scheduler));
+    listeners.abort().add(Listeners.of(listener, schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
-   * execution is aborted according to the retry policy.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured Scheduler when an execution is
+   * aborted according to a retry policy.
    *
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public S onAbortAsync(CheckedConsumer<? extends Throwable> listener) {
-    listeners.abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.abort().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
-   * execution is aborted according to the retry policy.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured Scheduler when an execution is
+   * aborted according to a retry policy.
    *
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public S onAbortAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    listeners.abort().add(Listeners.of(Listeners.of(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
-   */
-  public S onAbortAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    listeners.abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
-   */
-  public S onAbortAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    listeners.abort().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is aborted.
-   */
-  public S onAbortAsync(ContextualResultListener<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    listeners.abort().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.abort().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -155,7 +132,7 @@ public class FailsafeConfig<S, R> {
    * execution is completed.
    */
   public S onCompleteAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    listeners.complete().add(Listeners.of(listener, null, scheduler));
+    listeners.complete().add(Listeners.of(listener, schedulerSupplier));
     return (S) this;
   }
 
@@ -164,24 +141,7 @@ public class FailsafeConfig<S, R> {
    * execution is completed.
    */
   public S onCompleteAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    listeners.complete().add(Listeners.of(Listeners.of(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is completed.
-   */
-  public S onCompleteAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    listeners.complete().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is completed.
-   */
-  public S onCompleteAsync(ContextualResultListener<? extends R, ? extends Throwable> listener,
-      ExecutorService executor) {
-    listeners.complete().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.complete().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -214,7 +174,7 @@ public class FailsafeConfig<S, R> {
    * failed execution attempt.
    */
   public S onFailedAttemptAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    listeners.failedAttempt().add(Listeners.of(listener, null, scheduler));
+    listeners.failedAttempt().add(Listeners.of(listener, schedulerSupplier));
     return (S) this;
   }
 
@@ -223,7 +183,7 @@ public class FailsafeConfig<S, R> {
    * failed execution attempt.
    */
   public S onFailedAttemptAsync(CheckedConsumer<? extends Throwable> listener) {
-    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -232,36 +192,7 @@ public class FailsafeConfig<S, R> {
    * failed execution attempt.
    */
   public S onFailedAttemptAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution attempt
-   * fails.
-   */
-  public S onFailedAttemptAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener,
-      ExecutorService executor) {
-    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution attempt
-   * fails.
-   */
-  public S onFailedAttemptAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution attempt
-   * fails.
-   */
-  public S onFailedAttemptAsync(ContextualResultListener<? extends R, ? extends Throwable> listener,
-      ExecutorService executor) {
-    listeners.failedAttempt().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.failedAttempt().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -293,57 +224,32 @@ public class FailsafeConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler after a
-   * failure occurs that cannot be retried.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured Scheduler when an execution
+   * fails and cannot be retried. If multiple policies, are configured, this handler is called when the outer-most
+   * policy fails.
    */
   public S onFailureAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    listeners.failure().add(Listeners.of(listener, null, scheduler));
+    listeners.failure().add(Listeners.of(listener, schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler after a
-   * failure occurs that cannot be retried.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured Scheduler when an execution
+   * fails and cannot be retried. If multiple policies, are configured, this handler is called when the outer-most
+   * policy fails.
    */
   public S onFailureAsync(CheckedConsumer<? extends Throwable> listener) {
-    listeners.failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.failure().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler after a
-   * failure occurs that cannot be retried.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured Scheduler when an execution
+   * fails and cannot be retried. If multiple policies, are configured, this handler is called when the outer-most
+   * policy fails.
    */
   public S onFailureAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    listeners.failure().add(Listeners.of(Listeners.of(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and
-   * cannot be retried. If multiple policies, are configured, this handler is called when the outer-most policy fails.
-   */
-  public S onFailureAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    listeners.failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and
-   * cannot be retried. If multiple policies, are configured, this handler is called when the outer-most policy fails.
-   */
-  public S onFailureAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    listeners.failure().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and
-   * cannot be retried. If multiple policies, are configured, this handler is called when the outer-most policy fails.
-   */
-  public S onFailureAsync(ContextualResultListener<? extends R, ? extends Throwable> listener,
-      ExecutorService executor) {
-    listeners.failure().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.failure().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -368,45 +274,22 @@ public class FailsafeConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
-   * execution fails and the max retry attempts or duration are exceeded.
-   *
-   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
+   * Registers the {@code listener} to be called asynchronously when an execution fails and the {@link
+   * RetryPolicy#withMaxRetries(int) max retry attempts} or {@link RetryPolicy#withMaxDuration(long,
+   * java.util.concurrent.TimeUnit) max duration} are exceeded.
    */
   public S onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener) {
-    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
-   * execution fails and the max retry attempts or duration are exceeded.
-   *
-   * @throws IllegalStateException if a {@link RetryPolicy} is not configured
+   * Registers the {@code listener} to be called asynchronously when an execution fails and the {@link
+   * RetryPolicy#withMaxRetries(int) max retry attempts} or {@link RetryPolicy#withMaxDuration(long,
+   * java.util.concurrent.TimeUnit) max duration} are exceeded.
    */
   public S onRetriesExceededAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and the
-   * {@link RetryPolicy#withMaxRetries(int) max retry attempts} or {@link RetryPolicy#withMaxDuration(long,
-   * java.util.concurrent.TimeUnit) max duration} are exceeded.
-   */
-  public S onRetriesExceededAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener,
-      ExecutorService executor) {
-    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution fails and the
-   * {@link RetryPolicy#withMaxRetries(int) max retry attempts} or {@link RetryPolicy#withMaxDuration(long,
-   * java.util.concurrent.TimeUnit) max duration} are exceeded.
-   */
-  public S onRetriesExceededAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
+    listeners.retriesExceeded().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -435,59 +318,35 @@ public class FailsafeConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before a
-   * retry is attempted.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before an
+   * execution is retried.
    *
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public S onRetryAsync(ContextualResultListener<? extends R, ? extends Throwable> listener) {
-    listeners.retry().add(Listeners.of(listener, null, scheduler));
+    listeners.retry().add(Listeners.of(listener, schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before a
-   * retry is attempted.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before an
+   * execution is retried.
    *
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public S onRetryAsync(CheckedConsumer<? extends Throwable> listener) {
-    listeners.retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
+    listeners.retry().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before a
-   * retry is attempted.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler before an
+   * execution is retried.
    *
    * @throws IllegalStateException if a {@link RetryPolicy} is not configured
    */
   public S onRetryAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener) {
-    listeners.retry().add(Listeners.of(Listeners.of(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
-   */
-  public S onRetryAsync(CheckedBiConsumer<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    listeners.retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
-   */
-  public S onRetryAsync(CheckedConsumer<? extends Throwable> listener, ExecutorService executor) {
-    listeners.retry().add(Listeners.of(Listeners.of(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} before an execution is retried.
-   */
-  public S onRetryAsync(ContextualResultListener<? extends R, ? extends Throwable> listener, ExecutorService executor) {
-    listeners.retry().add(Listeners.of(listener, Assert.notNull(executor, "executor"), null));
+    listeners.retry().add(Listeners.of(Listeners.of(listener), schedulerSupplier));
     return (S) this;
   }
 
@@ -510,38 +369,22 @@ public class FailsafeConfig<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler after a
-   * successful execution.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
+   * execution is successful. If multiple policies, are configured, this handler is called when the outer-most policy
+   * succeeds.
    */
   public S onSuccessAsync(CheckedBiConsumer<? extends R, ExecutionContext> listener) {
-    listeners.success().add(Listeners.of(Listeners.ofResult(listener), null, scheduler));
+    listeners.success().add(Listeners.of(Listeners.ofResult(listener), schedulerSupplier));
     return (S) this;
   }
 
   /**
-   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler after a
-   * successful execution.
+   * Registers the {@code listener} to be called asynchronously on Failsafe's configured executor or Scheduler when an
+   * execution is successful. If multiple policies, are configured, this handler is called when the outer-most policy
+   * succeeds.
    */
   public S onSuccessAsync(CheckedConsumer<? extends R> listener) {
-    listeners.success().add(Listeners.of(Listeners.ofResult(listener), null, scheduler));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is successful.
-   * If multiple policies, are configured, this handler is called when the outer-most policy succeeds.
-   */
-  public S onSuccessAsync(CheckedBiConsumer<? extends R, ExecutionContext> listener, ExecutorService executor) {
-    listeners.success().add(Listeners.of(Listeners.ofResult(listener), Assert.notNull(executor, "executor"), null));
-    return (S) this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called asynchronously on the {@code executor} when an execution is successful.
-   * If multiple policies, are configured, this handler is called when the outer-most policy succeeds.
-   */
-  public S onSuccessAsync(CheckedConsumer<? extends R> listener, ExecutorService executor) {
-    listeners.success().add(Listeners.of(Listeners.ofResult(listener), Assert.notNull(executor, "executor"), null));
+    listeners.success().add(Listeners.of(Listeners.ofResult(listener), schedulerSupplier));
     return (S) this;
   }
 
