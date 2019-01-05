@@ -15,10 +15,10 @@ import static org.testng.Assert.fail;
 
 @Test
 public class Issue76Test {
-  public void shouldAbortOnSyncError() throws Exception {
+  public void shouldAbortOnSyncError() {
     AssertionError error = new AssertionError();
     try {
-      Failsafe.with(new RetryPolicy().abortOn(AssertionError.class)).run(() -> {
+      Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)).run(() -> {
         throw error;
       });
       fail();
@@ -30,12 +30,12 @@ public class Issue76Test {
   public void shouldAbortOnAsyncError() throws Exception {
     final AssertionError error = new AssertionError();
     Waiter waiter = new Waiter();
-    Future<?> future = Failsafe.with(new RetryPolicy().abortOn(AssertionError.class))
-        .with(Executors.newSingleThreadScheduledExecutor())
+    Future<?> future = Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)
         .onAbort(e -> {
           waiter.assertEquals(e.failure, error);
           waiter.resume();
-        })
+        }))
+        .with(Executors.newSingleThreadScheduledExecutor())
         .runAsync(() -> {
           throw error;
         });

@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.time.Duration;
@@ -24,7 +23,7 @@ import java.util.concurrent.Callable;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractExecution extends ExecutionContext {
-  final EventHandler eventHandler;
+  final FailsafeExecutor<Object> executor;
   Callable<Object> callable;
 
   // Internally mutable state
@@ -39,22 +38,22 @@ public abstract class AbstractExecution extends ExecutionContext {
   /**
    * Creates a new AbstractExecution for the {@code callable} and {@code config}.
    */
-  AbstractExecution(FailsafeConfig<Object, ?> config) {
+  AbstractExecution(FailsafeExecutor<Object> executor) {
     super(Duration.ofNanos(System.nanoTime()));
-    eventHandler = config.listeners;
+    this.executor = executor;
 
     PolicyExecutor next = null;
-    if (config.policies == null || config.policies.isEmpty()) {
+    if (executor.policies == null || executor.policies.isEmpty()) {
       // Add policies in logical order
-      if (config.circuitBreaker != null)
-        next = buildPolicyExecutor(config.circuitBreaker, next);
-      if (config.retryPolicy != RetryPolicy.NEVER)
-        next = buildPolicyExecutor(config.retryPolicy, next);
-      if (config.fallback != null)
-        next = buildPolicyExecutor(config.fallback, next);
+      if (executor.circuitBreaker != null)
+        next = buildPolicyExecutor(executor.circuitBreaker, next);
+      if (executor.retryPolicy != RetryPolicy.NEVER)
+        next = buildPolicyExecutor(executor.retryPolicy, next);
+      if (executor.fallback != null)
+        next = buildPolicyExecutor(executor.fallback, next);
     } else {
       // Add policies in user-defined order
-      ListIterator<Policy> policyIterator = config.policies.listIterator(config.policies.size());
+      ListIterator<Policy> policyIterator = executor.policies.listIterator(executor.policies.size());
       while (policyIterator.hasPrevious())
         next = buildPolicyExecutor(policyIterator.previous(), next);
     }
@@ -70,7 +69,6 @@ public abstract class AbstractExecution extends ExecutionContext {
   private PolicyExecutor buildPolicyExecutor(Policy policy, PolicyExecutor next) {
     PolicyExecutor policyExecutor = policy.toExecutor();
     policyExecutor.execution = this;
-    policyExecutor.eventHandler = eventHandler;
     policyExecutor.next = next;
     return policyExecutor;
   }
@@ -117,7 +115,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   ExecutionResult executeSync() {
     ExecutionResult result = head.executeSync(null);
     completed = result.completed;
-    eventHandler.handleComplete(result, this);
+    executor.handleComplete(result, this);
     return result;
   }
 

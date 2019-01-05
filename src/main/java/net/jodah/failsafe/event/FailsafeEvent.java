@@ -16,4 +16,9 @@ public class FailsafeEvent<R> {
     this.failure = failure;
     this.context = context;
   }
+
+  @Override
+  public String toString() {
+    return "FailsafeEvent[" + "result=" + result + ", failure=" + failure + ']';
+  }
 }

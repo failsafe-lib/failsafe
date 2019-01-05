@@ -15,9 +15,13 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.FailsafeEvent;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.CancellableFuture;
+import net.jodah.failsafe.internal.util.CommonPoolScheduler;
+import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.util.concurrent.Schedulers;
 
 import java.util.List;
 import java.util.concurrent.*;
@@ -30,17 +34,25 @@ import java.util.function.Function;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> {
-  FailsafeExecutor(CircuitBreaker circuitBreaker) {
+public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
+  private Scheduler scheduler = CommonPoolScheduler.INSTANCE;
+  RetryPolicy<R> retryPolicy = RetryPolicy.NEVER;
+  CircuitBreaker<R> circuitBreaker;
+  Fallback<R> fallback;
+  /** Policies sorted outer-most first */
+  List<Policy> policies;
+  private EventListener completeListener;
+
+  FailsafeExecutor(CircuitBreaker<R> circuitBreaker) {
     this.circuitBreaker = circuitBreaker;
   }
 
-  FailsafeExecutor(RetryPolicy retryPolicy) {
+  FailsafeExecutor(RetryPolicy<R> retryPolicy) {
     this.retryPolicy = retryPolicy;
   }
 
   FailsafeExecutor(List<Policy> policies) {
-    super(policies);
+    this.policies = policies;
   }
 
   /**
@@ -48,11 +60,11 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * exceeded.
    *
    * @throws NullPointerException if the {@code callable} is null
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
-   * perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
-  public <T> T get(Callable<T> callable) {
+  public <T extends R> T get(Callable<T> callable) {
     return call(execution -> Assert.notNull(callable, "callable"));
   }
 
@@ -61,11 +73,11 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * exceeded.
    *
    * @throws NullPointerException if the {@code callable} is null
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
-   * perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
-  public <T> T get(ContextualCallable<T> callable) {
+  public <T extends R> T get(ContextualCallable<T> callable) {
     return call(execution -> Functions.callableOf(callable, execution));
   }
 
@@ -79,7 +91,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> Future<T> getAsync(Callable<T> callable) {
+  public <T extends R> Future<T> getAsync(Callable<T> callable) {
     return callAsync(execution -> Functions.asyncOf(callable, execution), null);
   }
 
@@ -93,7 +105,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> Future<T> getAsync(ContextualCallable<T> callable) {
+  public <T extends R> Future<T> getAsync(ContextualCallable<T> callable) {
     return callAsync(execution -> Functions.asyncOf(callable, execution), null);
   }
 
@@ -108,8 +120,44 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> Future<T> getAsyncExecution(AsyncCallable<T> callable) {
+  public <T extends R> Future<T> getAsyncExecution(AsyncCallable<T> callable) {
     return callAsync(execution -> Functions.asyncOf(callable, execution), null);
+  }
+
+  void handleComplete(ExecutionResult result, ExecutionContext context) {
+    if (successListener != null && result.getSuccessAll())
+      successListener.handle(result, context.copy());
+    else if (failureListener != null && !result.getSuccessAll())
+      failureListener.handle(result, context.copy());
+    if (completeListener != null)
+      completeListener.handle(result, context.copy());
+  }
+
+  /**
+   * Registers the {@code listener} to be called when an execution is complete for all of the configured {@link Policy
+   * policies}.
+   */
+  public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+    completeListener = EventListener.of(Assert.notNull(listener, "listener"));
+    return this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called when an execution fails. If multiple policies, are configured, this
+   * handler is called when execution is complete and any policy fails.
+   */
+  @Override
+  public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+    return super.onFailure(listener);
+  }
+
+  /**
+   * Registers the {@code listener} to be called when an execution is successful. If multiple policies, are configured,
+   * this handler is called when execution is complete and all policies succeed.
+   */
+  @Override
+  public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+    return super.onSuccess(listener);
   }
 
   /**
@@ -122,7 +170,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> CompletableFuture<T> future(Callable<? extends CompletionStage<T>> callable) {
+  public <T extends R> CompletableFuture<T> future(Callable<? extends CompletionStage<T>> callable) {
     return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
   }
 
@@ -136,7 +184,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> CompletableFuture<T> future(ContextualCallable<? extends CompletionStage<T>> callable) {
+  public <T extends R> CompletableFuture<T> future(ContextualCallable<? extends CompletionStage<T>> callable) {
     return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
   }
 
@@ -151,7 +199,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * @throws NullPointerException if the {@code callable} is null
    * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
    */
-  public <T> CompletableFuture<T> futureAsyncExecution(AsyncCallable<? extends CompletionStage<T>> callable) {
+  public <T extends R> CompletableFuture<T> futureAsyncExecution(AsyncCallable<? extends CompletionStage<T>> callable) {
     return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
   }
 
@@ -159,8 +207,8 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
-   * perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(CheckedRunnable runnable) {
@@ -171,8 +219,8 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or if interrupted while waiting to
-   * perform a retry.
+   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or if interrupted while
+   *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(ContextualRunnable runnable) {
@@ -223,10 +271,150 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
   }
 
   /**
+   * Configures the {@code executor} to use for performing asynchronous executions and listener callbacks.
+   *
+   * @throws NullPointerException if {@code executor} is null
+   */
+  public FailsafeExecutor<R> with(ScheduledExecutorService executor) {
+    this.scheduler = Schedulers.of(executor);
+    return this;
+  }
+
+  /**
+   * Configures the {@code scheduler} to use for performing asynchronous executions and listener callbacks.
+   *
+   * @throws NullPointerException if {@code scheduler} is null
+   */
+  public FailsafeExecutor<R> with(Scheduler scheduler) {
+    this.scheduler = Assert.notNull(scheduler, "scheduler");
+    return this;
+  }
+
+  /**
+   * Configures the {@code circuitBreaker} to be used to control the rate of event execution.
+   *
+   * @throws NullPointerException if {@code circuitBreaker} is null
+   * @throws IllegalStateException if a circuit breaker is already configured or if ordered policies have been
+   *     configured
+   */
+  public FailsafeExecutor<R> with(CircuitBreaker<R> circuitBreaker) {
+    Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configured");
+    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
+    this.circuitBreaker = Assert.notNull(circuitBreaker, "circuitBreaker");
+    return this;
+  }
+
+  /**
+   * Configures the {@code retryPolicy} to be used for retrying failed executions.
+   *
+   * @throws NullPointerException if {@code retryPolicy} is null
+   * @throws IllegalStateException if a retry policy is already configured or if ordered policies have been
+   *     configured
+   */
+  public FailsafeExecutor<R> with(RetryPolicy<R> retryPolicy) {
+    Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configurd");
+    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
+    this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
+    return this;
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(Callable<? extends R> fallback) {
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(CheckedBiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
+    withFallback(Fallback.of(fallback));
+    return this;
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(CheckedConsumer<? extends Throwable> fallback) {
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(CheckedFunction<? extends Throwable, ? extends R> fallback) {
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(CheckedRunnable fallback) {
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} result to be returned if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(R fallback) {
+    return withFallback(Fallback.of(fallback));
+  }
+
+  /**
+   * Configures the {@code fallback} result to be returned if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
+   *     have been configured
+   */
+  public FailsafeExecutor<R> withFallback(Fallback<R> fallback) {
+    Assert.state(this.fallback == null, "withFallback has already been called");
+    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
+    this.fallback = Assert.notNull(fallback, "fallback");
+    return this;
+  }
+
+  /**
    * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
    *
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while waiting to
-   * perform a retry.
+   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   @SuppressWarnings("unchecked")
@@ -255,7 +443,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
    */
   @SuppressWarnings("unchecked")
   private <T> CompletableFuture<T> callAsync(Function<AsyncExecution, Callable<T>> callableFn) {
-    FailsafeFuture<T> future = new FailsafeFuture(listeners);
+    FailsafeFuture<T> future = new FailsafeFuture(this);
     CompletableFuture<T> response = CancellableFuture.of(future);
     future.inject(response);
     callAsync(callableFn, future);
@@ -275,7 +463,7 @@ public class FailsafeExecutor<R> extends FailsafeConfig<FailsafeExecutor<R>, R> 
   @SuppressWarnings("unchecked")
   private <T> FailsafeFuture<T> callAsync(Function<AsyncExecution, Callable<T>> callableFn, FailsafeFuture<T> future) {
     if (future == null)
-      future = new FailsafeFuture(listeners);
+      future = new FailsafeFuture(this);
 
     AsyncExecution execution = new AsyncExecution(scheduler, future, this);
     Callable<T> callable = callableFn.apply(execution);

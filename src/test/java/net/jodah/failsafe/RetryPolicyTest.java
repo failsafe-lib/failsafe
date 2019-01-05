@@ -37,12 +37,12 @@ public class RetryPolicyTest {
   }
 
   public void testisFailureNull() {
-    RetryPolicy policy = new RetryPolicy();
+    RetryPolicy<Object> policy = new RetryPolicy<>();
     assertFalse(policy.isFailure(null, null));
   }
 
   public void testisFailureCompletionPredicate() {
-    RetryPolicy policy = new RetryPolicy()
+    RetryPolicy<Object> policy = new RetryPolicy<>()
         .handleIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.isFailure("test", null));
     // No retries needed for successful result
@@ -52,13 +52,13 @@ public class RetryPolicyTest {
   }
 
   public void testisFailureFailurePredicate() {
-    RetryPolicy policy = new RetryPolicy().handleIf(failure -> failure instanceof ConnectException);
+    RetryPolicy<Object> policy = new RetryPolicy<>().handleIf(failure -> failure instanceof ConnectException);
     assertTrue(policy.isFailure(null, new ConnectException()));
     assertFalse(policy.isFailure(null, new IllegalStateException()));
   }
 
   public void testisFailureResultPredicate() {
-    RetryPolicy policy = new RetryPolicy().handleResultIf((Integer result) -> result > 100);
+    RetryPolicy<Integer> policy = new RetryPolicy<Integer>().handleResultIf(result -> result > 100);
     assertTrue(policy.isFailure(110, null));
     assertFalse(policy.isFailure(50, null));
   }
@@ -69,40 +69,40 @@ public class RetryPolicyTest {
     assertTrue(policy.isFailure(null, new Exception()));
     assertTrue(policy.isFailure(null, new IllegalArgumentException()));
 
-    policy = new RetryPolicy().handle(Exception.class);
+    policy = new RetryPolicy<>().handle(Exception.class);
     assertTrue(policy.isFailure(null, new Exception()));
     assertTrue(policy.isFailure(null, new IllegalArgumentException()));
 
-    policy = new RetryPolicy().handle(RuntimeException.class);
+    policy = new RetryPolicy<>().handle(RuntimeException.class);
     assertTrue(policy.isFailure(null, new IllegalArgumentException()));
     assertFalse(policy.isFailure(null, new Exception()));
 
-    policy = new RetryPolicy().handle(IllegalArgumentException.class, IOException.class);
+    policy = new RetryPolicy<>().handle(IllegalArgumentException.class, IOException.class);
     assertTrue(policy.isFailure(null, new IllegalArgumentException()));
     assertTrue(policy.isFailure(null, new IOException()));
     assertFalse(policy.isFailure(null, new RuntimeException()));
     assertFalse(policy.isFailure(null, new IllegalStateException()));
 
-    policy = new RetryPolicy().handle(Arrays.asList(IllegalArgumentException.class));
+    policy = new RetryPolicy<>().handle(Arrays.asList(IllegalArgumentException.class));
     assertTrue(policy.isFailure(null, new IllegalArgumentException()));
     assertFalse(policy.isFailure(null, new RuntimeException()));
     assertFalse(policy.isFailure(null, new IllegalStateException()));
   }
 
   public void testisFailureResult() {
-    RetryPolicy policy = new RetryPolicy().handleResult(10);
+    RetryPolicy<Object> policy = new RetryPolicy<>().handleResult(10);
     assertTrue(policy.isFailure(10, null));
     assertFalse(policy.isFailure(5, null));
     assertTrue(policy.isFailure(5, new Exception()));
   }
 
   public void testCanAbortForNull() {
-    RetryPolicy policy = new RetryPolicy();
+    RetryPolicy<Object> policy = new RetryPolicy<>();
     assertFalse(policy.isAbortable(null, null));
   }
 
   public void testCanAbortForCompletionPredicate() {
-    RetryPolicy policy = new RetryPolicy()
+    RetryPolicy<Object> policy = new RetryPolicy<>()
         .abortIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.isAbortable("test", null));
     assertFalse(policy.isAbortable(0, null));
@@ -111,13 +111,13 @@ public class RetryPolicyTest {
   }
 
   public void testCanAbortForFailurePredicate() {
-    RetryPolicy policy = new RetryPolicy().abortOn(failure -> failure instanceof ConnectException);
+    RetryPolicy<Object> policy = new RetryPolicy<>().abortOn(failure -> failure instanceof ConnectException);
     assertTrue(policy.isAbortable(null, new ConnectException()));
     assertFalse(policy.isAbortable(null, new IllegalArgumentException()));
   }
 
   public void testCanAbortForResultPredicate() {
-    RetryPolicy policy = new RetryPolicy().abortIf((Integer result) -> result > 100);
+    RetryPolicy<Integer> policy = new RetryPolicy<Integer>().abortIf(result -> result > 100);
     assertTrue(policy.isAbortable(110, null));
     assertFalse(policy.isAbortable(50, null));
     assertFalse(policy.isAbortable(50, new IllegalArgumentException()));
@@ -142,21 +142,21 @@ public class RetryPolicyTest {
   }
 
   public void testCanAbortForResult() {
-    RetryPolicy policy = new RetryPolicy().abortWhen(10);
+    RetryPolicy<Object> policy = new RetryPolicy<>().abortWhen(10);
     assertTrue(policy.isAbortable(10, null));
     assertFalse(policy.isAbortable(5, null));
     assertFalse(policy.isAbortable(5, new IllegalArgumentException()));
   }
 
   public void testWithDelayFunction() {
-    RetryPolicy retryPolicy = new RetryPolicy();
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
     assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
     retryPolicy.withDelay((r, f, ctx) -> Duration.ofMillis(10));
     assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
   }
 
   public void testWithDelayOn() {
-    RetryPolicy retryPolicy = new RetryPolicy().withDelayOn((r, f, ctx) -> Duration.ofMillis(10),
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelayOn((r, f, ctx) -> Duration.ofMillis(10),
         IllegalStateException.class);
     assertTrue(retryPolicy.canApplyDelayFn("foo", new IllegalStateException()));
     assertFalse(retryPolicy.canApplyDelayFn("foo", null));
@@ -164,7 +164,7 @@ public class RetryPolicyTest {
   }
 
   public void testWithDelayWhen() {
-    RetryPolicy retryPolicy = new RetryPolicy().withDelayWhen((r, f, ctx) -> Duration.ofMillis(10),
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelayWhen((r, f, ctx) -> Duration.ofMillis(10),
         "expected");
     assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalStateException()));
     assertFalse(retryPolicy.canApplyDelayFn(null, new IllegalStateException()));

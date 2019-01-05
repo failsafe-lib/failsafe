@@ -15,14 +15,13 @@
  */
 package net.jodah.failsafe;
 
-import static org.testng.Assert.assertEquals;
+import net.jodah.failsafe.function.CheckedRunnable;
+import org.testng.Assert;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import org.testng.Assert;
-
-import net.jodah.failsafe.function.CheckedRunnable;
+import static org.testng.Assert.assertEquals;
 
 public class Asserts {
   @SafeVarargs
@@ -52,7 +51,7 @@ public class Asserts {
       runnable.run();
       Assert.fail("No exception was thrown");
     } catch (Throwable t) {
-      assertEquals(throwable, t, "The expected exception was not thrown");
+      assertEquals(t, throwable,"The expected exception was not thrown");
     }
   }
 

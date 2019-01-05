@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
 @Test
-public class FailsafeConfigTest {
+public class FailsafeExecutorTest {
   private Service service = mock(Service.class);
   ExecutorService executor;
 
@@ -89,13 +89,14 @@ public class FailsafeConfigTest {
     executor.awaitTermination(5, TimeUnit.SECONDS);
   }
 
-  <T> FailsafeExecutor<T> registerListeners(FailsafeExecutor<T> failsafe) {
-    failsafe.onAbort(e -> abort.sync(1));
+  <T> FailsafeExecutor<T> registerListeners(RetryPolicy<T> retryPolicy) {
+    FailsafeExecutor<T> failsafe = Failsafe.with(retryPolicy);
+    retryPolicy.onAbort(e -> abort.sync(1));
     failsafe.onComplete(e -> complete.sync(1));
-    failsafe.onFailedAttempt(e -> failedAttempt.sync(1));
+    retryPolicy.onFailedAttempt(e -> failedAttempt.sync(1));
     failsafe.onFailure(e -> failure.sync(1));
-    failsafe.onRetriesExceeded(e -> retriesExceeded.sync(1));
-    failsafe.onRetry(e -> retry.sync(1));
+    retryPolicy.onRetriesExceeded(e -> retriesExceeded.sync(1));
+    retryPolicy.onRetry(e -> retry.sync(1));
     failsafe.onSuccess(e -> success.sync(1));
     return failsafe;
   }
@@ -108,10 +109,10 @@ public class FailsafeConfigTest {
 
     // Given - Fail 4 times then succeed
     when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
-    RetryPolicy retryPolicy = new RetryPolicy().handleResult(false);
+    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
 
     // When
-    registerListeners(Failsafe.with(retryPolicy)).get(callable);
+    registerListeners(retryPolicy).get(callable);
 
     // Then
     abort.assertEquals(0);
@@ -132,10 +133,10 @@ public class FailsafeConfigTest {
     // Given - Fail 2 times then don't match policy
     when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
         .thenThrow(IllegalArgumentException.class);
-    RetryPolicy retryPolicy = new RetryPolicy().handle(IllegalStateException.class).withMaxRetries(10);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withMaxRetries(10);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
+    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(callable),
         IllegalArgumentException.class);
 
     // Then
@@ -156,10 +157,10 @@ public class FailsafeConfigTest {
 
     // Given - Fail 4 times and exceed retries
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
-    RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
+    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(callable),
         IllegalStateException.class);
 
     // Then
@@ -181,10 +182,10 @@ public class FailsafeConfigTest {
     // Given - Fail twice then abort
     when(service.connect()).thenThrow(failures(3, new IllegalStateException()))
         .thenThrow(new IllegalArgumentException());
-    RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class).withMaxRetries(3);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(Failsafe.with(retryPolicy)).get(callable),
+    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(callable),
         IllegalArgumentException.class);
 
     // Then
@@ -202,7 +203,7 @@ public class FailsafeConfigTest {
    */
   public void testFailureListenerCalledOnAbort() {
     // Given
-    RetryPolicy retryPolicy = new RetryPolicy().abortOn(IllegalArgumentException.class);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class);
     AtomicBoolean called = new AtomicBoolean();
 
     // When

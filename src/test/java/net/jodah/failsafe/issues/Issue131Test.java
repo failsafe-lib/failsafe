@@ -16,10 +16,13 @@
 package net.jodah.failsafe.issues;
 
 import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.*;import org.testng.annotations.Test;
+import net.jodah.failsafe.CircuitBreaker;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.FailsafeException;
+import net.jodah.failsafe.FailsafeExecutor;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
@@ -41,11 +44,11 @@ public class Issue131Test {
    */
   @Test(expectedExceptions = FailsafeException.class)
   public void syncShouldThrowTheUnderlyingIOException() {
-    CircuitBreaker circuitBreaker = new CircuitBreaker().handleResultIf(handleIfEqualsIgnoreCaseFoo);
-    FailsafeExecutor<String> failsafe = Failsafe.<String>with(circuitBreaker);
+    CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>().handleResultIf(handleIfEqualsIgnoreCaseFoo);
+    FailsafeExecutor<String> failsafe = Failsafe.with(circuitBreaker);
 
     // I expect this getAsync() to throw IOException, not NPE.
-    failsafe.get((Callable<String>) () -> {
+    failsafe.get(() -> {
       throw new IOException("let's blame it on network error");
     });
   }
@@ -56,8 +59,8 @@ public class Issue131Test {
    * since Failsafe does not recover from the {@link NullPointerException} thrown by the predicate.
    */
   public void asyncShouldCompleteTheFuture() throws Throwable {
-    CircuitBreaker circuitBreaker = new CircuitBreaker().handleResultIf(handleIfEqualsIgnoreCaseFoo);
-    FailsafeExecutor<String> failsafe = Failsafe.<String>with(circuitBreaker).with(Executors.newSingleThreadScheduledExecutor());
+    CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>().handleResultIf(handleIfEqualsIgnoreCaseFoo);
+    FailsafeExecutor<String> failsafe = Failsafe.with(circuitBreaker).with(Executors.newSingleThreadScheduledExecutor());
 
     Waiter waiter = new Waiter();
 

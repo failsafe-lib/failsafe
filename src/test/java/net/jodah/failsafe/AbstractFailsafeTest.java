@@ -35,9 +35,9 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public abstract class AbstractFailsafeTest {
-  RetryPolicy retryAlways = new RetryPolicy();
-  RetryPolicy retryNever = new RetryPolicy().withMaxRetries(0);
-  RetryPolicy retryTwice = new RetryPolicy().withMaxRetries(2);
+  RetryPolicy<Boolean> retryAlways = new RetryPolicy<>();
+  RetryPolicy<Boolean> retryNever = new RetryPolicy<Boolean>().withMaxRetries(0);
+  RetryPolicy<Boolean> retryTwice = new RetryPolicy<Boolean>().withMaxRetries(2);
   Service service = mock(Service.class);
   AtomicInteger counter;
 
@@ -63,25 +63,25 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe getAsync with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy retryPolicy, Callable<T> callable) {
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(retryPolicy).get(callable)
-        : (T) Failsafe.with(retryPolicy).with(executor).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).get(callable)
+        : Failsafe.with(retryPolicy).with(executor).getAsync(callable).get());
   }
 
   /**
    * Does a failsafe getAsync with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker circuitBreaker, Callable<T> callable) {
+  <T> T failsafeGet(CircuitBreaker<T> circuitBreaker, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(circuitBreaker).get(callable)
-        : (T) Failsafe.with(circuitBreaker).with(executor).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(circuitBreaker).get(callable)
+        : Failsafe.with(circuitBreaker).with(executor).getAsync(callable).get());
   }
 
   /**
    * Does a failsafe runAsync with an optional executor.
    */
-  void failsafeRun(CircuitBreaker breaker, CheckedRunnable runnable) {
+  void failsafeRun(CircuitBreaker<?> breaker, CheckedRunnable runnable) {
     ScheduledExecutorService executor = getExecutor();
     if (executor == null)
       Failsafe.with(breaker).run(runnable);
@@ -92,19 +92,19 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker breaker, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
+  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(breaker).withFallback(fallback).get(callable)
-        : (T) Failsafe.with(breaker).with(executor).withFallback(fallback).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(breaker).withFallback(fallback).get(callable)
+        : Failsafe.with(breaker).with(executor).withFallback(fallback).getAsync(callable).get());
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? (T) Failsafe.with(retryPolicy).withFallback(fallback).get(callable)
-        : (T) Failsafe.with(retryPolicy).with(executor).withFallback(fallback).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).withFallback(fallback).get(callable)
+        : Failsafe.with(retryPolicy).with(executor).withFallback(fallback).getAsync(callable).get());
   }
 
   /**
@@ -127,7 +127,7 @@ public abstract class AbstractFailsafeTest {
   public void shouldThrowOnNonRetriableFailure() {
     // Given
     when(service.connect()).thenThrow(ConnectException.class, ConnectException.class, IllegalStateException.class);
-    RetryPolicy retryPolicy = new RetryPolicy().handle(ConnectException.class);
+    RetryPolicy retryPolicy = new RetryPolicy<>().handle(ConnectException.class);
 
     // When / Then
     assertThrows(() -> failsafeGet(retryPolicy, service::connect), IllegalStateException.class);
@@ -139,7 +139,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldRejectExcessiveExecutionsThroughHalfOpenCircuit() throws Throwable {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
     breaker.halfOpen();
     Waiter waiter = new Waiter();
     for (int i = 0; i < 3; i++)
@@ -159,7 +159,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldFallbackAfterFailureWithRetries() {
     // Given
-    RetryPolicy retryPolicy = new RetryPolicy().withMaxRetries(2);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failures(3, failure));
     Waiter waiter = new Waiter();
@@ -190,7 +190,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldFallbackAfterFailureWithCircuitBreaker() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failure);
     Waiter waiter = new Waiter();
@@ -222,7 +222,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldFallbackWhenCircuitBreakerIsOpen() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
     breaker.open();
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failure);

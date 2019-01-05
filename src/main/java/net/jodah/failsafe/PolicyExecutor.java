@@ -1,6 +1,5 @@
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.Future;
@@ -11,15 +10,14 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Part of the Failsafe SPI.
  *
- * @param <T> policy type
+ * @param <P> policy type
  */
-public abstract class PolicyExecutor<T extends Policy> {
-  protected final T policy;
+public abstract class PolicyExecutor<P extends Policy> {
+  protected final P policy;
   protected AbstractExecution execution;
-  protected EventHandler eventHandler;
   PolicyExecutor next;
 
-  protected PolicyExecutor(T policy) {
+  protected PolicyExecutor(P policy) {
     this.policy = policy;
   }
 
@@ -32,8 +30,9 @@ public abstract class PolicyExecutor<T extends Policy> {
   }
 
   /**
-   * Performs an sync execution by first doing a pre-execute, calling the next executor, else calling the executor's
-   * callable. This navigates to the end of the executor chain before calling the callable.
+   * Performs a sync execution by first doing a pre-execute, calling the next executor, else calling the executor's
+   * callable, then finally doing a post-execute. This navigates to the end of the executor chain before calling the
+   * callable.
    */
   protected ExecutionResult executeSync(ExecutionResult result) {
     ExecutionResult preResult = preExecute(result);
@@ -50,7 +49,7 @@ public abstract class PolicyExecutor<T extends Policy> {
         Thread.sleep(TimeUnit.NANOSECONDS.toMillis(waitNanos));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        return new ExecutionResult(null, new FailsafeException(e), true, false);
+        return ExecutionResult.failure(new FailsafeException(e));
       }
 
       try {
@@ -68,7 +67,8 @@ public abstract class PolicyExecutor<T extends Policy> {
 
   /**
    * Performs an async execution by first doing an optional pre-execute, calling the next executor, else scheduling the
-   * executor's callable. This navigates to the end of the executor chain before calling the callable.
+   * executor's callable, then finally doing a post-execute. This navigates to the end of the executor chain before
+   * calling the callable.
    *
    * @param shouldExecute Indicates whether this executor should be executed or be skipped
    * @return null if an execution has been scheduled
@@ -98,7 +98,7 @@ public abstract class PolicyExecutor<T extends Policy> {
         }
         return null;
       } catch (Throwable t) {
-        return new ExecutionResult(null, t, true, 0, true, false, true);
+        return ExecutionResult.schedulingError(t);
       }
     }
 

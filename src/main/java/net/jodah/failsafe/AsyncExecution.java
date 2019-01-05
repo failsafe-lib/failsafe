@@ -34,13 +34,13 @@ public final class AsyncExecution extends AbstractExecution {
   private volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
-  <T> AsyncExecution(Scheduler scheduler, FailsafeFuture<T> future, FailsafeConfig<?, ?> config) {
-    super((FailsafeConfig<Object, ?>) config);
+  <T> AsyncExecution(Scheduler scheduler, FailsafeFuture<T> future, FailsafeExecutor<?> executor) {
+    super((FailsafeExecutor<Object>) executor);
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
   }
 
-  <T> AsyncExecution(Callable<T> callable, Scheduler scheduler, FailsafeFuture<T> future, FailsafeConfig<?, ?> config) {
+  <T> AsyncExecution(Callable<T> callable, Scheduler scheduler, FailsafeFuture<T> future, FailsafeExecutor<?> config) {
     this(scheduler, future, config);
     inject(callable);
   }
@@ -141,7 +141,7 @@ public final class AsyncExecution extends AbstractExecution {
       if (!completeCalled) {
         if (super.postExecute(result)) {
           future.complete(result.result, result.failure);
-          eventHandler.handleComplete(result, this);
+          executor.handleComplete(result, this);
         }
         completeCalled = true;
       }
@@ -179,7 +179,7 @@ public final class AsyncExecution extends AbstractExecution {
 
     if (result != null) {
       completed = true;
-      eventHandler.handleComplete(result, this);
+      executor.handleComplete(result, this);
       future.complete(result.result, result.failure);
     }
 

@@ -1,10 +1,9 @@
 package net.jodah.failsafe.issues;
 
-import java.util.concurrent.TimeUnit;
-
+import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
-import net.jodah.failsafe.RetryPolicy;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests https://github.com/jhalterman/failsafe/issues/115 and https://github.com/jhalterman/failsafe/issues/116
@@ -13,12 +12,12 @@ import net.jodah.failsafe.RetryPolicy;
 public class Issue115Test {
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterLargerThanDelay() {
-    new RetryPolicy().handle(IllegalArgumentException.class).withDelay(100, TimeUnit.MILLISECONDS).withJitter(200,
+    new RetryPolicy<>().handle(IllegalArgumentException.class).withDelay(100, TimeUnit.MILLISECONDS).withJitter(200,
         TimeUnit.MILLISECONDS);
   }
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterWithNoDelay() {
-    new RetryPolicy().handle(IllegalArgumentException.class).withJitter(200, TimeUnit.MILLISECONDS);
+    new RetryPolicy<>().handle(IllegalArgumentException.class).withJitter(200, TimeUnit.MILLISECONDS);
   }
 }

@@ -20,8 +20,9 @@ package net.jodah.failsafe;
  * <p>
  * Part of the Failsafe SPI.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public interface Policy {
-  PolicyExecutor toExecutor();
+public interface Policy<R> {
+  PolicyExecutor<Policy<R>> toExecutor();
 }

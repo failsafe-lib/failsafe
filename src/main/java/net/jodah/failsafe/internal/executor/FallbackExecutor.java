@@ -30,9 +30,9 @@ public class FallbackExecutor extends PolicyExecutor<Fallback> {
   @Override
   protected ExecutionResult onFailure(ExecutionResult result) {
     try {
-      return new ExecutionResult(policy.apply(result.result, result.failure), null, true, true);
+      return result.success(policy.apply(result.result, result.failure));
     } catch (Exception e) {
-      return new ExecutionResult(null, e, true, false);
+      return ExecutionResult.failure(e);
     }
   }
 }

@@ -18,6 +18,7 @@ package net.jodah.failsafe.internal.executor;
 import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.PolicyExecutor;
+import net.jodah.failsafe.PolicyListeners.EventListener;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import net.jodah.failsafe.util.concurrent.Scheduler;
@@ -40,14 +41,25 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   /** The wait time, which is the delay time adjusted for jitter and max duration, in nanoseconds. */
   private volatile long waitNanos;
 
-  public RetryPolicyExecutor(RetryPolicy retryPolicy) {
+  // Listeners
+  private EventListener abortListener;
+  private EventListener failedAttemptListener;
+  private EventListener retriesExceededListener;
+  private EventListener retryListener;
+
+  public RetryPolicyExecutor(RetryPolicy retryPolicy, EventListener abortListener, EventListener failedAttemptListener,
+      EventListener retriesExceededListener, EventListener retryListener) {
     super(retryPolicy);
+    this.abortListener = abortListener;
+    this.failedAttemptListener = failedAttemptListener;
+    this.retriesExceededListener = retriesExceededListener;
+    this.retryListener = retryListener;
   }
 
   @Override
   protected ExecutionResult preExecute(ExecutionResult result) {
-    if (result != null && execution.getExecutions() > 0)
-      eventHandler.handleRetry(result, execution);
+    if (retryListener != null && result != null && execution.getExecutions() > 0)
+      retryListener.handle(result, execution);
     return result;
   }
 
@@ -61,7 +73,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   }
 
   @Override
-  protected ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler, FailsafeFuture<Object> future) {
+  protected ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler,
+      FailsafeFuture<Object> future) {
     while (true) {
       result = super.executeAsync(result, shouldExecute, scheduler, future);
       if (result == null || result.completed)
@@ -118,10 +131,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     }
 
     // Calculate result
-    boolean maxRetriesExceeded = policy.getMaxRetries() != -1
-        && execution.getExecutions() > policy.getMaxRetries();
-    boolean maxDurationExceeded = policy.getMaxDuration() != null
-        && elapsedNanos > policy.getMaxDuration().toNanos();
+    boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && execution.getExecutions() > policy.getMaxRetries();
+    boolean maxDurationExceeded = policy.getMaxDuration() != null && elapsedNanos > policy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
     boolean isAbortable = policy.isAbortable(result.result, result.failure);
     boolean shouldRetry = !result.success && !isAbortable && !retriesExceeded && policy.allowsRetries();
@@ -129,12 +140,12 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     boolean success = completed && result.success && !isAbortable;
 
     // Call listeners
-    if (!success)
-      eventHandler.handleFailedAttempt(result, execution);
-    if (isAbortable)
-      eventHandler.handleAbort(result, execution);
-    else if (!success && retriesExceeded)
-      eventHandler.handleRetriesExceeded(result, execution);
+    if (failedAttemptListener != null && !success)
+      failedAttemptListener.handle(result, execution);
+    if (abortListener != null && isAbortable)
+      abortListener.handle(result, execution);
+    else if (retriesExceededListener != null && !success && retriesExceeded)
+      retriesExceededListener.handle(result, execution);
 
     return result.with(waitNanos, completed, success);
   }

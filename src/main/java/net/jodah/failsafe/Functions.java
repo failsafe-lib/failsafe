@@ -122,7 +122,7 @@ final class Functions {
     };
   }
 
-  static <T> Callable<T> asyncOfFuture(AsyncCallable<? extends CompletionStage<T>> callable, AsyncExecution execution) {
+  static <T> Callable<T> asyncOfFuture(AsyncCallable<? extends CompletionStage<? extends T>> callable, AsyncExecution execution) {
     Assert.notNull(callable, "callable");
     return new Callable<T>() {
       Semaphore asyncFutureLock = new Semaphore(1);
@@ -153,7 +153,7 @@ final class Functions {
     };
   }
 
-  static <T> Callable<T> asyncOfFuture(Callable<? extends CompletionStage<T>> callable, AsyncExecution execution) {
+  static <T> Callable<T> asyncOfFuture(Callable<? extends CompletionStage<? extends T>> callable, AsyncExecution execution) {
     Assert.notNull(callable, "callable");
     return () -> {
       try {
@@ -172,7 +172,7 @@ final class Functions {
     };
   }
 
-  static <T> Callable<T> asyncOfFuture(ContextualCallable<? extends CompletionStage<T>> callable, AsyncExecution execution) {
+  static <T> Callable<T> asyncOfFuture(ContextualCallable<? extends CompletionStage<? extends T>> callable, AsyncExecution execution) {
     Assert.notNull(callable, "callable");
     return () -> {
       try {

@@ -46,9 +46,9 @@ public class Issue9Test {
 
     // When
     AtomicInteger successCounter = new AtomicInteger();
-    Future<Boolean> future = Failsafe.with(new RetryPolicy().withMaxRetries(2))
+    Future<Boolean> future = Failsafe.with(new RetryPolicy<Boolean>().withMaxRetries(2)
+        .onRetry(e -> retryCounter.incrementAndGet()))
         .with(executor)
-        .onRetry(e -> retryCounter.incrementAndGet())
         .onSuccess(p -> {
           successCounter.incrementAndGet();
           waiter.resume();

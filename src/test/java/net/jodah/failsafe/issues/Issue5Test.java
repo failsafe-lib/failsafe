@@ -31,7 +31,7 @@ public class Issue5Test {
    */
   public void test() throws Throwable {
     Waiter waiter = new Waiter();
-    RetryPolicy retryPolicy = new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS)
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(100, TimeUnit.MILLISECONDS)
         .withMaxDuration(2, TimeUnit.SECONDS)
         .withMaxRetries(3)
         .handleResult(null);

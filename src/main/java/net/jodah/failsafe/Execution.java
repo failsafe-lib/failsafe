@@ -34,12 +34,12 @@ public class Execution extends AbstractExecution {
    * @throws IllegalArgumentException if {@code policies} is empty
    */
   public Execution(Policy... policies) {
-    super(new FailsafeConfig<Object, FailsafeConfig<Object, ?>>(Arrays.asList(Assert.notNull(policies, "policies"))));
+    super(new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
   }
 
   @SuppressWarnings("unchecked")
-  Execution(FailsafeConfig<?, ?> config) {
-    super((FailsafeConfig<Object, ?>) config);
+  Execution(FailsafeExecutor<?> executor) {
+    super((FailsafeExecutor<Object>) executor);
   }
 
   /**

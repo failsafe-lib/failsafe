@@ -31,7 +31,7 @@ public class Issue52Test {
   @Test(expectedExceptions = CancellationException.class)
   public void shouldCancelExecutionViaFuture() throws Throwable {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-    Future<String> proxyFuture = Failsafe.with(new RetryPolicy().withDelay(10, TimeUnit.MILLISECONDS))
+    Future<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
         .with(scheduler)
         .getAsync(exec -> {
           throw new IllegalStateException();
@@ -46,7 +46,7 @@ public class Issue52Test {
   public void shouldCancelExecutionViaCompletableFuture() throws Throwable {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     AtomicInteger counter = new AtomicInteger();
-    CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy().withDelay(10, TimeUnit.MILLISECONDS))
+    CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
         .with(scheduler)
         .future(exec -> {
           counter.incrementAndGet();

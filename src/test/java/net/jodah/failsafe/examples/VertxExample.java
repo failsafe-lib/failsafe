@@ -30,7 +30,7 @@ public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  static RetryPolicy retryPolicy = new RetryPolicy()
+  static RetryPolicy retryPolicy = new RetryPolicy<>()
       .handleIf((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
           || ReplyFailure.TIMEOUT.equals(failure.failureType()));
 

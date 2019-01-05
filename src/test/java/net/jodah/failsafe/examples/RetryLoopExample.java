@@ -15,15 +15,15 @@
  */
 package net.jodah.failsafe.examples;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
+import net.jodah.failsafe.Execution;
+import net.jodah.failsafe.RetryPolicy;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import net.jodah.failsafe.Execution;
-import net.jodah.failsafe.RetryPolicy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
 
 @SuppressWarnings("unchecked")
 public class RetryLoopExample {
@@ -35,7 +35,10 @@ public class RetryLoopExample {
   }
 
   public static void main(String... args) throws Throwable {
-    RetryPolicy retryPolicy = new RetryPolicy().handle(IllegalStateException.class).withBackoff(10, 40,
+    RetryPolicy ss = new RetryPolicy();
+    ss.handle(Exception.class);
+
+    RetryPolicy retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withBackoff(10, 40,
         TimeUnit.MILLISECONDS);
     Execution execution = new Execution(retryPolicy);
 

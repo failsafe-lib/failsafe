@@ -1,26 +1,20 @@
 package net.jodah.failsafe.issues;
 
-import static org.testng.Assert.assertFalse;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.testng.annotations.Test;
-
 import net.jodah.failsafe.Asserts;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreakerOpenException;
 import net.jodah.failsafe.Failsafe;
+import org.testng.annotations.Test;
+
+import java.util.concurrent.*;
+
+import static org.testng.Assert.assertFalse;
 
 @Test
 public class Issue84Test {
   public void shouldHandleCircuitBreakerOpenException() throws Throwable {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-    CircuitBreaker circuitBreaker = new CircuitBreaker().withDelay(10, TimeUnit.MINUTES).handleResult(false);
+    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().withDelay(10, TimeUnit.MINUTES).handleResult(false);
     circuitBreaker.open();
 
     // Synchronous
@@ -31,7 +25,7 @@ public class Issue84Test {
 
     // Asynchronous
     Future<Boolean> future1 = Failsafe.with(circuitBreaker).with(executor).getAsync(() -> true);
-    Asserts.assertThrows(() -> future1.get(), ExecutionException.class, CircuitBreakerOpenException.class);
+    Asserts.assertThrows(future1::get, ExecutionException.class, CircuitBreakerOpenException.class);
 
     // Asynchronous with fallback
     Future<Boolean> future2 = Failsafe.with(circuitBreaker).with(executor).withFallback(false).getAsync(() -> true);
@@ -39,7 +33,7 @@ public class Issue84Test {
 
     // Future
     Future<Boolean> future3 = Failsafe.with(circuitBreaker).with(executor).future(() -> CompletableFuture.completedFuture(false));
-    Asserts.assertThrows(() -> future3.get(), ExecutionException.class, CircuitBreakerOpenException.class);
+    Asserts.assertThrows(future3::get, ExecutionException.class, CircuitBreakerOpenException.class);
 
     // Future with fallback
     Future<Boolean> future4 = Failsafe.with(circuitBreaker)

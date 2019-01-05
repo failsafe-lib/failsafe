@@ -24,19 +24,19 @@ import java.util.concurrent.Callable;
 /**
  * A Policy that handles failures using a fallback.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public class Fallback extends AbstractPolicy<Fallback> {
-  private final CheckedBiFunction<Object, Throwable, Object> fallback;
+public class Fallback<R> extends AbstractPolicy<Fallback<R>, R> {
+  private final CheckedBiFunction<R, Throwable, R> fallback;
 
   /**
    * Configures the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings("unchecked")
-  private <T> Fallback(CheckedBiFunction<T, Throwable, T> fallback) {
-    this.fallback = (CheckedBiFunction<Object, Throwable, Object>) Assert.notNull(fallback, "fallback");
+  private Fallback(CheckedBiFunction<R, Throwable, R> fallback) {
+    this.fallback = Assert.notNull(fallback, "fallback");
   }
 
   /**
@@ -45,17 +45,8 @@ public class Fallback extends AbstractPolicy<Fallback> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("unchecked")
-  public static <R> Fallback of(CheckedBiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
-    return new Fallback((CheckedBiFunction<R, Throwable, R>) fallback);
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   */
-  public static <R> Fallback of(Callable<? extends R> fallback) {
-    return new Fallback(Functions.fnOf(Assert.notNull(fallback, "fallback")));
+  public static <R> Fallback<R> of(CheckedBiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
+    return new Fallback<>((CheckedBiFunction<R, Throwable, R>) fallback);
   }
 
   /**
@@ -64,8 +55,8 @@ public class Fallback extends AbstractPolicy<Fallback> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("unchecked")
-  public static <R> Fallback of(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
-    return new Fallback(Functions.fnOf((CheckedBiConsumer<R, Throwable>) Assert.notNull(fallback, "fallback")));
+  public static <R> Fallback<R> of(Callable<? extends R> fallback) {
+    return new Fallback<>(Functions.fnOf((Callable<R>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -74,8 +65,8 @@ public class Fallback extends AbstractPolicy<Fallback> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("unchecked")
-  public static Fallback of(CheckedConsumer<? extends Throwable> fallback) {
-    return new Fallback(Functions.fnOf((CheckedConsumer<Throwable>) Assert.notNull(fallback, "fallback")));
+  public static <R> Fallback<R> of(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
+    return new Fallback<>(Functions.fnOf((CheckedBiConsumer<R, Throwable>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -84,8 +75,8 @@ public class Fallback extends AbstractPolicy<Fallback> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("unchecked")
-  public static <R> Fallback of(CheckedFunction<? extends Throwable, ? extends R> fallback) {
-    return new Fallback(Functions.fnOf((CheckedFunction<Throwable, R>) Assert.notNull(fallback, "fallback")));
+  public static <R> Fallback<R> of(CheckedConsumer<? extends Throwable> fallback) {
+    return new Fallback<>(Functions.fnOf((CheckedConsumer<Throwable>) Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -93,8 +84,18 @@ public class Fallback extends AbstractPolicy<Fallback> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  public static Fallback of(CheckedRunnable fallback) {
-    return new Fallback(Functions.fnOf(Assert.notNull(fallback, "fallback")));
+  @SuppressWarnings("unchecked")
+  public static <R> Fallback<R> of(CheckedFunction<? extends Throwable, ? extends R> fallback) {
+    return new Fallback<>(Functions.fnOf((CheckedFunction<Throwable, R>) Assert.notNull(fallback, "fallback")));
+  }
+
+  /**
+   * Configures the {@code fallback} action to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   */
+  public static <R> Fallback<R> of(CheckedRunnable fallback) {
+    return new Fallback<>(Functions.fnOf(Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -103,11 +104,11 @@ public class Fallback extends AbstractPolicy<Fallback> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("rawtypes")
-  public static Fallback of(Object fallback) {
-    return new Fallback(Functions.fnOf(Assert.notNull(fallback, "fallback")));
+  public static <R> Fallback<R> of(R fallback) {
+    return new Fallback<>(Functions.fnOf(Assert.notNull(fallback, "fallback")));
   }
 
-  public Object apply(Object result, Throwable failure) throws Exception {
+  public Object apply(R result, Throwable failure) throws Exception {
     return fallback.apply(result, failure);
   }
 

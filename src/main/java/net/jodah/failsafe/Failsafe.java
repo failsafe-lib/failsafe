@@ -29,10 +29,10 @@ public class Failsafe {
    * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
    * the {@code retryPolicy}.
    *
-   * @param <T> result type
+   * @param <R> result type
    * @throws NullPointerException if {@code retryPolicy} is null
    */
-  public static <T> FailsafeExecutor<T> with(RetryPolicy retryPolicy) {
+  public static <R> FailsafeExecutor<R> with(RetryPolicy<R> retryPolicy) {
     return new FailsafeExecutor<>(Assert.notNull(retryPolicy, "retryPolicy"));
   }
 
@@ -40,10 +40,10 @@ public class Failsafe {
    * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
    * the {@code circuitBreaker}.
    *
-   * @param <T> result type
+   * @param <R> result type
    * @throws NullPointerException if {@code circuitBreaker} is null
    */
-  public static <T> FailsafeExecutor<T> with(CircuitBreaker circuitBreaker) {
+  public static <R> FailsafeExecutor<R> with(CircuitBreaker<R> circuitBreaker) {
     return new FailsafeExecutor<>(Assert.notNull(circuitBreaker, "circuitBreaker"));
   }
 
@@ -51,11 +51,12 @@ public class Failsafe {
    * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
    * the {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
    *
-   * @param <T> result type
+   * @param <R> result type
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
-  public static <T> FailsafeExecutor<T> with(Policy... policies) {
+  @SafeVarargs
+  public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P... policies) {
     Assert.notNull(policies, "policies");
     Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
     return new FailsafeExecutor<>(Arrays.asList(policies));

@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.event.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.ReentrantCircuit;
 
@@ -23,13 +22,13 @@ import java.util.concurrent.*;
 
 /**
  * The future result of an asynchronous Failsafe execution.
- * 
- * @author Jonathan Halterman
+ *
  * @param <T> result type
+ * @author Jonathan Halterman
  */
 public class FailsafeFuture<T> implements Future<T> {
   private final ReentrantCircuit circuit = new ReentrantCircuit();
-  private final EventHandler eventHandler;
+  private final FailsafeExecutor<T> executor;
   private ExecutionContext execution;
   private CompletableFuture<T> completableFuture;
 
@@ -40,26 +39,26 @@ public class FailsafeFuture<T> implements Future<T> {
   private volatile T result;
   private volatile Throwable failure;
 
-  FailsafeFuture(EventHandler eventHandler) {
-    this.eventHandler = eventHandler;
+  FailsafeFuture(FailsafeExecutor<T> executor) {
+    this.executor = executor;
     circuit.open();
   }
 
   /**
    * Attempts to cancel this execution. This attempt will fail if the execution has already completed, has already been
    * cancelled, or could not be cancelled for some other reason. If successful, and this execution has not started when
-   * {@code cancel} is called, this execution should never run. If the execution has already started, then the
-   * {@code mayInterruptIfRunning} parameter determines whether the thread executing this task should be interrupted in
-   * an attempt to stop the execution.
+   * {@code cancel} is called, this execution should never run. If the execution has already started, then the {@code
+   * mayInterruptIfRunning} parameter determines whether the thread executing this task should be interrupted in an
+   * attempt to stop the execution.
    *
    * <p>
    * After this method returns, subsequent calls to {@link #isDone} will always return {@code true}. Subsequent calls to
    * {@link #isCancelled} will always return {@code true} if this method returned {@code true}.
    *
-   * @param mayInterruptIfRunning {@code true} if the thread executing this execution should be interrupted; otherwise,
-   *          in-progress executions are allowed to complete
+   * @param mayInterruptIfRunning {@code true} if the thread executing this execution should be interrupted;
+   *     otherwise, in-progress executions are allowed to complete
    * @return {@code false} if the execution could not be cancelled, typically because it has already completed normally;
-   *         {@code true} otherwise
+   *     {@code true} otherwise
    */
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
@@ -69,7 +68,7 @@ public class FailsafeFuture<T> implements Future<T> {
     boolean cancelResult = delegate.cancel(mayInterruptIfRunning);
     failure = new CancellationException();
     cancelled = true;
-    eventHandler.handleComplete(new ExecutionResult(null, failure, true, false), execution);
+    executor.handleComplete(ExecutionResult.failure(failure), execution);
     complete(null, failure);
     return cancelResult;
   }
@@ -88,7 +87,7 @@ public class FailsafeFuture<T> implements Future<T> {
     if (failure != null) {
       if (failure instanceof CancellationException)
         throw (CancellationException) failure;
-        throw new ExecutionException(failure);
+      throw new ExecutionException(failure);
     }
     return result;
   }
@@ -129,7 +128,7 @@ public class FailsafeFuture<T> implements Future<T> {
 
   /**
    * Returns {@code true} if this execution completed.
-   *
+   * <p>
    * Completion may be due to normal termination, an exception, or cancellation -- in all of these cases, this method
    * will return {@code true}.
    *

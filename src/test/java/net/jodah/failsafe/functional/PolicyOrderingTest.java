@@ -19,9 +19,9 @@ public class PolicyOrderingTest {
   }
 
   public void testFailsafeWithCircuitBreakerThenRetryThenFallback() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(2);
-    CircuitBreaker cb = new CircuitBreaker().withFailureThreshold(5);
-    Fallback fb = Fallback.of("test");
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
+    Fallback<Object> fb = Fallback.of("test");
 
     Object result = Testing.ignoreExceptions(
         () -> Failsafe.with(fb, rp, cb).onComplete(e -> assertEquals(e.context.getExecutions(), 3)).get(() -> {
@@ -33,8 +33,8 @@ public class PolicyOrderingTest {
   }
 
   public void testFailsafeWithRetryThenCircuitBreaker() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(2);
-    CircuitBreaker cb = new CircuitBreaker().withFailureThreshold(5);
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
     Testing.ignoreExceptions(
         () -> Failsafe.with(cb, rp).onComplete(e -> assertEquals(e.context.getExecutions(), 3)).run(() -> {
@@ -45,8 +45,8 @@ public class PolicyOrderingTest {
   }
 
   public void testExecutionWithCircuitBreakerThenRetry() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(2);
-    CircuitBreaker cb = new CircuitBreaker().withFailureThreshold(5);
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
     Execution execution = new Execution(rp, cb);
     execution.recordFailure(new Exception());
@@ -70,8 +70,8 @@ public class PolicyOrderingTest {
   }
 
   public void testFailsafeWithRetryThenFallback() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(2);
-    Fallback fb = Fallback.of("test");
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    Fallback<Object> fb = Fallback.of("test");
     AtomicInteger executions = new AtomicInteger();
 
     assertEquals(Failsafe.with(fb, rp).onComplete(e -> executions.set(e.context.getExecutions())).get(() -> {
@@ -81,8 +81,8 @@ public class PolicyOrderingTest {
   }
 
   public void testFailsafeWithFallbackThenRetry() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(2);
-    Fallback fb = Fallback.of("test");
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    Fallback<Object> fb = Fallback.of("test");
     AtomicInteger executions = new AtomicInteger();
 
     assertEquals(Failsafe.with(rp, fb).onComplete(e -> executions.set(e.context.getExecutions())).get(() -> {
@@ -95,8 +95,8 @@ public class PolicyOrderingTest {
    * Tests that multiple circuit breakers handle failures as expected, regardless of order.
    */
   public void testDuplicateCircuitBreakers() {
-    CircuitBreaker cb1 = new CircuitBreaker().handle(IllegalArgumentException.class);
-    CircuitBreaker cb2 = new CircuitBreaker().handle(IllegalStateException.class);
+    CircuitBreaker cb1 = new CircuitBreaker<>().handle(IllegalArgumentException.class);
+    CircuitBreaker cb2 = new CircuitBreaker<>().handle(IllegalStateException.class);
 
     CheckedRunnable runnable = () -> {
       throw new IllegalArgumentException();

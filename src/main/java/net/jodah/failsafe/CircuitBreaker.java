@@ -32,9 +32,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
  * 
  * @author Jonathan Halterman
+ * @param <R> result type
  */
 @SuppressWarnings("WeakerAccess")
-public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
+public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
@@ -159,7 +160,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
   /**
    * Calls the {@code runnable} when the circuit is closed.
    */
-  public CircuitBreaker onClose(CheckedRunnable runnable) {
+  public CircuitBreaker<R> onClose(CheckedRunnable runnable) {
     onClose = runnable;
     return this;
   }
@@ -167,7 +168,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
   /**
    * Calls the {@code runnable} when the circuit is half-opened.
    */
-  public CircuitBreaker onHalfOpen(CheckedRunnable runnable) {
+  public CircuitBreaker<R> onHalfOpen(CheckedRunnable runnable) {
     onHalfOpen = runnable;
     return this;
   }
@@ -175,7 +176,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
   /**
    * Calls the {@code runnable} when the circuit is opened.
    */
-  public CircuitBreaker onOpen(CheckedRunnable runnable) {
+  public CircuitBreaker<R> onOpen(CheckedRunnable runnable) {
     onOpen = runnable;
     return this;
   }
@@ -208,9 +209,9 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
 
   /**
    * Records an execution {@code failure} as a success or failure based on the failure configuration as determined by
-   * {@link #isFailure(Object, Throwable)}.
+   * {@link #isFailure(R, Throwable)}.
    * 
-   * @see #isFailure(Object, Throwable)
+   * @see #isFailure(R, Throwable)
    */
   public void recordFailure(Throwable failure) {
     recordResult(null, failure);
@@ -218,11 +219,11 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
 
   /**
    * Records an execution {@code result} as a success or failure based on the failure configuration as determined by
-   * {@link #isFailure(Object, Throwable)}.
+   * {@link #isFailure(R, Throwable)}.
    * 
-   * @see #isFailure(Object, Throwable)
+   * @see #isFailure(R, Throwable)
    */
-  public void recordResult(Object result) {
+  public void recordResult(R result) {
     recordResult(result, null);
   }
 
@@ -248,7 +249,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
    */
-  public CircuitBreaker withDelay(long delay, TimeUnit timeUnit) {
+  public CircuitBreaker<R> withDelay(long delay, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(delay > 0, "delay must be greater than 0");
     this.delay = Durations.of(delay, timeUnit);
@@ -260,7 +261,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
    * 
    * @throws IllegalArgumentException if {@code failureThresh} < 1
    */
-  public CircuitBreaker withFailureThreshold(int failureThreshold) {
+  public CircuitBreaker<R> withFailureThreshold(int failureThreshold) {
     Assert.isTrue(failureThreshold >= 1, "failureThreshold must be greater than or equal to 1");
     return withFailureThreshold(failureThreshold, failureThreshold);
   }
@@ -275,7 +276,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
    * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is <
    *           {@code executions}
    */
-  public synchronized CircuitBreaker withFailureThreshold(int failures, int executions) {
+  public synchronized CircuitBreaker<R> withFailureThreshold(int failures, int executions) {
     Assert.isTrue(failures >= 1, "failures must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= failures, "executions must be greater than or equal to failures");
@@ -290,7 +291,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
    * 
    * @throws IllegalArgumentException if {@code successThreshold} < 1
    */
-  public CircuitBreaker withSuccessThreshold(int successThreshold) {
+  public CircuitBreaker<R> withSuccessThreshold(int successThreshold) {
     Assert.isTrue(successThreshold >= 1, "successThreshold must be greater than or equal to 1");
     return withSuccessThreshold(successThreshold, successThreshold);
   }
@@ -305,7 +306,7 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
    * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is <
    *           {@code executions}
    */
-  public synchronized CircuitBreaker withSuccessThreshold(int successes, int executions) {
+  public synchronized CircuitBreaker<R> withSuccessThreshold(int successes, int executions) {
     Assert.isTrue(successes >= 1, "successes must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= successes, "executions must be greater than or equal to successes");
@@ -321,14 +322,14 @@ public class CircuitBreaker extends AbstractPolicy<CircuitBreaker> {
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
    */
-  public CircuitBreaker withTimeout(long timeout, TimeUnit timeUnit) {
+  public CircuitBreaker<R> withTimeout(long timeout, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(timeout > 0, "timeout must be greater than 0");
     this.timeout = Durations.of(timeout, timeUnit);
     return this;
   }
 
-  void recordResult(Object result, Throwable failure) {
+  void recordResult(R result, Throwable failure) {
     try {
       if (isFailure(result, failure))
         state.get().recordFailure();

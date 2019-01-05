@@ -15,6 +15,9 @@
  */
 package net.jodah.failsafe.examples;
 
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,14 +25,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
-
 public class Java8Example {
   @SuppressWarnings("unused")
   public static void main(String... args) {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-    RetryPolicy retryPolicy = new RetryPolicy();
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
 
     // Create a retryable functional interface
     Function<String, String> bar = value -> Failsafe.with(retryPolicy).get(() -> value + "bar");
