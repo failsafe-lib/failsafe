@@ -15,18 +15,18 @@
  */
 package net.jodah.failsafe.examples;
 
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
-
 public class AsyncExample {
   static ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-  static RetryPolicy retryPolicy = new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS).withJitter(.25);
+  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(100, TimeUnit.MILLISECONDS).withJitter(.25);
   static Service service = new Service();
 
   public static class Service {

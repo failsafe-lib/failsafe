@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe.internal.util;
 
+import net.jodah.failsafe.util.Unchecked;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.*;

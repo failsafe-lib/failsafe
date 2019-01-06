@@ -20,6 +20,7 @@ import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.util.Unchecked;
 import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -30,19 +31,13 @@ public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  static RetryPolicy retryPolicy = new RetryPolicy<>()
+  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
       .handleIf((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
           || ReplyFailure.TIMEOUT.equals(failure.failureType()));
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
   static Scheduler scheduler = (callable, delay, unit) -> {
-    Runnable runnable = () -> {
-      try {
-        callable.call();
-      } catch (Exception ignore) {
-      }
-    };
-
+    Runnable runnable = Unchecked.runnable(callable);
     return new DefaultScheduledFuture<Object>() {
       long timerId;
 
