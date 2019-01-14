@@ -2,6 +2,7 @@ package net.jodah.failsafe.issues;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.Fallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -18,7 +19,7 @@ public class Issue75Test {
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     int result = Failsafe.with(breaker)
         .with(service)
-        .withFallback((a, b) -> 999)
+        .with(Fallback.of((a, b) -> 999))
         .futureAsync(() -> CompletableFuture.completedFuture(223))
         .get();
 

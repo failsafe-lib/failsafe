@@ -1,9 +1,6 @@
 package net.jodah.failsafe.issues;
 
-import net.jodah.failsafe.Asserts;
-import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.CircuitBreakerOpenException;
-import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.*;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.*;
@@ -21,14 +18,14 @@ public class Issue84Test {
     Asserts.assertThrows(() -> Failsafe.with(circuitBreaker).get(() -> true), CircuitBreakerOpenException.class);
 
     // Synchronous with fallback
-    assertFalse(Failsafe.with(circuitBreaker).withFallback(false).get(() -> true));
+    assertFalse(Failsafe.with(circuitBreaker).with(Fallback.of(false)).get(() -> true));
 
     // Asynchronous
     Future<Boolean> future1 = Failsafe.with(circuitBreaker).with(executor).getAsync(() -> true);
     Asserts.assertThrows(future1::get, ExecutionException.class, CircuitBreakerOpenException.class);
 
     // Asynchronous with fallback
-    Future<Boolean> future2 = Failsafe.with(circuitBreaker).with(executor).withFallback(false).getAsync(() -> true);
+    Future<Boolean> future2 = Failsafe.with(circuitBreaker).with(executor).with(Fallback.of(false)).getAsync(() -> true);
     assertFalse(future2.get());
 
     // Future
@@ -38,7 +35,7 @@ public class Issue84Test {
     // Future with fallback
     Future<Boolean> future4 = Failsafe.with(circuitBreaker)
         .with(executor)
-        .withFallback(false)
+        .with(Fallback.of(false))
         .futureAsync(() -> CompletableFuture.completedFuture(false));
     assertFalse(future4.get());
   }

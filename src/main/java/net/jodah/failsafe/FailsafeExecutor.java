@@ -322,92 +322,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(CheckedSupplier<? extends R> fallback) {
-    return withFallback(Fallback.of(fallback));
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(CheckedBiConsumer<? extends R, ? extends Throwable> fallback) {
-    return withFallback(Fallback.of(fallback));
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(CheckedBiFunction<? extends R, ? extends Throwable, ? extends R> fallback) {
-    withFallback(Fallback.of(fallback));
-    return this;
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(CheckedConsumer<? extends Throwable> fallback) {
-    return withFallback(Fallback.of(fallback));
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(CheckedFunction<? extends Throwable, ? extends R> fallback) {
-    return withFallback(Fallback.of(fallback));
-  }
-
-  /**
-   * Configures the {@code fallback} action to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(CheckedRunnable fallback) {
-    return withFallback(Fallback.of(fallback));
-  }
-
-  /**
    * Configures the {@code fallback} result to be returned if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
    *     have been configured
    */
-  public FailsafeExecutor<R> withFallback(R fallback) {
-    return withFallback(Fallback.of(fallback));
-  }
-
-  /**
-   * Configures the {@code fallback} result to be returned if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> withFallback(Fallback<R> fallback) {
-    Assert.state(this.fallback == null, "withFallback has already been called");
+  public FailsafeExecutor<R> with(Fallback<R> fallback) {
+    Assert.state(this.fallback == null, "A fallback has already been configured");
     Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
     this.fallback = Assert.notNull(fallback, "fallback");
     return this;

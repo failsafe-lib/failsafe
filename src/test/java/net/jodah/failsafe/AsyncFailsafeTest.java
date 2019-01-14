@@ -398,7 +398,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When
     Future future = Failsafe.with(new CircuitBreaker<>())
         .with(new RetryPolicy<>())
-        .withFallback(false)
+        .with(Fallback.of(false))
         .with(executor)
         .runAsync(() -> waiter.fail("Should not execute supplier since executor has been shutdown"));
 

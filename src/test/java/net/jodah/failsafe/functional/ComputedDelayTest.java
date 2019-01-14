@@ -17,6 +17,7 @@ package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
@@ -67,7 +68,7 @@ public class ComputedDelayTest {
     }, "expected");
 
     AtomicInteger attempts = new AtomicInteger(0);
-    Object result = Failsafe.with(retryPolicy).withFallback(123).get(() -> {
+    Object result = Failsafe.with(retryPolicy).with(Fallback.of(123)).get(() -> {
       int i = attempts.getAndIncrement();
       switch (i) {
         case 0:
@@ -94,7 +95,7 @@ public class ComputedDelayTest {
         }, DelayException.class);
 
     AtomicInteger attempts = new AtomicInteger(0);
-    int result = Failsafe.with(retryPolicy).withFallback(123).get(() -> {
+    int result = Failsafe.with(retryPolicy).with(Fallback.of(123)).get(() -> {
       int i = attempts.getAndIncrement();
       switch (i) {
         case 0:

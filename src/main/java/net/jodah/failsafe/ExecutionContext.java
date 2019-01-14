@@ -23,7 +23,7 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public class ExecutionContext {
-  final Duration startTime;
+  private final Duration startTime;
   /** Number of execution attempts */
   volatile int executions;
 

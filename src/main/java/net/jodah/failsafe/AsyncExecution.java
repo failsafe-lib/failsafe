@@ -38,6 +38,7 @@ public final class AsyncExecution extends AbstractExecution {
   private volatile boolean completeCalled;
   private volatile boolean retryCalled;
 
+  @SuppressWarnings("unchecked")
   <T> AsyncExecution(Scheduler scheduler, FailsafeFuture<T> future, FailsafeExecutor<?> executor) {
     super((FailsafeExecutor<Object>) executor);
     this.scheduler = scheduler;

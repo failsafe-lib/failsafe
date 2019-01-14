@@ -94,8 +94,8 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedBiFunction<T, Throwable, T> fallback, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(breaker).withFallback(fallback).get(supplier)
-        : Failsafe.with(breaker).with(executor).withFallback(fallback).getAsync(supplier).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(breaker).with(Fallback.of(fallback)).get(supplier)
+        : Failsafe.with(breaker).with(executor).with(Fallback.of(fallback)).getAsync(supplier).get());
   }
 
   /**
@@ -103,8 +103,8 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).withFallback(fallback).get(supplier)
-        : Failsafe.with(retryPolicy).with(executor).withFallback(fallback).getAsync(supplier).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).with(Fallback.of(fallback)).get(supplier)
+        : Failsafe.with(retryPolicy).with(executor).with(Fallback.of(fallback)).getAsync(supplier).get());
   }
 
   /**
