@@ -244,7 +244,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
    * Tests the handling of a fallback with no conditions.
    */
   public void testCircuitBreakerWithoutConditions() {
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>();
+    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(1, TimeUnit.MILLISECONDS);
 
     Asserts.assertThrows(() -> Failsafe.with(circuitBreaker).get(() -> {
       throw new IllegalStateException();
@@ -272,7 +272,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     }));
 
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
-    assertTrue(Failsafe.with(retryPolicy).withFallback(fallback).get(() -> {
+    assertTrue(Failsafe.with(retryPolicy).with(fallback).get(() -> {
       throw new ConnectException();
     }));
   }

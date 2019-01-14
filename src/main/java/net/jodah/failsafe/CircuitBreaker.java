@@ -30,9 +30,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
- * 
- * @author Jonathan Halterman
+ *
  * @param <R> result type
+ * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
 public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
@@ -40,7 +40,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
   private final CircuitBreakerStats stats = currentExecutions::get;
-  private Duration delay = Duration.ZERO;
+  private Duration delay = Duration.ofMinutes(1);
   private Duration timeout;
   private Ratio failureThreshold;
   private Ratio successThreshold;
@@ -49,7 +49,8 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   CheckedRunnable onClose;
 
   /**
-   * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay by default.
+   * Creates a Circuit that opens after a single failure, closes after a single success, and has a 1 minute delay by
+   * default.
    */
   public CircuitBreaker() {
     failureConditions = new ArrayList<>();
@@ -65,8 +66,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
     /** The circuit is opened and not allowing executions to occur. */
     OPEN,
     /** The circuit is temporarily allowing executions to occur. */
-    HALF_OPEN
-  }
+    HALF_OPEN }
 
   /**
    * Returns whether the circuit allows execution, possibly triggering a state transition.
@@ -84,7 +84,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
 
   /**
    * Returns the delay before allowing another execution on the circuit. Defaults to {@link Duration#ZERO}.
-   * 
+   *
    * @see #withDelay(long, TimeUnit)
    */
   public Duration getDelay() {
@@ -94,7 +94,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit else
    * {@code null} if none has been configured.
-   * 
+   *
    * @see #withFailureThreshold(int)
    * @see #withFailureThreshold(int, int)
    */
@@ -112,7 +112,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Gets the ratio of successive successful executions that must occur when in a half-open state in order to close the
    * circuit else {@code null} if none has been configured.
-   * 
+   *
    * @see #withSuccessThreshold(int)
    * @see #withSuccessThreshold(int, int)
    */
@@ -122,7 +122,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
 
   /**
    * Returns timeout for executions else {@code null} if none has been configured.
-   * 
+   *
    * @see #withTimeout(long, TimeUnit)
    */
   public Duration getTimeout() {
@@ -189,8 +189,8 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   }
 
   /**
-   * Recods an execution that is about to take place by incrementing the internal executions count. Useful for standalone
-   * usage.
+   * Recods an execution that is about to take place by incrementing the internal executions count. Useful for
+   * standalone usage.
    */
   public void preExecute() {
     currentExecutions.incrementAndGet();
@@ -210,7 +210,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Records an execution {@code failure} as a success or failure based on the failure configuration as determined by
    * {@link #isFailure(R, Throwable)}.
-   * 
+   *
    * @see #isFailure(R, Throwable)
    */
   public void recordFailure(Throwable failure) {
@@ -220,7 +220,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Records an execution {@code result} as a success or failure based on the failure configuration as determined by
    * {@link #isFailure(R, Throwable)}.
-   * 
+   *
    * @see #isFailure(R, Throwable)
    */
   public void recordResult(R result) {
@@ -245,7 +245,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
 
   /**
    * Sets the {@code delay} to wait in open state before transitioning to half-open.
-   * 
+   *
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
    */
@@ -258,7 +258,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
 
   /**
    * Sets the number of successive failures that must occur when in a closed state in order to open the circuit.
-   * 
+   *
    * @throws IllegalArgumentException if {@code failureThresh} < 1
    */
   public CircuitBreaker<R> withFailureThreshold(int failureThreshold) {
@@ -270,11 +270,11 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
    * Sets the ratio of successive failures that must occur when in a closed state in order to open the circuit. For
    * example: 5, 10 would open the circuit if 5 out of the last 10 executions result in a failure. The circuit will not
    * be opened until at least the given number of {@code executions} have taken place.
-   * 
+   *
    * @param failures The number of failures that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code failures} against
    * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is <
-   *           {@code executions}
+   *     {@code executions}
    */
   public synchronized CircuitBreaker<R> withFailureThreshold(int failures, int executions) {
     Assert.isTrue(failures >= 1, "failures must be greater than or equal to 1");
@@ -288,7 +288,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Sets the number of successive successful executions that must occur when in a half-open state in order to close the
    * circuit, else the circuit is re-opened when a failure occurs.
-   * 
+   *
    * @throws IllegalArgumentException if {@code successThreshold} < 1
    */
   public CircuitBreaker<R> withSuccessThreshold(int successThreshold) {
@@ -300,11 +300,11 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
    * Sets the ratio of successive successful executions that must occur when in a half-open state in order to close the
    * circuit. For example: 5, 10 would close the circuit if 5 out of the last 10 executions were successful. The circuit
    * will not be closed until at least the given number of {@code executions} have taken place.
-   * 
+   *
    * @param successes The number of successful executions that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code successes} against
    * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is <
-   *           {@code executions}
+   *     {@code executions}
    */
   public synchronized CircuitBreaker<R> withSuccessThreshold(int successes, int executions) {
     Assert.isTrue(successes >= 1, "successes must be greater than or equal to 1");
@@ -318,7 +318,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Sets the {@code timeout} for executions. Executions that exceed this timeout are not interrupted, but are recorded
    * as failures once they naturally complete.
-   * 
+   *
    * @throws NullPointerException if {@code timeUnit} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
    */

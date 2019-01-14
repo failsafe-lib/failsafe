@@ -117,4 +117,12 @@ public class CircuitBreakerTest {
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 0), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 1), IllegalArgumentException.class);
   }
+
+  public void shouldDefaulDelay() throws Throwable {
+    CircuitBreaker breaker = new CircuitBreaker();
+    breaker.recordFailure();
+    Thread.sleep(100);
+    breaker.allowsExecution();
+    assertTrue(breaker.isOpen());
+  }
 }
