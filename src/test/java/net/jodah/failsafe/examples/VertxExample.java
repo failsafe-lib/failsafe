@@ -51,7 +51,7 @@ public class VertxExample {
       @Override
       public boolean cancel(boolean mayInterruptIfRunning) {
         return delay != 0 && vertx.cancelTimer(timerId);
-      };
+      }
     };
   };
 

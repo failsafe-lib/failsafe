@@ -18,6 +18,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 /**
  * Tracks executions and determines when an execution can be performed for a {@link RetryPolicy}.
@@ -80,7 +81,7 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public void complete() {
-    postExecute(ExecutionResult.noResult());
+    postExecute(ExecutionResult.NONE);
   }
 
   /**
@@ -104,5 +105,18 @@ public class Execution extends AbstractExecution {
    */
   public boolean recordFailure(Throwable failure) {
     return canRetryOn(failure);
+  }
+
+  /**
+   * Performs a synchronous execution.
+   */
+  ExecutionResult executeSync(Supplier<ExecutionResult> supplier) {
+    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+      supplier = policyExecutor.supplySync(supplier);
+
+    ExecutionResult result = supplier.get();
+    completed = result.completed;
+    executor.handleComplete(result, this);
+    return result;
   }
 }

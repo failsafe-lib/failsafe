@@ -20,6 +20,7 @@ package net.jodah.failsafe.function;
  * 
  * @author Jonathan Halterman
  */
+@FunctionalInterface
 public interface CheckedRunnable {
   void run() throws Exception;
 }

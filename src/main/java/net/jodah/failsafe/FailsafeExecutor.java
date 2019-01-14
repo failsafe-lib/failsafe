@@ -18,14 +18,17 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.event.FailsafeEvent;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.CancellableFuture;
 import net.jodah.failsafe.internal.util.CommonPoolScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 import net.jodah.failsafe.util.concurrent.Schedulers;
 
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * An executor capable of performing executions that where failures are handled according to configured {@link Policy
@@ -35,12 +38,12 @@ import java.util.function.Function;
  * @author Jonathan Halterman
  */
 public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
-  private Scheduler scheduler = CommonPoolScheduler.INSTANCE;
+  Scheduler scheduler = CommonPoolScheduler.INSTANCE;
   RetryPolicy<R> retryPolicy = RetryPolicy.NEVER;
   CircuitBreaker<R> circuitBreaker;
   Fallback<R> fallback;
   /** Policies sorted outer-most first */
-  List<Policy> policies;
+  List<Policy<R>> policies;
   private EventListener completeListener;
 
   FailsafeExecutor(CircuitBreaker<R> circuitBreaker) {
@@ -51,77 +54,77 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     this.retryPolicy = retryPolicy;
   }
 
-  FailsafeExecutor(List<Policy> policies) {
+  FailsafeExecutor(List<Policy<R>> policies) {
     this.policies = policies;
   }
 
   /**
-   * Executes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
+   * Executes the {@code supplier} until a successful result is returned or the configured {@link RetryPolicy} is
    * exceeded.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
    *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
-  public <T extends R> T get(Callable<T> callable) {
-    return call(execution -> Assert.notNull(callable, "callable"));
+  public <T extends R> T get(CheckedSupplier<T> supplier) {
+    return call(execution -> Assert.notNull(supplier, "supplier"));
   }
 
   /**
-   * Executes the {@code callable} until a successful result is returned or the configured {@link RetryPolicy} is
+   * Executes the {@code supplier} until a successful result is returned or the configured {@link RetryPolicy} is
    * exceeded.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
    *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
-  public <T extends R> T get(ContextualCallable<T> callable) {
-    return call(execution -> Functions.callableOf(callable, execution));
+  public <T extends R> T get(ContextualSupplier<T> supplier) {
+    return call(execution -> Functions.supplierOf(supplier, execution));
   }
 
   /**
-   * Executes the {@code callable} asynchronously until a successful result is returned or the configured {@link
+   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured {@link
    * RetryPolicy} is exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> Future<T> getAsync(Callable<T> callable) {
-    return callAsync(execution -> Functions.asyncOf(callable, execution), null);
+  public <T extends R> CompletableFuture<T> getAsync(CheckedSupplier<T> supplier) {
+    return callAsync(execution -> Functions.promiseOf(supplier, execution));
   }
 
   /**
-   * Executes the {@code callable} asynchronously until a successful result is returned or the configured {@link
+   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured {@link
    * RetryPolicy} is exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> Future<T> getAsync(ContextualCallable<T> callable) {
-    return callAsync(execution -> Functions.asyncOf(callable, execution), null);
+  public <T extends R> CompletableFuture<T> getAsync(ContextualSupplier<T> supplier) {
+    return callAsync(execution -> Functions.promiseOf(supplier, execution));
   }
 
   /**
-   * Executes the {@code callable} asynchronously until a successful result is returned or the configured {@link
+   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured {@link
    * RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be manually
    * scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> Future<T> getAsyncExecution(AsyncCallable<T> callable) {
-    return callAsync(execution -> Functions.asyncOf(callable, execution), null);
+  public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncSupplier<T> supplier) {
+    return callAsyncExecution(execution -> Functions.asyncOfExecution(supplier, execution));
   }
 
   void handleComplete(ExecutionResult result, ExecutionContext context) {
@@ -161,58 +164,58 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> future(Callable<? extends CompletionStage<T>> callable) {
-    return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
+  public <T extends R> CompletableFuture<T> futureAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
+    return callAsync(execution -> Functions.promiseOfStage(supplier, execution));
   }
 
   /**
-   * Executes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> future(ContextualCallable<? extends CompletionStage<T>> callable) {
-    return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
+  public <T extends R> CompletableFuture<T> futureAsync(ContextualSupplier<? extends CompletionStage<T>> supplier) {
+    return callAsync(execution -> Functions.promiseOfStage(supplier, execution));
   }
 
   /**
-   * Executes the {@code callable} asynchronously until the resulting future is successfully completed or the configured
+   * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
    * manually scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callable} is null
-   * @throws RejectedExecutionException if the {@code callable} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplier} is null
+   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> futureAsyncExecution(AsyncCallable<? extends CompletionStage<T>> callable) {
-    return callAsync(execution -> Functions.asyncOfFuture(callable, execution));
+  public <T extends R> CompletableFuture<T> futureAsyncExecution(AsyncSupplier<? extends CompletionStage<T>> supplier) {
+    return callAsyncExecution(execution -> Functions.asyncOfFutureExecution(supplier, execution));
   }
 
   /**
    * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
    *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(CheckedRunnable runnable) {
-    call(execution -> Functions.callableOf(runnable));
+    call(execution -> Functions.supplierOf(runnable));
   }
 
   /**
@@ -224,7 +227,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(ContextualRunnable runnable) {
-    call(execution -> Functions.callableOf(runnable, execution));
+    call(execution -> Functions.supplierOf(runnable, execution));
   }
 
   /**
@@ -237,8 +240,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
-  public Future<Void> runAsync(CheckedRunnable runnable) {
-    return callAsync(execution -> Functions.asyncOf(runnable, execution), null);
+  public CompletableFuture<Void> runAsync(CheckedRunnable runnable) {
+    return callAsync(execution -> Functions.promiseOf(runnable, execution));
   }
 
   /**
@@ -251,8 +254,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
-  public Future<Void> runAsync(ContextualRunnable runnable) {
-    return callAsync(execution -> Functions.asyncOf(runnable, execution), null);
+  public CompletableFuture<Void> runAsync(ContextualRunnable runnable) {
+    return callAsync(execution -> Functions.promiseOf(runnable, execution));
   }
 
   /**
@@ -266,8 +269,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
-  public Future<Void> runAsyncExecution(AsyncRunnable runnable) {
-    return callAsync(execution -> Functions.asyncOf(runnable, execution), null);
+  public CompletableFuture<Void> runAsyncExecution(AsyncRunnable runnable) {
+    return callAsyncExecution(execution -> Functions.asyncOfExecution(runnable, execution));
   }
 
   /**
@@ -325,7 +328,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
    *     have been configured
    */
-  public FailsafeExecutor<R> withFallback(Callable<? extends R> fallback) {
+  public FailsafeExecutor<R> withFallback(CheckedSupplier<? extends R> fallback) {
     return withFallback(Fallback.of(fallback));
   }
 
@@ -411,19 +414,18 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Calls the {@code callable} synchronously, performing retries according to the {@code retryPolicy}.
+   * Calls the {@code supplier} synchronously, performing retries according to the {@code retryPolicy}.
    *
-   * @throws FailsafeException if the {@code callable} fails with a checked Exception or if interrupted while
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
    *     waiting to perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   @SuppressWarnings("unchecked")
-  private <T> T call(Function<Execution, Callable<T>> callableFn) {
+  private <T> T call(Function<Execution, CheckedSupplier<?>> supplierFn) {
     Execution execution = new Execution(this);
-    Callable<T> callable = callableFn.apply(execution);
-    execution.inject(callable);
+    Supplier<ExecutionResult> supplier = Functions.resultSupplierOf(supplierFn.apply(execution), execution);
 
-    ExecutionResult result = execution.executeSync();
+    ExecutionResult result = execution.executeSync(supplier);
     if (result.failure != null)
       throw result.failure instanceof RuntimeException ?
           (RuntimeException) result.failure :
@@ -432,45 +434,41 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Calls the asynchronous {@code callable} via the configured Scheduler, performing retries according to the
-   * configured RetryPolicy, and returns a CompletableFuture.
-   * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
-   * CircuitBreakerOpenException}.
-   *
-   * @throws NullPointerException if the {@code callableFn} is null
-   * @throws RejectedExecutionException if the {@code callableFn} cannot be scheduled for execution
-   */
-  @SuppressWarnings("unchecked")
-  private <T> CompletableFuture<T> callAsync(Function<AsyncExecution, Callable<T>> callableFn) {
-    FailsafeFuture<T> future = new FailsafeFuture(this);
-    CompletableFuture<T> response = CancellableFuture.of(future);
-    future.inject(response);
-    callAsync(callableFn, future);
-    return response;
-  }
-
-  /**
-   * Calls the asynchronous {@code callable} via the configured Scheduler, performing retries according to the
+   * Calls the asynchronous {@code supplier} via the configured Scheduler, performing retries according to the
    * configured RetryPolicy.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
    *
-   * @throws NullPointerException if the {@code callableFn} is null
-   * @throws RejectedExecutionException if the {@code callableFn} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code supplierFn} is null
+   * @throws RejectedExecutionException if the {@code supplierFn} cannot be scheduled for execution
    */
   @SuppressWarnings("unchecked")
-  private <T> FailsafeFuture<T> callAsync(Function<AsyncExecution, Callable<T>> callableFn, FailsafeFuture<T> future) {
-    if (future == null)
-      future = new FailsafeFuture(this);
-
+  private <T> CompletableFuture<T> callAsync(
+      Function<AsyncExecution, Supplier<CompletableFuture<ExecutionResult>>> supplierFn) {
+    FailsafeFuture<T> future = new FailsafeFuture(this);
     AsyncExecution execution = new AsyncExecution(scheduler, future, this);
-    Callable<T> callable = callableFn.apply(execution);
-    execution.inject(callable);
     future.inject(execution);
+    execution.executeAsync(supplierFn.apply(execution));
+    return future;
+  }
 
-    execution.executeAsync(null, scheduler, (FailsafeFuture<Object>) future);
+  /**
+   * Calls the asynchronous {@code supplier} via the configured Scheduler, performing retries according to the
+   * configured RetryPolicy, until any configured RetryPolicy is exceeded or the AsyncExecution is completed.
+   * <p>
+   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * CircuitBreakerOpenException}.
+   *
+   * @throws NullPointerException if the {@code supplierFn} is null
+   * @throws RejectedExecutionException if the {@code supplierFn} cannot be scheduled for execution
+   */
+  @SuppressWarnings("unchecked")
+  private <T> CompletableFuture<T> callAsyncExecution(Function<AsyncExecution, Supplier<?>> supplierFn) {
+    FailsafeFuture<T> future = new FailsafeFuture(this);
+    AsyncExecution execution = new AsyncExecution(scheduler, future, this);
+    future.inject(execution);
+    execution.executeAsyncExecution(supplierFn.apply(execution));
     return future;
   }
 }

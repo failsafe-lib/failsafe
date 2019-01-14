@@ -16,7 +16,8 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.ContextualCallable;
+import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.function.ContextualSupplier;
 import net.jodah.failsafe.function.ContextualRunnable;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -81,12 +82,12 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     });
   }
 
-  private void assertGet(Object callable) {
+  private void assertGet(Object supplier) {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResult(false);
 
-    assertEquals(get(Failsafe.with(retryPolicy), callable), Boolean.TRUE);
+    assertEquals(get(Failsafe.with(retryPolicy), supplier), Boolean.TRUE);
     verify(service, times(5)).connect();
 
     // Given - Fail three times
@@ -95,16 +96,16 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When / Then
-    assertThrows(() -> get(Failsafe.with(retryTwice), callable), syncThrowables);
+    assertThrows(() -> get(Failsafe.with(retryTwice), supplier), syncThrowables);
     verify(service, times(3)).connect();
   }
 
   public void shouldGet() {
-    assertGet((Callable<Boolean>) () -> service.connect());
+    assertGet((CheckedSupplier<Boolean>) () -> service.connect());
   }
 
   public void shouldGetContextual() {
-    assertGet((ContextualCallable<Boolean>) context -> {
+    assertGet((ContextualSupplier<Boolean>) context -> {
       assertEquals(context.getExecutions(), counter.getAndIncrement());
       return service.connect();
     });
@@ -304,10 +305,10 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T get(FailsafeExecutor<T> failsafe, Object callable) {
-    if (callable instanceof Callable)
-      return failsafe.get((Callable<T>) callable);
+  private <T> T get(FailsafeExecutor<T> failsafe, Object supplier) {
+    if (supplier instanceof CheckedSupplier)
+      return failsafe.get((CheckedSupplier<T>) supplier);
     else
-      return failsafe.get((ContextualCallable<T>) callable);
+      return failsafe.get((ContextualSupplier<T>) supplier);
   }
 }

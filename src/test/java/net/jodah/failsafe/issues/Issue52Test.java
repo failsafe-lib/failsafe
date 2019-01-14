@@ -31,15 +31,13 @@ public class Issue52Test {
   @Test(expectedExceptions = CancellationException.class)
   public void shouldCancelExecutionViaFuture() throws Throwable {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-    Future<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
+    Future<Object> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
         .with(scheduler)
         .getAsync(exec -> {
           throw new IllegalStateException();
         });
 
-    Thread.sleep(100);
-    proxyFuture.cancel(true);
-
+    assertTrue(proxyFuture.cancel(true));
     proxyFuture.get(); // should throw CancellationException per .getAsync() javadoc.
   }
 
@@ -48,15 +46,15 @@ public class Issue52Test {
     AtomicInteger counter = new AtomicInteger();
     CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
         .with(scheduler)
-        .future(exec -> {
+        .futureAsync(exec -> {
+          Thread.sleep(100);
           counter.incrementAndGet();
           CompletableFuture<String> result = new CompletableFuture<>();
           result.completeExceptionally(new RuntimeException());
           return result;
         });
 
-    Thread.sleep(100);
-    proxyFuture.cancel(true);
+    assertTrue(proxyFuture.cancel(true));
     int count = counter.get();
 
     assertTrue(proxyFuture.isCancelled());

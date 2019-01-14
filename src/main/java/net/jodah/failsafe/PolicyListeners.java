@@ -14,17 +14,20 @@ import net.jodah.failsafe.internal.util.Assert;
 @SuppressWarnings("unchecked")
 public class PolicyListeners<S, R> {
   public interface EventListener {
-    void handle(ExecutionResult result, ExecutionContext context);
+    void handle(Object result, Throwable failure, ExecutionContext context);
 
     @SuppressWarnings("unchecked")
     static <R> EventListener of(CheckedConsumer<? extends FailsafeEvent<R>> handler) {
-      return (ExecutionResult result, ExecutionContext context) -> {
+      return (Object result, Throwable failure, ExecutionContext context) -> {
         try {
-          ((CheckedConsumer<FailsafeEvent<R>>) handler).accept(
-              new FailsafeEvent<>((R) result.result, result.failure, context));
+          ((CheckedConsumer<FailsafeEvent<R>>) handler).accept(new FailsafeEvent<>((R) result, failure, context));
         } catch (Exception ignore) {
         }
       };
+    }
+
+    default void handle(ExecutionResult result, ExecutionContext context) {
+      handle(result.result, result.failure, context);
     }
   }
 

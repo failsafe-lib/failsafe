@@ -15,13 +15,13 @@
  */
 package net.jodah.failsafe.function;
 
+/**
+ * A Consumer that throws checked exceptions.
+ *
+ * @author Jonathan Halterman
+ * @param <T> result type
+ */
+@FunctionalInterface
 public interface CheckedConsumer<T> {
   void accept(T t) throws Exception;
-
-  default void acceptIgnoreExceptions(T t) {
-    try {
-      accept(t);
-    } catch (Exception ignore) {
-    }
-  }
 }

@@ -18,59 +18,53 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.Callable;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractExecution extends ExecutionContext {
   final FailsafeExecutor<Object> executor;
-  Callable<Object> callable;
+  final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
   // Internally mutable state
   volatile Object lastResult;
   volatile Throwable lastFailure;
-  PolicyExecutor head;
-  volatile PolicyExecutor lastExecuted;
+
   /** The wait time in nanoseconds. */
   private volatile long waitNanos;
   volatile boolean completed;
 
   /**
-   * Creates a new AbstractExecution for the {@code callable} and {@code config}.
+   * Creates a new AbstractExecution for the {@code executor}.
    */
   AbstractExecution(FailsafeExecutor<Object> executor) {
     super(Duration.ofNanos(System.nanoTime()));
     this.executor = executor;
 
-    PolicyExecutor next = null;
     if (executor.policies == null || executor.policies.isEmpty()) {
       // Add policies in logical order
+      policyExecutors = new ArrayList<>(5);
       if (executor.circuitBreaker != null)
-        next = buildPolicyExecutor(executor.circuitBreaker, next);
+        buildPolicyExecutor(executor.circuitBreaker);
       if (executor.retryPolicy != RetryPolicy.NEVER)
-        next = buildPolicyExecutor(executor.retryPolicy, next);
+        buildPolicyExecutor(executor.retryPolicy);
       if (executor.fallback != null)
-        next = buildPolicyExecutor(executor.fallback, next);
+        buildPolicyExecutor(executor.fallback);
     } else {
       // Add policies in user-defined order
-      ListIterator<Policy> policyIterator = executor.policies.listIterator(executor.policies.size());
+      policyExecutors = new ArrayList<>(executor.policies.size());
+      ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
       while (policyIterator.hasPrevious())
-        next = buildPolicyExecutor(policyIterator.previous(), next);
+        buildPolicyExecutor(policyIterator.previous());
     }
-
-    head = next;
   }
 
   @SuppressWarnings("unchecked")
-  void inject(Callable<?> callable) {
-    this.callable = (Callable<Object>) callable;
-  }
-
-  private PolicyExecutor buildPolicyExecutor(Policy policy, PolicyExecutor next) {
-    PolicyExecutor policyExecutor = policy.toExecutor();
+  private void buildPolicyExecutor(Policy policy) {
+    PolicyExecutor<Policy<Object>> policyExecutor = policy.toExecutor();
     policyExecutor.execution = this;
-    policyExecutor.next = next;
-    return policyExecutor;
+    policyExecutors.add(policyExecutor);
   }
 
   /**
@@ -95,28 +89,12 @@ public abstract class AbstractExecution extends ExecutionContext {
    */
   synchronized boolean postExecute(ExecutionResult result) {
     record(result);
-    result = postExecute(result, head);
+    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+      result = policyExecutor.postExecute(result);
+
     waitNanos = result.waitNanos;
     completed = result.completed;
     return completed;
-  }
-
-  private ExecutionResult postExecute(ExecutionResult result, PolicyExecutor policyExecutor) {
-    // Traverse to the last executor
-    if (policyExecutor.next != null)
-      postExecute(result, policyExecutor.next);
-
-    return policyExecutor.postExecute(result);
-  }
-
-  /**
-   * Performs a synchronous execution.
-   */
-  ExecutionResult executeSync() {
-    ExecutionResult result = head.executeSync(null);
-    completed = result.completed;
-    executor.handleComplete(result, this);
-    return result;
   }
 
   /**

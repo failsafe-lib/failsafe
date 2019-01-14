@@ -32,14 +32,14 @@ public class Issue84Test {
     assertFalse(future2.get());
 
     // Future
-    Future<Boolean> future3 = Failsafe.with(circuitBreaker).with(executor).future(() -> CompletableFuture.completedFuture(false));
+    Future<Boolean> future3 = Failsafe.with(circuitBreaker).with(executor).futureAsync(() -> CompletableFuture.completedFuture(false));
     Asserts.assertThrows(future3::get, ExecutionException.class, CircuitBreakerOpenException.class);
 
     // Future with fallback
     Future<Boolean> future4 = Failsafe.with(circuitBreaker)
         .with(executor)
         .withFallback(false)
-        .future(() -> CompletableFuture.completedFuture(false));
+        .futureAsync(() -> CompletableFuture.completedFuture(false));
     assertFalse(future4.get());
   }
 }

@@ -45,7 +45,7 @@ public class AsyncExecutionTest {
 
   public void testCompleteForNoResult() {
     // Given
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>()));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>()));
 
     // When
     exec.complete();
@@ -60,7 +60,7 @@ public class AsyncExecutionTest {
 
   public void testCompleteForResult() {
     // Given
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -76,7 +76,7 @@ public class AsyncExecutionTest {
   }
 
   public void testGetAttemptCount() {
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>()));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>()));
     exec.retryOn(e);
     exec.preExecute();
     exec.retryOn(e);
@@ -85,7 +85,7 @@ public class AsyncExecutionTest {
 
   public void testRetryForResult() {
     // Given retry for null
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -103,8 +103,7 @@ public class AsyncExecutionTest {
     verify(future).complete(1, null);
 
     // Given 2 max retries
-    exec = new AsyncExecution(callable, scheduler, future,
-        executorFor(new RetryPolicy<>().handleResult(null).withMaxRetries(2)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null).withMaxRetries(2)));
 
     // When / Then
     resetMocks();
@@ -125,7 +124,7 @@ public class AsyncExecutionTest {
 
   public void testRetryForResultAndThrowable() {
     // Given retry for null
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -145,8 +144,7 @@ public class AsyncExecutionTest {
     verify(future).complete(1, null);
 
     // Given 2 max retries
-    exec = new AsyncExecution(callable, scheduler, future,
-        executorFor(new RetryPolicy<>().handleResult(null).withMaxRetries(2)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null).withMaxRetries(2)));
 
     // When / Then
     resetMocks();
@@ -167,7 +165,7 @@ public class AsyncExecutionTest {
 
   public void testRetryOn() {
     // Given retry on IllegalArgumentException
-    exec = new AsyncExecution(callable, scheduler, future,
+    exec = new AsyncExecution(scheduler, future,
         executorFor(new RetryPolicy<>().handle(IllegalArgumentException.class)));
 
     // When / Then
@@ -184,7 +182,7 @@ public class AsyncExecutionTest {
     verify(future).complete(null, e);
 
     // Given 2 max retries
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>().withMaxRetries(1)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().withMaxRetries(1)));
 
     // When / Then
     resetMocks();
@@ -203,7 +201,7 @@ public class AsyncExecutionTest {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnRetryWhenAlreadyComplete() {
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>()));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>()));
     exec.complete();
     exec.preExecute();
     exec.retryOn(e);
@@ -211,7 +209,7 @@ public class AsyncExecutionTest {
 
   public void testCompleteOrRetry() {
     // Given retry on IllegalArgumentException
-    exec = new AsyncExecution(callable, scheduler, future, executorFor(new RetryPolicy<>()));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>()));
 
     // When / Then
     exec.completeOrHandle(null, e);

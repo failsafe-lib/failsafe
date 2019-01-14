@@ -28,9 +28,10 @@ public class FallbackExecutor extends PolicyExecutor<Fallback> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected ExecutionResult onFailure(ExecutionResult result) {
     try {
-      return result.success(policy.apply(result.result, result.failure));
+      return result.withResult(policy.apply(result.result, result.failure));
     } catch (Exception e) {
       return ExecutionResult.failure(e);
     }

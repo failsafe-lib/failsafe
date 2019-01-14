@@ -2,8 +2,8 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /**
  * Handles execution and execution results according to a policy. May contain pre and post execution behaviors.
@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 public abstract class PolicyExecutor<P extends Policy> {
   protected final P policy;
   protected AbstractExecution execution;
-  PolicyExecutor next;
 
   protected PolicyExecutor(P policy) {
     this.policy = policy;
@@ -25,90 +24,47 @@ public abstract class PolicyExecutor<P extends Policy> {
    * Called before execution to return an alternative result or failure such as if execution is not allowed or needed.
    * Should return the provided {@code result} else some alternative.
    */
-  protected ExecutionResult preExecute(ExecutionResult result) {
-    return result;
+  protected ExecutionResult preExecute() {
+    return null;
   }
 
   /**
    * Performs a sync execution by first doing a pre-execute, calling the next executor, else calling the executor's
-   * callable, then finally doing a post-execute. This navigates to the end of the executor chain before calling the
-   * callable.
+   * supplier, then finally doing a post-execute. This navigates to the end of the executor chain before calling the
+   * supplier.
    */
-  protected ExecutionResult executeSync(ExecutionResult result) {
-    ExecutionResult preResult = preExecute(result);
-    if (preResult != result)
-      return preResult;
+  protected Supplier<ExecutionResult> supplySync(Supplier<ExecutionResult> supplier) {
+    return () -> {
+      ExecutionResult result = preExecute();
+      if (result != null)
+        return result;
 
-    if (next != null) {
-      // Move right
-      result = next.executeSync(result);
-    } else {
-      // End of chain
-      try {
-        long waitNanos = result == null ? 0 : result.waitNanos;
-        Thread.sleep(TimeUnit.NANOSECONDS.toMillis(waitNanos));
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        return ExecutionResult.failure(new FailsafeException(e));
-      }
-
-      try {
-        execution.preExecute();
-        result = new ExecutionResult(execution.callable.call(), null);
-      } catch (Throwable t) {
-        result = new ExecutionResult(null, t);
-      } finally {
-        execution.record(result);
-      }
-    }
-
-    return postExecute(result);
+      return postExecute(supplier.get());
+    };
   }
 
   /**
    * Performs an async execution by first doing an optional pre-execute, calling the next executor, else scheduling the
-   * executor's callable, then finally doing a post-execute. This navigates to the end of the executor chain before
-   * calling the callable.
+   * executor's supplier, then finally doing a post-execute. This navigates to the end of the executor chain before
+   * calling the supplier.
    *
-   * @param shouldExecute Indicates whether this executor should be executed or be skipped
    * @return null if an execution has been scheduled
    */
-  @SuppressWarnings("unchecked")
-  protected ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler,
-      FailsafeFuture<Object> future) {
+  protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
+      Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    return () -> {
+      ExecutionResult result = preExecute();
+      if (result != null)
+        return CompletableFuture.completedFuture(result);
 
-    boolean shouldExecuteNext = shouldExecute || this.equals(execution.lastExecuted);
-    execution.lastExecuted = this;
-
-    if (shouldExecute) {
-      ExecutionResult preResult = preExecute(result);
-      if (preResult != result)
-        return preResult;
-    }
-
-    if (next != null) {
-      // Move right
-      result = next.executeAsync(result, shouldExecuteNext, scheduler, future);
-    } else if (shouldExecute) {
-      // End of chain
-      try {
-        if (!future.isDone() && !future.isCancelled()) {
-          long waitNanos = result == null ? 0 : result.waitNanos;
-          future.inject((Future<Object>) scheduler.schedule(execution.callable, waitNanos, TimeUnit.NANOSECONDS));
-        }
-        return null;
-      } catch (Throwable t) {
-        return ExecutionResult.schedulingError(t);
-      }
-    }
-
-    return result == null || result.schedulingError ? result : postExecute(result);
+      return supplier.get().thenApply(this::postExecute);
+    };
   }
 
   /**
    * Performs post-execution handling for a {@code result}.
    */
-  ExecutionResult postExecute(ExecutionResult result) {
+  protected ExecutionResult postExecute(ExecutionResult result) {
     if (isFailure(result)) {
       return onFailure(result.with(false, false));
     } else {
@@ -123,7 +79,7 @@ public abstract class PolicyExecutor<P extends Policy> {
    * not a failure.
    */
   protected boolean isFailure(ExecutionResult result) {
-    if (result.noResult)
+    if (result.nonResult)
       return false;
     else if (policy instanceof AbstractPolicy)
       return ((AbstractPolicy) policy).isFailure(result);

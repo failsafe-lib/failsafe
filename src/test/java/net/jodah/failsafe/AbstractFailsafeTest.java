@@ -18,11 +18,11 @@ package net.jodah.failsafe;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
+import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -63,19 +63,19 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe getAsync with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, Callable<T> callable) {
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).get(callable)
-        : Failsafe.with(retryPolicy).with(executor).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).get(supplier)
+        : Failsafe.with(retryPolicy).with(executor).getAsync(supplier).get());
   }
 
   /**
    * Does a failsafe getAsync with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker<T> circuitBreaker, Callable<T> callable) {
+  <T> T failsafeGet(CircuitBreaker<T> circuitBreaker, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(circuitBreaker).get(callable)
-        : Failsafe.with(circuitBreaker).with(executor).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(circuitBreaker).get(supplier)
+        : Failsafe.with(circuitBreaker).with(executor).getAsync(supplier).get());
   }
 
   /**
@@ -92,19 +92,19 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
+  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedBiFunction<T, Throwable, T> fallback, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(breaker).withFallback(fallback).get(callable)
-        : Failsafe.with(breaker).with(executor).withFallback(fallback).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(breaker).withFallback(fallback).get(supplier)
+        : Failsafe.with(breaker).with(executor).withFallback(fallback).getAsync(supplier).get());
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, Callable<T> callable) {
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).withFallback(fallback).get(callable)
-        : Failsafe.with(retryPolicy).with(executor).withFallback(fallback).getAsync(callable).get());
+    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).withFallback(fallback).get(supplier)
+        : Failsafe.with(retryPolicy).with(executor).withFallback(fallback).getAsync(supplier).get());
   }
 
   /**
@@ -237,9 +237,9 @@ public abstract class AbstractFailsafeTest {
     verify(service, times(0)).connect();
   }
 
-  private <T> T unwrapExceptions(Callable<T> callable) {
+  private <T> T unwrapExceptions(CheckedSupplier<T> supplier) {
     try {
-      return callable.call();
+      return supplier.get();
     } catch (ExecutionException e) {
       throw (RuntimeException) e.getCause();
     } catch (FailsafeException e) {

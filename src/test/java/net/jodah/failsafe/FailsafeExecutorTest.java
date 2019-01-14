@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -105,14 +106,14 @@ public class FailsafeExecutorTest {
    * Asserts that listeners are called the expected number of times for a successful completion.
    */
   public void testListenersForSuccess() throws Throwable {
-    Callable<Boolean> callable = () -> service.connect();
+    CheckedSupplier<Boolean> supplier = () -> service.connect();
 
     // Given - Fail 4 times then succeed
     when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
     RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
 
     // When
-    registerListeners(retryPolicy).get(callable);
+    registerListeners(retryPolicy).get(supplier);
 
     // Then
     abort.assertEquals(0);
@@ -128,7 +129,7 @@ public class FailsafeExecutorTest {
    * Asserts that listeners are called the expected number of times for an unhandled failure.
    */
   public void testListenersForUnhandledFailure() throws Throwable {
-    Callable<Boolean> callable = () -> service.connect();
+    CheckedSupplier<Boolean> supplier = () -> service.connect();
 
     // Given - Fail 2 times then don't match policy
     when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
@@ -136,31 +137,31 @@ public class FailsafeExecutorTest {
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withMaxRetries(10);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(callable),
+    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(supplier),
         IllegalArgumentException.class);
 
     // Then
     abort.assertEquals(0);
     complete.assertEquals(1);
     failedAttempt.assertEquals(2);
-    failure.assertEquals(0);
+    failure.assertEquals(1);
     retriesExceeded.assertEquals(0);
     retry.assertEquals(2);
-    success.assertEquals(1);
+    success.assertEquals(0);
   }
 
   /**
    * Asserts that listeners are called the expected number of times when retries are exceeded.
    */
   public void testListenersForRetriesExceeded() throws Throwable {
-    Callable<Boolean> callable = () -> service.connect();
+    CheckedSupplier<Boolean> supplier = () -> service.connect();
 
     // Given - Fail 4 times and exceed retries
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(callable),
+    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(supplier),
         IllegalStateException.class);
 
     // Then
@@ -177,7 +178,7 @@ public class FailsafeExecutorTest {
    * Asserts that listeners are called the expected number of times for an aborted execution.
    */
   public void testListenersForAbort() throws Throwable {
-    Callable<Boolean> callable = () -> service.connect();
+    CheckedSupplier<Boolean> supplier = () -> service.connect();
 
     // Given - Fail twice then abort
     when(service.connect()).thenThrow(failures(3, new IllegalStateException()))
@@ -185,7 +186,7 @@ public class FailsafeExecutorTest {
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(callable),
+    Asserts.assertThrows(() -> registerListeners(retryPolicy).get(supplier),
         IllegalArgumentException.class);
 
     // Then

@@ -26,51 +26,64 @@ import static org.testng.Assert.*;
 public class FailsafeFutureTest {
   ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
 
-  @Test(expectedExceptions = TimeoutException.class)
-  public void shouldGetWithTimeout() throws Throwable {
-    Failsafe.with(new RetryPolicy()).with(executor).runAsync(() -> {
-      Thread.sleep(1000);
-    }).get(100, TimeUnit.MILLISECONDS);
-
-    Thread.sleep(1000);
-  }
-
-  public void shouldCompleteFutureOnCancel() throws Throwable {
+  /**
+   * Asserts that retries are stopped and completion handlers are called on cancel.
+   */
+  public void shouldCallOnCompleteWhenCancelled() throws Throwable {
     Waiter waiter = new Waiter();
-    Future<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).onComplete(e -> {
+    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).onComplete(e -> {
       waiter.assertNull(e.result);
       waiter.assertTrue(e.failure instanceof CancellationException);
       waiter.resume();
     }).getAsync(() -> {
-      Thread.sleep(5000);
-      return "test";
+      Thread.sleep(1000);
+      throw new IllegalStateException();
     });
 
-    Testing.sleep(300);
-    future.cancel(true);
-    waiter.await(1000);
+    // Note: We have to add whenComplete to the returned future separately, otherwise cancel will not be noticed by
+    // Failsafe
+    future.whenComplete((result, failure) -> {
+      waiter.assertNull(result);
+      waiter.assertTrue(failure instanceof CancellationException);
+      waiter.resume();
+    });
 
-    assertTrue(future.isCancelled());
-    assertTrue(future.isDone());
+    future.cancel(true);
+    waiter.await(1000, 2);
+    future.complete("unxpected2");
     Asserts.assertThrows(future::get, CancellationException.class);
   }
 
   /**
-   * Asserts that completion handlers are not called again if a completed execution is cancelled.
+   * Asserts that a completed future ignroes subsequent completion attempts.
    */
-  public void shouldNotCancelCompletedExecution() throws Throwable {
-    Waiter waiter = new Waiter();
-    Future<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).onComplete(e -> {
-      waiter.assertEquals("test", e.result);
-      waiter.assertNull(e.failure);
-      waiter.resume();
-      Thread.sleep(100);
-    }).getAsync(() -> "test");
+  public void shouldNotCancelCompletedFuture() throws Throwable {
+    // Given
+    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).getAsync(() -> "test");
 
-    waiter.await(1000);
+    // When
+    Thread.sleep(200);
+    assertFalse(future.isCancelled());
+    assertTrue(future.isDone());
     assertFalse(future.cancel(true));
+
+    // Then
     assertFalse(future.isCancelled());
     assertTrue(future.isDone());
     assertEquals(future.get(), "test");
+  }
+
+  /**
+   * Asserts that a cancelled future ignores subsequent completion attempts.
+   */
+  public void shouldNotCompleteCancelledFuture() {
+    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).getAsync(() -> {
+      Thread.sleep(1000);
+      throw new IllegalStateException();
+    });
+
+    future.cancel(true);
+    future.complete("unxpected2");
+    Asserts.assertThrows(future::get, CancellationException.class);
   }
 }

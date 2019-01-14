@@ -35,22 +35,22 @@ public class ComputedDelayTest {
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullDelayFunction() {
-    new RetryPolicy().withDelay(null);
+    new RetryPolicy<>().withDelay(null);
   }
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullResult() {
-    new RetryPolicy().withDelayWhen((result, failure, context) -> Duration.ofSeconds(1), null);
+    new RetryPolicy<>().withDelayWhen((result, failure, context) -> Duration.ofSeconds(1), null);
   }
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullFailureType() {
-    new RetryPolicy().withDelayOn((result, failure, context) -> Duration.ofSeconds(1), null);
+    new RetryPolicy<>().withDelayOn((result, failure, context) -> Duration.ofSeconds(1), null);
   }
 
   @Test(expectedExceptions = UncheckedExpectedException.class)
   public void testUncheckedExceptionInDelayFunction() {
-    RetryPolicy retryPolicy = new RetryPolicy().withDelay((result, failure, context) -> {
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay((result, failure, context) -> {
       throw new UncheckedExpectedException();
     });
 
@@ -61,7 +61,7 @@ public class ComputedDelayTest {
 
   public void shouldDelayOnMatchingResult() {
     AtomicInteger delays = new AtomicInteger(0);
-    RetryPolicy retryPolicy = new RetryPolicy<>().handleResultIf(result -> true).withMaxRetries(4).withDelayWhen((r, f, c) -> {
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResultIf(result -> true).withMaxRetries(4).withDelayWhen((r, f, c) -> {
       delays.incrementAndGet(); // side-effect for test purposes
       return Duration.ofNanos(1);
     }, "expected");

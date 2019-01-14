@@ -19,8 +19,6 @@ import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.executor.FallbackExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 
-import java.util.concurrent.Callable;
-
 /**
  * A Policy that handles failures using a fallback.
  *
@@ -55,8 +53,8 @@ public class Fallback<R> extends AbstractPolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("unchecked")
-  public static <R> Fallback<R> of(Callable<? extends R> fallback) {
-    return new Fallback<>(Functions.fnOf((Callable<R>) Assert.notNull(fallback, "fallback")));
+  public static <R> Fallback<R> of(CheckedSupplier<? extends R> fallback) {
+    return new Fallback<>(Functions.fnOf((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")));
   }
 
   /**

@@ -15,14 +15,13 @@
  */
 package net.jodah.failsafe.function;
 
-import net.jodah.failsafe.AsyncExecution;
-
 /**
- * A callable that manually triggers asynchronous retries or completion via an asynchronous execution.
- * 
+ * A Supplier that throws checked exceptions.
+ *
  * @author Jonathan Halterman
  * @param <T> result type
  */
-public interface AsyncCallable<T> {
-  T call(AsyncExecution execution) throws Exception;
+@FunctionalInterface
+public interface CheckedSupplier<T> {
+  T get() throws Exception;
 }

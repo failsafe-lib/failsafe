@@ -15,13 +15,15 @@
  */
 package net.jodah.failsafe.function;
 
+import net.jodah.failsafe.AsyncExecution;
+
 /**
- * A BiFunction that throws checked exceptions.
- *
+ * A Supplier that manually triggers asynchronous retries or completion via an asynchronous execution.
+ * 
  * @author Jonathan Halterman
  * @param <T> result type
  */
 @FunctionalInterface
-public interface CheckedBiFunction<T, U, R> {
-  R apply(T t, U u) throws Exception;
+public interface AsyncSupplier<T> {
+  T get(AsyncExecution execution) throws Exception;
 }

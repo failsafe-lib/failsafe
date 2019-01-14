@@ -15,15 +15,17 @@
  */
 package net.jodah.failsafe.internal.executor;
 
-import net.jodah.failsafe.ExecutionResult;
-import net.jodah.failsafe.FailsafeFuture;
-import net.jodah.failsafe.PolicyExecutor;
+import net.jodah.failsafe.*;
 import net.jodah.failsafe.PolicyListeners.EventListener;
-import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelay;
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
@@ -57,32 +59,70 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   }
 
   @Override
-  protected ExecutionResult preExecute(ExecutionResult result) {
-    if (retryListener != null && result != null && execution.getExecutions() > 0)
-      retryListener.handle(result, execution);
-    return result;
+  protected Supplier<ExecutionResult> supplySync(Supplier<ExecutionResult> supplier) {
+    return () -> {
+      while (true) {
+        ExecutionResult result = postExecute(supplier.get());
+        if (result.completed)
+          return result;
+
+        try {
+          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.waitNanos));
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return ExecutionResult.failure(new FailsafeException(e));
+        }
+
+        if (retryListener != null)
+          retryListener.handle(result, execution);
+      }
+    };
   }
 
   @Override
-  protected ExecutionResult executeSync(ExecutionResult result) {
-    while (true) {
-      result = super.executeSync(result);
-      if (result.completed)
-        return result;
-    }
-  }
+  @SuppressWarnings("unchecked")
+  protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
+      Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    return () -> {
+      CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+      Callable<Object> callable = new Callable<Object>() {
+        volatile ExecutionResult previousResult;
 
-  @Override
-  protected ExecutionResult executeAsync(ExecutionResult result, boolean shouldExecute, Scheduler scheduler,
-      FailsafeFuture<Object> future) {
-    while (true) {
-      result = super.executeAsync(result, shouldExecute, scheduler, future);
-      if (result == null || result.completed)
-        return result;
+        @Override
+        public Object call() {
+          if (retryListener != null && previousResult != null)
+            retryListener.handle(previousResult, execution);
 
-      // Move right again
-      shouldExecute = true;
-    }
+          return supplier.get().handle((result, error) -> {
+            // Propagate result
+            if (result != null) {
+              result = postExecute(result);
+              if (result.completed)
+                promise.complete(result);
+              else if (!future.isDone() && !future.isCancelled()) {
+                try {
+                  previousResult = result;
+                  future.inject((Future<Object>) scheduler.schedule(this, result.waitNanos, TimeUnit.NANOSECONDS));
+                } catch (Exception e) {
+                  promise.completeExceptionally(e);
+                }
+              }
+            } else
+              promise.completeExceptionally(error);
+
+            return result;
+          });
+        }
+      };
+
+      try {
+        callable.call();
+      } catch (Throwable t) {
+        promise.completeExceptionally(t);
+      }
+
+      return promise;
+    };
   }
 
   @Override

@@ -19,7 +19,7 @@ public class Issue75Test {
     int result = Failsafe.with(breaker)
         .with(service)
         .withFallback((a, b) -> 999)
-        .future(() -> CompletableFuture.completedFuture(223))
+        .futureAsync(() -> CompletableFuture.completedFuture(223))
         .get();
 
     Assert.assertEquals(result, 223);

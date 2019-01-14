@@ -15,6 +15,13 @@
  */
 package net.jodah.failsafe.function;
 
+/**
+ * A Function that throws checked exceptions.
+ *
+ * @author Jonathan Halterman
+ * @param <T> result type
+ */
+@FunctionalInterface
 public interface CheckedFunction<T, R> {
   R apply(T t) throws Exception;
 }
