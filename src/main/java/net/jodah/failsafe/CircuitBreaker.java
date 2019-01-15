@@ -247,11 +247,11 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
    * Sets the {@code delay} to wait in open state before transitioning to half-open.
    *
    * @throws NullPointerException if {@code timeUnit} is null
-   * @throws IllegalArgumentException if {@code delay} <= 0
+   * @throws IllegalArgumentException if {@code delay} < 0
    */
   public CircuitBreaker<R> withDelay(long delay, TimeUnit timeUnit) {
     Assert.notNull(timeUnit, "timeUnit");
-    Assert.isTrue(delay > 0, "delay must be greater than 0");
+    Assert.isTrue(delay >= 0, "delay must not be negative");
     this.delay = Durations.of(delay, timeUnit);
     return this;
   }

@@ -244,7 +244,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
    * Tests the handling of a fallback with no conditions.
    */
   public void testCircuitBreakerWithoutConditions() {
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(1, TimeUnit.MILLISECONDS);
+    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(0, TimeUnit.MILLISECONDS);
 
     Asserts.assertThrows(() -> Failsafe.with(circuitBreaker).get(() -> {
       throw new IllegalStateException();
