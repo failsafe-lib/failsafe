@@ -84,7 +84,7 @@ public class AsyncExecutionTest {
   }
 
   public void testRetryForResult() {
-    // Given retry for null
+    // Given rpRetry for null
     exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
 
     // When / Then
@@ -123,7 +123,7 @@ public class AsyncExecutionTest {
   }
 
   public void testRetryForResultAndThrowable() {
-    // Given retry for null
+    // Given rpRetry for null
     exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
 
     // When / Then
@@ -164,7 +164,7 @@ public class AsyncExecutionTest {
   }
 
   public void testRetryOn() {
-    // Given retry on IllegalArgumentException
+    // Given rpRetry on IllegalArgumentException
     exec = new AsyncExecution(scheduler, future,
         executorFor(new RetryPolicy<>().handle(IllegalArgumentException.class)));
 
@@ -208,7 +208,7 @@ public class AsyncExecutionTest {
   }
 
   public void testCompleteOrRetry() {
-    // Given retry on IllegalArgumentException
+    // Given rpRetry on IllegalArgumentException
     exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>()));
 
     // When / Then

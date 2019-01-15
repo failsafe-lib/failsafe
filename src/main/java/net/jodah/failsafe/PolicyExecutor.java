@@ -92,6 +92,11 @@ public abstract class PolicyExecutor<P extends Policy> {
    * #isFailure(ExecutionResult)}.
    */
   protected void onSuccess(ExecutionResult result) {
+    if (policy instanceof AbstractPolicy) {
+      AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
+      if (abstractPolicy.successListener != null)
+        abstractPolicy.successListener.handle(result, execution);
+    }
   }
 
   /**
@@ -99,6 +104,11 @@ public abstract class PolicyExecutor<P extends Policy> {
    * #isFailure(ExecutionResult)}, possibly creating a new result, else returning the original {@code result}.
    */
   protected ExecutionResult onFailure(ExecutionResult result) {
+    if (policy instanceof AbstractPolicy) {
+      AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
+      if (abstractPolicy.failureListener != null)
+        abstractPolicy.failureListener.handle(result, execution);
+    }
     return result;
   }
 }

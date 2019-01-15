@@ -406,7 +406,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   /**
-   * Asserts that Failsafe handles a retry scheduling failure.
+   * Asserts that Failsafe handles a rpRetry scheduling failure.
    */
   public void shouldHandleRejectedRetryExecution() throws Throwable {
     // Given

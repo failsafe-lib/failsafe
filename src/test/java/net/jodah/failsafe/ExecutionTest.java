@@ -35,7 +35,7 @@ public class ExecutionTest {
   ConnectException e = new ConnectException();
 
   public void testCanRetryForResult() {
-    // Given retry for null
+    // Given rpRetry for null
     Execution exec = new Execution(new RetryPolicy<>().handleResult(null));
 
     // When / Then
@@ -65,7 +65,7 @@ public class ExecutionTest {
   }
 
   public void testCanRetryForResultAndThrowable() {
-    // Given retry for null
+    // Given rpRetry for null
     Execution exec = new Execution(new RetryPolicy<>().handleResult(null));
 
     // When / Then
@@ -92,7 +92,7 @@ public class ExecutionTest {
   }
 
   public void testCanRetryOn() {
-    // Given retry on IllegalArgumentException
+    // Given rpRetry on IllegalArgumentException
     Execution exec = new Execution(new RetryPolicy<>().handle(IllegalArgumentException.class));
 
     // When / Then

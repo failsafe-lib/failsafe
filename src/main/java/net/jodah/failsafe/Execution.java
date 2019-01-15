@@ -34,6 +34,7 @@ public class Execution extends AbstractExecution {
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
+  @SuppressWarnings("unchecked")
   public Execution(Policy... policies) {
     super(new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
   }
