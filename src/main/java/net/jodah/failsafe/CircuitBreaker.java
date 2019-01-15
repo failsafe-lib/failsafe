@@ -19,12 +19,10 @@ import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.internal.*;
 import net.jodah.failsafe.internal.executor.CircuitBreakerExecutor;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Durations;
 import net.jodah.failsafe.util.Ratio;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -85,7 +83,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Returns the delay before allowing another execution on the circuit. Defaults to {@link Duration#ZERO}.
    *
-   * @see #withDelay(long, TimeUnit)
+   * @see #withDelay(Duration)
    */
   public Duration getDelay() {
     return delay;
@@ -123,7 +121,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Returns timeout for executions else {@code null} if none has been configured.
    *
-   * @see #withTimeout(long, TimeUnit)
+   * @see #withTimeout(Duration)
    */
   public Duration getTimeout() {
     return timeout;
@@ -246,13 +244,13 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   /**
    * Sets the {@code delay} to wait in open state before transitioning to half-open.
    *
-   * @throws NullPointerException if {@code timeUnit} is null
+   * @throws NullPointerException if {@code delay} is null
    * @throws IllegalArgumentException if {@code delay} < 0
    */
-  public CircuitBreaker<R> withDelay(long delay, TimeUnit timeUnit) {
-    Assert.notNull(timeUnit, "timeUnit");
-    Assert.isTrue(delay >= 0, "delay must not be negative");
-    this.delay = Durations.of(delay, timeUnit);
+  public CircuitBreaker<R> withDelay(Duration delay) {
+    Assert.notNull(delay, "delay");
+    Assert.isTrue(delay.toNanos() >= 0, "delay must not be negative");
+    this.delay = delay;
     return this;
   }
 
@@ -319,13 +317,13 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
    * Sets the {@code timeout} for executions. Executions that exceed this timeout are not interrupted, but are recorded
    * as failures once they naturally complete.
    *
-   * @throws NullPointerException if {@code timeUnit} is null
+   * @throws NullPointerException if {@code timeout} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
    */
-  public CircuitBreaker<R> withTimeout(long timeout, TimeUnit timeUnit) {
-    Assert.notNull(timeUnit, "timeUnit");
-    Assert.isTrue(timeout > 0, "timeout must be greater than 0");
-    this.timeout = Durations.of(timeout, timeUnit);
+  public CircuitBreaker<R> withTimeout(Duration timeout) {
+    Assert.notNull(timeout, "timeout");
+    Assert.isTrue(timeout.toNanos() > 0, "timeout must be greater than 0");
+    this.timeout = timeout;
     return this;
   }
 

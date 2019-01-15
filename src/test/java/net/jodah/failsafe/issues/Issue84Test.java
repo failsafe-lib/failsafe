@@ -3,6 +3,7 @@ package net.jodah.failsafe.issues;
 import net.jodah.failsafe.*;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.*;
 
 import static org.testng.Assert.assertFalse;
@@ -11,7 +12,7 @@ import static org.testng.Assert.assertFalse;
 public class Issue84Test {
   public void shouldHandleCircuitBreakerOpenException() throws Throwable {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().withDelay(10, TimeUnit.MINUTES).handleResult(false);
+    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().withDelay(Duration.ofMinutes(10)).handleResult(false);
     circuitBreaker.open();
 
     // Synchronous

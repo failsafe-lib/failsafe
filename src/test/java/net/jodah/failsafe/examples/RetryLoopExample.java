@@ -18,8 +18,8 @@ package net.jodah.failsafe.examples;
 import net.jodah.failsafe.Execution;
 import net.jodah.failsafe.RetryPolicy;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,7 +36,7 @@ public class RetryLoopExample {
 
   public static void main(String... args) throws Throwable {
     RetryPolicy retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withBackoff(10, 40,
-        TimeUnit.MILLISECONDS);
+        ChronoUnit.MILLIS);
     Execution execution = new Execution(retryPolicy);
 
     while (!execution.isComplete()) {

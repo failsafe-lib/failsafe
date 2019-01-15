@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 
 import java.net.ConnectException;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -184,7 +185,7 @@ public class ExecutionTest {
   }
 
   public void shouldAdjustWaitTimeForBackoff() {
-    Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, TimeUnit.NANOSECONDS));
+    Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, ChronoUnit.NANOS));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);
@@ -215,7 +216,7 @@ public class ExecutionTest {
   }
 
   public void shouldFallbackWaitTimeFromComputedToFixedDelay() {
-    Execution exec = new Execution(new RetryPolicy<>().withDelay(5, TimeUnit.NANOSECONDS).withDelay((r, f,
+    Execution exec = new Execution(new RetryPolicy<>().withDelay(Duration.ofNanos(5)).withDelay((r, f,
         ctx) -> Duration.ofNanos(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
@@ -233,7 +234,7 @@ public class ExecutionTest {
   }
 
   public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
-    Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, TimeUnit.NANOSECONDS).withDelay((r, f,
+    Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, ChronoUnit.NANOS).withDelay((r, f,
         ctx) -> Duration.ofNanos(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
@@ -254,14 +255,14 @@ public class ExecutionTest {
 
   public void shouldAdjustWaitTimeForMaxDuration() throws Throwable {
     Execution exec = new Execution(
-        new RetryPolicy<>().withDelay(49, TimeUnit.MILLISECONDS).withMaxDuration(50, TimeUnit.MILLISECONDS));
+        new RetryPolicy<>().withDelay(Duration.ofMillis(49)).withMaxDuration(Duration.ofMillis(50)));
     Thread.sleep(10);
     assertTrue(exec.canRetryOn(e));
     assertTrue(exec.getWaitTime().toNanos() < TimeUnit.MILLISECONDS.toNanos(50) && exec.getWaitTime().toNanos() > 0);
   }
 
   public void shouldSupportMaxDuration() throws Exception {
-    Execution exec = new Execution(new RetryPolicy<>().withMaxDuration(100, TimeUnit.MILLISECONDS));
+    Execution exec = new Execution(new RetryPolicy<>().withMaxDuration(Duration.ofMillis(100)));
     assertTrue(exec.canRetryOn(e));
     assertTrue(exec.canRetryOn(e));
     Thread.sleep(105);
@@ -280,8 +281,8 @@ public class ExecutionTest {
 
   public void shouldGetWaitMillis() throws Throwable {
     Execution exec = new Execution(new RetryPolicy<>()
-        .withDelay(100, TimeUnit.MILLISECONDS)
-        .withMaxDuration(101, TimeUnit.MILLISECONDS)
+        .withDelay(Duration.ofMillis(100))
+        .withMaxDuration(Duration.ofMillis(101))
         .handleResult(null));
     assertEquals(exec.getWaitTime().toMillis(), 0);
     exec.canRetryFor(null);

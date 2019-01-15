@@ -23,7 +23,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 public class NettyExample {
   static final String HOST = System.getProperty("host", "127.0.0.1");
@@ -32,7 +32,7 @@ public class NettyExample {
   public static void main(String... args) throws Throwable {
     EventLoopGroup group = new NioEventLoopGroup();
     Bootstrap bootstrap = createBootstrap(group);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(1, TimeUnit.SECONDS);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofSeconds(1));
 
     Failsafe.with(retryPolicy).with(group).runAsyncExecution(
         execution -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {

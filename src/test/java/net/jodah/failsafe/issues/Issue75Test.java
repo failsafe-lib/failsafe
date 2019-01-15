@@ -6,16 +6,16 @@ import net.jodah.failsafe.Fallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Issue75Test {
   @Test
   public void testThatFailSafeIsBrokenWithFallback() throws Exception {
-    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().withFailureThreshold(10, 100).withSuccessThreshold(2).withDelay(100,
-        TimeUnit.MILLISECONDS);
+    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().withFailureThreshold(10, 100).withSuccessThreshold(2).withDelay(
+        Duration.ofMillis(100));
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     int result = Failsafe.with(breaker)
         .with(service)

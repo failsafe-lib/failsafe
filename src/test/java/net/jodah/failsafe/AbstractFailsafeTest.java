@@ -25,7 +25,6 @@ import org.testng.annotations.Test;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
@@ -190,7 +189,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldFallbackAfterFailureWithCircuitBreaker() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failure);
     Waiter waiter = new Waiter();
@@ -222,7 +221,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldFallbackWhenCircuitBreakerIsOpen() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3).withDelay(1, TimeUnit.MINUTES);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
     breaker.open();
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failure);

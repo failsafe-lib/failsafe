@@ -20,8 +20,8 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.*;
 
@@ -174,20 +174,20 @@ public class RetryPolicyTest {
   public void shouldRequireValidBackoff() {
     shouldFail(() -> new RetryPolicy().withBackoff(0, 0, null), NullPointerException.class);
     shouldFail(
-        () -> new RetryPolicy().withMaxDuration(1, TimeUnit.MILLISECONDS).withBackoff(100, 120, TimeUnit.MILLISECONDS),
+        () -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withBackoff(100, 120, ChronoUnit.MILLIS),
         IllegalStateException.class);
-    shouldFail(() -> new RetryPolicy().withBackoff(-3, 10, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
-    shouldFail(() -> new RetryPolicy().withBackoff(100, 10, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
-    shouldFail(() -> new RetryPolicy().withBackoff(5, 10, TimeUnit.MILLISECONDS, .5), IllegalArgumentException.class);
+    shouldFail(() -> new RetryPolicy().withBackoff(-3, 10, ChronoUnit.MILLIS), IllegalArgumentException.class);
+    shouldFail(() -> new RetryPolicy().withBackoff(100, 10, ChronoUnit.MILLIS), IllegalArgumentException.class);
+    shouldFail(() -> new RetryPolicy().withBackoff(5, 10, ChronoUnit.MILLIS, .5), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidDelay() {
-    shouldFail(() -> new RetryPolicy().withDelay(5, null), NullPointerException.class);
-    shouldFail(() -> new RetryPolicy().withMaxDuration(1, TimeUnit.MILLISECONDS).withDelay(100, TimeUnit.MILLISECONDS),
+    shouldFail(() -> new RetryPolicy().withDelay((Duration)null), NullPointerException.class);
+    shouldFail(() -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withDelay(Duration.ofMillis(100)),
         IllegalStateException.class);
-    shouldFail(() -> new RetryPolicy().withBackoff(1, 2, TimeUnit.MILLISECONDS).withDelay(100, TimeUnit.MILLISECONDS),
+    shouldFail(() -> new RetryPolicy().withBackoff(1, 2, ChronoUnit.MILLIS).withDelay(Duration.ofMillis(100)),
         IllegalStateException.class);
-    shouldFail(() -> new RetryPolicy().withDelay(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    shouldFail(() -> new RetryPolicy().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidMaxRetries() {
@@ -196,14 +196,14 @@ public class RetryPolicyTest {
 
   public void shouldRequireValidMaxDuration() {
     shouldFail(
-        () -> new RetryPolicy().withDelay(100, TimeUnit.MILLISECONDS).withMaxDuration(100, TimeUnit.MILLISECONDS),
+        () -> new RetryPolicy().withDelay(Duration.ofMillis(100)).withMaxDuration(Duration.ofMillis(100)),
         IllegalStateException.class);
   }
 
   public void testCopy() {
     RetryPolicy rp = new RetryPolicy();
-    rp.withBackoff(2, 20, TimeUnit.SECONDS, 2.5);
-    rp.withMaxDuration(60, TimeUnit.SECONDS);
+    rp.withBackoff(2, 20, ChronoUnit.SECONDS, 2.5);
+    rp.withMaxDuration(Duration.ofSeconds(60));
     rp.withMaxRetries(3);
 
     RetryPolicy rp2 = rp.copy();

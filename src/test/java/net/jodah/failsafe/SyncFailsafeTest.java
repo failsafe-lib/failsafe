@@ -22,6 +22,7 @@ import net.jodah.failsafe.function.ContextualRunnable;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -153,7 +154,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldOpenCircuitWhenTimeoutExceeded() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withTimeout(10, TimeUnit.MILLISECONDS);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withTimeout(Duration.ofMillis(10));
     assertTrue(breaker.isClosed());
 
     // When
@@ -179,7 +180,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     }).start();
 
     try {
-      Failsafe.with(new RetryPolicy<>().withDelay(5, TimeUnit.SECONDS)).run(() -> {
+      Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofSeconds(5))).run(() -> {
         throw new Exception();
       });
     } catch (Exception e) {
@@ -191,7 +192,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldRetryAndOpenCircuit() {
-    CircuitBreaker<Boolean> circuit = new CircuitBreaker<Boolean>().withFailureThreshold(3).withDelay(10, TimeUnit.MINUTES);
+    CircuitBreaker<Boolean> circuit = new CircuitBreaker<Boolean>().withFailureThreshold(3).withDelay(Duration.ofMinutes(10));
 
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(20, new ConnectException())).thenReturn(true);
@@ -207,7 +208,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldThrowCircuitBreakerOpenExceptionAfterFailuresExceeded() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2).withDelay(10, TimeUnit.SECONDS);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2).withDelay(Duration.ofSeconds(10));
     AtomicInteger counter = new AtomicInteger();
     CheckedRunnable runnable = () -> Failsafe.with(breaker).run(() -> {
       counter.incrementAndGet();
@@ -228,7 +229,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
    */
   public void shouldCompleteWhenMaxDurationExceeded() {
     when(service.connect()).thenReturn(false);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResult(false).withMaxDuration(100, TimeUnit.MILLISECONDS);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResult(false).withMaxDuration(Duration.ofMillis(100));
 
     assertEquals(Failsafe.with(retryPolicy).onFailure(e -> {
       assertEquals(e.result, Boolean.FALSE);
@@ -244,7 +245,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
    * Tests the handling of a fallback with no conditions.
    */
   public void testCircuitBreakerWithoutConditions() {
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(0, TimeUnit.MILLISECONDS);
+    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
 
     Asserts.assertThrows(() -> Failsafe.with(circuitBreaker).get(() -> {
       throw new IllegalStateException();

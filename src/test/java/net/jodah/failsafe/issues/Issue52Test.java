@@ -20,6 +20,7 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,7 +32,7 @@ public class Issue52Test {
   @Test(expectedExceptions = CancellationException.class)
   public void shouldCancelExecutionViaFuture() throws Throwable {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-    Future<Object> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
+    Future<Object> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
         .with(scheduler)
         .getAsync(exec -> {
           throw new IllegalStateException();
@@ -44,7 +45,7 @@ public class Issue52Test {
   public void shouldCancelExecutionViaCompletableFuture() throws Throwable {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     AtomicInteger counter = new AtomicInteger();
-    CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(10, TimeUnit.MILLISECONDS))
+    CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
         .with(scheduler)
         .futureAsync(exec -> {
           Thread.sleep(100);

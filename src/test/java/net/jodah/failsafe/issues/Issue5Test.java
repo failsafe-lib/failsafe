@@ -20,6 +20,7 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.*;
 
 @Test
@@ -29,8 +30,8 @@ public class Issue5Test {
    */
   public void test() throws Throwable {
     Waiter waiter = new Waiter();
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(100, TimeUnit.MILLISECONDS)
-        .withMaxDuration(2, TimeUnit.SECONDS)
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofMillis(100))
+        .withMaxDuration(Duration.ofSeconds(2))
         .withMaxRetries(3)
         .handleResult(null);
 

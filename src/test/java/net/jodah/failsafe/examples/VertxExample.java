@@ -24,7 +24,7 @@ import net.jodah.failsafe.util.Unchecked;
 import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class VertxExample {
@@ -70,7 +70,7 @@ public class VertxExample {
     });
 
     // Retryable sender
-    Failsafe.with(retryPolicy.copy().withDelay(1, TimeUnit.SECONDS))
+    Failsafe.with(retryPolicy.copy().withDelay(Duration.ofSeconds(1)))
         .with(scheduler)
         .runAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
           if (reply.succeeded())

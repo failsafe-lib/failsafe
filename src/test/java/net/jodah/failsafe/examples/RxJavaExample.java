@@ -20,13 +20,14 @@ import net.jodah.failsafe.RetryPolicy;
 import rx.Observable;
 import rx.Subscriber;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RxJavaExample {
   public static void main(String... args) {
     AtomicInteger failures = new AtomicInteger();
-    RetryPolicy retryPolicy = new RetryPolicy().withDelay(1, TimeUnit.SECONDS);
+    RetryPolicy retryPolicy = new RetryPolicy().withDelay(Duration.ofSeconds(1));
 
     Observable.create((Subscriber<? super String> s) -> {
       // Fail 3 times then succeed

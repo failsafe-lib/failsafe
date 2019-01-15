@@ -20,6 +20,7 @@ import net.jodah.failsafe.function.*;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -356,7 +357,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldOpenCircuitWhenTimeoutExceeded() throws Throwable {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withTimeout(10, TimeUnit.MILLISECONDS);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withTimeout(Duration.ofMillis(10));
     assertTrue(breaker.isClosed());
 
     // When
@@ -373,7 +374,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldSkipExecutionWhenCircuitOpen() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(10, TimeUnit.MINUTES);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofMillis(10));
     breaker.open();
     AtomicBoolean executed = new AtomicBoolean();
 

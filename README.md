@@ -10,7 +10,7 @@
 
 ## Introduction
 
-Failsafe is a lightweight, zero-dependency library for handling failures for Java 8+. It was designed to be as easy to use as possible, with a concise API for handling everyday use cases and the flexibility to handle everything else. Failsafe features:
+Failsafe is a lightweight, zero-dependency library for handling failures. It was designed to be as easy to use as possible, with a concise API for handling everyday use cases and the flexibility to handle everything else. Failsafe features:
 
 * [Retries](#retries)
 * [Circuit breakers](#circuit-breakers)
@@ -20,6 +20,8 @@ Failsafe is a lightweight, zero-dependency library for handling failures for Jav
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletableFuture](#completablefuture-integration) and [functional interface](#functional-interface-integration) integration
 * [Execution tracking](#execution-tracking)
+
+Supports Java 6+ though the documentation uses lambdas for simplicity.
 
 ## Setup
 
@@ -46,6 +48,16 @@ Failsafe.with(retryPolicy).run(() -> connect());
 
 // Get with retries
 Connection connection = Failsafe.with(retryPolicy).get(() -> connect());
+```
+
+Java 6 and 7 are also supported:
+
+```java
+Connection connection = Failsafe.with(retryPolicy).get(new Callable<Connection>() {
+  public Connection call() {
+    return connect();
+  }
+});
 ```
 
 #### Retry Policies
@@ -139,7 +151,7 @@ Connection connection = Failsafe.with(retryPolicy).get(this::connect);
 
 #### Asynchronous Retries
 
-Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler]. They return a Future from which a result can be synchronously retrieved. Execution [listeners](#event-listeners) can also be registered to learn when an execution completes:
+Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler]. They return a [FailsafeFuture] from which a result can be synchronously [retrieved][future-get]. Execution [listeners](#event-listeners) can also be registered to learn when an execution completes:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -243,7 +255,7 @@ breaker.close();
 
 if (breaker.allowsExecution()) {
   try {
-    breaker.preExecute();
+    preExecute();
     doSomething();
     breaker.recordSuccess();
   } catch (Exception e) {
@@ -342,6 +354,17 @@ Failsafe.with(retryPolicy)
   .get(this::connect);
 ```
 
+Java 6 and 7 users can extend the [Listeners] class and override individual event handlers:
+
+```java
+Failsafe.with(retryPolicy)
+  .with(new Listeners<Connection>() {
+    public void onRetry(Connection cxn, Throwable failure, ExecutionContext ctx) {
+      log.warn("Failure #{}. Retrying.", ctx.getExecutions());
+    }
+  }).get(() -> connect());
+```
+
 [CircuitBreaker] related event listeners can also be registered:
 
 ```java
@@ -367,7 +390,7 @@ Failsafe can also perform asynchronous executions and retries on 3rd party sched
 
 #### CompletableFuture Integration
 
-Failsafe can be used to retry [CompletableFuture] or [CompletionStage] calls:
+Java 8 users can use Failsafe to retry [CompletableFuture] or [CompletionStage] calls:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -379,7 +402,7 @@ Failsafe.with(retryPolicy)
 
 #### Functional Interface Integration
 
-Failsafe can be used to create retryable functional interfaces:
+Failsafe can be used to create retryable Java 8 functional interfaces:
 
 ```java
 Function<String, Connection> connect = address -> Failsafe.with(retryPolicy).get(() -> connect(address));
@@ -464,12 +487,14 @@ Copyright 2015-2018 Jonathan Halterman and friends. Released under the [Apache 2
 [runAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#runAsync-net.jodah.failsafe.function.AsyncRunnable-
 [getAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#getAsync-net.jodah.failsafe.function.AsyncCallable-
 [futureAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#futureAsync-net.jodah.failsafe.function.AsyncCallable-
+[future-get]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html#get--
 [retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
 
 [Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
 [FailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html
 [AsyncFailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafeConfig.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
+[FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
 [ExecutionContext]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ExecutionContext.html
 [Execution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Execution
 [AsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncExecution

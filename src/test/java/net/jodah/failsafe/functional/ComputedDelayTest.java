@@ -19,6 +19,7 @@ import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -36,7 +37,7 @@ public class ComputedDelayTest {
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testNullDelayFunction() {
-    new RetryPolicy<>().withDelay(null);
+    new RetryPolicy<>().withDelay((DelayFunction<Object, ? extends Throwable>) null);
   }
 
   @Test(expectedExceptions = NullPointerException.class)

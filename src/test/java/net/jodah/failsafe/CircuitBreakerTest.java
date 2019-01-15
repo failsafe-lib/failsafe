@@ -19,8 +19,8 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
 import static org.testng.Assert.assertFalse;
@@ -89,13 +89,13 @@ public class CircuitBreakerTest {
   }
 
   public void shouldRequireValidDelay() {
-    assertThrows(() -> new CircuitBreaker().withDelay(5, null), NullPointerException.class);
-    assertThrows(() -> new CircuitBreaker().withDelay(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay(null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidTimeout() {
-    assertThrows(() -> new CircuitBreaker().withTimeout(5, null), NullPointerException.class);
-    assertThrows(() -> new CircuitBreaker().withTimeout(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withTimeout(null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withTimeout(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidFailureThreshold() {
