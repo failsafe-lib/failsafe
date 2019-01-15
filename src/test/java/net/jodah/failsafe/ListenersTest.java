@@ -17,12 +17,10 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,27 +33,27 @@ import static org.mockito.Mockito.*;
 @Test
 public class ListenersTest {
   private Service service = mock(Service.class);
-  ExecutorService executor;
+  CheckedSupplier<Boolean> supplier = () -> service.connect();
 
   // RetryPolicy listener counters
-  ListenerCounter rpAbort;
-  ListenerCounter rpFailedAttempt;
-  ListenerCounter rpRetriesExceeded;
-  ListenerCounter rpRetry;
-  ListenerCounter rpSuccess;
-  ListenerCounter rpFailure;
+  volatile ListenerCounter rpAbort;
+  volatile ListenerCounter rpFailedAttempt;
+  volatile ListenerCounter rpRetriesExceeded;
+  volatile ListenerCounter rpRetry;
+  volatile ListenerCounter rpSuccess;
+  volatile ListenerCounter rpFailure;
 
   // CircuitBreaker listener counters
-  ListenerCounter cbSuccess;
-  ListenerCounter cbFailure;
-  ListenerCounter cbOpen;
-  ListenerCounter cbHalfOpen;
-  ListenerCounter cbClose;
+  volatile ListenerCounter cbSuccess;
+  volatile ListenerCounter cbFailure;
+  volatile ListenerCounter cbOpen;
+  volatile ListenerCounter cbHalfOpen;
+  volatile ListenerCounter cbClose;
 
   // Executor listener counters
-  ListenerCounter complete;
-  ListenerCounter success;
-  ListenerCounter failure;
+  volatile ListenerCounter complete;
+  volatile ListenerCounter success;
+  volatile ListenerCounter failure;
 
   static class ListenerCounter {
     /** Per listener invocations */
@@ -78,7 +76,6 @@ public class ListenersTest {
 
   @BeforeMethod
   void beforeMethod() {
-    executor = Executors.newFixedThreadPool(2);
     reset(service);
 
     rpAbort = new ListenerCounter();
@@ -97,12 +94,6 @@ public class ListenersTest {
     complete = new ListenerCounter();
     success = new ListenerCounter();
     failure = new ListenerCounter();
-  }
-
-  @AfterMethod
-  void afterMethod() throws Throwable {
-    executor.shutdownNow();
-    executor.awaitTermination(5, TimeUnit.SECONDS);
   }
 
   private <T> FailsafeExecutor<T> registerListeners(RetryPolicy<T> retryPolicy, CircuitBreaker<T> circuitBreaker) {
@@ -131,16 +122,19 @@ public class ListenersTest {
   /**
    * Asserts that listeners are called the expected number of times for a successful completion.
    */
-  public void testListenersForSuccess() {
-    CheckedSupplier<Boolean> supplier = () -> service.connect();
-
+  private void assertListenersForSuccess(boolean sync) throws Throwable {
     // Given - Fail 4 times then succeed
     when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
     RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
-    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().handleResult(false).withDelay(0, TimeUnit.MILLISECONDS);
+    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().handleResult(false)
+        .withDelay(0, TimeUnit.MILLISECONDS);
 
     // When
-    registerListeners(retryPolicy, circuitBreaker).get(supplier);
+    FailsafeExecutor<Boolean> executor = registerListeners(retryPolicy, circuitBreaker);
+    if (sync)
+      executor.get(supplier);
+    else
+      executor.getAsync(supplier).get();
 
     // Then
     rpAbort.assertEquals(0);
@@ -161,12 +155,18 @@ public class ListenersTest {
     failure.assertEquals(0);
   }
 
+  public void testListenersForSuccessSync() throws Throwable {
+    assertListenersForSuccess(true);
+  }
+
+  public void testListenersForSuccessAsync() throws Throwable {
+    assertListenersForSuccess(false);
+  }
+
   /**
    * Asserts that listeners are called the expected number of times for an unhandled failure.
    */
-  public void testListenersForUnhandledFailure() {
-    CheckedSupplier<Boolean> supplier = () -> service.connect();
-
+  private void assertListenersForUnhandledFailure(boolean sync) {
     // Given - Fail 2 times then don't match policy
     when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
         .thenThrow(IllegalArgumentException.class);
@@ -174,7 +174,12 @@ public class ListenersTest {
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(0, TimeUnit.MILLISECONDS);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(retryPolicy, circuitBreaker).get(supplier), IllegalArgumentException.class);
+    FailsafeExecutor<Object> executor = registerListeners(retryPolicy, circuitBreaker);
+    if (sync)
+      Asserts.assertThrows(() -> executor.get(supplier), IllegalArgumentException.class);
+    else
+      Asserts.assertThrows(() -> executor.getAsync(supplier).get(), ExecutionException.class,
+          IllegalArgumentException.class);
 
     // Then
     rpAbort.assertEquals(0);
@@ -195,19 +200,30 @@ public class ListenersTest {
     success.assertEquals(0);
   }
 
-  /**
-   * Asserts that listeners are called the expected number of times when retries are exceeded.
-   */
-  public void testListenersForRetriesExceeded() {
-    CheckedSupplier<Boolean> supplier = () -> service.connect();
+  public void testListenersForUnhandledFailureSync() {
+    assertListenersForUnhandledFailure(true);
+  }
 
+  public void testListenersForUnhandledFailureAsync() {
+    assertListenersForUnhandledFailure(false);
+  }
+
+  /**
+   * Asserts that listeners aree called the expected number of times when retries are exceeded.
+   */
+  private void assertListenersForRetriesExceeded(boolean sync) {
     // Given - Fail 4 times and exceed retries
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(0, TimeUnit.MILLISECONDS);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(retryPolicy, circuitBreaker).get(supplier), IllegalStateException.class);
+    FailsafeExecutor<Object> executor = registerListeners(retryPolicy, circuitBreaker);
+    if (sync)
+      Asserts.assertThrows(() -> executor.get(supplier), IllegalStateException.class);
+    else
+      Asserts.assertThrows(() -> executor.getAsync(supplier).get(), ExecutionException.class,
+          IllegalStateException.class);
 
     // Then
     rpAbort.assertEquals(0);
@@ -228,12 +244,18 @@ public class ListenersTest {
     failure.assertEquals(1);
   }
 
+  public void testListenersForRetriesExceededSync() {
+    assertListenersForRetriesExceeded(true);
+  }
+
+  public void testListenersForRetriesExceededAsync() {
+    assertListenersForRetriesExceeded(false);
+  }
+
   /**
    * Asserts that listeners are called the expected number of times for an aborted execution.
    */
-  public void testListenersForAbort() {
-    CheckedSupplier<Boolean> supplier = () -> service.connect();
-
+  private void assertListenersForAbort(boolean sync) {
     // Given - Fail twice then abort
     when(service.connect()).thenThrow(failures(3, new IllegalStateException()))
         .thenThrow(new IllegalArgumentException());
@@ -241,7 +263,12 @@ public class ListenersTest {
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(0, TimeUnit.MILLISECONDS);
 
     // When
-    Asserts.assertThrows(() -> registerListeners(retryPolicy, circuitBreaker).get(supplier), IllegalArgumentException.class);
+    FailsafeExecutor<Object> executor = registerListeners(retryPolicy, circuitBreaker);
+    if (sync)
+      Asserts.assertThrows(() -> executor.get(supplier), IllegalArgumentException.class);
+    else
+      Asserts.assertThrows(() -> executor.getAsync(supplier).get(), ExecutionException.class,
+          IllegalArgumentException.class);
 
     // Then
     rpAbort.assertEquals(1);
@@ -260,5 +287,13 @@ public class ListenersTest {
     complete.assertEquals(1);
     success.assertEquals(0);
     failure.assertEquals(1);
+  }
+
+  public void testListenersForAbortSync() {
+    assertListenersForAbort(true);
+  }
+
+  public void testListenersForAbortAsync() {
+    assertListenersForAbort(false);
   }
 }
