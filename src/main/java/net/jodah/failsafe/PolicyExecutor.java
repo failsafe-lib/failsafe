@@ -66,12 +66,25 @@ public abstract class PolicyExecutor<P extends Policy> {
    */
   protected ExecutionResult postExecute(ExecutionResult result) {
     if (isFailure(result)) {
-      return onFailure(result.with(false, false));
+      result = onFailure(result.with(false, false));
+
+      if (result.completed && policy instanceof AbstractPolicy) {
+        AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
+        if (abstractPolicy.failureListener != null)
+          abstractPolicy.failureListener.handle(result, execution);
+      }
     } else {
       result = result.with(true, true);
       onSuccess(result);
-      return result;
+
+      if (result.completed && policy instanceof AbstractPolicy) {
+        AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
+        if (abstractPolicy.successListener != null)
+          abstractPolicy.successListener.handle(result, execution);
+      }
     }
+
+    return result;
   }
 
   /**
@@ -92,11 +105,6 @@ public abstract class PolicyExecutor<P extends Policy> {
    * #isFailure(ExecutionResult)}.
    */
   protected void onSuccess(ExecutionResult result) {
-    if (policy instanceof AbstractPolicy) {
-      AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
-      if (abstractPolicy.successListener != null)
-        abstractPolicy.successListener.handle(result, execution);
-    }
   }
 
   /**
@@ -104,11 +112,6 @@ public abstract class PolicyExecutor<P extends Policy> {
    * #isFailure(ExecutionResult)}, possibly creating a new result, else returning the original {@code result}.
    */
   protected ExecutionResult onFailure(ExecutionResult result) {
-    if (policy instanceof AbstractPolicy) {
-      AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
-      if (abstractPolicy.failureListener != null)
-        abstractPolicy.failureListener.handle(result, execution);
-    }
     return result;
   }
 }

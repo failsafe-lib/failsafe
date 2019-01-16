@@ -168,7 +168,7 @@ public class ListenersTest {
     rpRetriesExceeded.assertEquals(0);
     rpRetry.assertEquals(4);
     rpSuccess.assertEquals(1);
-    rpFailure.assertEquals(4);
+    rpFailure.assertEquals(0);
 
     cbOpen.assertEquals(4);
     cbHalfOpen.assertEquals(4);
@@ -217,7 +217,7 @@ public class ListenersTest {
     rpRetriesExceeded.assertEquals(0);
     rpRetry.assertEquals(2);
     rpSuccess.assertEquals(1);
-    rpFailure.assertEquals(2);
+    rpFailure.assertEquals(0);
 
     cbOpen.assertEquals(3);
     cbHalfOpen.assertEquals(2);
@@ -262,7 +262,7 @@ public class ListenersTest {
     rpRetriesExceeded.assertEquals(1);
     rpRetry.assertEquals(3);
     rpSuccess.assertEquals(0);
-    rpFailure.assertEquals(4);
+    rpFailure.assertEquals(1);
 
     cbOpen.assertEquals(4);
     cbHalfOpen.assertEquals(3);
@@ -308,7 +308,7 @@ public class ListenersTest {
     rpRetriesExceeded.assertEquals(0);
     rpRetry.assertEquals(3);
     rpSuccess.assertEquals(0);
-    rpFailure.assertEquals(4);
+    rpFailure.assertEquals(1);
 
     cbOpen.assertEquals(4);
     cbHalfOpen.assertEquals(3);
@@ -378,7 +378,7 @@ public class ListenersTest {
     // Then
     waiter.await(1000);
     rpSuccess.assertEquals(0);
-    rpFailure.assertEquals(3);
+    rpFailure.assertEquals(1);
 
     cbSuccess.assertEquals(3);
     cbFailure.assertEquals(0);

@@ -128,8 +128,6 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   @Override
   @SuppressWarnings("unchecked")
   protected ExecutionResult onFailure(ExecutionResult result) {
-    super.onFailure(result);
-
     // Determine the computed delay
     long computedDelayNanos = -1;
     DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) policy.getDelayFn();
