@@ -67,9 +67,10 @@ public class ComputedDelayTest {
       delays.incrementAndGet(); // side-effect for test purposes
       return Duration.ofNanos(1);
     }, "expected");
+    Fallback<Object> fallback = Fallback.<Object>of(123).handleResultIf(result -> true);
 
     AtomicInteger attempts = new AtomicInteger(0);
-    Object result = Failsafe.with(retryPolicy).with(Fallback.of(123)).get(() -> {
+    Object result = Failsafe.with(retryPolicy).with(fallback).get(() -> {
       int i = attempts.getAndIncrement();
       switch (i) {
         case 0:

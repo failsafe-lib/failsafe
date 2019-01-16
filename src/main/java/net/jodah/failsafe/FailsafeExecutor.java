@@ -147,7 +147,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
 
   /**
    * Registers the {@code listener} to be called when an execution fails. If multiple policies, are configured, this
-   * handler is called when execution is complete and any policy fails.
+   * handler is called when execution is complete and <i>any</i> policy fails.
    */
   @Override
   public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
@@ -156,7 +156,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
 
   /**
    * Registers the {@code listener} to be called when an execution is successful. If multiple policies, are configured,
-   * this handler is called when execution is complete and all policies succeed.
+   * this handler is called when execution is complete and <i>all</i> policies succeed. If <i>all</i> policies do not
+   * succeed, then the {@link #onFailure(CheckedConsumer)} registered listener is called instead.
    */
   @Override
   public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends FailsafeEvent<R>> listener) {

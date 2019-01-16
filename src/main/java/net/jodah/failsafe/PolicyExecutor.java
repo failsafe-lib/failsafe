@@ -84,7 +84,7 @@ public abstract class PolicyExecutor<P extends Policy> {
     else if (policy instanceof AbstractPolicy)
       return ((AbstractPolicy) policy).isFailure(result);
     else
-      return !result.success;
+      return result.failure != null;
   }
 
   /**
