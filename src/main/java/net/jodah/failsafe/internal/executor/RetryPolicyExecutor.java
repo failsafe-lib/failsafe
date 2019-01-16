@@ -179,9 +179,11 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     boolean completed = isAbortable || !shouldRetry;
     boolean success = completed && result.success && !isAbortable;
 
-    // Call listeners
+    // Call attempt listeners
     if (failedAttemptListener != null && !success)
       failedAttemptListener.handle(result, execution);
+
+    // Call completion listeners
     if (abortListener != null && isAbortable)
       abortListener.handle(result, execution);
     else if (retriesExceededListener != null && !success && retriesExceeded)

@@ -32,8 +32,8 @@ public class FailsafeFutureTest {
   public void shouldCallOnCompleteWhenCancelled() throws Throwable {
     Waiter waiter = new Waiter();
     CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).onComplete(e -> {
-      waiter.assertNull(e.result);
-      waiter.assertTrue(e.failure instanceof CancellationException);
+      waiter.assertNull(e.getResult());
+      waiter.assertTrue(e.getFailure() instanceof CancellationException);
       waiter.resume();
     }).getAsync(() -> {
       Thread.sleep(1000);

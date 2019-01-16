@@ -37,8 +37,8 @@ public class Issue5Test {
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     Failsafe.with(retryPolicy).with(executor).onFailure(e -> {
-      waiter.assertNull(e.result);
-      waiter.assertNull(e.failure);
+      waiter.assertNull(e.getResult());
+      waiter.assertNull(e.getFailure());
       waiter.resume();
     }).getAsync(() -> null);
 

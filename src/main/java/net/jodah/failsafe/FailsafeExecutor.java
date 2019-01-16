@@ -15,7 +15,7 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.event.FailsafeEvent;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.CommonPoolScheduler;
@@ -140,7 +140,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Registers the {@code listener} to be called when an execution is complete for all of the configured {@link Policy
    * policies}.
    */
-  public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+  public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     completeListener = EventListener.of(Assert.notNull(listener, "listener"));
     return this;
   }
@@ -150,7 +150,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * handler is called when execution is complete and <i>any</i> policy fails.
    */
   @Override
-  public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+  public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     return super.onFailure(listener);
   }
 
@@ -160,7 +160,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * succeed, then the {@link #onFailure(CheckedConsumer)} registered listener is called instead.
    */
   @Override
-  public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+  public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     return super.onSuccess(listener);
   }
 

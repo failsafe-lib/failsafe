@@ -15,7 +15,8 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.event.FailsafeEvent;
+import net.jodah.failsafe.event.ExecutionAttemptedEvent;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.executor.RetryPolicyExecutor;
 import net.jodah.failsafe.internal.util.Assert;
@@ -254,7 +255,7 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
   /**
    * Registers the {@code listener} to be called when an execution is aborted.
    */
-  public RetryPolicy<R> onAbort(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+  public RetryPolicy<R> onAbort(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     abortListener = EventListener.of(Assert.notNull(listener, "listener"));
     return this;
   }
@@ -262,8 +263,8 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
   /**
    * Registers the {@code listener} to be called when an execution attempt fails.
    */
-  public RetryPolicy<R> onFailedAttempt(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
-    failedAttemptListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onFailedAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
+    failedAttemptListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -272,7 +273,7 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
    * max retry attempts} or {@link RetryPolicy#withMaxDuration(Duration) max duration} are
    * exceeded.
    */
-  public RetryPolicy<R> onRetriesExceeded(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
+  public RetryPolicy<R> onRetriesExceeded(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     retriesExceededListener = EventListener.of(Assert.notNull(listener, "listener"));
     return this;
   }
@@ -280,8 +281,8 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
   /**
    * Registers the {@code listener} to be called before an execution is retried.
    */
-  public RetryPolicy<R> onRetry(CheckedConsumer<? extends FailsafeEvent<R>> listener) {
-    retryListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onRetry(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
+    retryListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
     return this;
   }
 

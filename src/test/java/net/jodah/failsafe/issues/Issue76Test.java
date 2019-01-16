@@ -32,7 +32,7 @@ public class Issue76Test {
     Waiter waiter = new Waiter();
     Future<?> future = Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)
         .onAbort(e -> {
-          waiter.assertEquals(e.failure, error);
+          waiter.assertEquals(e.getFailure(), error);
           waiter.resume();
         }))
         .with(Executors.newSingleThreadScheduledExecutor())

@@ -232,8 +232,8 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResult(false).withMaxDuration(Duration.ofMillis(100));
 
     assertEquals(Failsafe.with(retryPolicy).onFailure(e -> {
-      assertEquals(e.result, Boolean.FALSE);
-      assertNull(e.failure);
+      assertEquals(e.getResult(), Boolean.FALSE);
+      assertNull(e.getFailure());
     }).get(() -> {
       Testing.sleep(120);
       return service.connect();
