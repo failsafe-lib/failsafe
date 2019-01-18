@@ -75,8 +75,8 @@ public abstract class AbstractExecution extends ExecutionContext {
   void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
     attempts++;
-    lastResult = result.result;
-    lastFailure = result.failure;
+    lastResult = result.getResult();
+    lastFailure = result.getFailure();
   }
 
   void preExecute() {
@@ -92,8 +92,8 @@ public abstract class AbstractExecution extends ExecutionContext {
     for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
       result = policyExecutor.postExecute(result);
 
-    waitNanos = result.waitNanos;
-    completed = result.completed;
+    waitNanos = result.getWaitNanos();
+    completed = result.isComplete();
     return completed;
   }
 

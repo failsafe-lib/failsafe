@@ -194,7 +194,7 @@ public final class AsyncExecution extends AbstractExecution {
     completed = true;
     if (!future.isDone() && !future.isCancelled()) {
       if (result != null) {
-        future.complete(result.result, result.failure);
+        future.complete(result.getResult(), result.getFailure());
         executor.handleComplete(result, this);
       } else
         future.complete(null, error);

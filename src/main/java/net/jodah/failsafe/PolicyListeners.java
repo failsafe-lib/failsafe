@@ -40,7 +40,7 @@ public class PolicyListeners<S, R> {
     }
 
     default void handle(ExecutionResult result, ExecutionContext context) {
-      handle(result.result, result.failure, context);
+      handle(result.getResult(), result.getFailure(), context);
     }
   }
 

@@ -68,11 +68,11 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
           return result;
 
         result = postExecute(result);
-        if (result.completed)
+        if (result.isComplete())
           return result;
 
         try {
-          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.waitNanos));
+          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getWaitNanos()));
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           return ExecutionResult.failure(new FailsafeException(e));
@@ -103,12 +103,12 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
             if (result != null) {
               if (!retriesExceeded)
                 result = postExecute(result);
-              if (retriesExceeded || result.completed)
+              if (retriesExceeded || result.isComplete())
                 promise.complete(result);
               else if (!future.isDone() && !future.isCancelled()) {
                 try {
                   previousResult = result;
-                  future.inject((Future<Object>) scheduler.schedule(this, result.waitNanos, TimeUnit.NANOSECONDS));
+                  future.inject((Future<Object>) scheduler.schedule(this, result.getWaitNanos(), TimeUnit.NANOSECONDS));
                 } catch (Exception e) {
                   promise.completeExceptionally(e);
                 }
@@ -139,8 +139,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     // Determine the computed delay
     long computedDelayNanos = -1;
     DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) policy.getDelayFn();
-    if (delayFunction != null && policy.canApplyDelayFn(result.result, result.failure)) {
-      Duration computedDelay = delayFunction.computeDelay(result.result, result.failure, execution);
+    if (delayFunction != null && policy.canApplyDelayFn(result.getResult(), result.getFailure())) {
+      Duration computedDelay = delayFunction.computeDelay(result.getResult(), result.getFailure(), execution);
       if (computedDelay != null && computedDelay.toNanos() >= 0)
         computedDelayNanos = computedDelay.toNanos();
     }
@@ -182,10 +182,10 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && failedAttempts > policy.getMaxRetries();
     boolean maxDurationExceeded = policy.getMaxDuration() != null && elapsedNanos > policy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean isAbortable = policy.isAbortable(result.result, result.failure);
-    boolean shouldRetry = !result.success && !isAbortable && !retriesExceeded && policy.allowsRetries();
+    boolean isAbortable = policy.isAbortable(result.getResult(), result.getFailure());
+    boolean shouldRetry = !result.isSuccess() && !isAbortable && !retriesExceeded && policy.allowsRetries();
     boolean completed = isAbortable || !shouldRetry;
-    boolean success = completed && result.success && !isAbortable;
+    boolean success = completed && result.isSuccess() && !isAbortable;
 
     // Call attempt listeners
     if (failedAttemptListener != null && !success)

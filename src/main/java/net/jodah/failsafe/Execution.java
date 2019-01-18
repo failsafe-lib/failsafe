@@ -116,7 +116,7 @@ public class Execution extends AbstractExecution {
       supplier = policyExecutor.supplySync(supplier);
 
     ExecutionResult result = supplier.get();
-    completed = result.completed;
+    completed = result.isComplete();
     executor.handleComplete(result, this);
     return result;
   }

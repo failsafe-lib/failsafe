@@ -349,11 +349,11 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     Supplier<ExecutionResult> supplier = Functions.resultSupplierOf(supplierFn.apply(execution), execution);
 
     ExecutionResult result = execution.executeSync(supplier);
-    if (result.failure != null)
-      throw result.failure instanceof RuntimeException ?
-          (RuntimeException) result.failure :
-          new FailsafeException(result.failure);
-    return (T) result.result;
+    if (result.getFailure() != null)
+      throw result.getFailure() instanceof RuntimeException ?
+          (RuntimeException) result.getFailure() :
+          new FailsafeException(result.getFailure());
+    return (T) result.getResult();
   }
 
   /**

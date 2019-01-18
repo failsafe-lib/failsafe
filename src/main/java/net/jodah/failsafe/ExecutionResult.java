@@ -7,23 +7,22 @@ package net.jodah.failsafe;
  *
  * @author Jonathan Halterman
  */
-@SuppressWarnings("WeakerAccess")
 public class ExecutionResult {
   /** An execution that was completed with a non-result */
   static final ExecutionResult NONE = new ExecutionResult(null, null, true, 0, true, true, true);
 
   /** The execution result, if any */
-  public final Object result;
+  private final Object result;
   /** The execution failure, if any */
-  public final Throwable failure;
+  private final Throwable failure;
   /** Whether the result represents a non result rather than a {@code null} result */
-  public final boolean nonResult;
+  private final boolean nonResult;
   /** The amount of time to wait prior to the next execution, according to the policy */
-  public final long waitNanos;
+  private final long waitNanos;
   /** Whether a policy has completed handling of the execution */
-  public final boolean completed;
+  private final boolean complete;
   /** Whether a policy determined the execution to be a success */
-  public final boolean success;
+  private final boolean success;
   /** Whether all policies determined the execution to be a success */
   private final Boolean successAll;
 
@@ -34,13 +33,13 @@ public class ExecutionResult {
     this(result, failure, false, 0, false, failure == null, null);
   }
 
-  private ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean completed,
+  private ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean complete,
       boolean success, Boolean successAll) {
     this.nonResult = nonResult;
     this.result = result;
     this.failure = failure;
     this.waitNanos = waitNanos;
-    this.completed = completed;
+    this.complete = complete;
     this.success = success;
     this.successAll = successAll;
   }
@@ -57,6 +56,30 @@ public class ExecutionResult {
     return new ExecutionResult(null, failure, false, 0, true, false, false);
   }
 
+  public Object getResult() {
+    return result;
+  }
+
+  public Throwable getFailure() {
+    return failure;
+  }
+
+  public long getWaitNanos() {
+    return waitNanos;
+  }
+
+  public boolean isComplete() {
+    return complete;
+  }
+
+  public boolean isNonResult() {
+    return nonResult;
+  }
+
+  public boolean isSuccess() {
+    return success;
+  }
+
   /**
    * Returns a copy of the ExecutionResult with the {@code result} value, and completed and success set to true.
    */
@@ -67,8 +90,8 @@ public class ExecutionResult {
   /**
    * Returns a copy of the ExecutionResult with the value set to true, else this if nothing has changed.
    */
-  public ExecutionResult withCompleted() {
-    return this.completed ?
+  public ExecutionResult withComplete() {
+    return this.complete ?
         this :
         new ExecutionResult(result, failure, nonResult, waitNanos, true, success, successAll);
   }
@@ -96,7 +119,7 @@ public class ExecutionResult {
   @Override
   public String toString() {
     return "ExecutionResult[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult
-        + ", waitNanos=" + waitNanos + ", completed=" + completed + ", success=" + success + ", successAll="
+        + ", waitNanos=" + waitNanos + ", complete=" + complete + ", success=" + success + ", successAll="
         + successAll + ']';
   }
 }

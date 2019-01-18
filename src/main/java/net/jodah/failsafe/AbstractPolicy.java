@@ -123,7 +123,7 @@ public abstract class AbstractPolicy<S, R> extends PolicyListeners<S, R> impleme
    * @see #handleResultIf(Predicate)
    */
   boolean isFailure(ExecutionResult result) {
-    return failureConditions.isEmpty() ? result.failure != null : isFailure((R) result.result, result.failure);
+    return failureConditions.isEmpty() ? result.getFailure() != null : isFailure((R) result.getResult(), result.getFailure());
   }
 
   /**

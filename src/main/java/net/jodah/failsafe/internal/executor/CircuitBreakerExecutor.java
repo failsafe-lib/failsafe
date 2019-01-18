@@ -57,6 +57,6 @@ public class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
   @Override
   protected ExecutionResult onFailure(ExecutionResult result) {
     policy.recordFailure();
-    return result.withCompleted();
+    return result.withComplete();
   }
 }
