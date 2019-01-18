@@ -22,8 +22,9 @@ public class OpenState extends CircuitState {
   private final CircuitBreaker circuit;
   private final long startTime = System.nanoTime();
 
-  public OpenState(CircuitBreaker circuit) {
+  public OpenState(CircuitBreaker circuit, CircuitState previousState) {
     this.circuit = circuit;
+    this.bitSet = previousState.bitSet;
   }
 
   @Override

@@ -15,11 +15,13 @@
  */
 package net.jodah.failsafe.internal.util;
 
-import static org.testng.Assert.*;
+import net.jodah.failsafe.util.Ratio;
+import org.testng.annotations.Test;
 
 import java.util.Arrays;
 
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class CircularBitSetTest {
@@ -35,16 +37,30 @@ public class CircularBitSetTest {
 
   public void testRatios() {
     CircularBitSet bs = new CircularBitSet(100, null);
+    assertEquals(bs.positiveRatio(), new Ratio(0, 0));
+    assertEquals(bs.positiveRatioValue(), 0.0);
+    assertEquals(bs.negativeRatio(), new Ratio(0, 0));
+    assertEquals(bs.negativeRatioValue(), 0.0);
 
     for (int i = 0; i < 50; i++)
       bs.setNext(i % 3 == 0);
-    assertEquals(bs.positiveRatio(), .34);
-    assertEquals(bs.negativeRatio(), .66);
+
+    assertEquals(bs.positives(), 17);
+    assertEquals(bs.positiveRatio(), new Ratio(17, 50));
+    assertEquals(bs.positiveRatioValue(), .34);
+    assertEquals(bs.negatives(), 33);
+    assertEquals(bs.negativeRatio(), new Ratio(33, 50));
+    assertEquals(bs.negativeRatioValue(), .66);
 
     for (int i = 0; i < 100; i++)
       bs.setNext(true);
-    assertEquals(bs.positiveRatio(), 1.0);
-    assertEquals(bs.negativeRatio(), 0.0);
+
+    assertEquals(bs.positives(), 100);
+    assertEquals(bs.positiveRatio(), new Ratio(100, 100));
+    assertEquals(bs.positiveRatioValue(), 1.0);
+    assertEquals(bs.negatives(), 0);
+    assertEquals(bs.negativeRatio(), new Ratio(0, 100));
+    assertEquals(bs.negativeRatioValue(), 0.0);
   }
 
   public void testCopyBitsToEqualSizedSet() {

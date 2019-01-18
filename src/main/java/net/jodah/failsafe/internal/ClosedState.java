@@ -22,7 +22,6 @@ import net.jodah.failsafe.util.Ratio;
 
 public class ClosedState extends CircuitState {
   private final CircuitBreaker circuit;
-  private CircularBitSet bitSet;
 
   public ClosedState(CircuitBreaker circuit) {
     this.circuit = circuit;
@@ -53,12 +52,12 @@ public class ClosedState extends CircuitState {
 
   @Override
   public void setFailureThreshold(Ratio threshold) {
-    bitSet = new CircularBitSet(threshold.denominator, bitSet);
+    bitSet = new CircularBitSet(threshold.getDenominator(), bitSet);
   }
 
   /**
    * Checks to determine if a threshold has been met and the circuit should be opened or closed.
-   * 
+   *
    * <p>
    * When a failure ratio is configured, the circuit is opened after the expected number of executions based on whether
    * the ratio was exceeded.
@@ -70,12 +69,12 @@ public class ClosedState extends CircuitState {
     Ratio failureRatio = circuit.getFailureThreshold();
 
     // Handle failure threshold ratio
-    if (failureRatio != null && bitSet.occupiedBits() >= failureRatio.denominator
-        && bitSet.negativeRatio() >= failureRatio.ratio)
+    if (failureRatio != null && bitSet.occupiedBits() >= failureRatio.getDenominator()
+        && bitSet.negativeRatioValue() >= failureRatio.getValue())
       circuit.open();
 
     // Handle no thresholds configured
-    if (failureRatio == null && bitSet.negativeRatio() == 1)
+    else if (failureRatio == null && bitSet.negativeRatioValue() == 1)
       circuit.open();
   }
 }

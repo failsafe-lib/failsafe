@@ -29,7 +29,7 @@ public class OpenStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withDelay(Duration.ofMillis(100));
     breaker.open();
-    OpenState state = new OpenState(breaker);
+    OpenState state = new OpenState(breaker, new ClosedState(breaker));
     assertTrue(breaker.isOpen());
     assertFalse(state.allowsExecution(null));
 

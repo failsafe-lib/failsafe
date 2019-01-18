@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.util.Ratio;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -23,8 +24,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 @Test
 public class CircuitBreakerTest {
@@ -124,5 +124,50 @@ public class CircuitBreakerTest {
     Thread.sleep(100);
     breaker.allowsExecution();
     assertTrue(breaker.isOpen());
+  }
+
+  public void shouldGetSuccessAndFailureStats() {
+    // Given
+    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(5, 10).withSuccessThreshold(10, 20);
+
+    // When
+    for (int i = 0; i < 7; i++)
+      if (i % 2 == 0)
+        breaker.recordSuccess();
+      else
+        breaker.recordFailure();
+
+    // Then
+    assertEquals(breaker.getFailureCount(), 3);
+    assertEquals(breaker.getFailureRatio(), new Ratio(3, 7));
+    assertEquals(breaker.getSuccessCount(), 4);
+    assertEquals(breaker.getSuccessRatio(), new Ratio(4, 7));
+
+    // When
+    for (int i = 0; i < 15; i++)
+      if (i % 4 == 0)
+        breaker.recordFailure();
+      else
+        breaker.recordSuccess();
+
+    // Then
+    assertEquals(breaker.getFailureCount(), 2);
+    assertEquals(breaker.getFailureRatio(), new Ratio(2, 10));
+    assertEquals(breaker.getSuccessCount(), 8);
+    assertEquals(breaker.getSuccessRatio(), new Ratio(8, 10));
+
+    // When
+    breaker.halfOpen();
+    for (int i = 0; i < 15; i++)
+      if (i % 3 == 0)
+        breaker.recordFailure();
+      else
+        breaker.recordSuccess();
+
+    // Then
+    assertEquals(breaker.getFailureCount(), 5);
+    assertEquals(breaker.getFailureRatio(), new Ratio(5, 15));
+    assertEquals(breaker.getSuccessCount(), 10);
+    assertEquals(breaker.getSuccessRatio(), new Ratio(10, 15));
   }
 }

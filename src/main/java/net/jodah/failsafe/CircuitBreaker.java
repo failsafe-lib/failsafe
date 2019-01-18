@@ -90,6 +90,42 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
   }
 
   /**
+   * Returns the number of failures recorded in the current state when the state is CLOSED or HALF_OPEN. When the state
+   * is OPEN, returns the failures recorded during the previous CLOSED state. The max number of failures is based on the
+   * configured {@link #getFailureThreshold() failure threshold}.
+   */
+  public long getFailureCount() {
+    return state.get().getFailureCount();
+  }
+
+  /**
+   * Returns the ratio of failures to successes in the current state when the state is CLOSED or HALF_OPEN. When the
+   * state is OPEN, returns the ratio recorded during the previous CLOSED state. The ratio is based on the configured
+   * {@link #getFailureThreshold() failure threshold}.
+   */
+  public Ratio getFailureRatio() {
+    return state.get().getFailureRatio();
+  }
+
+  /**
+   * Returns the number of successes recorded in the current state when the state is CLOSED or HALF_OPEN. When the state
+   * is OPEN, returns the successes recorded during the previous CLOSED state.The max number of successes is based on
+   * the configured {@link #getSuccessThreshold() success threshold}.
+   */
+  public int getSuccessCount() {
+    return state.get().getSuccessCount();
+  }
+
+  /**
+   * Returns the ratio of successes to failures in the current state when the state is CLOSED or HALF_OPEN. When the
+   * state is OPEN, returns the ratio recorded during the previous CLOSED state. The ratio is based on the configured
+   * {@link #getSuccessThreshold() success threshold}.
+   */
+  public Ratio getSuccessRatio() {
+    return state.get().getSuccessRatio();
+  }
+
+  /**
    * Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit else
    * {@code null} if none has been configured.
    *
@@ -271,7 +307,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
    *
    * @param failures The number of failures that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code failures} against
-   * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is <
+   * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is >
    *     {@code executions}
    */
   public synchronized CircuitBreaker<R> withFailureThreshold(int failures, int executions) {
@@ -301,7 +337,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
    *
    * @param successes The number of successful executions that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code successes} against
-   * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is <
+   * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is >
    *     {@code executions}
    */
   public synchronized CircuitBreaker<R> withSuccessThreshold(int successes, int executions) {
@@ -350,7 +386,7 @@ public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
             state.set(new ClosedState(this));
             break;
           case OPEN:
-            state.set(new OpenState(this));
+            state.set(new OpenState(this, state.get()));
             break;
           case HALF_OPEN:
             state.set(new HalfOpenState(this));

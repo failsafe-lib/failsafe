@@ -15,11 +15,13 @@
  */
 package net.jodah.failsafe.internal.util;
 
+import net.jodah.failsafe.util.Ratio;
+
 import java.util.BitSet;
 
 /**
  * A circular BitSet implementation that tracks the cardinality and ratios of positive and negative bits.
- * 
+ *
  * @author Jonathan Halterman
  */
 public class CircularBitSet {
@@ -57,10 +59,24 @@ public class CircularBitSet {
   }
 
   /**
+   * Returns the number of negatives.
+   */
+  public int negatives() {
+    return negatives;
+  }
+
+  /**
    * Returns the ratio of positive bits to the number of occupied bits.
    */
-  public double negativeRatio() {
-    return (double) negatives / (double) occupiedBits;
+  public Ratio negativeRatio() {
+    return new Ratio(negatives, occupiedBits);
+  }
+
+  /**
+   * Returns the ratio value of positive bits to the number of occupied bits.
+   */
+  public double negativeRatioValue() {
+    return occupiedBits == 0 ? 0 : (double) negatives / (double) occupiedBits;
   }
 
   /**
@@ -71,15 +87,31 @@ public class CircularBitSet {
   }
 
   /**
+   * Returns the number of positives.
+   */
+  public int positives() {
+    return positives;
+  }
+
+  /**
    * Returns the ratio of positive bits to the number of occupied bits.
    */
-  public double positiveRatio() {
-    return (double) positives / (double) occupiedBits;
+  public Ratio positiveRatio() {
+    return new Ratio(positives, occupiedBits);
+  }
+
+  /**
+   * Returns the ratio value of positive bits to the number of occupied bits.
+   */
+  public double positiveRatioValue() {
+    return occupiedBits == 0 ? 0 : (double) positives / (double) occupiedBits;
   }
 
   /**
    * Sets the value of the next bit in the bitset, returning the previous value, else -1 if no previous value was set
    * for the bit.
+   *
+   * @param value true if positive/success, false if negative/failure
    */
   public synchronized int setNext(boolean value) {
     int previousValue = -1;
