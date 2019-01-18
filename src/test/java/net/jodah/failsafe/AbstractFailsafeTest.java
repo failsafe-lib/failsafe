@@ -16,6 +16,8 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.Testing.ConnectException;
+import net.jodah.failsafe.Testing.Service;
 import net.jodah.failsafe.function.CheckedBiFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
@@ -39,15 +41,6 @@ public abstract class AbstractFailsafeTest {
   RetryPolicy<Boolean> retryTwice = new RetryPolicy<Boolean>().withMaxRetries(2);
   Service service = mock(Service.class);
   AtomicInteger counter;
-
-  public static class ConnectException extends RuntimeException {
-  }
-
-  public interface Service {
-    boolean connect();
-
-    boolean disconnect();
-  }
 
   public interface FastService extends Service {
   }

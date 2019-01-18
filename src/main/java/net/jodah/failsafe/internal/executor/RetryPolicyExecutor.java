@@ -37,6 +37,7 @@ import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
  */
 public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   // Mutable state
+  private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
   /** The fixed, backoff, random or computed delay time in nanoseconds. */
   private volatile long delayNanos = -1;
@@ -62,7 +63,11 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   protected Supplier<ExecutionResult> supplySync(Supplier<ExecutionResult> supplier) {
     return () -> {
       while (true) {
-        ExecutionResult result = postExecute(supplier.get());
+        ExecutionResult result = supplier.get();
+        if (retriesExceeded)
+          return result;
+
+        result = postExecute(result);
         if (result.completed)
           return result;
 
@@ -96,8 +101,9 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
           return supplier.get().handle((result, error) -> {
             // Propagate result
             if (result != null) {
-              result = postExecute(result);
-              if (result.completed)
+              if (!retriesExceeded)
+                result = postExecute(result);
+              if (retriesExceeded || result.completed)
                 promise.complete(result);
               else if (!future.isDone() && !future.isCancelled()) {
                 try {
@@ -128,6 +134,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   @Override
   @SuppressWarnings("unchecked")
   protected ExecutionResult onFailure(ExecutionResult result) {
+    failedAttempts++;
+
     // Determine the computed delay
     long computedDelayNanos = -1;
     DelayFunction<Object, Throwable> delayFunction = (DelayFunction<Object, Throwable>) policy.getDelayFn();
@@ -171,7 +179,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     }
 
     // Calculate result
-    boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && execution.getAttemptCount() > policy.getMaxRetries();
+    boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && failedAttempts > policy.getMaxRetries();
     boolean maxDurationExceeded = policy.getMaxDuration() != null && elapsedNanos > policy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
     boolean isAbortable = policy.isAbortable(result.result, result.failure);

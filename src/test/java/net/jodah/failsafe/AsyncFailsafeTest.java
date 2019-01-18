@@ -16,6 +16,8 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.Testing.ConnectException;
+import net.jodah.failsafe.Testing.Service;
 import net.jodah.failsafe.function.*;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -60,7 +62,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<?> future = runAsync(Failsafe.with(retryAlways).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
+      waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
       waiter.assertNull(e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -76,7 +78,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When
     Future<?> future2 = runAsync(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
+      waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof ConnectException);
       waiter.resume();
@@ -122,7 +124,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<Boolean> future = getAsync(Failsafe.with(retryPolicy).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
+      waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
       waiter.assertTrue(e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -140,7 +142,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<Boolean> future2 = getAsync(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
+      waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof ConnectException);
       waiter.resume();

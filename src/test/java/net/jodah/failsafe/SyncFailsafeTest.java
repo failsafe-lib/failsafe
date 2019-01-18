@@ -15,15 +15,19 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.Testing.ConnectException;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
-import net.jodah.failsafe.function.ContextualSupplier;
 import net.jodah.failsafe.function.ContextualRunnable;
+import net.jodah.failsafe.function.ContextualSupplier;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;

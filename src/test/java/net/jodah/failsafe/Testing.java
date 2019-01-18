@@ -23,6 +23,15 @@ import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Testing {
+  public static class ConnectException extends RuntimeException {
+  }
+
+  public interface Service {
+    boolean connect();
+
+    boolean disconnect();
+  }
+
   public static Throwable getThrowable(CheckedRunnable runnable) {
     try {
       runnable.run();

@@ -270,8 +270,7 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
 
   /**
    * Registers the {@code listener} to be called when an execution fails and the {@link RetryPolicy#withMaxRetries(int)
-   * max retry attempts} or {@link RetryPolicy#withMaxDuration(Duration) max duration} are
-   * exceeded.
+   * max retry attempts} or {@link RetryPolicy#withMaxDuration(Duration) max duration} are exceeded.
    */
   public RetryPolicy<R> onRetriesExceeded(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     retriesExceededListener = EventListener.of(Assert.notNull(listener, "listener"));
@@ -391,7 +390,8 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Returns the max retries. Defaults to {@code 100}, which retries forever.
+   * Returns the max number of retries to perform when an execution attempt fails. Defaults to {@code -1}, which retries
+   * forever.
    *
    * @see #withMaxRetries(int)
    */
@@ -539,8 +539,8 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
    * random} or {@link #withBackoff(long, long, ChronoUnit) exponential backoff} delays.
    *
    * @throws IllegalArgumentException if {@code jitterFactor} is < 0 or > 1
-   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(Duration)} has
-   *     already been called
+   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(Duration)} has already been
+   *     called
    */
   public RetryPolicy<R> withJitter(double jitterFactor) {
     Assert.isTrue(jitterFactor >= 0.0 && jitterFactor <= 1.0, "jitterFactor must be >= 0 and <= 1");
@@ -577,8 +577,7 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
    * Sets the max duration to perform retries for, else the execution will be failed.
    *
    * @throws NullPointerException if {@code maxDuration} is null
-   * @throws IllegalStateException if {@code maxDuration} is <= the {@link RetryPolicy#withDelay(Duration)
-   *     delay}
+   * @throws IllegalStateException if {@code maxDuration} is <= the {@link RetryPolicy#withDelay(Duration) delay}
    */
   public RetryPolicy<R> withMaxDuration(Duration maxDuration) {
     Assert.notNull(maxDuration, "maxDuration");
@@ -588,7 +587,7 @@ public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Sets the max number of retries to perform. {@code -1} indicates to retry forever.
+   * Sets the max number of retries to perform when an execution attempt fails. {@code -1} indicates to retry forever.
    *
    * @throws IllegalArgumentException if {@code maxRetries} &lt -1
    */

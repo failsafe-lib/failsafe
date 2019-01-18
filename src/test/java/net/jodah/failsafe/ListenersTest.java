@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.Testing.Service;
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -78,10 +79,6 @@ public class ListenersTest {
     void reset() {
       invocations.set(0);
     }
-  }
-
-  public interface Service {
-    boolean connect();
   }
 
   @BeforeMethod
@@ -147,7 +144,7 @@ public class ListenersTest {
   /**
    * Asserts that listeners are called the expected number of times for a successful completion.
    */
-  private void assertListenersForSuccess(boolean sync) throws Throwable {
+  private void assertForSuccess(boolean sync) throws Throwable {
     // Given - Fail 4 times then succeed
     when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
     RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
@@ -184,18 +181,18 @@ public class ListenersTest {
     failure.assertEquals(0);
   }
 
-  public void testListenersForSuccessSync() throws Throwable {
-    assertListenersForSuccess(true);
+  public void testForSuccessSync() throws Throwable {
+    assertForSuccess(true);
   }
 
-  public void testListenersForSuccessAsync() throws Throwable {
-    assertListenersForSuccess(false);
+  public void testForSuccessAsync() throws Throwable {
+    assertForSuccess(false);
   }
 
   /**
    * Asserts that listeners are called the expected number of times for an unhandled failure.
    */
-  private void assertListenersForUnhandledFailure(boolean sync) throws Throwable {
+  private void assertForUnhandledFailure(boolean sync) throws Throwable {
     // Given - Fail 2 times then don't match policy
     when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
         .thenThrow(IllegalArgumentException.class);
@@ -230,18 +227,18 @@ public class ListenersTest {
     success.assertEquals(0);
   }
 
-  public void testListenersForUnhandledFailureSync() throws Throwable {
-    assertListenersForUnhandledFailure(true);
+  public void testForUnhandledFailureSync() throws Throwable {
+    assertForUnhandledFailure(true);
   }
 
-  public void testListenersForUnhandledFailureAsync() throws Throwable {
-    assertListenersForUnhandledFailure(false);
+  public void testForUnhandledFailureAsync() throws Throwable {
+    assertForUnhandledFailure(false);
   }
 
   /**
    * Asserts that listeners aree called the expected number of times when retries are exceeded.
    */
-  private void assertListenersForRetriesExceeded(boolean sync) throws Throwable {
+  private void assertForRetriesExceeded(boolean sync) throws Throwable {
     // Given - Fail 4 times and exceed retries
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
@@ -275,18 +272,18 @@ public class ListenersTest {
     failure.assertEquals(1);
   }
 
-  public void testListenersForRetriesExceededSync() throws Throwable {
-    assertListenersForRetriesExceeded(true);
+  public void testForRetriesExceededSync() throws Throwable {
+    assertForRetriesExceeded(true);
   }
 
-  public void testListenersForRetriesExceededAsync() throws Throwable {
-    assertListenersForRetriesExceeded(false);
+  public void testForRetriesExceededAsync() throws Throwable {
+    assertForRetriesExceeded(false);
   }
 
   /**
    * Asserts that listeners are called the expected number of times for an aborted execution.
    */
-  private void assertListenersForAbort(boolean sync) throws Throwable {
+  private void assertForAbort(boolean sync) throws Throwable {
     // Given - Fail twice then abort
     when(service.connect()).thenThrow(failures(3, new IllegalStateException()))
         .thenThrow(new IllegalArgumentException());
@@ -321,44 +318,15 @@ public class ListenersTest {
     failure.assertEquals(1);
   }
 
-  public void testListenersForAbortSync() throws Throwable {
-    assertListenersForAbort(true);
+  public void testForAbortSync() throws Throwable {
+    assertForAbort(true);
   }
 
-  public void testListenersForAbortAsync() throws Throwable {
-    assertListenersForAbort(false);
+  public void testForAbortAsync() throws Throwable {
+    assertForAbort(false);
   }
 
-  private void assertFailsafeExecutorForSuccess(boolean sync) throws Throwable {
-    // Given - Fail 4 times then succeed
-    when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
-    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
-    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().handleResult(false).withDelay(Duration.ZERO);
-    Fallback<Boolean> fallback = Fallback.of(() -> true);
-    FailsafeExecutor<Boolean> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
-
-    // When
-    if (sync)
-      Testing.ignoreExceptions(() -> failsafe.get(supplier));
-    else
-      Testing.ignoreExceptions(() -> failsafe.getAsync(supplier));
-
-    // Then
-    waiter.await(1000);
-    complete.assertEquals(1);
-    success.assertEquals(1);
-    failure.assertEquals(0);
-  }
-
-  public void testFailsafeExecutorForSuccessSync() throws Throwable {
-    assertFailsafeExecutorForSuccess(true);
-  }
-
-  public void testFailsafeExecutorForSuccessAsync() throws Throwable {
-    assertFailsafeExecutorForSuccess(false);
-  }
-
-  private void assertFailsafeExecutorForFailingRetryPolicy(boolean sync) throws Throwable {
+  private void assertForFailingRetryPolicy(boolean sync) throws Throwable {
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given failing RetryPolicy
@@ -391,15 +359,15 @@ public class ListenersTest {
     failure.assertEquals(1);
   }
 
-  public void testFailsafeExecutorForFailureSync() throws Throwable {
-    assertFailsafeExecutorForFailingRetryPolicy(true);
+  public void testFailingRetryPolicySync() throws Throwable {
+    assertForFailingRetryPolicy(true);
   }
 
-  public void testFailsafeExecutorForFailureAsync() throws Throwable {
-    assertFailsafeExecutorForFailingRetryPolicy(false);
+  public void testFailingRetryPolicyAsync() throws Throwable {
+    assertForFailingRetryPolicy(false);
   }
 
-  private void assertFailsafeExecutorForFailingCircuitBreaker(boolean sync) throws Throwable {
+  private void assertForFailingCircuitBreaker(boolean sync) throws Throwable {
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given successful RetryPolicy
@@ -432,15 +400,15 @@ public class ListenersTest {
     failure.assertEquals(1);
   }
 
-  public void testFailsafeExecutorForFailingCircuitBreakerSync() throws Throwable {
-    assertFailsafeExecutorForFailingCircuitBreaker(true);
+  public void testFailingCircuitBreakerSync() throws Throwable {
+    assertForFailingCircuitBreaker(true);
   }
 
-  public void testFailsafeExecutorForFailingCircuitBreakerAsync() throws Throwable {
-    assertFailsafeExecutorForFailingCircuitBreaker(false);
+  public void testFailingCircuitBreakerAsync() throws Throwable {
+    assertForFailingCircuitBreaker(false);
   }
 
-  private void assertFailsafeExecutorForFailingFallback(boolean sync) throws Throwable {
+  private void assertForFailingFallback(boolean sync) throws Throwable {
     when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given successful RetryPolicy and CircuitBreaker
@@ -473,11 +441,11 @@ public class ListenersTest {
     failure.assertEquals(1);
   }
 
-  public void testFailsafeExecutorForFailingFallbackSync() throws Throwable {
-    assertFailsafeExecutorForFailingFallback(true);
+  public void testFailingFallbackSync() throws Throwable {
+    assertForFailingFallback(true);
   }
 
-  public void testFailsafeExecutorForFailingFallbackAsync() throws Throwable {
-    assertFailsafeExecutorForFailingFallback(false);
+  public void testFailingFallbackAsync() throws Throwable {
+    assertForFailingFallback(false);
   }
 }
