@@ -45,7 +45,7 @@ public class ExecutionTest {
     assertFalse(exec.canRetryFor(1));
 
     // Then
-    assertEquals(exec.getExecutions(), 3);
+    assertEquals(exec.getAttemptCount(), 3);
     assertTrue(exec.isComplete());
     assertEquals(exec.getLastResult(), Integer.valueOf(1));
     assertNull(exec.getLastFailure());
@@ -59,7 +59,7 @@ public class ExecutionTest {
     assertFalse(exec.canRetryFor(null));
 
     // Then
-    assertEquals(exec.getExecutions(), 3);
+    assertEquals(exec.getAttemptCount(), 3);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
     assertNull(exec.getLastFailure());
@@ -76,7 +76,7 @@ public class ExecutionTest {
     assertFalse(exec.canRetryFor(1, null));
 
     // Then
-    assertEquals(exec.getExecutions(), 4);
+    assertEquals(exec.getAttemptCount(), 4);
     assertTrue(exec.isComplete());
 
     // Given 2 max retries
@@ -88,7 +88,7 @@ public class ExecutionTest {
     assertFalse(exec.canRetryFor(null, e));
 
     // Then
-    assertEquals(exec.getExecutions(), 3);
+    assertEquals(exec.getAttemptCount(), 3);
     assertTrue(exec.isComplete());
   }
 
@@ -101,7 +101,7 @@ public class ExecutionTest {
     assertFalse(exec.canRetryOn(e));
 
     // Then
-    assertEquals(exec.getExecutions(), 2);
+    assertEquals(exec.getAttemptCount(), 2);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
     assertEquals(exec.getLastFailure(), e);
@@ -115,7 +115,7 @@ public class ExecutionTest {
     assertFalse(exec.canRetryOn(e));
 
     // Then
-    assertEquals(exec.getExecutions(), 3);
+    assertEquals(exec.getAttemptCount(), 3);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
     assertEquals(exec.getLastFailure(), e);
@@ -129,7 +129,7 @@ public class ExecutionTest {
     exec.complete();
 
     // Then
-    assertEquals(exec.getExecutions(), 1);
+    assertEquals(exec.getAttemptCount(), 1);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
     assertNull(exec.getLastFailure());
@@ -144,7 +144,7 @@ public class ExecutionTest {
     assertTrue(exec.complete(true));
 
     // Then
-    assertEquals(exec.getExecutions(), 2);
+    assertEquals(exec.getAttemptCount(), 2);
     assertTrue(exec.isComplete());
     assertEquals(exec.getLastResult(), Boolean.TRUE);
     assertNull(exec.getLastFailure());
@@ -154,7 +154,7 @@ public class ExecutionTest {
     Execution exec = new Execution(new RetryPolicy<>());
     exec.recordFailure(e);
     exec.recordFailure(e);
-    assertEquals(exec.getExecutions(), 2);
+    assertEquals(exec.getAttemptCount(), 2);
   }
 
   public void testGetElapsedMillis() throws Throwable {
@@ -181,7 +181,7 @@ public class ExecutionTest {
     }
 
     assertEquals(exec.getLastResult(), Integer.valueOf(5));
-    assertEquals(exec.getExecutions(), 3);
+    assertEquals(exec.getAttemptCount(), 3);
   }
 
   public void shouldAdjustWaitTimeForBackoff() {
@@ -203,7 +203,7 @@ public class ExecutionTest {
 
   public void shouldAdjustWaitTimeForComputedDelay() {
     Execution exec = new Execution(
-        new RetryPolicy<>().withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getExecutions() * 2)));
+        new RetryPolicy<>().withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() * 2)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 2);
@@ -217,7 +217,7 @@ public class ExecutionTest {
 
   public void shouldFallbackWaitTimeFromComputedToFixedDelay() {
     Execution exec = new Execution(new RetryPolicy<>().withDelay(Duration.ofNanos(5)).withDelay((r, f,
-        ctx) -> Duration.ofNanos(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1)));
+        ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 5);
@@ -235,7 +235,7 @@ public class ExecutionTest {
 
   public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
     Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, ChronoUnit.NANOS).withDelay((r, f,
-        ctx) -> Duration.ofNanos(ctx.getExecutions() % 2 == 0 ? ctx.getExecutions() * 2 : -1)));
+        ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);

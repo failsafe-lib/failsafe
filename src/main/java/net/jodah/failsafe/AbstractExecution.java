@@ -74,7 +74,7 @@ public abstract class AbstractExecution extends ExecutionContext {
    */
   void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
-    executions++;
+    attempts++;
     lastResult = result.result;
     lastFailure = result.failure;
   }

@@ -24,10 +24,10 @@ public class ExecutionEvent {
   }
 
   /**
-   * Gets the number of executions so far.
+   * Gets the number of execution attempts so far.
    */
-  public int getExecutions() {
-    return context.getExecutions();
+  public int getAttemptCount() {
+    return context.getAttemptCount();
   }
 
   /**

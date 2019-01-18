@@ -78,7 +78,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldRunContextual() {
     assertRun((ContextualRunnable) context -> {
-      assertEquals(context.getExecutions(), counter.getAndIncrement());
+      assertEquals(context.getAttemptCount(), counter.getAndIncrement());
       service.connect();
     });
   }
@@ -107,7 +107,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldGetContextual() {
     assertGet((ContextualSupplier<Boolean>) context -> {
-      assertEquals(context.getExecutions(), counter.getAndIncrement());
+      assertEquals(context.getAttemptCount(), counter.getAndIncrement());
       return service.connect();
     });
   }

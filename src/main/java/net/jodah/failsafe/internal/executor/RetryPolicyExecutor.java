@@ -149,7 +149,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
         delayNanos = randomDelayInRange(delayMin.toNanos(), delayMin.toNanos(), Math.random());
 
       // Adjust for backoff
-      if (execution.getExecutions() != 1 && policy.getMaxDelay() != null)
+      if (execution.getAttemptCount() != 1 && policy.getMaxDelay() != null)
         delayNanos = (long) Math.min(delayNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
     }
 
@@ -171,7 +171,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     }
 
     // Calculate result
-    boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && execution.getExecutions() > policy.getMaxRetries();
+    boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && execution.getAttemptCount() > policy.getMaxRetries();
     boolean maxDurationExceeded = policy.getMaxDuration() != null && elapsedNanos > policy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
     boolean isAbortable = policy.isAbortable(result.result, result.failure);

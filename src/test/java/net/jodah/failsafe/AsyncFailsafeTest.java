@@ -60,7 +60,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<?> future = runAsync(Failsafe.with(retryAlways).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getExecutions(), expectedExecutions.get());
+      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
       waiter.assertNull(e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -76,7 +76,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When
     Future<?> future2 = runAsync(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getExecutions(), expectedExecutions.get());
+      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof ConnectException);
       waiter.resume();
@@ -94,7 +94,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldRunContextualWithExecutor() throws Throwable {
     assertRunAsync((ContextualRunnable) context -> {
-      assertEquals(context.getExecutions(), counter.getAndIncrement());
+      assertEquals(context.getAttemptCount(), counter.getAndIncrement());
       service.connect();
     });
   }
@@ -106,7 +106,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         exec.complete();
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (exec.getExecutions() % 2 == 0)
+        if (exec.getAttemptCount() % 2 == 0)
           throw failure;
         if (!exec.retryOn(failure))
           throw failure;
@@ -122,7 +122,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<Boolean> future = getAsync(Failsafe.with(retryPolicy).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getExecutions(), expectedExecutions.get());
+      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
       waiter.assertTrue(e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -140,7 +140,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Future<Boolean> future2 = getAsync(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
-      waiter.assertEquals(e.getExecutions(), expectedExecutions.get());
+      waiter.assertEquals(e.getAttemptCount(), expectedExecutions.get());
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof ConnectException);
       waiter.resume();
@@ -156,7 +156,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldGetContextualWithExecutor() throws Throwable {
     assertGetAsync((ContextualSupplier<Boolean>) context -> {
-      assertEquals(context.getExecutions(), counter.getAndIncrement());
+      assertEquals(context.getAttemptCount(), counter.getAndIncrement());
       return service.connect();
     });
   }
@@ -170,7 +170,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (exec.getExecutions() % 2 == 0)
+        if (exec.getAttemptCount() % 2 == 0)
           throw failure;
         if (!exec.retryOn(failure))
           throw failure;
@@ -232,7 +232,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
-        if (exec.getExecutions() % 2 == 0)
+        if (exec.getAttemptCount() % 2 == 0)
           throw failure;
         if (!exec.retryOn(failure))
           throw failure;
@@ -312,7 +312,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       waiter.assertNull(e.getFailure());
       waiter.resume();
     }).getAsyncExecution(exec -> {
-      if (exec.getExecutions() < 2)
+      if (exec.getAttemptCount() < 2)
         exec.retryOn(new ConnectException());
       else
         exec.complete(true);

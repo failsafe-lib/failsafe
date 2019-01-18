@@ -19,13 +19,13 @@ import java.time.Duration;
 
 /**
  * Contextual execution information.
- * 
+ *
  * @author Jonathan Halterman
  */
 public class ExecutionContext {
   private final Duration startTime;
   /** Number of execution attempts */
-  volatile int executions;
+  volatile int attempts;
 
   ExecutionContext(Duration startTime) {
     this.startTime = startTime;
@@ -33,7 +33,7 @@ public class ExecutionContext {
 
   private ExecutionContext(ExecutionContext context) {
     this.startTime = context.startTime;
-    this.executions = context.executions;
+    this.attempts = context.attempts;
   }
 
   /**
@@ -44,10 +44,10 @@ public class ExecutionContext {
   }
 
   /**
-   * Gets the number of executions so far.
+   * Gets the number of execution attempts so far.
    */
-  public int getExecutions() {
-    return executions;
+  public int getAttemptCount() {
+    return attempts;
   }
 
   /**

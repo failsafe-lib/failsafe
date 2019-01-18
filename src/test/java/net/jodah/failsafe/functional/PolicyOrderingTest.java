@@ -24,7 +24,7 @@ public class PolicyOrderingTest {
     Fallback<Object> fb = Fallback.of("test");
 
     Object result = Testing.ignoreExceptions(
-        () -> Failsafe.with(fb, rp, cb).onComplete(e -> assertEquals(e.getExecutions(), 3)).get(() -> {
+        () -> Failsafe.with(fb, rp, cb).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).get(() -> {
           throw new FooException();
         }));
 
@@ -37,7 +37,7 @@ public class PolicyOrderingTest {
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
     Testing.ignoreExceptions(
-        () -> Failsafe.with(cb, rp).onComplete(e -> assertEquals(e.getExecutions(), 3)).run(() -> {
+        () -> Failsafe.with(cb, rp).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).run(() -> {
           throw new Exception();
         }));
 
@@ -74,7 +74,7 @@ public class PolicyOrderingTest {
     Fallback<Object> fb = Fallback.of("test");
     AtomicInteger executions = new AtomicInteger();
 
-    assertEquals(Failsafe.with(fb, rp).onComplete(e -> executions.set(e.getExecutions())).get(() -> {
+    assertEquals(Failsafe.with(fb, rp).onComplete(e -> executions.set(e.getAttemptCount())).get(() -> {
       throw new IllegalStateException();
     }), "test");
     assertEquals(executions.get(), 3);
@@ -85,7 +85,7 @@ public class PolicyOrderingTest {
     Fallback<Object> fb = Fallback.of("test");
     AtomicInteger executions = new AtomicInteger();
 
-    assertEquals(Failsafe.with(rp, fb).onComplete(e -> executions.set(e.getExecutions())).get(() -> {
+    assertEquals(Failsafe.with(rp, fb).onComplete(e -> executions.set(e.getAttemptCount())).get(() -> {
       throw new IllegalStateException();
     }), "test");
     assertEquals(executions.get(), 1);
