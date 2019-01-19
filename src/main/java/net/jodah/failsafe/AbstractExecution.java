@@ -41,23 +41,10 @@ public abstract class AbstractExecution extends ExecutionContext {
   AbstractExecution(FailsafeExecutor<Object> executor) {
     super(Duration.ofNanos(System.nanoTime()));
     this.executor = executor;
-
-    if (executor.policies == null || executor.policies.isEmpty()) {
-      // Add policies in logical order
-      policyExecutors = new ArrayList<>(5);
-      if (executor.circuitBreaker != null)
-        buildPolicyExecutor(executor.circuitBreaker);
-      if (executor.retryPolicy != RetryPolicy.NEVER)
-        buildPolicyExecutor(executor.retryPolicy);
-      if (executor.fallback != null)
-        buildPolicyExecutor(executor.fallback);
-    } else {
-      // Add policies in user-defined order
-      policyExecutors = new ArrayList<>(executor.policies.size());
-      ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
-      while (policyIterator.hasPrevious())
-        buildPolicyExecutor(policyIterator.previous());
-    }
+    policyExecutors = new ArrayList<>(executor.policies.size());
+    ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
+    while (policyIterator.hasPrevious())
+      buildPolicyExecutor(policyIterator.previous());
   }
 
   @SuppressWarnings("unchecked")

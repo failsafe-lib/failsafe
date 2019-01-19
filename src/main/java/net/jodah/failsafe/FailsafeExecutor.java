@@ -22,6 +22,8 @@ import net.jodah.failsafe.internal.util.CommonPoolScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 import net.jodah.failsafe.util.concurrent.Schedulers;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -38,24 +40,17 @@ import java.util.function.Supplier;
  * @author Jonathan Halterman
  */
 public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
-  Scheduler scheduler = CommonPoolScheduler.INSTANCE;
-  RetryPolicy<R> retryPolicy = RetryPolicy.NEVER;
-  CircuitBreaker<R> circuitBreaker;
-  Fallback<R> fallback;
+  private Scheduler scheduler = CommonPoolScheduler.INSTANCE;
   /** Policies sorted outer-most first */
-  List<Policy<R>> policies;
+  final List<Policy<R>> policies;
   private EventListener completeListener;
 
-  FailsafeExecutor(CircuitBreaker<R> circuitBreaker) {
-    this.circuitBreaker = circuitBreaker;
-  }
-
-  FailsafeExecutor(RetryPolicy<R> retryPolicy) {
-    this.retryPolicy = retryPolicy;
-  }
-
-  FailsafeExecutor(List<Policy<R>> policies) {
-    this.policies = policies;
+  @SafeVarargs
+  FailsafeExecutor(Policy<R>... policies) {
+    Assert.notNull(policies, "policies");
+    Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
+    this.policies = new ArrayList<>(5);
+    Collections.addAll(this.policies, policies);
   }
 
   /**
@@ -291,48 +286,6 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public FailsafeExecutor<R> with(Scheduler scheduler) {
     this.scheduler = Assert.notNull(scheduler, "scheduler");
-    return this;
-  }
-
-  /**
-   * Configures the {@code circuitBreaker} to be used to control the rate of event execution.
-   *
-   * @throws NullPointerException if {@code circuitBreaker} is null
-   * @throws IllegalStateException if a circuit breaker is already configured or if ordered policies have been
-   *     configured
-   */
-  public FailsafeExecutor<R> with(CircuitBreaker<R> circuitBreaker) {
-    Assert.state(this.circuitBreaker == null, "A circuit breaker has already been configured");
-    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
-    this.circuitBreaker = Assert.notNull(circuitBreaker, "circuitBreaker");
-    return this;
-  }
-
-  /**
-   * Configures the {@code retryPolicy} to be used for retrying failed executions.
-   *
-   * @throws NullPointerException if {@code retryPolicy} is null
-   * @throws IllegalStateException if a retry policy is already configured or if ordered policies have been
-   *     configured
-   */
-  public FailsafeExecutor<R> with(RetryPolicy<R> retryPolicy) {
-    Assert.state(this.retryPolicy == RetryPolicy.NEVER, "A retry policy has already been configurd");
-    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
-    this.retryPolicy = Assert.notNull(retryPolicy, "retryPolicy");
-    return this;
-  }
-
-  /**
-   * Configures the {@code fallback} result to be returned if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   * @throws IllegalStateException if {@code withFallback} method has already been called or if ordered policies
-   *     have been configured
-   */
-  public FailsafeExecutor<R> with(Fallback<R> fallback) {
-    Assert.state(this.fallback == null, "A fallback has already been configured");
-    Assert.state(policies == null || policies.isEmpty(), "Policies have already been configured");
-    this.fallback = Assert.notNull(fallback, "fallback");
     return this;
   }
 

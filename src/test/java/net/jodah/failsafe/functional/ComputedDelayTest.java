@@ -70,7 +70,7 @@ public class ComputedDelayTest {
     Fallback<Object> fallback = Fallback.<Object>of(123).handleResultIf(result -> true);
 
     AtomicInteger attempts = new AtomicInteger(0);
-    Object result = Failsafe.with(retryPolicy).with(fallback).get(() -> {
+    Object result = Failsafe.with(fallback, retryPolicy).get(() -> {
       int i = attempts.getAndIncrement();
       switch (i) {
         case 0:
@@ -97,7 +97,7 @@ public class ComputedDelayTest {
         }, DelayException.class);
 
     AtomicInteger attempts = new AtomicInteger(0);
-    int result = Failsafe.with(retryPolicy).with(Fallback.of(123)).get(() -> {
+    int result = Failsafe.with(Fallback.of(123), retryPolicy).get(() -> {
       int i = attempts.getAndIncrement();
       switch (i) {
         case 0:

@@ -233,7 +233,7 @@ public class AsyncExecutionTest {
     reset(callable);
   }
 
-  static <T> FailsafeExecutor<T> executorFor(RetryPolicy<T> retryPolicy) {
+  private static <T> FailsafeExecutor<T> executorFor(RetryPolicy<T> retryPolicy) {
     return new FailsafeExecutor<>(retryPolicy);
   }
 

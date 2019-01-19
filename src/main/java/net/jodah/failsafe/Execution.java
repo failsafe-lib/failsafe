@@ -17,7 +17,6 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
@@ -36,7 +35,7 @@ public class Execution extends AbstractExecution {
    */
   @SuppressWarnings("unchecked")
   public Execution(Policy... policies) {
-    super(new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
+    super(new FailsafeExecutor<>(policies));
   }
 
   @SuppressWarnings("unchecked")

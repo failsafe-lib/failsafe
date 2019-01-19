@@ -19,14 +19,14 @@ public class Issue84Test {
     Asserts.assertThrows(() -> Failsafe.with(circuitBreaker).get(() -> true), CircuitBreakerOpenException.class);
 
     // Synchronous with fallback
-    assertFalse(Failsafe.with(circuitBreaker).with(Fallback.of(false)).get(() -> true));
+    assertFalse(Failsafe.with(Fallback.of(false), circuitBreaker).get(() -> true));
 
     // Asynchronous
     Future<Boolean> future1 = Failsafe.with(circuitBreaker).with(executor).getAsync(() -> true);
     Asserts.assertThrows(future1::get, ExecutionException.class, CircuitBreakerOpenException.class);
 
     // Asynchronous with fallback
-    Future<Boolean> future2 = Failsafe.with(circuitBreaker).with(executor).with(Fallback.of(false)).getAsync(() -> true);
+    Future<Boolean> future2 = Failsafe.with(Fallback.of(false), circuitBreaker).with(executor).getAsync(() -> true);
     assertFalse(future2.get());
 
     // Future
@@ -34,9 +34,7 @@ public class Issue84Test {
     Asserts.assertThrows(future3::get, ExecutionException.class, CircuitBreakerOpenException.class);
 
     // Future with fallback
-    Future<Boolean> future4 = Failsafe.with(circuitBreaker)
-        .with(executor)
-        .with(Fallback.of(false))
+    Future<Boolean> future4 = Failsafe.with(Fallback.of(false), circuitBreaker)
         .futureAsync(() -> CompletableFuture.completedFuture(false));
     assertFalse(future4.get());
   }

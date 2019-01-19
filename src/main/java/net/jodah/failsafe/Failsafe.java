@@ -15,10 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.internal.util.Assert;
-
-import java.util.Arrays;
-
 /**
  * Simple, sophisticated failure handling.
  *
@@ -27,29 +23,7 @@ import java.util.Arrays;
 public class Failsafe {
   /**
    * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
-   * the {@code retryPolicy}.
-   *
-   * @param <R> result type
-   * @throws NullPointerException if {@code retryPolicy} is null
-   */
-  public static <R> FailsafeExecutor<R> with(RetryPolicy<R> retryPolicy) {
-    return new FailsafeExecutor<>(Assert.notNull(retryPolicy, "retryPolicy"));
-  }
-
-  /**
-   * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
-   * the {@code circuitBreaker}.
-   *
-   * @param <R> result type
-   * @throws NullPointerException if {@code circuitBreaker} is null
-   */
-  public static <R> FailsafeExecutor<R> with(CircuitBreaker<R> circuitBreaker) {
-    return new FailsafeExecutor<>(Assert.notNull(circuitBreaker, "circuitBreaker"));
-  }
-
-  /**
-   * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
-   * the {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
+   * the provided {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
    *
    * @param <R> result type
    * @throws NullPointerException if {@code policies} is null
@@ -57,8 +31,6 @@ public class Failsafe {
    */
   @SafeVarargs
   public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P... policies) {
-    Assert.notNull(policies, "policies");
-    Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
-    return new FailsafeExecutor<>(Arrays.asList(policies));
+    return new FailsafeExecutor<>(policies);
   }
 }

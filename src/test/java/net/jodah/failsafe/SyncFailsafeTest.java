@@ -203,7 +203,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
     // When
     assertThrows(
-        () -> Failsafe.with(circuit).with(retryAlways.handle(ConnectException.class)).run(() -> service.connect()),
+        () -> Failsafe.with(retryAlways.handle(ConnectException.class), circuit).run(() -> service.connect()),
         CircuitBreakerOpenException.class);
 
     // Then
@@ -258,7 +258,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(5);
     AtomicInteger counter = new AtomicInteger();
-    assertTrue(Failsafe.with(retryPolicy).with(circuitBreaker).get(() -> {
+    assertTrue(Failsafe.with(retryPolicy, circuitBreaker).get(() -> {
       if (counter.incrementAndGet() < 3)
         throw new ConnectException();
       return true;
@@ -277,7 +277,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     }));
 
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
-    assertTrue(Failsafe.with(retryPolicy).with(fallback).get(() -> {
+    assertTrue(Failsafe.with(fallback, retryPolicy).get(() -> {
       throw new ConnectException();
     }));
   }

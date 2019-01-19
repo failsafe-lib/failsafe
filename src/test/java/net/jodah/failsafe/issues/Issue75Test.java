@@ -17,9 +17,8 @@ public class Issue75Test {
     CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().withFailureThreshold(10, 100).withSuccessThreshold(2).withDelay(
         Duration.ofMillis(100));
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-    int result = Failsafe.with(breaker)
+    int result = Failsafe.with(Fallback.of((a, b) -> 999), breaker)
         .with(service)
-        .with(Fallback.of((a, b) -> 999))
         .futureAsync(() -> CompletableFuture.completedFuture(223))
         .get();
 
