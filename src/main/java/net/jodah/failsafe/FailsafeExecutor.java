@@ -20,7 +20,6 @@ import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.CommonPoolScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
-import net.jodah.failsafe.util.concurrent.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -275,7 +274,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if {@code executor} is null
    */
   public FailsafeExecutor<R> with(ScheduledExecutorService executor) {
-    this.scheduler = Schedulers.of(executor);
+    this.scheduler = Scheduler.of(executor);
     return this;
   }
 
