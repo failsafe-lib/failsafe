@@ -14,6 +14,9 @@ import net.jodah.failsafe.internal.util.Assert;
  */
 @SuppressWarnings("unchecked")
 public class PolicyListeners<S, R> {
+  /**
+   * Handles an execution event.
+   */
   public interface EventListener {
     void handle(Object result, Throwable failure, ExecutionContext context);
 

@@ -22,6 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+/**
+ * Common execution information.
+ *
+ * @author Jonathan Halterman
+ */
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractExecution extends ExecutionContext {
   final FailsafeExecutor<Object> executor;

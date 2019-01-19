@@ -44,13 +44,15 @@ public class ExecutionResult {
     this.successAll = successAll;
   }
 
+  /**
+   * Returns a an ExecutionResult with the {@code result} set, {@code completed} true and {@code success} true.
+   */
   public static ExecutionResult success(Object result) {
     return new ExecutionResult(result, null);
   }
 
   /**
-   * Returns a copy of the ExecutionResult with the {@code failure} set, {@code completed} true and {@code success}
-   * false.
+   * Returns a an ExecutionResult with the {@code failure} set, {@code completed} true and {@code success} false.
    */
   public static ExecutionResult failure(Throwable failure) {
     return new ExecutionResult(null, failure, false, 0, true, false, false);
@@ -91,9 +93,7 @@ public class ExecutionResult {
    * Returns a copy of the ExecutionResult with the value set to true, else this if nothing has changed.
    */
   public ExecutionResult withComplete() {
-    return this.complete ?
-        this :
-        new ExecutionResult(result, failure, nonResult, waitNanos, true, success, successAll);
+    return this.complete ? this : new ExecutionResult(result, failure, nonResult, waitNanos, true, success, successAll);
   }
 
   /**
@@ -119,7 +119,7 @@ public class ExecutionResult {
   @Override
   public String toString() {
     return "ExecutionResult[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult
-        + ", waitNanos=" + waitNanos + ", complete=" + complete + ", success=" + success + ", successAll="
-        + successAll + ']';
+        + ", waitNanos=" + waitNanos + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll
+        + ']';
   }
 }
