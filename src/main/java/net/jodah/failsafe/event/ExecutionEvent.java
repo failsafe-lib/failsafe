@@ -12,7 +12,7 @@ import java.time.Duration;
 public class ExecutionEvent {
   private final ExecutionContext context;
 
-  public ExecutionEvent(ExecutionContext context) {
+  ExecutionEvent(ExecutionContext context) {
     this.context = context;
   }
 
