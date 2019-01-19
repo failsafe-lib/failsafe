@@ -10,7 +10,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
- * Base Policy implementation that captures conditions to determine whether an execution is a failure. If no failure
+ * A Policy implementation that captures conditions to determine whether an execution is a failure. If no failure
  * conditions are configured:
  * <ul>
  * <li>If no other policies are configured, the execution is considered a failure if an Exception was thrown.</li>
@@ -22,13 +22,13 @@ import java.util.function.Predicate;
  * @param <R> result type
  */
 @SuppressWarnings("unchecked")
-public abstract class AbstractPolicy<S, R> extends PolicyListeners<S, R> implements Policy<R> {
+public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implements Policy<R> {
   /** Indicates whether failures are checked by a configured failure condition */
   protected boolean failuresChecked;
   /** Conditions that determine whether an execution is a failure */
   protected List<BiPredicate<R, Throwable>> failureConditions;
 
-  AbstractPolicy() {
+  FailurePolicy() {
     failureConditions = new ArrayList<>();
   }
 

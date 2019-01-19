@@ -25,7 +25,7 @@ import net.jodah.failsafe.internal.util.Assert;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public class Fallback<R> extends AbstractPolicy<Fallback<R>, R> {
+public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   private final CheckedBiFunction<R, Throwable, R> fallback;
 
   /**

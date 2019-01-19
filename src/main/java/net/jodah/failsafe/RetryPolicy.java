@@ -44,7 +44,7 @@ import java.util.function.Predicate;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class RetryPolicy<R> extends AbstractPolicy<RetryPolicy<R>, R> {
+public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   /**
    * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
    *

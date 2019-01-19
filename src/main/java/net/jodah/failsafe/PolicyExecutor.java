@@ -68,19 +68,19 @@ public abstract class PolicyExecutor<P extends Policy> {
     if (isFailure(result)) {
       result = onFailure(result.with(false, false));
 
-      if (result.isComplete() && policy instanceof AbstractPolicy) {
-        AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
-        if (abstractPolicy.failureListener != null)
-          abstractPolicy.failureListener.handle(result, execution);
+      if (result.isComplete() && policy instanceof FailurePolicy) {
+        FailurePolicy failurePolicy = (FailurePolicy) policy;
+        if (failurePolicy.failureListener != null)
+          failurePolicy.failureListener.handle(result, execution);
       }
     } else {
       result = result.with(true, true);
       onSuccess(result);
 
-      if (result.isComplete() && policy instanceof AbstractPolicy) {
-        AbstractPolicy abstractPolicy = (AbstractPolicy) policy;
-        if (abstractPolicy.successListener != null)
-          abstractPolicy.successListener.handle(result, execution);
+      if (result.isComplete() && policy instanceof FailurePolicy) {
+        FailurePolicy failurePolicy = (FailurePolicy) policy;
+        if (failurePolicy.successListener != null)
+          failurePolicy.successListener.handle(result, execution);
       }
     }
 
@@ -94,8 +94,8 @@ public abstract class PolicyExecutor<P extends Policy> {
   protected boolean isFailure(ExecutionResult result) {
     if (result.isNonResult())
       return false;
-    else if (policy instanceof AbstractPolicy)
-      return ((AbstractPolicy) policy).isFailure(result);
+    else if (policy instanceof FailurePolicy)
+      return ((FailurePolicy) policy).isFailure(result);
     else
       return result.getFailure() != null;
   }

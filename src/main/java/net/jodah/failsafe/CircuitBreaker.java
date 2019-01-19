@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class CircuitBreaker<R> extends AbstractPolicy<CircuitBreaker<R>, R> {
+public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
