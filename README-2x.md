@@ -267,7 +267,7 @@ Fallback<Object> fallback = Fallback.of(this::connectToBackup);
 
 ## Policy Composition
 
-Policies can be composed in any way desired, including multiple policies of the same type. Policies handle execution results in reverse order, similar to the way that function composition works. For example:
+Policies can be composed in any way desired, including multiple policies of the same type. Policies handle execution results in reverse order, similar to the way that function composition works. For example, consider:
 
 ```java
 Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
@@ -388,16 +388,14 @@ RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
 But for other policies we may declare a more specific result type:
 
 ```java
-RetryPolicy<HttpResponse> retryPolicy = new RetryPolicy<HttpResponse>();
-```
-
-This allows Failsafe to ensure that the same result type is used when configuring a policy and performing an execution:
-
-```java
-retryPolicy
+RetryPolicy<HttpResponse> retryPolicy = new RetryPolicy<HttpResponse>()
   .handleResultIf(reponse -> response.getStatusCode == 500)
   .onFailedAttempt(e -> log.warn("Failed attempt: {}", e.getLastResult().getStatusCode()));
+```
 
+This allows Failsafe to ensure that the same result type used for the policy is returned by the execution:
+
+```java
 HttpResponse response = Failsafe.with(retryPolicy)
   .onSuccess(e -> log.info("Success: {}", e.getResult().getStatusCode()))  
   .get(this::sendHttpRequest);

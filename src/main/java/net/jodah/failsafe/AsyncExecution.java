@@ -46,7 +46,7 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Completes the execution and the associated {@code FutureResult}.
+   * Completes the execution and the associated {@code CompletableFuture}.
    *
    * @throws IllegalStateException if the execution is already complete
    */
@@ -55,7 +55,7 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Attempts to complete the execution and the associated {@code FutureResult} with the {@code result}. Returns true on
+   * Attempts to complete the execution and the associated {@code CompletableFuture} with the {@code result}. Returns true on
    * success, else false if completion failed and the execution should be retried via {@link #retry()}.
    *
    * @throws IllegalStateException if the execution is already complete
@@ -65,7 +65,7 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Attempts to complete the execution and the associated {@code FutureResult} with the {@code result} and {@code
+   * Attempts to complete the execution and the associated {@code CompletableFuture} with the {@code result} and {@code
    * failure}. Returns true on success, else false if completion failed and the execution should be retried via {@link
    * #retry()}.
    * <p>
@@ -80,7 +80,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Records an execution and returns true if a retry has been scheduled for else returns returns false and completes
-   * the execution and associated {@code FutureResult}.
+   * the execution and associated {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
@@ -90,7 +90,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Records an execution and returns true if a retry has been scheduled for the {@code result}, else returns false and
-   * marks the execution and associated {@code FutureResult} as complete.
+   * marks the execution and associated {@code CompletableFuture} as complete.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
@@ -100,7 +100,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Records an execution and returns true if a retry has been scheduled for the {@code result} or {@code failure}, else
-   * returns false and marks the execution and associated {@code FutureResult} as complete.
+   * returns false and marks the execution and associated {@code CompletableFuture} as complete.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
@@ -112,7 +112,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Records an execution and returns true if a retry has been scheduled for the {@code failure}, else returns false and
-   * marks the execution and associated {@code FutureResult} as complete.
+   * marks the execution and associated {@code CompletableFuture} as complete.
    *
    * @throws NullPointerException if {@code failure} is null
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete

@@ -22,8 +22,23 @@ package net.jodah.failsafe;
  */
 public class Failsafe {
   /**
-   * Creates and returns a new {@link FailsafeExecutor} instance that will perform executions and retries according to
-   * the provided {@code policies}. Policies are applied in reverse order, with the last policy being applied first.
+   * Creates and returns a new {@link FailsafeExecutor} instance that will handle failures according to the given {@code
+   * policies}. The {@code policies} are composed around an execution and will handle execution results in reverse, with
+   * the last policy being applied first. For example, consider:
+   * <p>
+   * <pre>
+   *   Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
+   * </pre>
+   * </p>
+   * This results in the following internal composition when executing the {@code supplier} and handling its result:
+   * <p>
+   * <pre>
+   *   Fallback(RetryPolicy(CircuitBreaker(Supplier)))
+   * </pre>
+   * </p>
+   * This means the {@code CircuitBreaker} is first to evaluate the {@code Supplier}'s result, then the {@code
+   * RetryPolicy}, then the {@code Fallback}. Each policy makes its own determination as to whether the result
+   * represents a failure. This allows different policies to be used for handling different types of failures.
    *
    * @param <R> result type
    * @throws NullPointerException if {@code policies} is null
