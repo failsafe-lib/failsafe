@@ -119,7 +119,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   private void assertGetAsync(Object supplier) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
-    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
+    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false).withMaxAttempts(10);
     AtomicInteger expectedExecutions = new AtomicInteger(5);
 
     // When / Then
@@ -184,7 +184,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   private void assertFuture(Object supplier) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
-    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
+    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false).withMaxAttempts(10);
 
     // When
     CompletableFuture<Boolean> future = futureAsync(Failsafe.with(retryPolicy).with(executor), supplier);

@@ -124,7 +124,7 @@ public class AsyncExecutionTest {
 
   public void testRetryForResultAndThrowable() {
     // Given rpRetry for null
-    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
+    exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().withMaxAttempts(10).handleResult(null)));
 
     // When / Then
     assertFalse(exec.complete(null));

@@ -36,12 +36,12 @@ public class RetryPolicyTest {
     }
   }
 
-  public void testisFailureNull() {
+  public void testIsFailureNull() {
     RetryPolicy<Object> policy = new RetryPolicy<>();
     assertFalse(policy.isFailure(null, null));
   }
 
-  public void testisFailureCompletionPredicate() {
+  public void testIsFailureCompletionPredicate() {
     RetryPolicy<Object> policy = new RetryPolicy<>()
         .handleIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.isFailure("test", null));
@@ -51,20 +51,20 @@ public class RetryPolicyTest {
     assertFalse(policy.isFailure(null, new IllegalStateException()));
   }
 
-  public void testisFailureFailurePredicate() {
+  public void testIsFailureFailurePredicate() {
     RetryPolicy<Object> policy = new RetryPolicy<>().handleIf(failure -> failure instanceof ConnectException);
     assertTrue(policy.isFailure(null, new ConnectException()));
     assertFalse(policy.isFailure(null, new IllegalStateException()));
   }
 
-  public void testisFailureResultPredicate() {
+  public void testIsFailureResultPredicate() {
     RetryPolicy<Integer> policy = new RetryPolicy<Integer>().handleResultIf(result -> result > 100);
     assertTrue(policy.isFailure(110, null));
     assertFalse(policy.isFailure(50, null));
   }
 
   @SuppressWarnings("unchecked")
-  public void testisFailureFailure() {
+  public void testIsFailureFailure() {
     RetryPolicy policy = new RetryPolicy();
     assertTrue(policy.isFailure(null, new Exception()));
     assertTrue(policy.isFailure(null, new IllegalArgumentException()));
@@ -89,7 +89,7 @@ public class RetryPolicyTest {
     assertFalse(policy.isFailure(null, new IllegalStateException()));
   }
 
-  public void testisFailureResult() {
+  public void testIsFailureResult() {
     RetryPolicy<Object> policy = new RetryPolicy<>().handleResult(10);
     assertTrue(policy.isFailure(10, null));
     assertFalse(policy.isFailure(5, null));
@@ -198,6 +198,12 @@ public class RetryPolicyTest {
     shouldFail(
         () -> new RetryPolicy().withDelay(Duration.ofMillis(100)).withMaxDuration(Duration.ofMillis(100)),
         IllegalStateException.class);
+  }
+
+  public void testGetMaxAttempts() {
+    assertEquals(new RetryPolicy().withMaxRetries(-1).getMaxAttempts(), -1);
+    assertEquals(new RetryPolicy().withMaxRetries(0).getMaxAttempts(), 1);
+    assertEquals(new RetryPolicy().withMaxRetries(1).getMaxAttempts(), 2);
   }
 
   public void testCopy() {

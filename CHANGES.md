@@ -42,6 +42,7 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
 
 ### Behavior Changes
 
+- `RetryPolicy` now has 3 max attempts by default.
 - `CircuitBreaker` now has a 1 minute delay by default.
 
 ### API Additions

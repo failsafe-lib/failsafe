@@ -112,15 +112,15 @@ policy
 
 ## Retries
 
-[Retry policies][RetryPolicy] express when retries should be performed for an execution failure.
+[Retry policies][RetryPolicy] express when retries should be performed for an execution failure. 
 
-You can add a max number of retries:
+By default, a [RetryPolicy] will perform a maximum of 3 execution attempts. You can configure a max number of [attempts][max-attempts] or [retries][max-retries]:
 
 ```java
-retryPolicy.withMaxRetries(100);
+retryPolicy.withMaxAttempts(3);
 ```
 
-And a delay between retry attempts:
+And a delay between attempts:
 
 ```java
 retryPolicy.withDelay(Duration.ofSeconds(1));
@@ -179,7 +179,7 @@ CircuitBreaker<Object> breaker = new CircuitBreaker<>()
   .withDelay(Duration.ofMinutes(1));
 ```
 
-When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions exceed a success threshold, the breaker is *closed* again and executions will proceed as normal.
+When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
 
 #### Circuit Breaker Configuration
 
@@ -197,10 +197,10 @@ Or when, for example, the last 3 out of 5 executions have failed:
 breaker.withFailureThreshold(3, 5);
 ```
 
-After opening, a breaker is typically configured to delay before attempting to *close* again:
+After opening, a breaker will delay for 1 minute by default before before attempting to *close* again, or you can configure a specific delay:
 
 ```java
-breaker.withDelay(Duration.ofMinutes(1));
+breaker.withDelay(Duration.ofSeconds(30));
 ```
 
 The breaker can be configured to *close* again if a number of trial executions succeed, else it will re-*open*:
@@ -515,6 +515,7 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.RetryPolicy.DelayFunction-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
+[max-attempts]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxAttempts-int-
 [max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-
 [jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-java.time.Duration-
 [jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-

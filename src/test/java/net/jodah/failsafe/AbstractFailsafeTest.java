@@ -36,7 +36,7 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public abstract class AbstractFailsafeTest {
-  RetryPolicy<Boolean> retryAlways = new RetryPolicy<>();
+  RetryPolicy<Boolean> retryAlways = new RetryPolicy<Boolean>().withMaxRetries(-1);
   RetryPolicy<Boolean> retryNever = new RetryPolicy<Boolean>().withMaxRetries(0);
   RetryPolicy<Boolean> retryTwice = new RetryPolicy<Boolean>().withMaxRetries(2);
   Service service = mock(Service.class);

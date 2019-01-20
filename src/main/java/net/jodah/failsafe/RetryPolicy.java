@@ -46,6 +46,8 @@ import java.util.function.Predicate;
  */
 @SuppressWarnings("WeakerAccess")
 public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
+  private static final int DEFAULT_MAX_RETRIES = 2;
+
   /**
    * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
    *
@@ -103,11 +105,11 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   private EventListener retryListener;
 
   /**
-   * Creates a retry policy that always retries with no delay.
+   * Creates a retry policy that allows 3 execution attempts max with no delay.
    */
   public RetryPolicy() {
     delay = Duration.ZERO;
-    maxRetries = -1;
+    maxRetries = DEFAULT_MAX_RETRIES;
     abortConditions = new ArrayList<>();
   }
 
@@ -373,6 +375,17 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   }
 
   /**
+   * Returns the max number of execution attempts to perform. A value of {@code -1} represents no limit. Defaults to
+   * {@code 3}.
+   *
+   * @see #withMaxAttempts(int)
+   * @see #getMaxRetries()
+   */
+  public int getMaxAttempts() {
+    return maxRetries == -1 ? -1 : maxRetries + 1;
+  }
+
+  /**
    * Returns the max delay between backoff retries.
    *
    * @see #withBackoff(long, long, ChronoUnit)
@@ -391,10 +404,11 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Returns the max number of retries to perform when an execution attempt fails. Defaults to {@code -1}, which retries
-   * forever.
+   * Returns the max number of retries to perform when an execution attempt fails. A value of {@code -1} represents no
+   * limit. Defaults to {@code 2}.
    *
    * @see #withMaxRetries(int)
+   * @see #getMaxAttempts()
    */
   public int getMaxRetries() {
     return maxRetries;
@@ -575,6 +589,20 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   }
 
   /**
+   * Sets the max number of execution attempts to perform. {@code -1} indicates no limit. This method has the same
+   * effect as setting 1 more than {@link #withMaxRetries(int)}. For example, 2 retries equal 3 attempts.
+   *
+   * @throws IllegalArgumentException if {@code maxAttempts} is 0 or less than -1
+   * @see #withMaxRetries(int)
+   */
+  public RetryPolicy<R> withMaxAttempts(int maxAttempts) {
+    Assert.isTrue(maxAttempts != 0, "maxAttempts cannot be 0");
+    Assert.isTrue(maxAttempts >= -1, "maxAttempts cannot be less than -1");
+    this.maxRetries = maxAttempts == -1 ? -1 : maxAttempts - 1;
+    return this;
+  }
+
+  /**
    * Sets the max duration to perform retries for, else the execution will be failed.
    *
    * @throws NullPointerException if {@code maxDuration} is null
@@ -588,9 +616,12 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Sets the max number of retries to perform when an execution attempt fails. {@code -1} indicates to retry forever.
+   * Sets the max number of retries to perform when an execution attempt fails. {@code -1} indicates no limit. This
+   * method has the same effect as setting 1 less than {@link #withMaxAttempts(int)}. For example, 2 retries equal 3
+   * attempts.
    *
    * @throws IllegalArgumentException if {@code maxRetries} &lt -1
+   * @see #withMaxAttempts(int)
    */
   public RetryPolicy<R> withMaxRetries(int maxRetries) {
     Assert.isTrue(maxRetries >= -1, "maxRetries must be greater than or equal to -1");

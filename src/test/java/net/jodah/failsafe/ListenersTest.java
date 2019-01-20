@@ -147,7 +147,7 @@ public class ListenersTest {
   private void assertForSuccess(boolean sync) throws Throwable {
     // Given - Fail 4 times then succeed
     when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
-    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false);
+    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().withMaxAttempts(10).handleResult(false);
     CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().handleResult(false).withDelay(Duration.ZERO);
     Fallback<Boolean> fallback = Fallback.of(true);
     FailsafeExecutor<Boolean> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);

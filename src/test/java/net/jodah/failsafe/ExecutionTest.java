@@ -67,7 +67,7 @@ public class ExecutionTest {
 
   public void testCanRetryForResultAndThrowable() {
     // Given rpRetry for null
-    Execution exec = new Execution(new RetryPolicy<>().handleResult(null));
+    Execution exec = new Execution(new RetryPolicy<>().withMaxAttempts(10).handleResult(null));
 
     // When / Then
     assertFalse(exec.complete(null));
@@ -185,7 +185,7 @@ public class ExecutionTest {
   }
 
   public void shouldAdjustWaitTimeForBackoff() {
-    Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, ChronoUnit.NANOS));
+    Execution exec = new Execution(new RetryPolicy<>().withMaxAttempts(10).withBackoff(1, 10, ChronoUnit.NANOS));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);
@@ -203,7 +203,7 @@ public class ExecutionTest {
 
   public void shouldAdjustWaitTimeForComputedDelay() {
     Execution exec = new Execution(
-        new RetryPolicy<>().withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() * 2)));
+        new RetryPolicy<>().withMaxAttempts(10).withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() * 2)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 2);
@@ -216,8 +216,9 @@ public class ExecutionTest {
   }
 
   public void shouldFallbackWaitTimeFromComputedToFixedDelay() {
-    Execution exec = new Execution(new RetryPolicy<>().withDelay(Duration.ofNanos(5)).withDelay((r, f,
-        ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
+    Execution exec = new Execution(new RetryPolicy<>().withMaxAttempts(10)
+        .withDelay(Duration.ofNanos(5))
+        .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 5);
@@ -234,8 +235,9 @@ public class ExecutionTest {
   }
 
   public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
-    Execution exec = new Execution(new RetryPolicy<>().withBackoff(1, 10, ChronoUnit.NANOS).withDelay((r, f,
-        ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
+    Execution exec = new Execution(new RetryPolicy<>().withMaxAttempts(10)
+        .withBackoff(1, 10, ChronoUnit.NANOS)
+        .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);
@@ -280,8 +282,7 @@ public class ExecutionTest {
   }
 
   public void shouldGetWaitMillis() throws Throwable {
-    Execution exec = new Execution(new RetryPolicy<>()
-        .withDelay(Duration.ofMillis(100))
+    Execution exec = new Execution(new RetryPolicy<>().withDelay(Duration.ofMillis(100))
         .withMaxDuration(Duration.ofMillis(101))
         .handleResult(null));
     assertEquals(exec.getWaitTime().toMillis(), 0);

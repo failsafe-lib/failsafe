@@ -90,7 +90,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   private void assertGet(Object supplier) {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResult(false);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxAttempts(10).handleResult(false);
 
     assertEquals(get(Failsafe.with(retryPolicy), supplier), Boolean.TRUE);
     verify(service, times(5)).connect();
@@ -120,7 +120,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, true);
     when(service.disconnect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, true);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResult(false);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxAttempts(10).handleResult(false);
 
     // When
     CompletableFuture.supplyAsync(() -> Failsafe.with(retryPolicy).get(() -> service.connect()))
