@@ -46,7 +46,7 @@ public class Java8Example {
     Stream.of("foo").map(value -> Failsafe.with(retryPolicy).get(() -> value + "bar")).forEach(System.out::println);
 
     // Create a retryable CompletableFuture
-    Failsafe.with(retryPolicy).with(executor).futureAsync(() -> CompletableFuture.supplyAsync(() -> "foo")
+    Failsafe.with(retryPolicy).with(executor).getStageAsync(() -> CompletableFuture.supplyAsync(() -> "foo")
         .thenApplyAsync(value -> value + "bar")
         .thenAccept(System.out::println));
 

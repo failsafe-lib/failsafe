@@ -65,7 +65,7 @@ public class Issue131Test {
     Waiter waiter = new Waiter();
 
     failsafe
-      .futureAsync(() -> {
+      .getStageAsync(() -> {
         CompletableFuture<String> future = new CompletableFuture<>();
         future.completeExceptionally(new IOException("let's blame it on network error"));
         return future;

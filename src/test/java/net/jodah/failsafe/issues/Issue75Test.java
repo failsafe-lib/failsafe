@@ -19,7 +19,7 @@ public class Issue75Test {
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     int result = Failsafe.with(Fallback.of((a, b) -> 999), breaker)
         .with(service)
-        .futureAsync(() -> CompletableFuture.completedFuture(223))
+        .getStageAsync(() -> CompletableFuture.completedFuture(223))
         .get();
 
     Assert.assertEquals(result, 223);

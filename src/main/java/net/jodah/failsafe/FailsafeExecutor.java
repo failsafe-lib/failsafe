@@ -53,8 +53,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} until a successful result is returned or the configured {@link RetryPolicy} is
-   * exceeded.
+   * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
@@ -66,8 +65,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} until a successful result is returned or the configured {@link RetryPolicy} is
-   * exceeded.
+   * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
@@ -79,8 +77,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured {@link
-   * RetryPolicy} is exceeded.
+   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
+   * exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -93,8 +91,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured {@link
-   * RetryPolicy} is exceeded.
+   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
+   * exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -107,9 +105,9 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured {@link
-   * RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be manually
-   * scheduled via one of the {@code AsyncExecution.retry} methods.
+   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
+   * exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
+   * one of the {@code AsyncExecution.retry} methods.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -131,8 +129,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution is complete for all of the configured {@link Policy
-   * policies}.
+   * Registers the {@code listener} to be called when an execution is complete for all of the configured policies are
+   * exceeded.
    */
   public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     completeListener = EventListener.of(Assert.notNull(listener, "listener"));
@@ -160,7 +158,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
 
   /**
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
-   * {@link RetryPolicy} is exceeded.
+   * policies are exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
@@ -168,13 +166,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> futureAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
+  public <T extends R> CompletableFuture<T> getStageAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
     return callAsync(execution -> Functions.promiseOfStage(supplier, execution));
   }
 
   /**
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
-   * {@link RetryPolicy} is exceeded.
+   * policies are exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
@@ -182,14 +180,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> futureAsync(ContextualSupplier<? extends CompletionStage<T>> supplier) {
+  public <T extends R> CompletableFuture<T> getStageAsync(ContextualSupplier<? extends CompletionStage<T>> supplier) {
     return callAsync(execution -> Functions.promiseOfStage(supplier, execution));
   }
 
   /**
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
-   * {@link RetryPolicy} is exceeded. This method is intended for integration with asynchronous code. Retries must be
-   * manually scheduled via one of the {@code AsyncExecution.retry} methods.
+   * policies are exceeded. This method is intended for integration with asynchronous code. Retries must be manually
+   * scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
@@ -197,12 +195,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> futureAsyncExecution(AsyncSupplier<? extends CompletionStage<T>> supplier) {
+  public <T extends R> CompletableFuture<T> getStageAsyncExecution(
+      AsyncSupplier<? extends CompletionStage<T>> supplier) {
     return callAsyncExecution(execution -> Functions.asyncOfFutureExecution(supplier, execution));
   }
 
   /**
-   * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
+   * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
@@ -214,7 +213,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code runnable} until successful or until the configured {@link RetryPolicy} is exceeded.
+   * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception or if interrupted while
@@ -226,8 +225,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
-   * exceeded.
+   * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -240,8 +238,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
-   * exceeded.
+   * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -254,9 +251,9 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code runnable} asynchronously until successful or until the configured {@link RetryPolicy} is
-   * exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
-   * one of the {@code AsyncExecution.retry} methods.
+   * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded. This
+   * method is intended for integration with asynchronous code. Retries must be manually scheduled via one of the {@code
+   * AsyncExecution.retry} methods.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -289,7 +286,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Calls the {@code supplier} synchronously, performing retries according to the {@code retryPolicy}.
+   * Calls the {@code supplier} synchronously, handling results according to the configured policies.
    *
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
    *     waiting to perform a retry.
@@ -309,8 +306,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Calls the asynchronous {@code supplier} via the configured Scheduler, performing retries according to the
-   * configured RetryPolicy.
+   * Calls the asynchronous {@code supplier} via the configured Scheduler, handling results according to the configured
+   * policies.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
@@ -329,8 +326,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Calls the asynchronous {@code supplier} via the configured Scheduler, performing retries according to the
-   * configured RetryPolicy, until any configured RetryPolicy is exceeded or the AsyncExecution is completed.
+   * Calls the asynchronous {@code supplier} via the configured Scheduler, handling results according to the configured
+   * policies, until any configured policy is exceeded or the AsyncExecution is completed.
    * <p>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.

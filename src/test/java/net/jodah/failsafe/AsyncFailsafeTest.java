@@ -327,15 +327,15 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
    * Assert handles a supplier that throws instead of returning a future.
    */
   public void shouldHandleThrowingFutureSupplier() {
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).futureAsync(() -> {
+    assertThrows(() -> Failsafe.with(retryTwice).with(executor).getStageAsync(() -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
 
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).futureAsync(context -> {
+    assertThrows(() -> Failsafe.with(retryTwice).with(executor).getStageAsync(context -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
 
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).futureAsyncExecution(exec -> {
+    assertThrows(() -> Failsafe.with(retryTwice).with(executor).getStageAsyncExecution(exec -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
   }
@@ -459,10 +459,10 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   @SuppressWarnings("unchecked")
   private <T> CompletableFuture<T> futureAsync(FailsafeExecutor<T> failsafe, Object supplier) {
     if (supplier instanceof CheckedSupplier)
-      return failsafe.futureAsync((CheckedSupplier<CompletableFuture<T>>) supplier);
+      return failsafe.getStageAsync((CheckedSupplier<CompletableFuture<T>>) supplier);
     else if (supplier instanceof ContextualSupplier)
-      return failsafe.futureAsync((ContextualSupplier<CompletableFuture<T>>) supplier);
+      return failsafe.getStageAsync((ContextualSupplier<CompletableFuture<T>>) supplier);
     else
-      return failsafe.futureAsyncExecution((AsyncSupplier<CompletableFuture<T>>) supplier);
+      return failsafe.getStageAsyncExecution((AsyncSupplier<CompletableFuture<T>>) supplier);
   }
 }

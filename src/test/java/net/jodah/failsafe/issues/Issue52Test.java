@@ -47,7 +47,7 @@ public class Issue52Test {
     AtomicInteger counter = new AtomicInteger();
     CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
         .with(scheduler)
-        .futureAsync(exec -> {
+        .getStageAsync(exec -> {
           Thread.sleep(100);
           counter.incrementAndGet();
           CompletableFuture<String> result = new CompletableFuture<>();
