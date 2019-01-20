@@ -90,18 +90,18 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(3)).connect();
   }
 
-  public void shouldRunWithExecutor() throws Throwable {
+  public void shouldRunAsync() throws Throwable {
     assertRunAsync((CheckedRunnable) service::connect);
   }
 
-  public void shouldRunContextualWithExecutor() throws Throwable {
+  public void shouldRunAsyncContextual() throws Throwable {
     assertRunAsync((ContextualRunnable) context -> {
       assertEquals(context.getAttemptCount(), counter.getAndIncrement());
       service.connect();
     });
   }
 
-  public void shouldRunAsync() throws Throwable {
+  public void shouldRunAsyncExecutor() throws Throwable {
     assertRunAsync((AsyncRunnable) exec -> {
       try {
         service.connect();
@@ -152,18 +152,18 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(expectedExecutions.get())).connect();
   }
 
-  public void shouldGetWithExecutor() throws Throwable {
+  public void shouldGetAsync() throws Throwable {
     assertGetAsync((CheckedSupplier<?>) service::connect);
   }
 
-  public void shouldGetContextualWithExecutor() throws Throwable {
+  public void shouldGetAsyncContextual() throws Throwable {
     assertGetAsync((ContextualSupplier<Boolean>) context -> {
       assertEquals(context.getAttemptCount(), counter.getAndIncrement());
       return service.connect();
     });
   }
 
-  public void shouldGetAsync() throws Throwable {
+  public void shouldGetAsyncExecutor() throws Throwable {
     assertGetAsync((AsyncSupplier<?>) exec -> {
       try {
         boolean result = service.connect();
@@ -292,14 +292,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     }));
   }
 
-  public void shouldCancelOnFutureAsync() throws Throwable {
+  public void shouldCancelOnGetStageAsync() throws Throwable {
     assertCancel(executor -> getStageAsync(executor, (CheckedSupplier<?>) () -> {
       Thread.sleep(1000);
       return CompletableFuture.completedFuture("test");
     }));
   }
 
-  public void shouldCancelOnFutureAsyncExecutor() throws Throwable {
+  public void shouldCancelOnGetStageAsyncExecutor() throws Throwable {
     assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?>) (e) -> {
       Thread.sleep(1000);
       CompletableFuture<?> result = CompletableFuture.completedFuture("test");
@@ -326,16 +326,16 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   /**
    * Assert handles a supplier that throws instead of returning a future.
    */
-  public void shouldHandleThrowingFutureSupplier() {
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).getStageAsync(() -> {
+  public void shouldHandleThrowingGetStageAsync() {
+    assertThrows(() -> Failsafe.with(retryTwice).getStageAsync(() -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
 
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).getStageAsync(context -> {
+    assertThrows(() -> Failsafe.with(retryTwice).getStageAsync(context -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
 
-    assertThrows(() -> Failsafe.with(retryTwice).with(executor).getStageAsyncExecution(exec -> {
+    assertThrows(() -> Failsafe.with(retryTwice).getStageAsyncExecution(exec -> {
       throw new IllegalArgumentException();
     }).get(), ExecutionException.class, IllegalArgumentException.class);
   }
@@ -345,7 +345,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
    */
   public void shouldCompleteAsync() throws Throwable {
     Waiter waiter = new Waiter();
-    Failsafe.with(retryAlways).with(executor).runAsyncExecution(exec -> executor.schedule(() -> {
+    Failsafe.with(retryAlways).runAsyncExecution(exec -> executor.schedule(() -> {
       try {
         exec.complete();
         waiter.resume();
