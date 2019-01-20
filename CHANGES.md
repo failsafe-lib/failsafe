@@ -27,7 +27,7 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
   - `Supplier`s are now used instead of `Callable`s.
   - `withFallback` is no longer supported. Instead, `Failsafe.with(fallback...)` should be used.
 - Async execution
-  - Async execution is now performed with the `getAsync`, `runAsync`, etc. methods.
+  - Async execution is now performed with the `getAsync`, `runAsync`, `getStageAsync`, etc. methods.
   - Async API integration is now supported via the `getAsyncExecution`, `runAsyncExecution`, etc. methods.
 - Event listeners
   - Event listeners now all consume a single `ExecutionEvent` object, which includes references to the result, failure, and other information.

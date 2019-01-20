@@ -12,14 +12,15 @@
 
 Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+. It was designed to be as easy to use as possible, with a concise API for handling everyday use cases and the flexibility to handle everything else. 
 
-Failsafe works by wrapping executable logic with one or more resilience [policies](#failure-policies), which can be combined and [composed](#policy-composition) as needed. These policies include:
+Failsafe works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed](#policy-composition) as needed. These policies include:
 
 * [Retries](#retries) 
 * [Circuit breakers](#circuit-breakers) 
 * [Fallbacks](#fallbacks) 
 
-It also provides features that allow you to integrate and extend Failsafe as needed, including:
+It also provides features that allow you to integrate with various scenarios, including:
 
+* [Configurable schedulers](#configurable-schedulers)
 * [Execution context](#execution-context)
 * [Event listeners](#event-listeners)
 * [Strong typing](#strong-typing)
@@ -45,7 +46,7 @@ To start, we'll create a [RetryPolicy] that defines which failures should be han
 ```java
 RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
   .handle(ConnectException.class)
-  .withDelay(1, TimeUnit.SECONDS)
+  .withDelay(Duration.ofSeconds(1))
   .withMaxRetries(3);
 ```
 
@@ -71,7 +72,7 @@ CompletableFuture<Connection> future = Failsafe.with(retryPolicy).getAsync(() ->
 
 #### Composing Policies
 
-Multiple policies can be arbitrarily composed to add additional layers of resilience or to handle different failures in different ways:
+Multiple [policies] can be arbitrarily composed to add additional layers of resilience or to handle different failures in different ways:
 
 ```java
 CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>();
@@ -149,7 +150,7 @@ Or a [time based jitter][jitter-duration]:
 retryPolicy.withJitter(Duration.ofMillis(100));
 ```
 
-You can add a max retry duration:
+You can add a [max retry duration][max-duration]:
 
 ```java
 retryPolicy.withMaxDuration(Duration.ofMinutes(5));
@@ -292,6 +293,14 @@ That said, it really depends on how the policies are being used, and different c
 
 ## Additional Features
 
+#### Configurable Schedulers
+
+By default, Failsafe uses the [ForkJoinPool]'s [common pool][common-pool] to perform async executions, but you can also configure a specific [ScheduledExecutorService] or custom [Scheduler] to use:
+
+```java
+Failsafe.with(scheduler).getAsync(this::connect);
+```
+
 #### Execution Context
 
 Failsafe can provide an [ExecutionContext] containing execution related information such as the number of execution attempts as well as start and elapsed times:
@@ -356,8 +365,7 @@ retryPolicy
 Or when an execution fails and the max retries are [exceeded][retries-exceeded] for a [RetryPolicy]:
 
 ```java
-retryPolicy
-  .onRetriesExceeded(e -> log.warn("Failed to connect. Max retries exceeded."));
+retryPolicy.onRetriesExceeded(e -> log.warn("Failed to connect. Max retries exceeded."));
 ```
 
 For [CircuitBreakers][CircuitBreaker], Failsafe can notify you when the state changes:
@@ -383,11 +391,12 @@ But for other policies we may declare a more specific result type:
 RetryPolicy<HttpResponse> retryPolicy = new RetryPolicy<HttpResponse>();
 ```
 
-This allows Failsafe to ensure that the same result type is used when handling an event or performing an execution:
+This allows Failsafe to ensure that the same result type is used when configuring a policy and performing an execution:
 
 ```java
 retryPolicy
-  .onFailedAttempt(e -> log.warn("Failure: {}", e.getLastResult().getStatusCode()));
+  .handleResultIf(reponse -> response.getStatusCode == 500)
+  .onFailedAttempt(e -> log.warn("Failed attempt: {}", e.getLastResult().getStatusCode()));
 
 HttpResponse response = Failsafe.with(retryPolicy)
   .onSuccess(e -> log.info("Success: {}", e.getResult().getStatusCode()))  
@@ -400,8 +409,7 @@ Failsafe can be integrated with asynchronous code that reports completion via ca
 
 ```java
 Failsafe.with(retryPolicy)
-  .with(executor)
-  .getAsync(execution -> service.connect().whenComplete((result, failure) -> {
+  .getAsyncExecution(execution -> service.connect().whenComplete((result, failure) -> {
     if (execution.complete(result, failure))
       log.info("Connected");
     else if (!execution.retry())
@@ -417,8 +425,7 @@ Failsafe can accept a [CompletionStage] and return a new [CompletableFuture] wit
 
 ```java
 Failsafe.with(retryPolicy)
-  .with(executor)
-  .future(this::connectAsync)
+  .getStageAsync(this::connectAsync)
   .thenApplyAsync(value -> value + "bar")
   .thenAccept(System.out::println));
 ```
@@ -503,14 +510,15 @@ Failsafe is a volunteer effort. If you use it and you like it, [let us know][who
 
 Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
+[policies]: #failure-policies
+[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.time.temporal.ChronoUnit-
 [computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.RetryPolicy.DelayFunction-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
-[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
-[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-long-java.util.concurrent.TimeUnit-
+[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-
+[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-java.time.Duration-
 [jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
-[timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-long-java.util.concurrent.TimeUnit-
+[timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-
 [runAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#runAsyncExecution-net.jodah.failsafe.function.AsyncRunnable-
 [getAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
 [futureAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#futureAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
@@ -528,6 +536,8 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [AsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncExecution
 [Scheduler]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/util/concurrent/Scheduler.html
 
+[ForkJoinPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html
+[common-pool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [CompletionStage]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html 
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
