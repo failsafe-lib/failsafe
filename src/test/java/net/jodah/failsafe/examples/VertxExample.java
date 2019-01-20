@@ -20,7 +20,6 @@ import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.util.Unchecked;
 import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -37,7 +36,12 @@ public class VertxExample {
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
   static Scheduler scheduler = (callable, delay, unit) -> {
-    Runnable runnable = Unchecked.runnable(callable);
+    Runnable runnable = () -> {
+      try {
+        callable.call();
+      } catch (Exception ignore) {
+      }
+    };
     return new DefaultScheduledFuture<Object>() {
       long timerId;
 

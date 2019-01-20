@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.util;
+package net.jodah.failsafe.internal.util;
 
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
@@ -23,30 +23,17 @@ import java.util.function.Supplier;
  *
  * @author Jonathan Halterman
  */
-public final class Unchecked {
+final class Unchecked {
   private Unchecked() {
   }
 
   /**
    * Returns a Supplier for the {@code callable} that wraps and re-throws any checked Exception in a RuntimeException.
    */
-  public static <T> Supplier<T> supplier(Callable<T> callable) {
+  static <T> Supplier<T> supplier(Callable<T> callable) {
     return () -> {
       try {
         return callable.call();
-      } catch (Exception e) {
-        throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
-      }
-    };
-  }
-
-  /**
-   * Returns a Runnable for the {@code callable} that wraps and re-throws any checked Exception in a RuntimeException.
-   */
-  public static <T> Runnable runnable(Callable<T> callable) {
-    return () -> {
-      try {
-        callable.call();
       } catch (Exception e) {
         throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
       }
