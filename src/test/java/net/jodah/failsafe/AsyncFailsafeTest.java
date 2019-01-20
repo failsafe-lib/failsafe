@@ -181,13 +181,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     });
   }
 
-  private void assertFuture(Object supplier) throws Throwable {
+  private void assertGetStage(Object supplier) throws Throwable {
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(2, new ConnectException())).thenReturn(false, false, true);
     RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().handleResult(false).withMaxAttempts(10);
 
     // When
-    CompletableFuture<Boolean> future = futureAsync(Failsafe.with(retryPolicy).with(executor), supplier);
+    CompletableFuture<Boolean> future = getStageAsync(Failsafe.with(retryPolicy).with(executor), supplier);
 
     // Then
     future.whenComplete((result, failure) -> {
@@ -204,7 +204,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(10, new ConnectException()));
 
     // When
-    CompletableFuture<Boolean> future2 = futureAsync(Failsafe.with(retryTwice).with(executor), supplier);
+    CompletableFuture<Boolean> future2 = getStageAsync(Failsafe.with(retryTwice).with(executor), supplier);
 
     // Then
     future2.whenComplete((result, failure) -> {
@@ -217,16 +217,16 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(3)).connect();
   }
 
-  public void shouldGetFutureAsync() throws Throwable {
-    assertFuture((CheckedSupplier<?>) () -> CompletableFuture.supplyAsync(service::connect));
+  public void shouldGetStageAsync() throws Throwable {
+    assertGetStage((CheckedSupplier<?>) () -> CompletableFuture.supplyAsync(service::connect));
   }
 
-  public void shouldGetFutureAsyncContextual() throws Throwable {
-    assertFuture((ContextualSupplier<?>) context -> CompletableFuture.supplyAsync(service::connect));
+  public void shouldGetStageAsyncContextual() throws Throwable {
+    assertGetStage((ContextualSupplier<?>) context -> CompletableFuture.supplyAsync(service::connect));
   }
 
-  public void shouldGetFutureAsyncExecution() throws Throwable {
-    assertFuture((AsyncSupplier<?>) exec -> CompletableFuture.supplyAsync(() -> {
+  public void shouldGetStageAsyncExecution() throws Throwable {
+    assertGetStage((AsyncSupplier<?>) exec -> CompletableFuture.supplyAsync(() -> {
       try {
         boolean result = service.connect();
         if (!exec.complete(result))
@@ -293,14 +293,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnFutureAsync() throws Throwable {
-    assertCancel(executor -> futureAsync(executor, (CheckedSupplier<?>) () -> {
+    assertCancel(executor -> getStageAsync(executor, (CheckedSupplier<?>) () -> {
       Thread.sleep(1000);
       return CompletableFuture.completedFuture("test");
     }));
   }
 
   public void shouldCancelOnFutureAsyncExecutor() throws Throwable {
-    assertCancel(executor -> futureAsync(executor, (AsyncSupplier<?>) (e) -> {
+    assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?>) (e) -> {
       Thread.sleep(1000);
       CompletableFuture<?> result = CompletableFuture.completedFuture("test");
       e.complete(result);
@@ -457,7 +457,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> CompletableFuture<T> futureAsync(FailsafeExecutor<T> failsafe, Object supplier) {
+  private <T> CompletableFuture<T> getStageAsync(FailsafeExecutor<T> failsafe, Object supplier) {
     if (supplier instanceof CheckedSupplier)
       return failsafe.getStageAsync((CheckedSupplier<CompletableFuture<T>>) supplier);
     else if (supplier instanceof ContextualSupplier)
