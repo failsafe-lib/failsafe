@@ -10,8 +10,8 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
- * A Policy implementation that captures conditions to determine whether an execution is a failure. If no failure
- * conditions are configured:
+ * A Policy that captures conditions to determine whether an execution is a failure. If no failure conditions are
+ * configured:
  * <ul>
  * <li>If no other policies are configured, the execution is considered a failure if an Exception was thrown.</li>
  * <li>If other policies were configured, the execution is considered a failure if the previous configured Policy's
@@ -123,7 +123,9 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * @see #handleResultIf(Predicate)
    */
   boolean isFailure(ExecutionResult result) {
-    return failureConditions.isEmpty() ? result.getFailure() != null : isFailure((R) result.getResult(), result.getFailure());
+    return failureConditions.isEmpty() ?
+        result.getFailure() != null :
+        isFailure((R) result.getResult(), result.getFailure());
   }
 
   /**
@@ -168,9 +170,9 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
 
   /**
    * Returns a predicate that evaluates the {@code resultPredicate} against a result, when present.
-   *
-   * Short-circuts to false without invoking {@code resultPredicate},
-   * when result is not present (i.e. BiPredicate.test(null, Throwable)).
+   * <p>
+   * Short-circuts to false without invoking {@code resultPredicate}, when result is not present (i.e.
+   * BiPredicate.test(null, Throwable)).
    */
   static <R> BiPredicate<R, Throwable> resultPredicateFor(Predicate<R> resultPredicate) {
     return (t, u) -> {

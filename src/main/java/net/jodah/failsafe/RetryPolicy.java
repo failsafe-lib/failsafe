@@ -18,6 +18,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
+import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.executor.RetryPolicyExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 

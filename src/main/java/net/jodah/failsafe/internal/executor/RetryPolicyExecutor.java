@@ -16,8 +16,8 @@
 package net.jodah.failsafe.internal.executor;
 
 import net.jodah.failsafe.*;
-import net.jodah.failsafe.PolicyListeners.EventListener;
 import net.jodah.failsafe.RetryPolicy.DelayFunction;
+import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.time.Duration;

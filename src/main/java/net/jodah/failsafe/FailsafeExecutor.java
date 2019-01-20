@@ -17,6 +17,7 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.CommonPoolScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
@@ -32,8 +33,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * An executor capable of performing executions that where failures are handled according to configured {@link Policy
- * policies}.
+ * An executor that handles failures according to configured {@link FailurePolicy policies}.
  *
  * @param <R> result type
  * @author Jonathan Halterman
