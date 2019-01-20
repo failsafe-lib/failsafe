@@ -21,8 +21,7 @@ Failsafe works by wrapping executable logic with one or more resilience [policie
 It also provides features that allow you to integrate with various scenarios, including:
 
 * [Configurable schedulers](#configurable-schedulers)
-* [Execution context](#execution-context)
-* [Event listeners](#event-listeners)
+* [Event listeners](#event-listeners) and [Execution context](#execution-context)
 * [Strong typing](#strong-typing)
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletionStage](#completionstage-integration) and [functional interface](#functional-interface-integration) integration
@@ -301,17 +300,6 @@ By default, Failsafe uses the [ForkJoinPool]'s [common pool][common-pool] to per
 Failsafe.with(scheduler).getAsync(this::connect);
 ```
 
-#### Execution Context
-
-Failsafe can provide an [ExecutionContext] containing execution related information such as the number of execution attempts as well as start and elapsed times:
-
-```java
-Failsafe.with(retryPolicy).run(ctx -> {
-  log.debug("Connection attempt #{}", ctx.getAttemptCount());
-  connect();
-});
-```
-
 #### Event Listeners
 
 Failsafe supports event listeners, both in the top level [Failsafe][FailsafeExecutor] API, and in the different [Policy][FailurePolicy] implementations.
@@ -375,6 +363,17 @@ circuitBreaker
   .onClose(() -> log.info("The circuit breaker was closed"));
   .onOpen(() -> log.info("The circuit breaker was opened"))
   .onHalfOpen(() -> log.info("The circuit breaker was half-opened"))
+```
+
+#### Execution Context
+
+Failsafe can provide an [ExecutionContext] containing execution related information such as the number of execution attempts as well as start and elapsed times:
+
+```java
+Failsafe.with(retryPolicy).run(ctx -> {
+  log.debug("Connection attempt #{}", ctx.getAttemptCount());
+  connect();
+});
 ```
 
 #### Strong typing
