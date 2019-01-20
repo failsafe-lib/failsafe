@@ -18,7 +18,8 @@ package net.jodah.failsafe;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Testing.ConnectException;
 import net.jodah.failsafe.Testing.Service;
-import net.jodah.failsafe.function.CheckedBiFunction;
+import net.jodah.failsafe.event.ExecutionAttemptedEvent;
+import net.jodah.failsafe.function.CheckedFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.annotations.BeforeMethod;
@@ -84,19 +85,19 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedBiFunction<T, Throwable, T> fallback, CheckedSupplier<T> supplier) {
+  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? Failsafe.with(Fallback.of(fallback), breaker).get(supplier)
-        : Failsafe.with(Fallback.of(fallback), breaker).with(executor).getAsync(supplier).get());
+        : Failsafe.with(Fallback.ofAsync(fallback), breaker).with(executor).getAsync(supplier).get());
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedBiFunction<T, Throwable, T> fallback, CheckedSupplier<T> supplier) {
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ? Failsafe.with(Fallback.of(fallback), retryPolicy).get(supplier)
-        : Failsafe.with(Fallback.of(fallback), retryPolicy).with(executor).getAsync(supplier).get());
+        : Failsafe.with(Fallback.ofAsync(fallback), retryPolicy).with(executor).getAsync(supplier).get());
   }
 
   /**
@@ -157,9 +158,9 @@ public abstract class AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When / Then
-    assertEquals(failsafeGet(retryPolicy, (r, f) -> {
-      waiter.assertNull(r);
-      waiter.assertEquals(failure, f);
+    assertEquals(failsafeGet(retryPolicy, e -> {
+      waiter.assertNull(e.getLastResult());
+      waiter.assertEquals(failure, e.getLastFailure());
       return false;
     }, () -> service.connect()), Boolean.FALSE);
     verify(service, times(3)).connect();
@@ -169,10 +170,10 @@ public abstract class AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(3, failure));
 
     // When / Then
-    assertThrows(() -> failsafeGet(retryPolicy, (r, f) -> {
-      waiter.assertNull(r);
-      waiter.assertEquals(failure, f);
-      throw new RuntimeException(f);
+    assertThrows(() -> failsafeGet(retryPolicy, e -> {
+      waiter.assertNull(e.getLastResult());
+      waiter.assertEquals(failure, e.getLastFailure());
+      throw new RuntimeException(e.getLastFailure());
     }, () -> service.connect()), RuntimeException.class, ConnectException.class);
     verify(service, times(3)).connect();
   }
@@ -188,9 +189,9 @@ public abstract class AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When / Then
-    assertEquals(failsafeGet(breaker, (r, f) -> {
-      waiter.assertNull(r);
-      waiter.assertEquals(failure, f);
+    assertEquals(failsafeGet(breaker, e -> {
+      waiter.assertNull(e.getLastResult());
+      waiter.assertEquals(failure, e.getLastFailure());
       return false;
     }, () -> service.connect()), Boolean.FALSE);
     verify(service).connect();
@@ -201,10 +202,10 @@ public abstract class AbstractFailsafeTest {
     when(service.connect()).thenThrow(failure);
 
     // When / Then
-    assertThrows(() -> failsafeGet(breaker, (r, f) -> {
-      waiter.assertNull(r);
-      waiter.assertEquals(failure, f);
-      throw new RuntimeException(f);
+    assertThrows(() -> failsafeGet(breaker, e -> {
+      waiter.assertNull(e.getLastResult());
+      waiter.assertEquals(failure, e.getLastFailure());
+      throw new RuntimeException(e.getLastFailure());
     }, () -> service.connect()), RuntimeException.class, ConnectException.class);
     verify(service).connect();
   }
@@ -221,9 +222,9 @@ public abstract class AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When / Then
-    assertEquals(failsafeGet(breaker, (r, f) -> {
-      waiter.assertNull(r);
-      waiter.assertTrue(f instanceof CircuitBreakerOpenException);
+    assertEquals(failsafeGet(breaker, e -> {
+      waiter.assertNull(e.getLastResult());
+      waiter.assertTrue(e.getLastFailure() instanceof CircuitBreakerOpenException);
       return false;
     }, service::connect), Boolean.FALSE);
     verify(service, times(0)).connect();

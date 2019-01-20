@@ -57,7 +57,7 @@ public class ExecutionContext {
     return startTime;
   }
 
-  ExecutionContext copy() {
+  public ExecutionContext copy() {
     return new ExecutionContext(this);
   }
 }

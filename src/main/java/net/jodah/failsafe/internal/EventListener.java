@@ -13,7 +13,7 @@ public interface EventListener {
   void handle(Object result, Throwable failure, ExecutionContext context);
 
   @SuppressWarnings("unchecked")
-  public static <R> EventListener of(CheckedConsumer<? extends ExecutionCompletedEvent<R>> handler) {
+  static <R> EventListener of(CheckedConsumer<? extends ExecutionCompletedEvent<R>> handler) {
     return (Object result, Throwable failure, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionCompletedEvent<R>>) handler).accept(
@@ -24,7 +24,7 @@ public interface EventListener {
   }
 
   @SuppressWarnings("unchecked")
-  public static <R> EventListener ofAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> handler) {
+  static <R> EventListener ofAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> handler) {
     return (Object result, Throwable failure, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionAttemptedEvent<R>>) handler).accept(

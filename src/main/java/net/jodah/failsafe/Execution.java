@@ -112,7 +112,7 @@ public class Execution extends AbstractExecution {
    */
   ExecutionResult executeSync(Supplier<ExecutionResult> supplier) {
     for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
-      supplier = policyExecutor.supplySync(supplier);
+      supplier = policyExecutor.supply(supplier);
 
     ExecutionResult result = supplier.get();
     completed = result.isComplete();

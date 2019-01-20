@@ -5,6 +5,7 @@
 * [Policy composition](README.md#policy-composition) is now supported.
 * [A Policy SPI](README.md#policy-spi) is now available.
 * Async execution is now supported without requiring that a `ScheduledExecutorService` or `Scheduler` be configured. When no scheduler is configured, the `ForkJoinPool`'s common pool will be used by default.
+* `Fallback` now support async execution via `ofAsync`.
 * `CircuitBreaker` supports execution metrics (see below).
 * Strong typing based on result types is supported throughout the API.
 

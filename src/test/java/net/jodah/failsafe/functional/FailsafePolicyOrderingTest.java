@@ -42,7 +42,7 @@ public class FailsafePolicyOrderingTest {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
-    Fallback<Object> fb = Fallback.of("test");
+    Fallback<Object> fb = Fallback.ofAsync(() -> "test");
     FailsafeExecutor<Object> failsafe = Failsafe.with(fb, rp, cb).onComplete(e -> {
       waiter.assertEquals(3, e.getAttemptCount());
       waiter.resume();
@@ -162,7 +162,7 @@ public class FailsafePolicyOrderingTest {
         .withMaxRetries(3)
         .onFailedAttempt(e -> rp2FailedAttempts.incrementAndGet())
         .onFailure(e -> rp2Failures.incrementAndGet());
-    Fallback<Object> fallback = Fallback.of(true);
+    Fallback<Object> fallback = Fallback.ofAsync(() -> true);
     FailsafeExecutor<Object> failsafe = Failsafe.with(fallback, rp2, rp1).onComplete(e -> {
       waiter.assertEquals(5, e.getAttemptCount());
       waiter.resume();

@@ -375,7 +375,7 @@ public class ListenersTest {
     // And failing CircuitBreaker
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
     // And successful Fallback
-    Fallback<Object> fallback = Fallback.<Object>of(() -> true).handle(NullPointerException.class);
+    Fallback<Object> fallback = Fallback.<Object>ofAsync(() -> true).handle(NullPointerException.class);
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
 
     // When
@@ -416,7 +416,7 @@ public class ListenersTest {
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO)
         .handle(NullPointerException.class);
     // And failing Fallback
-    Fallback<Object> fallback = Fallback.of(() -> true);
+    Fallback<Object> fallback = Fallback.ofAsync(() -> true);
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
 
     // When

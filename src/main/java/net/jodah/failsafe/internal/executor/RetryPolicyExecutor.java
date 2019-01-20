@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelay;
@@ -60,7 +61,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   }
 
   @Override
-  protected Supplier<ExecutionResult> supplySync(Supplier<ExecutionResult> supplier) {
+  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier) {
     return () -> {
       while (true) {
         ExecutionResult result = supplier.get();
@@ -78,6 +79,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
           return ExecutionResult.failure(new FailsafeException(e));
         }
 
+        // Call retry listener
         if (retryListener != null)
           retryListener.handle(result, execution);
       }
@@ -95,24 +97,31 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
 
         @Override
         public Object call() {
+          // Call retry listener
           if (retryListener != null && previousResult != null)
             retryListener.handle(previousResult, execution);
 
           return supplier.get().handle((result, error) -> {
-            // Propagate result
             if (result != null) {
-              if (!retriesExceeded)
-                result = postExecute(result);
-              if (retriesExceeded || result.isComplete())
-                promise.complete(result);
-              else if (!future.isDone() && !future.isCancelled()) {
-                try {
-                  previousResult = result;
-                  future.inject((Future<Object>) scheduler.schedule(this, result.getWaitNanos(), TimeUnit.NANOSECONDS));
-                } catch (Exception e) {
-                  promise.completeExceptionally(e);
+              // Prepare post execution handler
+              Consumer<ExecutionResult> postExecutionHandler = postResult -> {
+                if (retriesExceeded || postResult.isComplete())
+                  promise.complete(postResult);
+                else if (!future.isDone() && !future.isCancelled()) {
+                  try {
+                    previousResult = postResult;
+                    future.inject((Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
+                  } catch (Exception e) {
+                    promise.completeExceptionally(e);
+                  }
                 }
-              }
+              };
+
+              // Perform post execution handling
+              if (!retriesExceeded)
+                postExecuteAsync(result, scheduler, future).thenAccept(postExecutionHandler);
+              else
+                postExecutionHandler.accept(result);
             } else
               promise.completeExceptionally(error);
 

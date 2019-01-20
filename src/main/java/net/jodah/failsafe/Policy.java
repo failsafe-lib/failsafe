@@ -24,5 +24,9 @@ package net.jodah.failsafe;
  * @author Jonathan Halterman
  */
 public interface Policy<R> {
+  /**
+   * Returns an {@link PolicyExecutor} capable of performing an execution in the context of a Policy and handling
+   * results according to the Policy.
+   */
   PolicyExecutor<Policy<R>> toExecutor();
 }

@@ -139,7 +139,8 @@ final class Functions {
     };
   }
 
-  static Supplier<CompletableFuture<ExecutionResult>> promiseOf(ContextualRunnable runnable, AbstractExecution execution) {
+  static Supplier<CompletableFuture<ExecutionResult>> promiseOf(ContextualRunnable runnable,
+      AbstractExecution execution) {
     Assert.notNull(runnable, "runnable");
     return () -> {
       ExecutionResult result;
@@ -249,7 +250,8 @@ final class Functions {
           supplier.get(execution).whenComplete((innerResult, failure) -> {
             try {
               if (failure != null)
-                execution.completeOrHandle(innerResult, failure instanceof CompletionException ? failure.getCause() : failure);
+                execution.completeOrHandle(innerResult,
+                    failure instanceof CompletionException ? failure.getCause() : failure);
             } finally {
               asyncFutureLock.release();
             }
@@ -302,36 +304,25 @@ final class Functions {
     };
   }
 
-  static <T, U, R> CheckedBiFunction<T, U, R> fnOf(CheckedSupplier<R> supplier) {
-    return (t, u) -> supplier.get();
+  static <T, R> CheckedFunction<T, R> fnOf(CheckedSupplier<R> supplier) {
+    return t -> supplier.get();
   }
 
-  static <T, U, R> CheckedBiFunction<T, U, R> fnOf(CheckedBiConsumer<T, U> consumer) {
-    return (t, u) -> {
-      consumer.accept(t, u);
+  static <T, R> CheckedFunction<T, R> fnOf(CheckedConsumer<T> consumer) {
+    return t -> {
+      consumer.accept(t);
       return null;
     };
   }
 
-  static <T, U, R> CheckedBiFunction<T, U, R> fnOf(CheckedConsumer<U> consumer) {
-    return (t, u) -> {
-      consumer.accept(u);
-      return null;
-    };
-  }
-
-  static <T, U, R> CheckedBiFunction<T, U, R> fnOf(CheckedFunction<U, R> function) {
-    return (t, u) -> function.apply(u);
-  }
-
-  static <T, U, R> CheckedBiFunction<T, U, R> fnOf(CheckedRunnable runnable) {
-    return (t, u) -> {
+  static <T, R> CheckedFunction<T, R> fnOf(CheckedRunnable runnable) {
+    return t -> {
       runnable.run();
       return null;
     };
   }
 
-  static <T, U, R> CheckedBiFunction<T, U, R> fnOf(R result) {
-    return (t, u) -> result;
+  static <T, R> CheckedFunction<T, R> fnOf(R result) {
+    return t -> result;
   }
 }

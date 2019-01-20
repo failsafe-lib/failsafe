@@ -16,8 +16,15 @@
 package net.jodah.failsafe.internal.executor;
 
 import net.jodah.failsafe.ExecutionResult;
+import net.jodah.failsafe.FailsafeFuture;
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.PolicyExecutor;
+import net.jodah.failsafe.util.concurrent.Scheduler;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A PolicyExecutor that handles failures according to a fallback.
@@ -31,9 +38,27 @@ public class FallbackExecutor extends PolicyExecutor<Fallback> {
   @SuppressWarnings("unchecked")
   protected ExecutionResult onFailure(ExecutionResult result) {
     try {
-      return result.withResult(policy.apply(result.getResult(), result.getFailure()));
+      return result.withResult(policy.apply(result.getResult(), result.getFailure(), execution.copy()));
     } catch (Exception e) {
       return ExecutionResult.failure(e);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
+      FailsafeFuture<Object> future) {
+    if (!policy.isAsync())
+      return CompletableFuture.completedFuture(onFailure(result));
+
+    CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+    Callable<Object> callable = () -> promise.complete(onFailure(result));
+
+    try {
+      future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
+    } catch (Exception e) {
+      promise.completeExceptionally(e);
+    }
+
+    return promise;
   }
 }

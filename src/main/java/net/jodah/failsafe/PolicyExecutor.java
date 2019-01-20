@@ -29,11 +29,10 @@ public abstract class PolicyExecutor<P extends Policy> {
   }
 
   /**
-   * Performs a sync execution by first doing a pre-execute, calling the next executor, else calling the executor's
-   * supplier, then finally doing a post-execute. This navigates to the end of the executor chain before calling the
-   * supplier.
+   * Performs a synchronous execution by first doing a pre-execute, calling the next executor, else calling the
+   * executor's supplier, then finally doing a post-execute.
    */
-  protected Supplier<ExecutionResult> supplySync(Supplier<ExecutionResult> supplier) {
+  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier) {
     return () -> {
       ExecutionResult result = preExecute();
       if (result != null)
@@ -44,11 +43,24 @@ public abstract class PolicyExecutor<P extends Policy> {
   }
 
   /**
+   * Performs synchronous post-execution handling for a {@code result}.
+   */
+  protected ExecutionResult postExecute(ExecutionResult result) {
+    if (isFailure(result)) {
+      result = onFailure(result.with(false, false));
+      callFailureListener(result);
+    } else {
+      result = result.with(true, true);
+      onSuccess(result);
+      callSuccessListener(result);
+    }
+
+    return result;
+  }
+
+  /**
    * Performs an async execution by first doing an optional pre-execute, calling the next executor, else scheduling the
-   * executor's supplier, then finally doing a post-execute. This navigates to the end of the executor chain before
-   * calling the supplier.
-   *
-   * @return null if an execution has been scheduled
+   * executor's supplier, then finally doing an async post-execute.
    */
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
       Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
@@ -57,34 +69,26 @@ public abstract class PolicyExecutor<P extends Policy> {
       if (result != null)
         return CompletableFuture.completedFuture(result);
 
-      return supplier.get().thenApply(this::postExecute);
+      return supplier.get().thenCompose(s -> postExecuteAsync(s, scheduler, future));
     };
   }
 
   /**
-   * Performs post-execution handling for a {@code result}.
+   * Performs potentially asynchronous post-execution handling for a {@code result}.
    */
-  protected ExecutionResult postExecute(ExecutionResult result) {
+  protected CompletableFuture<ExecutionResult> postExecuteAsync(ExecutionResult result, Scheduler scheduler,
+      FailsafeFuture<Object> future) {
     if (isFailure(result)) {
-      result = onFailure(result.with(false, false));
-
-      if (result.isComplete() && policy instanceof FailurePolicy) {
-        FailurePolicy failurePolicy = (FailurePolicy) policy;
-        if (failurePolicy.failureListener != null)
-          failurePolicy.failureListener.handle(result, execution);
-      }
+      result = result.with(false, false);
+      return onFailureAsync(result, scheduler, future).whenComplete((postResult, error) -> {
+        callFailureListener(postResult);
+      });
     } else {
       result = result.with(true, true);
       onSuccess(result);
-
-      if (result.isComplete() && policy instanceof FailurePolicy) {
-        FailurePolicy failurePolicy = (FailurePolicy) policy;
-        if (failurePolicy.successListener != null)
-          failurePolicy.successListener.handle(result, execution);
-      }
+      callSuccessListener(result);
+      return CompletableFuture.completedFuture(result);
     }
-
-    return result;
   }
 
   /**
@@ -113,5 +117,30 @@ public abstract class PolicyExecutor<P extends Policy> {
    */
   protected ExecutionResult onFailure(ExecutionResult result) {
     return result;
+  }
+
+  /**
+   * Performs potentially asynchrononus post-execution handling for a failed {@code result}, possibly creating a new
+   * result, else returning the original {@code result}.
+   */
+  protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
+      FailsafeFuture<Object> future) {
+    return CompletableFuture.completedFuture(onFailure(result));
+  }
+
+  private void callSuccessListener(ExecutionResult result) {
+    if (result.isComplete() && policy instanceof FailurePolicy) {
+      FailurePolicy failurePolicy = (FailurePolicy) policy;
+      if (failurePolicy.successListener != null)
+        failurePolicy.successListener.handle(result, execution);
+    }
+  }
+
+  private void callFailureListener(ExecutionResult result) {
+    if (result.isComplete() && policy instanceof FailurePolicy) {
+      FailurePolicy failurePolicy = (FailurePolicy) policy;
+      if (failurePolicy.failureListener != null)
+        failurePolicy.failureListener.handle(result, execution);
+    }
   }
 }

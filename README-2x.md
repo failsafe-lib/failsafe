@@ -264,6 +264,12 @@ Or compute an alternative result such as from a backup resource:
 Fallback<Object> fallback = Fallback.of(this::connectToBackup);
 ```
 
+For computations that block, a Fallback can be configured to run asynchronously:
+
+```java
+Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
+```
+
 ## Policy Composition
 
 Policies can be composed in any way desired, including multiple policies of the same type. Policies handle execution results in reverse order, similar to the way that function composition works. For example, consider:

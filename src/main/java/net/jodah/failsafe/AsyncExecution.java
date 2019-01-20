@@ -55,8 +55,8 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Attempts to complete the execution and the associated {@code CompletableFuture} with the {@code result}. Returns true on
-   * success, else false if completion failed and the execution should be retried via {@link #retry()}.
+   * Attempts to complete the execution and the associated {@code CompletableFuture} with the {@code result}. Returns
+   * true on success, else false if completion failed and the execution should be retried via {@link #retry()}.
    *
    * @throws IllegalStateException if the execution is already complete
    */
@@ -131,7 +131,8 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Attempts to complete the parent execution, calls failure handlers, and completes the future if needed.
+   * Attempts to complete the parent execution, calls failure handlers, and completes the future if needed. Runs
+   * synchrnously since a concrete result is needed.
    *
    * @throws IllegalStateException if the execution is already complete
    */
