@@ -6,19 +6,15 @@
 [![JavaDoc](http://javadoc-badge.appspot.com/net.jodah/failsafe.svg?label=javadoc)](https://jhalterman.github.com/failsafe/javadoc)
 [![Join the chat at https://gitter.im/jhalterman/failsafe](https://badges.gitter.im/jhalterman/failsafe.svg)][gitter]
 
-*Simple, sophisticated failure handling.*
-
 ## Introduction
 
-Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+. It was designed to be as easy to use as possible, with a concise API for handling everyday use cases and the flexibility to handle everything else. 
-
-Failsafe works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed](#policy-composition) as needed. These policies include:
+Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It  works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed](#policy-composition) as needed. These policies include:
 
 * [Retries](#retries) 
 * [Circuit breakers](#circuit-breakers) 
 * [Fallbacks](#fallbacks) 
 
-It also provides features that allow you to integrate with various scenarios, including:
+Failsafe also provides features that allow you to integrate with various scenarios, including:
 
 * [Configurable schedulers](#configurable-schedulers)
 * [Event listeners](#event-listeners) and [Execution context](#execution-context)
