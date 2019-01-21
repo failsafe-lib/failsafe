@@ -216,7 +216,11 @@ And the breaker can be configured to recognize executions that exceed a certain 
 breaker.withTimeout(Duration.ofSeconds(10));
 ```
 
-#### Failing Together
+#### Circuit Breaker Metrics
+
+[CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state.
+
+#### Best Practices
 
 A circuit breaker can and *should* be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again. For example, if multiple connections or requests are made to the same external server, typically they should all go through the same circuit breaker.
 
@@ -523,6 +527,8 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [getAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
 [futureAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#futureAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
 [retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
+[breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
+[breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
 
 [FailsafeExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html
 [Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
