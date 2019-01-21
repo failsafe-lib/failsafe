@@ -30,19 +30,29 @@ import java.util.function.Supplier;
 final class Functions {
   private static final CompletableFuture<ExecutionResult> NULL_FUTURE = CompletableFuture.completedFuture(null);
 
-  /** Returns a supplier that supplies the {@code result} once then uses the {@code supplier} for subsequent calls. */
-  static <T> Supplier<CompletableFuture<T>> supplyOnce(CompletableFuture<T> result,
-      Supplier<CompletableFuture<T>> supplier) {
-    return new Supplier<CompletableFuture<T>>() {
+  interface SettableSupplier<T> extends Supplier<T> {
+    void set(T value);
+  }
+
+  /** Returns a SettableSupplier that supplies the set value once then uses the {@code supplier} for subsequent calls. */
+  static <T> SettableSupplier<CompletableFuture<T>> settableSupplierOf(Supplier<CompletableFuture<T>> supplier) {
+    return new SettableSupplier<CompletableFuture<T>>() {
       volatile boolean called;
+      volatile CompletableFuture<T> value;
 
       @Override
       public CompletableFuture<T> get() {
-        if (!called) {
+        if (!called && value != null) {
           called = true;
-          return result;
+          return value;
         } else
           return supplier.get();
+      }
+
+      @Override
+      public void set(CompletableFuture<T> value) {
+        called = false;
+        this.value = value;
       }
     };
   }
@@ -156,7 +166,7 @@ final class Functions {
     };
   }
 
-  static <T> Supplier<CompletableFuture<ExecutionResult>> asyncOfExecution(AsyncRunnable runnable,
+  static Supplier<CompletableFuture<ExecutionResult>> asyncOfExecution(AsyncRunnable runnable,
       AsyncExecution execution) {
     Assert.notNull(runnable, "runnable");
     return new Supplier<CompletableFuture<ExecutionResult>>() {

@@ -312,6 +312,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * If a configured circuit breaker is open, the resulting future is completed with {@link
    * CircuitBreakerOpenException}.
    *
+   * @param asyncExecution whether this is a detached, async execution that must be manually completed
    * @throws NullPointerException if the {@code supplierFn} is null
    * @throws RejectedExecutionException if the {@code supplierFn} cannot be scheduled for execution
    */
@@ -321,10 +322,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     FailsafeFuture<T> future = new FailsafeFuture(this);
     AsyncExecution execution = new AsyncExecution(scheduler, future, this);
     future.inject(execution);
-    if (!asyncExecution)
-      execution.executeAsync(supplierFn.apply(execution));
-    else
-      execution.executeAsyncExecution(supplierFn.apply(execution));
+    execution.inject(supplierFn.apply(execution), asyncExecution);
+    execution.executeAsync(asyncExecution);
     return future;
   }
 }

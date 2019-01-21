@@ -223,8 +223,8 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   }
 
   /**
-   * Recods an execution that is about to take place by incrementing the internal executions count. Useful for
-   * standalone usage.
+   * Records an execution that is about to take place by incrementing the internal executions count. Required for
+   * standalone CircuitBreaker usage.
    */
   public void preExecute() {
     currentExecutions.incrementAndGet();

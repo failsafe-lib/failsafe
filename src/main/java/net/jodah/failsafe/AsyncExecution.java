@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.Functions.SettableSupplier;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -31,7 +32,8 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("WeakerAccess")
 public final class AsyncExecution extends AbstractExecution {
-  private Supplier<CompletableFuture<ExecutionResult>> executionSupplier;
+  private SettableSupplier<CompletableFuture<ExecutionResult>> innerExecutionSupplier;
+  private Supplier<CompletableFuture<ExecutionResult>> outerExecutionSupplier;
   final FailsafeFuture<Object> future;
   final Scheduler scheduler;
   private volatile boolean completeCalled;
@@ -42,6 +44,17 @@ public final class AsyncExecution extends AbstractExecution {
     super((FailsafeExecutor<Object>) executor);
     this.scheduler = scheduler;
     this.future = (FailsafeFuture<Object>) future;
+  }
+
+  void inject(Supplier<CompletableFuture<ExecutionResult>> supplier, boolean asyncExecution) {
+    if (!asyncExecution) {
+      outerExecutionSupplier = supplier;
+    } else {
+      outerExecutionSupplier = innerExecutionSupplier = Functions.settableSupplierOf(supplier);
+    }
+
+    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+      outerExecutionSupplier = policyExecutor.supplyAsync(outerExecutionSupplier, scheduler, this.future);
   }
 
   /**
@@ -150,21 +163,15 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Performs an asynchronous execution.
-   */
-  void executeAsync(Supplier<CompletableFuture<ExecutionResult>> supplier) {
-    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
-      supplier = policyExecutor.supplyAsync(supplier, scheduler, future);
-    supplier = Functions.makeAsync(supplier, scheduler, future);
-    supplier.get().whenComplete(this::complete);
-  }
-
-  /**
-   * Performs an asynchronous execution where the execution must be manually completed via the provided AsyncExecution.
+   *
+   * @param asyncExecution whether this is a detached, async execution that must be manually completed
    */
   @SuppressWarnings("unchecked")
-  void executeAsyncExecution(Supplier<CompletableFuture<ExecutionResult>> supplier) {
-    executionSupplier = supplier;
-    future.inject((Future) scheduler.schedule(supplier::get, 0, TimeUnit.NANOSECONDS));
+  void executeAsync(boolean asyncExecution) {
+    if (!asyncExecution)
+      Functions.makeAsync(outerExecutionSupplier, scheduler, future).get().whenComplete(this::complete);
+    else
+      future.inject((Future) scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
   }
 
   /**
@@ -180,13 +187,8 @@ public final class AsyncExecution extends AbstractExecution {
       if (!completeCalled)
         record(er);
       completeCalled = true;
-
-      Supplier<CompletableFuture<ExecutionResult>> supplier = Functions.supplyOnce(
-          CompletableFuture.completedFuture(er), executionSupplier);
-      for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
-        supplier = policyExecutor.supplyAsync(supplier, scheduler, future);
-
-      supplier.get().whenComplete(this::complete);
+      innerExecutionSupplier.set(CompletableFuture.completedFuture(er));
+      outerExecutionSupplier.get().whenComplete(this::complete);
       return completed;
     }
   }
