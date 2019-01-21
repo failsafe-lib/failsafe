@@ -122,8 +122,10 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                 postExecuteAsync(result, scheduler, future).thenAccept(postExecutionHandler);
               else
                 postExecutionHandler.accept(result);
-            } else
+            } else if (error != null)
               promise.completeExceptionally(error);
+            else
+              promise.complete(null);
 
             return result;
           });

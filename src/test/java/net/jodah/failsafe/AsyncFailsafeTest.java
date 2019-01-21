@@ -101,7 +101,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     });
   }
 
-  public void shouldRunAsyncExecutor() throws Throwable {
+  public void shouldRunAsyncExecution() throws Throwable {
     assertRunAsync((AsyncRunnable) exec -> {
       try {
         service.connect();
@@ -163,7 +163,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     });
   }
 
-  public void shouldGetAsyncExecutor() throws Throwable {
+  public void shouldGetAsyncExecution() throws Throwable {
     assertGetAsync((AsyncSupplier<?>) exec -> {
       try {
         boolean result = service.connect();
@@ -271,7 +271,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     }));
   }
 
-  public void shouldCancelOnGetAsyncExecutor() throws Throwable {
+  public void shouldCancelOnGetAsyncExecution() throws Throwable {
     assertCancel(executor -> getAsync(executor, (AsyncSupplier<?>) (e) -> {
       Thread.sleep(1000);
       e.complete();
@@ -285,7 +285,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     }));
   }
 
-  public void shouldCancelOnRunAsyncExecutor() throws Throwable {
+  public void shouldCancelOnRunAsyncExecution() throws Throwable {
     assertCancel(executor -> runAsync(executor, (AsyncRunnable) (e) -> {
       Thread.sleep(1000);
       e.complete();
@@ -299,7 +299,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     }));
   }
 
-  public void shouldCancelOnGetStageAsyncExecutor() throws Throwable {
+  public void shouldCancelOnGetStageAsyncExecution() throws Throwable {
     assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?>) (e) -> {
       Thread.sleep(1000);
       CompletableFuture<?> result = CompletableFuture.completedFuture("test");

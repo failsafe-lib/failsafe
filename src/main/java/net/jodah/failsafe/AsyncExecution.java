@@ -18,7 +18,9 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -29,9 +31,6 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("WeakerAccess")
 public final class AsyncExecution extends AbstractExecution {
-  /** Used to complete a promise for a scheduled execution */
-  static final Exception SCHEDULED = new Exception("The execution has been scheduled");
-
   private Supplier<CompletableFuture<ExecutionResult>> executionSupplier;
   final FailsafeFuture<Object> future;
   final Scheduler scheduler;
@@ -159,9 +158,13 @@ public final class AsyncExecution extends AbstractExecution {
     supplier.get().whenComplete(this::complete);
   }
 
-  <T> void executeAsyncExecution(Supplier<T> supplier) {
-    executionSupplier = Functions.makeAsyncExecution(supplier, scheduler, future);
-    executionSupplier.get();
+  /**
+   * Performs an asynchronous execution where the execution must be manually completed via the provided AsyncExecution.
+   */
+  @SuppressWarnings("unchecked")
+  void executeAsyncExecution(Supplier<CompletableFuture<ExecutionResult>> supplier) {
+    executionSupplier = supplier;
+    future.inject((Future) scheduler.schedule(supplier::get, 0, TimeUnit.NANOSECONDS));
   }
 
   /**
@@ -189,7 +192,7 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   private void complete(ExecutionResult result, Throwable error) {
-    if (AsyncExecution.SCHEDULED.equals(error))
+    if (result == null && error == null)
       return;
 
     completed = true;

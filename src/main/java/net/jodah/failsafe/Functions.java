@@ -28,6 +28,8 @@ import java.util.function.Supplier;
  * @author Jonathan Halterman
  */
 final class Functions {
+  private static final CompletableFuture<ExecutionResult> NULL_FUTURE = CompletableFuture.completedFuture(null);
+
   /** Returns a supplier that supplies the {@code result} once then uses the {@code supplier} for subsequent calls. */
   static <T> Supplier<CompletableFuture<T>> supplyOnce(CompletableFuture<T> result,
       Supplier<CompletableFuture<T>> supplier) {
@@ -65,25 +67,6 @@ final class Functions {
 
       try {
         future.inject((Future) scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
-      } catch (Exception e) {
-        promise.completeExceptionally(e);
-      }
-      return promise;
-    };
-  }
-
-  /**
-   * Returns a Supplier that supplies a promose that is completed exceptionally with AsyncExecution.SCHEDULED by calling
-   * the {@code supplier} on the {code scheduler}.
-   */
-  @SuppressWarnings("unchecked")
-  static <T> Supplier<CompletableFuture<ExecutionResult>> makeAsyncExecution(Supplier<T> supplier, Scheduler scheduler,
-      FailsafeFuture<Object> future) {
-    return () -> {
-      CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      try {
-        future.inject((Future) scheduler.schedule(supplier::get, 0, TimeUnit.NANOSECONDS));
-        promise.completeExceptionally(AsyncExecution.SCHEDULED);
       } catch (Exception e) {
         promise.completeExceptionally(e);
       }
@@ -156,34 +139,36 @@ final class Functions {
     };
   }
 
-  static <T> Supplier<T> asyncOfExecution(AsyncSupplier<T> supplier, AsyncExecution execution) {
+  static <T> Supplier<CompletableFuture<ExecutionResult>> asyncOfExecution(AsyncSupplier<T> supplier,
+      AsyncExecution execution) {
     Assert.notNull(supplier, "supplier");
-    return new Supplier<T>() {
+    return new Supplier<CompletableFuture<ExecutionResult>>() {
       @Override
-      public synchronized T get() {
+      public synchronized CompletableFuture<ExecutionResult> get() {
         try {
           execution.preExecute();
-          return supplier.get(execution);
+          supplier.get(execution);
         } catch (Throwable e) {
           execution.completeOrHandle(null, e);
-          return null;
         }
+        return NULL_FUTURE;
       }
     };
   }
 
-  static <T> Supplier<T> asyncOfExecution(AsyncRunnable runnable, AsyncExecution execution) {
+  static <T> Supplier<CompletableFuture<ExecutionResult>> asyncOfExecution(AsyncRunnable runnable,
+      AsyncExecution execution) {
     Assert.notNull(runnable, "runnable");
-    return new Supplier<T>() {
+    return new Supplier<CompletableFuture<ExecutionResult>>() {
       @Override
-      public synchronized T get() {
+      public synchronized CompletableFuture<ExecutionResult> get() {
         try {
           execution.preExecute();
           runnable.run(execution);
         } catch (Throwable e) {
           execution.completeOrHandle(null, e);
         }
-        return null;
+        return NULL_FUTURE;
       }
     };
   }
@@ -236,14 +221,14 @@ final class Functions {
     };
   }
 
-  static <T> Supplier<CompletableFuture<T>> asyncOfFutureExecution(
+  static <T> Supplier<CompletableFuture<ExecutionResult>> asyncOfFutureExecution(
       AsyncSupplier<? extends CompletionStage<? extends T>> supplier, AsyncExecution execution) {
     Assert.notNull(supplier, "supplier");
-    return new Supplier<CompletableFuture<T>>() {
+    return new Supplier<CompletableFuture<ExecutionResult>>() {
       Semaphore asyncFutureLock = new Semaphore(1);
 
       @Override
-      public CompletableFuture<T> get() {
+      public CompletableFuture<ExecutionResult> get() {
         try {
           execution.preExecute();
           asyncFutureLock.acquire();
@@ -264,7 +249,7 @@ final class Functions {
           }
         }
 
-        return null;
+        return NULL_FUTURE;
       }
     };
   }
