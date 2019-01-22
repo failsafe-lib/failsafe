@@ -9,6 +9,11 @@
 * `CircuitBreaker` supports execution metrics (see below).
 * Strong typing based on result types is supported throughout the API.
 
+### Behavior Changes
+
+- `RetryPolicy` now has 3 max attempts by default.
+- `CircuitBreaker` now has a 1 minute delay by default.
+
 ### JRE Changes
 
 - Java 8+ is now required
@@ -40,11 +45,6 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
   - `ChronoUnit` is used instead of `TimeUnit` in policies.
 - `ExecutionContext.getExecutions` is now `getAttemptCount`.
 - `Schedulers.of(ScheduledExecutorService)` was moved to the `Scheduler` interface.
-
-### Behavior Changes
-
-- `RetryPolicy` now has 3 max attempts by default.
-- `CircuitBreaker` now has a 1 minute delay by default.
 
 ### API Additions
 

@@ -14,7 +14,7 @@ Failsafe is a lightweight, zero-dependency library for handling failures in Java
 * [Circuit breakers](#circuit-breakers) 
 * [Fallbacks](#fallbacks) 
 
-Failsafe also provides features that allow you to integrate with various scenarios, including:
+It also provides features that allow you to integrate with various scenarios, including:
 
 * [Configurable schedulers](#configurable-schedulers)
 * [Event listeners](#event-listeners) and [Execution context](#execution-context)
@@ -30,7 +30,7 @@ Add the latest [Failsafe Maven dependency][maven] to your project.
 
 ## Migrating from 1.x
 
-Failsafe 2.0 features some API and behavior changes from 1.x. See the [CHANGES](CHANGES.md#2.0) doc for more details.
+Failsafe 2.0 has API and behavior changes from 1.x. See the [CHANGES](CHANGES.md#2.0) doc for more details.
 
 ## Usage
 
