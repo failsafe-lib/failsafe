@@ -38,8 +38,6 @@ import java.util.function.Predicate;
  * handleResult} methods describe when a retry should be performed for a particular result. If multiple {@code handle}
  * or {@code handleResult} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
  * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
- * <p>
- * An {@link Execution} is marked as {@code completed} when the {@code RetryPolicy}
  *
  * @param <R> result type
  * @author Jonathan Halterman
@@ -116,7 +114,7 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   /**
    * Copy constructor.
    */
-  public RetryPolicy(RetryPolicy<R> rp) {
+  private RetryPolicy(RetryPolicy<R> rp) {
     this.delay = rp.delay;
     this.delayMin = rp.delayMin;
     this.delayMax = rp.delayMax;
