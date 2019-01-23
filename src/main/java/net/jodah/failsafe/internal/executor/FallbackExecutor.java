@@ -15,10 +15,7 @@
  */
 package net.jodah.failsafe.internal.executor;
 
-import net.jodah.failsafe.ExecutionResult;
-import net.jodah.failsafe.FailsafeFuture;
-import net.jodah.failsafe.Fallback;
-import net.jodah.failsafe.PolicyExecutor;
+import net.jodah.failsafe.*;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.Callable;
@@ -30,8 +27,8 @@ import java.util.concurrent.TimeUnit;
  * A PolicyExecutor that handles failures according to a fallback.
  */
 public class FallbackExecutor extends PolicyExecutor<Fallback> {
-  public FallbackExecutor(Fallback fallback) {
-    super(fallback);
+  public FallbackExecutor(Fallback fallback, AbstractExecution execution) {
+    super(fallback, execution);
   }
 
   @Override

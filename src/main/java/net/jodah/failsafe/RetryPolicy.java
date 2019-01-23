@@ -628,7 +628,7 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   }
 
   @Override
-  public PolicyExecutor toExecutor() {
-    return new RetryPolicyExecutor(this, abortListener, failedAttemptListener, retriesExceededListener, retryListener);
+  public PolicyExecutor toExecutor(AbstractExecution execution) {
+    return new RetryPolicyExecutor(this, execution, abortListener, failedAttemptListener, retriesExceededListener, retryListener);
   }
 }

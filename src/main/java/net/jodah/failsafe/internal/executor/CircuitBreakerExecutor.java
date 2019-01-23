@@ -15,10 +15,7 @@
  */
 package net.jodah.failsafe.internal.executor;
 
-import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.CircuitBreakerOpenException;
-import net.jodah.failsafe.ExecutionResult;
-import net.jodah.failsafe.PolicyExecutor;
+import net.jodah.failsafe.*;
 
 import java.time.Duration;
 
@@ -28,8 +25,8 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
-  public CircuitBreakerExecutor(CircuitBreaker circuitBreaker) {
-    super(circuitBreaker);
+  public CircuitBreakerExecutor(CircuitBreaker circuitBreaker, AbstractExecution execution) {
+    super(circuitBreaker, execution);
   }
 
   @Override

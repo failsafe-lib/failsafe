@@ -51,9 +51,9 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private EventListener retriesExceededListener;
   private EventListener retryListener;
 
-  public RetryPolicyExecutor(RetryPolicy retryPolicy, EventListener abortListener, EventListener failedAttemptListener,
+  public RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener, EventListener failedAttemptListener,
       EventListener retriesExceededListener, EventListener retryListener) {
-    super(retryPolicy);
+    super(retryPolicy, execution);
     this.abortListener = abortListener;
     this.failedAttemptListener = failedAttemptListener;
     this.retriesExceededListener = retriesExceededListener;

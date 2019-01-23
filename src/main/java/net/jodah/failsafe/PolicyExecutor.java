@@ -14,10 +14,11 @@ import java.util.function.Supplier;
  */
 public abstract class PolicyExecutor<P extends Policy> {
   protected final P policy;
-  protected AbstractExecution execution;
+  protected final AbstractExecution execution;
 
-  protected PolicyExecutor(P policy) {
+  protected PolicyExecutor(P policy, AbstractExecution execution) {
     this.policy = policy;
+    this.execution = execution;
   }
 
   /**

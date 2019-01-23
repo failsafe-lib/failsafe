@@ -49,14 +49,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     policyExecutors = new ArrayList<>(executor.policies.size());
     ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
     while (policyIterator.hasPrevious())
-      buildPolicyExecutor(policyIterator.previous());
-  }
-
-  @SuppressWarnings("unchecked")
-  private void buildPolicyExecutor(Policy policy) {
-    PolicyExecutor<Policy<Object>> policyExecutor = policy.toExecutor();
-    policyExecutor.execution = this;
-    policyExecutors.add(policyExecutor);
+      policyExecutors.add(policyIterator.previous().toExecutor(this));
   }
 
   /**

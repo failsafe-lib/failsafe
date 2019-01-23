@@ -405,7 +405,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   }
 
   @Override
-  public PolicyExecutor toExecutor() {
-    return new CircuitBreakerExecutor(this);
+  public PolicyExecutor toExecutor(AbstractExecution execution) {
+    return new CircuitBreakerExecutor(this, execution);
   }
 }
