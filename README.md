@@ -6,41 +6,46 @@
 [![JavaDoc](http://javadoc-badge.appspot.com/net.jodah/failsafe.svg?label=javadoc)](https://jhalterman.github.com/failsafe/javadoc)
 [![Join the chat at https://gitter.im/jhalterman/failsafe](https://badges.gitter.im/jhalterman/failsafe.svg)][gitter]
 
-*Simple, sophisticated failure handling.*
-
 ## Introduction
 
-Failsafe is a lightweight, zero-dependency library for handling failures. It was designed to be as easy to use as possible, with a concise API for handling everyday use cases and the flexibility to handle everything else. Failsafe features:
+Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It  works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed](#policy-composition) as needed. These policies include:
 
-* [Retries](#retries)
-* [Circuit breakers](#circuit-breakers)
-* [Fallbacks](#fallbacks)
-* [Execution context](#execution-context)
-* [Event listeners](#event-listeners)
+* [Retries](#retries) 
+* [Circuit breakers](#circuit-breakers) 
+* [Fallbacks](#fallbacks) 
+
+It also provides features that allow you to integrate with various scenarios, including:
+
+* [Configurable schedulers](#configurable-schedulers)
+* [Event listeners](#event-listeners) and [Execution context](#execution-context)
+* [Strong typing](#strong-typing)
 * [Asynchronous API integration](#asynchronous-api-integration)
-* [CompletableFuture](#completablefuture-integration) and [functional interface](#functional-interface-integration) integration
+* [CompletionStage](#completionstage-integration) and [functional interface](#functional-interface-integration) integration
 * [Execution tracking](#execution-tracking)
-
-Supports Java 6+ though the documentation uses lambdas for simplicity.
+* [Policy SPI](#policy-spi)
 
 ## Setup
 
 Add the latest [Failsafe Maven dependency][maven] to your project.
 
+## Migrating from 1.x
+
+Failsafe 2.0 has API and behavior changes from 1.x. See the [CHANGES](CHANGES.md#2.0) doc for more details.
+
 ## Usage
 
-#### Retries
+#### Getting Started
 
-One of the core Failsafe features is retries. To start, define a [RetryPolicy] that expresses when retries should be performed:
+To start, we'll create a [RetryPolicy] that defines which failures should be handled and when retries should be performed:
 
 ```java
-RetryPolicy retryPolicy = new RetryPolicy()
-  .retryOn(ConnectException.class)
-  .withDelay(1, TimeUnit.SECONDS)
+RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+  .handle(ConnectException.class)
+  .withDelay(Duration.ofSeconds(1))
   .withMaxRetries(3);
 ```
 
-Then use your [RetryPolicy] to execute a `Runnable` or `Callable` *with* retries:
+We can then execute a `Runnable` or `Supplier` *with* retries:
 
 ```java
 // Run with retries
@@ -50,55 +55,85 @@ Failsafe.with(retryPolicy).run(() -> connect());
 Connection connection = Failsafe.with(retryPolicy).get(() -> connect());
 ```
 
-Java 6 and 7 are also supported:
+We can also execute a `Runnable` or `Supplier` asynchronously *with* retries:
 
 ```java
-Connection connection = Failsafe.with(retryPolicy).get(new Callable<Connection>() {
-  public Connection call() {
-    return connect();
-  }
-});
+// Run with retries asynchronously
+CompletableFuture<Void> future = Failsafe.with(retryPolicy).runAsync(() -> connect());
+
+// Get with retries asynchronously
+CompletableFuture<Connection> future = Failsafe.with(retryPolicy).getAsync(() -> connect());
 ```
 
-#### Retry Policies
+#### Composing Policies
 
-Failsafe's [retry policies][RetryPolicy] provide flexibility in allowing you to express when retries should be performed.
-
-A policy can allow retries on particular failures:
+Multiple [policies] can be arbitrarily composed to add additional layers of resilience or to handle different failures in different ways:
 
 ```java
-RetryPolicy retryPolicy = new RetryPolicy()
-  .retryOn(ConnectException.class, SocketException.class)
-  .retryOn(failure -> failure instanceof ConnectException);
+CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>();
+Fallback<Object> fallback = Fallback.of(this::connectToBackup);
+
+Failsafe.with(fallback, retryPolicy, circuitBreaker).get(this::connect);
 ```
 
-And for particular results or conditions:
+Order does matter when composing policies. See the [section below](#policy-composition) for more details.
+
+#### Failsafe Executor
+
+Policy compositions can also be saved for later use via a [FailsafeExecutor]:
 
 ```java
-retryPolicy
-  .retryWhen(null)
-  .retryIf(result -> result == null);  
+FailsafeExecutor<Object> executor = Failsafe.with(fallback, retryPolicy, circuitBreaker);
+executor.run(this::connect);
 ```
 
-It can add a fixed delay between retries:
+## Failure Policies
+
+Failsafe uses [policies][FailurePolicy] to handle failures. By default, policies treat any `Exception` as a failure. But policies can also be configured to handle more specific failures or conditions:
 
 ```java
-retryPolicy.withDelay(1, TimeUnit.SECONDS);
+policy
+  .handle(ConnectException.class, SocketException.class)
+  .handleIf(failure -> failure instanceof ConnectException);
+```
+
+They can also be configured to handle specific results or result conditions:
+
+```java
+policy
+  .handleResult(null)
+  .handleResultIf(result -> result == null);  
+```
+
+## Retries
+
+[Retry policies][RetryPolicy] express when retries should be performed for an execution failure. 
+
+By default, a [RetryPolicy] will perform a maximum of 3 execution attempts. You can configure a max number of [attempts][max-attempts] or [retries][max-retries]:
+
+```java
+retryPolicy.withMaxAttempts(3);
+```
+
+And a delay between attempts:
+
+```java
+retryPolicy.withDelay(Duration.ofSeconds(1));
+```
+
+You can add delay that [backs off][backoff] exponentially:
+
+```java
+retryPolicy.withBackoff(1, 30, ChronoUnit.SECONDS);
 ```
 
 A random delay for some range:
 
 ```java
-retryPolicy.withDelay(1, 10, TimeUnit.SECONDS);
+retryPolicy.withDelay(1, 10, ChronoUnit.SECONDS);
 ```
 
-A delay that [backs off][backoff] exponentially:
-
-```java
-retryPolicy.withBackoff(1, 30, TimeUnit.SECONDS);
-```
-
-Or a [computed delay][computed-delay] based on an execution. It can add a random [jitter factor][jitter-factor] to a delay:
+Or a [computed delay][computed-delay] based on an execution. You can add a random [jitter factor][jitter-factor] to a delay:
 
 ```java
 retryPolicy.withJitter(.1);
@@ -107,18 +142,16 @@ retryPolicy.withJitter(.1);
 Or a [time based jitter][jitter-duration]:
 
 ```java
-retryPolicy.withJitter(100, TimeUnit.MILLISECONDS);
+retryPolicy.withJitter(Duration.ofMillis(100));
 ```
 
-It can add a max number of retries and a max retry duration:
+You can add a [max retry duration][max-duration]:
 
 ```java
-retryPolicy
-  .withMaxRetries(100)
-  .withMaxDuration(5, TimeUnit.MINUTES);
+retryPolicy.withMaxDuration(Duration.ofMinutes(5));
 ```
 
-It can also specify which results, failures or conditions to [abort retries][abort-retries] on:
+You can specify which results, failures or conditions to [abort retries][abort-retries] on:
 
 ```java
 retryPolicy
@@ -127,58 +160,21 @@ retryPolicy
   .abortIf(result -> result == true)
 ```
 
-Retry policies support multiple retry or abort conditions of the same type:
+And of course you can arbitrarily combine any of these things into a single policy.
+
+## Circuit Breakers
+
+[Circuit breakers][fowler-circuit-breaker] allow you to create systems that [fail-fast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
 
 ```java
-retryPolicy
-  .retryWhen(null)
-  .retryWhen("");
-```
-
-And of course we can combine any of these things into a single policy.
-
-#### Synchronous Retries
-
-With a retry policy defined, we can perform a retryable synchronous execution:
-
-```java
-// Run with retries
-Failsafe.with(retryPolicy).run(this::connect);
-
-// Get with retries
-Connection connection = Failsafe.with(retryPolicy).get(this::connect);
-```
-
-#### Asynchronous Retries
-
-Asynchronous executions can be performed and retried on a [ScheduledExecutorService] or custom [Scheduler]. They return a [FailsafeFuture] from which a result can be synchronously [retrieved][future-get]. Execution [listeners](#event-listeners) can also be registered to learn when an execution completes:
-
-```java
-Failsafe.with(retryPolicy)
-  .with(executor)
-  .onSuccess(connection -> log.info("Connected to {}", connection))
-  .onFailure(failure -> log.error("Connection attempts failed", failure))
-  .get(this::connect);
-```
-
-#### Circuit Breakers
-
-[Circuit breakers][fowler-circuit-breaker] are a way of creating systems that [fail-fast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
-
-```java
-CircuitBreaker breaker = new CircuitBreaker()
+CircuitBreaker<Object> breaker = new CircuitBreaker<>()
+  .handle(ConnectException.class)
   .withFailureThreshold(3, 10)
   .withSuccessThreshold(5)
-  .withDelay(1, TimeUnit.MINUTES);
+  .withDelay(Duration.ofMinutes(1));
 ```
 
-We can then execute a `Runnable` or `Callable` *with* the `breaker`:
-
-```java
-Failsafe.with(breaker).run(this::connect);
-```
-
-When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions exceed a success threshold, the breaker is *closed* again and executions will proceed as normal.
+When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
 
 #### Circuit Breaker Configuration
 
@@ -187,8 +183,7 @@ Circuit breakers can be flexibly configured to express when the circuit should b
 A circuit breaker can be configured to *open* when a successive number of executions have failed:
 
 ```java
-CircuitBreaker breaker = new CircuitBreaker()
-  .withFailureThreshold(5);
+breaker.withFailureThreshold(5);
 ```
 
 Or when, for example, the last 3 out of 5 executions have failed:
@@ -197,10 +192,10 @@ Or when, for example, the last 3 out of 5 executions have failed:
 breaker.withFailureThreshold(3, 5);
 ```
 
-After opening, a breaker is typically configured to delay before attempting to *close* again:
+After opening, a breaker will delay for 1 minute by default before before attempting to *close* again, or you can configure a specific delay:
 
 ```java
-breaker.withDelay(1, TimeUnit.MINUTES);
+breaker.withDelay(Duration.ofSeconds(30));
 ```
 
 The breaker can be configured to *close* again if a number of trial executions succeed, else it will re-*open*:
@@ -215,34 +210,19 @@ The breaker can also be configured to *close* again if, for example, the last 3 
 breaker.withSuccessThreshold(3, 5);
 ```
 
-The breaker can be configured to only recognize certain results, exceptions or conditions as failures:
-
-```java
-breaker.
-  .failWhen(true)
-  .failOn(NoRouteToHostException.class)
-  .failIf((result, failure) -> result == 500 || failure instanceof NoRouteToHostException);
-```
-
 And the breaker can be configured to recognize executions that exceed a certain [timeout] as failures:
 
 ```java
-breaker.withTimeout(10, TimeUnit.SECONDS);
+breaker.withTimeout(Duration.ofSeconds(10));
 ```
 
-#### With Retries
+#### Circuit Breaker Metrics
 
-A CircuitBreaker can be used along with a `RetryPolicy`:
+[CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state.
 
-```java
-Failsafe.with(retryPolicy).with(breaker).get(this::connect);
-```
+#### Best Practices
 
-Execution failures are first retried according to the `RetryPolicy`, then if the policy is exceeded the failure is recorded by the `CircuitBreaker`.
-
-#### Failing Together
-
-A circuit breaker can and should be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again.
+A circuit breaker can and *should* be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again. For example, if multiple connections or requests are made to the same external server, typically they should all go through the same circuit breaker.
 
 #### Standalone Usage
 
@@ -255,7 +235,7 @@ breaker.close();
 
 if (breaker.allowsExecution()) {
   try {
-    preExecute();
+    breaker.preExecute();
     doSomething();
     breaker.recordSuccess();
   } catch (Exception e) {
@@ -264,30 +244,131 @@ if (breaker.allowsExecution()) {
 }
 ```
 
-#### Fallbacks
+## Fallbacks
 
-Fallbacks allow you to provide an alternative result for a failed execution. They can be used to suppress exceptions and provide a default result:
+[Fallbacks][Fallback] allow you to provide an alternative result for a failed execution. They can also be used to suppress exceptions and provide a default result:
 
 ```java
-Failsafe.with(retryPolicy)
-  .withFallback(null)
-  .get(this::connect);
+Fallback<Object> fallback = Fallback.of(null);
 ```
 
 Throw a custom exception:
 
 ```java
-Failsafe.with(retryPolicy)
-  .withFallback(() -> { throw new CustomException(); })
-  .get(this::connect);
+Fallback<Object> fallback = Fallback.of(failure -> { throw new CustomException(failure); });
 ```
 
 Or compute an alternative result such as from a backup resource:
 
 ```java
-Failsafe.with(retryPolicy)
-  .withFallback(this::connectToBackup)
-  .get(this::connectToPrimary);
+Fallback<Object> fallback = Fallback.of(this::connectToBackup);
+```
+
+For computations that block, a Fallback can be configured to run asynchronously:
+
+```java
+Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
+```
+
+## Policy Composition
+
+Policies can be composed in any way desired, including multiple policies of the same type. Policies handle execution results in reverse order, similar to the way that function composition works. For example, consider:
+
+```java
+Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
+```
+
+This results in the following internal composition when executing the `supplier` and handling its result:
+
+```
+Fallback(RetryPolicy(CircuitBreaker(Supplier)))
+```
+
+This means the `CircuitBreaker` is first to evaluate the `Supplier`'s result, then the `RetryPolicy`, then the `Fallback`. Each policy makes its own determination as to whether the result represents a failure. This allows different policies to be used for handling different types of failures.
+
+#### Typical Composition
+
+A typical Failsafe configuration that uses multiple policies will place a `Fallback` as the outer-most policy, followed by a `RetryPolicy`, and a `CircuitBreaker` as the inner-most policy:
+
+```java
+Failsafe.with(fallback, retryPolicy, circuitBreaker)
+```
+
+That said, it really depends on how the policies are being used, and different compositions make sense for different use cases.
+
+## Additional Features
+
+#### Configurable Schedulers
+
+By default, Failsafe uses the [ForkJoinPool]'s [common pool][common-pool] to perform async executions, but you can also configure a specific [ScheduledExecutorService] or custom [Scheduler] to use:
+
+```java
+Failsafe.with(scheduler).getAsync(this::connect);
+```
+
+#### Event Listeners
+
+Failsafe supports event listeners, both in the top level [Failsafe][FailsafeExecutor] API, and in the different [Policy][FailurePolicy] implementations.
+
+At the top level, it can notify you when an execution completes for all policies:
+
+```java
+Failsafe.with(retryPolicy, circuitBreaker)
+  .onComplete(e -> {
+    if (e.getResult() != null)
+      log.info("Connected to {}", e.getResult());
+    else if (e.getFailure() != null)
+      log.error("Failed to create connection", e.getFailure());
+  })
+  .get(this::connect);
+```
+
+It can notify you when an execution completes *successfully* for all policies:
+
+```java
+Failsafe.with(retryPolicy, circuitBreaker)
+  .onSuccess(e -> log.info("Connected to {}", e.getResult()))
+  .get(this::connect);
+```
+
+Or when an execution fails for *any* policy:
+
+```java
+Failsafe.with(retryPolicy, circuitBreaker)
+  .onFailure(e -> log.error("Failed to create connection", e.getFailure()))
+  .get(this::connect);
+```
+
+At the policy level, it can notify you when an execution succeeds or fails for a particular policy:
+
+```java
+policy
+  .onSuccess(e -> log.info("Connected to {}", e.getResult()))
+  .onFailure(e -> log.error("Failed to create connection", e.getFailure()))
+  .get(this::connect);
+```
+
+When an execution attempt fails and before a retry is performed for a [RetryPolicy]:
+
+```java
+retryPolicy
+  .onFailedAttempt(e -> log.error("Connection attempt failed", e.getLastFailure()))
+  .onRetry(e -> log.warn("Failure #{}. Retrying.", ctx.getAttemptCount()));
+```
+
+Or when an execution fails and the max retries are [exceeded][retries-exceeded] for a [RetryPolicy]:
+
+```java
+retryPolicy.onRetriesExceeded(e -> log.warn("Failed to connect. Max retries exceeded."));
+```
+
+For [CircuitBreakers][CircuitBreaker], Failsafe can notify you when the state changes:
+
+```java
+circuitBreaker
+  .onClose(() -> log.info("The circuit breaker was closed"));
+  .onOpen(() -> log.info("The circuit breaker was opened"))
+  .onHalfOpen(() -> log.info("The circuit breaker was half-opened"))
 ```
 
 #### Execution Context
@@ -296,89 +377,42 @@ Failsafe can provide an [ExecutionContext] containing execution related informat
 
 ```java
 Failsafe.with(retryPolicy).run(ctx -> {
-  log.debug("Connection attempt #{}", ctx.getExecutions());
+  log.debug("Connection attempt #{}", ctx.getAttemptCount());
   connect();
 });
 ```
 
-#### Event Listeners
+#### Strong typing
 
-Failsafe supports a variety of execution and retry event [listeners][FailsafeConfig].
-
-It can notify you when an execution completes:
+Failsafe Policies are typed based on the expected result. For generic policies that are used for various executions, the result type may just be `Object`:
 
 ```java
-Failsafe.with(retryPolicy)
-  .onComplete((cxn, failure) -> {
-    if (cxn != null)
-      log.info("Connected to {}", cxn);
-    else if (failure != null)
-      log.error("Failed to create connection", e);
-  })
-  .get(this::connect);
+RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
 ```
 
-Or on an execution success or failure:
+But for other policies we may declare a more specific result type:
 
 ```java
-Failsafe.with(retryPolicy)
-  .onSuccess(cxn -> log.info("Connected to {}", cxn))
-  .onFailure(failure -> log.error("Failed to create connection", failure))
-  .get(this::connect);
+RetryPolicy<HttpResponse> retryPolicy = new RetryPolicy<HttpResponse>()
+  .handleResultIf(reponse -> response.getStatusCode == 500)
+  .onFailedAttempt(e -> log.warn("Failed attempt: {}", e.getLastResult().getStatusCode()));
 ```
 
-It can notify you when an execution attempt fails and before a retry is performed:
+This allows Failsafe to ensure that the same result type used for the policy is returned by the execution:
 
 ```java
-Failsafe.with(retryPolicy)
-  .onFailedAttempt(failure -> log.error("Connection attempt failed", failure))
-  .onRetry((c, f, ctx) -> log.warn("Failure #{}. Retrying.", ctx.getExecutions()))
-  .get(this::connect);
-```
-
-And it can notify you when an execution fails and the max retries are [exceeded][retries-exceeded]:
-
-```java
-Failsafe.with(retryPolicy)
-  .onRetriesExceeded(ctx -> log.warn("Failed to connect. Max retries exceeded."))
-  .get(this::connect);
-```
-
-[Asynchronous listeners][AsyncFailsafeConfig] are also supported:
-
-```java
-Failsafe.with(retryPolicy)
-  .with(executor)
-  .onFailureAsync(e -> log.error("Failed to create connection", e))
-  .onSuccessAsync(cxn -> log.info("Connected to {}", cxn), anotherExecutor)
-  .get(this::connect);
-```
-
-Java 6 and 7 users can extend the [Listeners] class and override individual event handlers:
-
-```java
-Failsafe.with(retryPolicy)
-  .with(new Listeners<Connection>() {
-    public void onRetry(Connection cxn, Throwable failure, ExecutionContext ctx) {
-      log.warn("Failure #{}. Retrying.", ctx.getExecutions());
-    }
-  }).get(() -> connect());
-```
-
-[CircuitBreaker] related event listeners can also be registered:
-
-```java
-circuitBreaker.onOpen(() -> log.info("The circuit breaker was opened"));
+HttpResponse response = Failsafe.with(retryPolicy)
+  .onSuccess(e -> log.info("Success: {}", e.getResult().getStatusCode()))  
+  .get(this::sendHttpRequest);
 ```
 
 #### Asynchronous API Integration
 
-Failsafe can be integrated with asynchronous code that reports completion via callbacks. The [runAsync], [getAsync] and [futureAsync] methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
+Failsafe can be integrated with asynchronous code that reports completion via callbacks. The [runAsyncExecution], [getAsyncExecution] and [futureAsyncExecution] methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
 
 ```java
 Failsafe.with(retryPolicy)
-  .with(executor)
-  .getAsync(execution -> service.connect().whenComplete((result, failure) -> {
+  .getAsyncExecution(execution -> service.connect().whenComplete((result, failure) -> {
     if (execution.complete(result, failure))
       log.info("Connected");
     else if (!execution.retry())
@@ -388,27 +422,26 @@ Failsafe.with(retryPolicy)
 
 Failsafe can also perform asynchronous executions and retries on 3rd party schedulers via the [Scheduler] interface. See the [Vert.x example][Vert.x] for a more detailed implementation.
 
-#### CompletableFuture Integration
+#### CompletionStage Integration
 
-Java 8 users can use Failsafe to retry [CompletableFuture] or [CompletionStage] calls:
+Failsafe can accept a [CompletionStage] and return a new [CompletableFuture] with failure handling built-in:
 
 ```java
 Failsafe.with(retryPolicy)
-  .with(executor)
-  .future(this::connectAsync)
+  .getStageAsync(this::connectAsync)
   .thenApplyAsync(value -> value + "bar")
   .thenAccept(System.out::println));
 ```
 
 #### Functional Interface Integration
 
-Failsafe can be used to create retryable Java 8 functional interfaces:
+Failsafe can be used to create resilient functional interfaces:
 
 ```java
 Function<String, Connection> connect = address -> Failsafe.with(retryPolicy).get(() -> connect(address));
 ```
 
-We can retry streams:
+We can wrap Streams:
 
 ```java
 Failsafe.with(retryPolicy).run(() -> Stream.of("foo").map(value -> value + "bar"));
@@ -455,6 +488,10 @@ if (execution.canRetryOn(someFailure))
 
 See the [RxJava example][RxJava] for a more detailed implementation.
 
+#### Policy SPI
+
+Failsafe provides an SPI that allows you to implement your own [Policy] and plug it into Failsafe. Each [Policy] implementation must returns a [PolicyExecutor] which is responsible for performing synchronous or asynchronous execution, handling pre-execution requests, or handling post-execution results. The existing [PolicyExecutor] implementations are a good reference for creating additional implementations.
+
 ## Additional Resources
 
 * [Gitter Chat Room][gitter]
@@ -474,33 +511,39 @@ Failsafe is a volunteer effort. If you use it and you like it, [let us know][who
 
 ## License
 
-Copyright 2015-2018 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
+Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.util.concurrent.TimeUnit-
+[policies]: #failure-policies
+[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.time.temporal.ChronoUnit-
 [computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.RetryPolicy.DelayFunction-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
-[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
-[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-long-java.util.concurrent.TimeUnit-
+[max-attempts]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxAttempts-int-
+[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-
+[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-java.time.Duration-
 [jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
-[timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-long-java.util.concurrent.TimeUnit-
-[runAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#runAsync-net.jodah.failsafe.function.AsyncRunnable-
-[getAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#getAsync-net.jodah.failsafe.function.AsyncCallable-
-[futureAsync]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafe.html#futureAsync-net.jodah.failsafe.function.AsyncCallable-
-[future-get]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html#get--
+[timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-
+[runAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#runAsyncExecution-net.jodah.failsafe.function.AsyncRunnable-
+[getAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
+[futureAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#futureAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
 [retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
+[breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
+[breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
 
-[Listeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Listeners.html
-[FailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html
-[AsyncFailsafeConfig]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncFailsafeConfig.html
+[FailsafeExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html
+[Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
+[FailurePolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailurePolicy.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
-[FailsafeFuture]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeFuture.html
+[CircuitBreaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html
+[Fallback]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Fallback.html
+[PolicyExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/PolicyExecutor.html
 [ExecutionContext]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ExecutionContext.html
 [Execution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Execution
 [AsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/AsyncExecution
 [Scheduler]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/util/concurrent/Scheduler.html
-[CircuitBreaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html
 
+[ForkJoinPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html
+[common-pool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [CompletionStage]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html 
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
