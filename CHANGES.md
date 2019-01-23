@@ -38,6 +38,7 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
 - Event listeners
   - Event listeners now all consume a single `ExecutionEvent` object, which includes references to the result, failure, and other information.
   - Event listeners that are specific to policies, such as `onRetry` for `RetryPolicy`, must now be configured through the policy instance. The top level `Failsafe` API only supports `onComplete`, `onSuccess`, and `onFailure`. Individual `Policy` implementations still support  `onSuccess` and `onFailure` in addition to policy specific events.
+  - The top level `Failsafe.onSuccess` event listener will only be called if *all* configured policies consider an execution to be successful, otherwise `onFailure` will be called. 
   - The `Listeners` class was removed, since it was mostly intended for Java 6/7 users.
   - The async event listener APIs were removed. Events will always be delivered in the same thread as the execution that they follow or preceed, including for async executions.
 - Java 8
@@ -48,8 +49,6 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
 
 ### API Additions
 
-- Event listeners
-  - The top level `Failsafe.onSuccess` event listener will only be called if *all* configured policies consider an execution to be successful, otherwise `onFailure` will be called. 
 - `CircuitBreaker`
   - `preExecute` is now exposed to support standalone usage.
   - Execution metrics are available via `getFailureCount`, `getFailureRatio`, `getSuccessCount`, and `getSuccessRatio`.
