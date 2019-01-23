@@ -33,7 +33,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * An executor that handles failures according to configured {@link FailurePolicy policies}.
+ * An executor that handles failures according to configured {@link FailurePolicy policies}. Can be created via {@link
+ * Failsafe#with(Policy[])}.
  *
  * @param <R> result type
  * @author Jonathan Halterman
