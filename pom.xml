@@ -146,7 +146,7 @@
         </executions>
         <configuration>
           <author>false</author>
-          <show>public</show>
+          <show>protected</show>
           <excludePackageNames>*.internal</excludePackageNames>
           <additionalparam>
             -Xdoclint:none
