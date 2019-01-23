@@ -490,7 +490,7 @@ See the [RxJava example][RxJava] for a more detailed implementation.
 
 #### Policy SPI
 
-Failsafe provides an SPI that allows you to implement your own [Policy] and plug it into Failsafe. Each [Policy] implementation must returns a [PolicyExecutor] which is responsible for performing synchronous or asynchronous execution, handling pre-execution requests, or handling post-execution results. The existing [PolicyExecutor] implementations are a good reference for creating additional implementations.
+Failsafe provides an SPI that allows you to implement your own [Policy] and plug it into Failsafe. Each [Policy] implementation must returns a [PolicyExecutor] which is responsible for performing synchronous or asynchronous execution, handling pre-execution requests, or handling post-execution results. The existing [PolicyExecutor] [implementations][policy-executor-impls] are a good reference for creating additional implementations.
 
 ## Additional Resources
 
@@ -529,6 +529,7 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
 [breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
 [breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
+[policy-executor-impls]: https://github.com/jhalterman/failsafe/tree/master/src/main/java/net/jodah/failsafe/internal/executor
 
 [FailsafeExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html
 [Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
