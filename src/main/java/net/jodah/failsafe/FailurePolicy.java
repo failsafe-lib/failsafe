@@ -39,9 +39,9 @@ import java.util.function.Predicate;
 @SuppressWarnings("unchecked")
 public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implements Policy<R> {
   /** Indicates whether failures are checked by a configured failure condition */
-  protected boolean failuresChecked;
+  boolean failuresChecked;
   /** Conditions that determine whether an execution is a failure */
-  protected List<BiPredicate<R, Throwable>> failureConditions;
+  List<BiPredicate<R, Throwable>> failureConditions;
 
   FailurePolicy() {
     failureConditions = new ArrayList<>();
