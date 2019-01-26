@@ -13,8 +13,8 @@ import java.util.concurrent.TimeUnit;
 import static org.testng.Assert.assertTrue;
 
 @Test
-public class CommonPoolSchedulerTest {
-  Scheduler scheduler = CommonPoolScheduler.INSTANCE;
+public class DelegatingSchedulerTest {
+  Scheduler scheduler = DelegatingScheduler.INSTANCE;
 
   public void shouldSchedule() throws Throwable {
     // Given

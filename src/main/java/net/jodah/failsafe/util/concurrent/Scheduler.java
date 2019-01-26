@@ -16,7 +16,7 @@
 package net.jodah.failsafe.util.concurrent;
 
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.CommonPoolScheduler;
+import net.jodah.failsafe.internal.util.DelegatingScheduler;
 
 import java.util.concurrent.*;
 
@@ -48,6 +48,6 @@ public interface Scheduler {
    * @throws NullPointerException if {@code executor} is null
    */
   static Scheduler of(final ExecutorService executor) {
-    return new CommonPoolScheduler(Assert.notNull(executor, "executor"));
+    return new DelegatingScheduler(Assert.notNull(executor, "executor"));
   }
 }

@@ -20,30 +20,31 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.concurrent.*;
 
 /**
- * A ScheduledExecutorService implementation that schedules delays on an internal, common ScheduledExecutorService and
- * executes tasks on either a provided ExecutorService or the ForkJoinPool's common thread pool..
+ * A {@link Scheduler} implementation that schedules delays on an internal, common ScheduledExecutorService and executes
+ * tasks on either a provided ExecutorService or {@link ForkJoinPool#commonPool()}. Supports cancellation of {@link
+ * ForkJoinPool} tasks.
  *
  * @author Jonathan Halterman
  * @author Ben Manes
  */
-public final class CommonPoolScheduler implements Scheduler {
-  public static final CommonPoolScheduler INSTANCE = new CommonPoolScheduler();
+public final class DelegatingScheduler implements Scheduler {
+  public static final DelegatingScheduler INSTANCE = new DelegatingScheduler();
   private static final ExecutorService COMMON_POOL = ForkJoinPool.commonPool();
   private static volatile ScheduledExecutorService delayer;
 
   private final ExecutorService executorService;
 
-  private CommonPoolScheduler() {
+  private DelegatingScheduler() {
     this.executorService = null;
   }
 
-  public CommonPoolScheduler(ExecutorService executor) {
+  public DelegatingScheduler(ExecutorService executor) {
     this.executorService = executor;
   }
 
   private static ScheduledExecutorService delayer() {
     if (delayer == null) {
-      synchronized (CommonPoolScheduler.class) {
+      synchronized (DelegatingScheduler.class) {
         if (delayer == null)
           delayer = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
       }
@@ -62,6 +63,7 @@ public final class CommonPoolScheduler implements Scheduler {
 
   static final class ScheduledCompletableFuture<V> extends CompletableFuture<V> implements ScheduledFuture<V> {
     volatile Future<V> delegate;
+    volatile Thread forkJoinPoolThread;
     private final long time;
 
     ScheduledCompletableFuture(long delay, TimeUnit unit) {
@@ -85,12 +87,12 @@ public final class CommonPoolScheduler implements Scheduler {
 
     @Override
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-      return delegate != null ? delegate.cancel(mayInterruptIfRunning) : super.cancel(mayInterruptIfRunning);
-    }
-
-    @Override
-    public boolean isCancelled() {
-      return delegate != null ? delegate.isCancelled() : super.isCancelled();
+      boolean result = super.cancel(mayInterruptIfRunning);
+      if (delegate != null)
+        result = delegate.cancel(mayInterruptIfRunning);
+      if (forkJoinPoolThread != null)
+        forkJoinPoolThread.interrupt();
+      return result;
     }
   }
 
@@ -98,8 +100,16 @@ public final class CommonPoolScheduler implements Scheduler {
   @SuppressWarnings("unchecked")
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
     ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
+    ExecutorService es = executorService != null ? executorService : COMMON_POOL;
+    boolean isForkJoinPool = es instanceof ForkJoinPool;
     Callable<?> completingCallable = () -> {
       try {
+        if (isForkJoinPool) {
+          // Guard against race with promise.cancel 
+          synchronized (promise) {
+            promise.forkJoinPoolThread = Thread.currentThread();
+          }
+        }
         promise.complete(callable.call());
       } catch (Throwable t) {
         promise.completeExceptionally(t);
@@ -107,7 +117,6 @@ public final class CommonPoolScheduler implements Scheduler {
       return null;
     };
 
-    ExecutorService es = executorService != null ? executorService : COMMON_POOL;
     if (delay == 0)
       promise.delegate = es.submit(completingCallable);
     else

@@ -19,7 +19,7 @@ import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.CommonPoolScheduler;
+import net.jodah.failsafe.internal.util.DelegatingScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.ArrayList;
@@ -30,14 +30,23 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
+ * <p>
  * An executor that handles failures according to configured {@link FailurePolicy policies}. Can be created via {@link
  * Failsafe#with(Policy[])}.
+ * <p>
+ * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be
+ * configured via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable via the returned
+ * CompletableFuture, even those run by a {@link ForkJoinPool} implementation.
+ * <p>
+ * Executions that are cancelled or timed out while blocked or waiting will be interrupted with an {@link
+ * InterruptedException}. Executions that do not block can cooperate with cancellation by periodiically checking for
+ * {@code Thread.currentThread().isInterrupted()} and exit if {@code true}.
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
 public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
-  private Scheduler scheduler = CommonPoolScheduler.INSTANCE;
+  private Scheduler scheduler = DelegatingScheduler.INSTANCE;
   /** Policies sorted outer-most first */
   final List<Policy<R>> policies;
   private EventListener completeListener;
