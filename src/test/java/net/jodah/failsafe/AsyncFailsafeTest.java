@@ -429,6 +429,21 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertEquals(counter.get(), 1, "Supplier should have been executed before executor was shutdown");
   }
 
+  public void shouldInterruptExecutionOnCancelWithScheduledExecutor() throws Throwable {
+    Waiter waiter = new Waiter();
+    CompletableFuture<Void> future = Failsafe.with(retryAlways).with(executor).runAsync(()->{
+      try {
+        Thread.sleep(1000);
+        waiter.fail("Expected to be cancelled");
+      } catch (InterruptedException e) {
+        waiter.resume();
+      }
+    });
+
+    future.cancel(true);
+    waiter.await(1000);
+  }
+
   @SuppressWarnings("unused")
   public void shouldSupportCovariance() {
     FastService fastService = mock(FastService.class);
