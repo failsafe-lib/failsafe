@@ -16,15 +16,13 @@
 package net.jodah.failsafe.util.concurrent;
 
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.CommonPoolScheduler;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Schedules executions.
- * 
+ *
  * @author Jonathan Halterman
  * @see net.jodah.failsafe.util.concurrent.DefaultScheduledFuture
  */
@@ -42,5 +40,14 @@ public interface Scheduler {
   static Scheduler of(final ScheduledExecutorService executor) {
     Assert.notNull(executor, "executor");
     return executor::schedule;
+  }
+
+  /**
+   * Returns a Scheduler adapted from the {@code executor}.
+   *
+   * @throws NullPointerException if {@code executor} is null
+   */
+  static Scheduler of(final ExecutorService executor) {
+    return new CommonPoolScheduler(Assert.notNull(executor, "executor"));
   }
 }

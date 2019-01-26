@@ -25,10 +25,7 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -272,6 +269,18 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if {@code executor} is null
    */
   public FailsafeExecutor<R> with(ScheduledExecutorService executor) {
+    this.scheduler = Scheduler.of(executor);
+    return this;
+  }
+
+  /**
+   * Configures the {@code executor} to use for performing asynchronous executions and listener callbacks. For
+   * executions that require a delay, an internal ScheduledExecutorService will be used for the delay, then the {@code
+   * executor} will be used for actual execution.
+   *
+   * @throws NullPointerException if {@code executor} is null
+   */
+  public FailsafeExecutor<R> with(ExecutorService executor) {
     this.scheduler = Scheduler.of(executor);
     return this;
   }

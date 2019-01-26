@@ -20,16 +20,26 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.concurrent.*;
 
 /**
- * A ScheduledExecutorService implementation that executes tasks on the ForkJoinPool's common thread pool and schedules
- * delayed executions on an internal, common ScheduledExecutorService.
+ * A ScheduledExecutorService implementation that schedules delays on an internal, common ScheduledExecutorService and
+ * executes tasks on either a provided ExecutorService or the ForkJoinPool's common thread pool..
  *
  * @author Jonathan Halterman
  * @author Ben Manes
  */
 public final class CommonPoolScheduler implements Scheduler {
   public static final CommonPoolScheduler INSTANCE = new CommonPoolScheduler();
-  private static final ExecutorService commonPool = ForkJoinPool.commonPool();
+  private static final ExecutorService COMMON_POOL = ForkJoinPool.commonPool();
   private static volatile ScheduledExecutorService delayer;
+
+  private final ExecutorService executorService;
+
+  private CommonPoolScheduler() {
+    this.executorService = null;
+  }
+
+  public CommonPoolScheduler(ExecutorService executor) {
+    this.executorService = executor;
+  }
 
   private static ScheduledExecutorService delayer() {
     if (delayer == null) {
@@ -50,29 +60,12 @@ public final class CommonPoolScheduler implements Scheduler {
     }
   }
 
-  static final class DelayedExecutor implements Executor {
-    final long delay;
-    final TimeUnit unit;
-    final Executor executor;
-
-    DelayedExecutor(long delay, TimeUnit unit, Executor executor) {
-      this.delay = delay;
-      this.unit = unit;
-      this.executor = executor;
-    }
-
-    public void execute(Runnable runnable) {
-      delayer().schedule(() -> commonPool.execute(runnable), delay, unit);
-    }
-  }
-
-  static final class ScheduledCompletableFuture<V> implements ScheduledFuture<V> {
-    private final CompletableFuture<V> delegate;
+  static final class ScheduledCompletableFuture<V> extends CompletableFuture<V> implements ScheduledFuture<V> {
+    volatile Future<V> delegate;
     private final long time;
 
-    ScheduledCompletableFuture(CompletableFuture<V> delegate, long delay, TimeUnit unit) {
+    ScheduledCompletableFuture(long delay, TimeUnit unit) {
       this.time = System.nanoTime() + unit.toNanos(delay);
-      this.delegate = Assert.notNull(delegate, "delegate");
     }
 
     @Override
@@ -91,35 +84,41 @@ public final class CommonPoolScheduler implements Scheduler {
     }
 
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-      return delegate.cancel(mayInterruptIfRunning);
+    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
+      return delegate != null ? delegate.cancel(mayInterruptIfRunning) : super.cancel(mayInterruptIfRunning);
     }
 
     @Override
     public boolean isCancelled() {
-      return delegate.isCancelled();
-    }
-
-    @Override
-    public boolean isDone() {
-      return delegate.isDone();
-    }
-
-    @Override
-    public V get() throws InterruptedException, ExecutionException {
-      return delegate.get();
-    }
-
-    @Override
-    public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-      return delegate.get(timeout, unit);
+      return delegate != null ? delegate.isCancelled() : super.isCancelled();
     }
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
-    Executor executor = delay == 0 ? commonPool : new DelayedExecutor(delay, unit, commonPool);
-    CompletableFuture<?> future = CompletableFuture.supplyAsync(Unchecked.supplier(callable), executor);
-    return new ScheduledCompletableFuture<>(future, delay, unit);
+    ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
+    Callable<?> completingCallable = () -> {
+      try {
+        promise.complete(callable.call());
+      } catch (Throwable t) {
+        promise.completeExceptionally(t);
+      }
+      return null;
+    };
+
+    ExecutorService es = executorService != null ? executorService : COMMON_POOL;
+    if (delay == 0)
+      promise.delegate = es.submit(completingCallable);
+    else
+      promise.delegate = delayer().schedule(() -> {
+        // Guard against race with promise.cancel
+        synchronized (promise) {
+          if (!promise.isCancelled())
+            promise.delegate = es.submit(completingCallable);
+        }
+      }, delay, unit);
+
+    return promise;
   }
 }

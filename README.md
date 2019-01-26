@@ -300,7 +300,7 @@ That said, it really depends on how the policies are being used, and different c
 
 #### Configurable Schedulers
 
-By default, Failsafe uses the [ForkJoinPool]'s [common pool][common-pool] to perform async executions, but you can also configure a specific [ScheduledExecutorService] or custom [Scheduler] to use:
+By default, Failsafe uses the [ForkJoinPool]'s [common pool][common-pool] to perform async executions, but you can also configure a specific [ScheduledExecutorService], custom [Scheduler], or [ExecutorService] to use:
 
 ```java
 Failsafe.with(scheduler).getAsync(this::connect);
@@ -548,6 +548,7 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [CompletionStage]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html 
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
+[ExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html
 [RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
 [Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
 

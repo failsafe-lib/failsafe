@@ -14,7 +14,7 @@ import static org.testng.Assert.assertTrue;
 
 @Test
 public class CommonPoolSchedulerTest {
-  Scheduler scheduler = new CommonPoolScheduler();
+  Scheduler scheduler = CommonPoolScheduler.INSTANCE;
 
   public void shouldSchedule() throws Throwable {
     // Given
@@ -36,7 +36,6 @@ public class CommonPoolSchedulerTest {
   public void shouldWrapCheckedExceptions() {
     Asserts.assertThrows(() -> scheduler.schedule(() -> {
       throw new IOException();
-    }, 1, TimeUnit.MILLISECONDS)
-        .get(), ExecutionException.class, RuntimeException.class, IOException.class);
+    }, 1, TimeUnit.MILLISECONDS).get(), ExecutionException.class, IOException.class);
   }
 }
