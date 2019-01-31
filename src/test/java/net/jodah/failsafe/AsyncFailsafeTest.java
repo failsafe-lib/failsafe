@@ -341,6 +341,22 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   /**
+   * Assert handles a supplier that returns an exceptionally completed future.
+   */
+  public void shouldHandleCompletedExceptionallyGetStageAsync() {
+    CompletableFuture<Boolean> failedFuture = new CompletableFuture<>();
+    failedFuture.completeExceptionally(new IllegalArgumentException());
+    assertThrows(() -> Failsafe.with(retryTwice).getStageAsync(() -> failedFuture).get(),
+            ExecutionException.class, IllegalArgumentException.class);
+
+    assertThrows(() -> Failsafe.with(retryTwice).getStageAsync(context -> failedFuture).get(),
+            ExecutionException.class, IllegalArgumentException.class);
+
+    assertThrows(() -> Failsafe.with(retryTwice).getStageAsyncExecution(exec -> failedFuture).get(),
+            ExecutionException.class, IllegalArgumentException.class);
+  }
+
+  /**
    * Asserts that asynchronous completion via an execution is supported.
    */
   public void shouldCompleteAsync() throws Throwable {
