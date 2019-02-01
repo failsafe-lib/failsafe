@@ -41,6 +41,7 @@ public class Failsafe {
    * represents a failure. This allows different policies to be used for handling different types of failures.
    *
    * @param <R> result type
+   * @param <P> policy type
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
