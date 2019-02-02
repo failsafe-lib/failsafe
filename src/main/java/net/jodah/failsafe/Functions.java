@@ -192,9 +192,15 @@ final class Functions {
         execution.preExecute();
         supplier.get().whenComplete((innerResult, failure) -> {
           // Unwrap CompletionException cause
-          ExecutionResult result = failure instanceof CompletionException ?
-              ExecutionResult.failure(failure.getCause()) :
-              ExecutionResult.success(innerResult);
+          ExecutionResult result;
+          if ( failure != null ) {
+            if ( failure instanceof CompletionException) {
+              failure = failure.getCause();
+            }
+            result = ExecutionResult.failure(failure);
+          } else {
+            result = ExecutionResult.success(innerResult);
+          }
           execution.record(result);
           promise.complete(result);
         });
@@ -216,9 +222,15 @@ final class Functions {
         execution.preExecute();
         supplier.get(execution).whenComplete((innerResult, failure) -> {
           // Unwrap CompletionException cause
-          ExecutionResult result = failure instanceof CompletionException ?
-              ExecutionResult.failure(failure.getCause()) :
-              ExecutionResult.success(innerResult);
+          ExecutionResult result;
+          if ( failure != null ) {
+            if ( failure instanceof CompletionException) {
+              failure = failure.getCause();
+            }
+            result = ExecutionResult.failure(failure);
+          } else {
+            result = ExecutionResult.success(innerResult);
+          }
           execution.record(result);
           promise.complete(result);
         });
