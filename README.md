@@ -441,13 +441,7 @@ Failsafe can be used to create resilient functional interfaces:
 Function<String, Connection> connect = address -> Failsafe.with(retryPolicy).get(() -> connect(address));
 ```
 
-We can wrap Streams:
-
-```java
-Failsafe.with(retryPolicy).run(() -> Stream.of("foo").map(value -> value + "bar"));
-```
-
-Individual Stream operations:
+We can wrap Stream operations:
 
 ```java
 Stream.of("foo").map(value -> Failsafe.with(retryPolicy).get(() -> value + "bar"));

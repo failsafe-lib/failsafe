@@ -34,10 +34,7 @@ public class Java8Example {
     // Create a retryable functional interface
     Function<String, String> bar = value -> Failsafe.with(retryPolicy).get(() -> value + "bar");
 
-    // Create a retryable runnable Stream
-    Failsafe.with(retryPolicy).run(() -> Stream.of("foo").map(value -> value + "bar").forEach(System.out::println));
-
-    // Create a retryable supplier Stream
+    // Create a retryable Stream operation
     Failsafe.with(retryPolicy).get(() -> Stream.of("foo")
         .map(value -> Failsafe.with(retryPolicy).get(() -> value + "bar"))
         .collect(Collectors.toList()));
