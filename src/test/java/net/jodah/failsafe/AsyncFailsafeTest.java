@@ -245,7 +245,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   private void assertCancel(Function<FailsafeExecutor<?>, Future<?>> executorCallable) throws Throwable {
     // Given
-    Waiter waiter = new Waiter();
     Future<?> future = executorCallable.apply(Failsafe.with(retryAlways).with(executor).onComplete(e -> {
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof CancellationException);
@@ -360,7 +359,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
    * Asserts that asynchronous completion via an execution is supported.
    */
   public void shouldCompleteAsync() throws Throwable {
-    Waiter waiter = new Waiter();
     Failsafe.with(retryAlways).runAsyncExecution(exec -> executor.schedule(() -> {
       try {
         exec.complete();
@@ -412,8 +410,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(0);
     executor.shutdownNow();
 
-    Waiter waiter = new Waiter();
-
     // When
     Future future = Failsafe.with(Fallback.of(false), new RetryPolicy<>(), new CircuitBreaker<>())
         .with(executor)
@@ -446,7 +442,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   private void assertInterruptedExecptionOnCancel(FailsafeExecutor<Boolean> failsafe) throws Throwable {
-    Waiter waiter = new Waiter();
     CompletableFuture<Void> future = failsafe.runAsync(() -> {
       try {
         Thread.sleep(1000);
