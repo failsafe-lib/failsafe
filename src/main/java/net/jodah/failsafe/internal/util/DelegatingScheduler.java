@@ -62,7 +62,9 @@ public final class DelegatingScheduler implements Scheduler {
   }
 
   static final class ScheduledCompletableFuture<V> extends CompletableFuture<V> implements ScheduledFuture<V> {
+    // Guarded by this
     volatile Future<V> delegate;
+    // Guarded by this
     volatile Thread forkJoinPoolThread;
     private final long time;
 
@@ -86,12 +88,14 @@ public final class DelegatingScheduler implements Scheduler {
     }
 
     @Override
-    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
       boolean result = super.cancel(mayInterruptIfRunning);
-      if (delegate != null)
-        result = delegate.cancel(mayInterruptIfRunning);
-      if (forkJoinPoolThread != null)
-        forkJoinPoolThread.interrupt();
+      synchronized(this) {
+        if (delegate != null)
+          result = delegate.cancel(mayInterruptIfRunning);
+        if (forkJoinPoolThread != null)
+          forkJoinPoolThread.interrupt();
+      }
       return result;
     }
   }
