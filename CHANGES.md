@@ -1,3 +1,14 @@
+# 0.2.1
+
+### Improvements
+
+- Added support for using `ExecutorService` via `FailsafeExecutor.with(ExecutorService)`.
+- Added interruptable cancellation for executions ran on `ForkJoinPool` via `CompletableFuture.cancel(true)`.
+
+### Bug Fixes
+
+- Issue #171 - Handle completed futures when using `getStageAsync`.
+
 # 2.0
 
 ### Improvements
