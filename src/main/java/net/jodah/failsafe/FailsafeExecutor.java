@@ -22,8 +22,6 @@ import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.DelegatingScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -51,12 +49,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   final List<Policy<R>> policies;
   private EventListener completeListener;
 
-  @SafeVarargs
-  FailsafeExecutor(Policy<R>... policies) {
-    Assert.notNull(policies, "policies");
-    Assert.isTrue(policies.length > 0, "At least one policy must be supplied");
-    this.policies = new ArrayList<>(5);
-    Collections.addAll(this.policies, policies);
+  /**
+   * @throws IllegalArgumentException if {@code policies} is empty
+   */
+  FailsafeExecutor(List<Policy<R>> policies) {
+    Assert.isTrue(!policies.isEmpty(), "At least one policy must be supplied");
+    this.policies = policies;
   }
 
   /**
