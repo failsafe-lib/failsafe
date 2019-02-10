@@ -93,7 +93,7 @@ public final class DelegatingScheduler implements Scheduler {
       synchronized(this) {
         if (delegate != null)
           result = delegate.cancel(mayInterruptIfRunning);
-        if (forkJoinPoolThread != null)
+        if (forkJoinPoolThread != null && mayInterruptIfRunning)
           forkJoinPoolThread.interrupt();
       }
       return result;
