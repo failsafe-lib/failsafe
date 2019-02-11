@@ -3,7 +3,10 @@ language: java
 
 jdk:
   - oraclejdk8
-
+cache:
+  directories:
+    - .autoconf
+    - "$HOME/.m2"
 install: 
   - mvn install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true -B -V
 script:
