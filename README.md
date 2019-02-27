@@ -303,7 +303,7 @@ That said, it really depends on how the policies are being used, and different c
 By default, Failsafe uses the [ForkJoinPool]'s [common pool][common-pool] to perform async executions, but you can also configure a specific [ScheduledExecutorService], custom [Scheduler], or [ExecutorService] to use:
 
 ```java
-Failsafe.with(scheduler).getAsync(this::connect);
+Failsafe.with(policy).with(scheduler).getAsync(this::connect);
 ```
 
 #### Event Listeners
