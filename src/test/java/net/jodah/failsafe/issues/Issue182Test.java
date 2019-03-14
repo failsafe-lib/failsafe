@@ -49,24 +49,6 @@ public class Issue182Test {
     assertTrue(throwable instanceof Error);
   }
 
-  public void shouldStillRetryOnErrorsIfExplicitlyHandled() {
-    AtomicInteger counter = new AtomicInteger(1);
-
-    // Not sure why one would ever want to do this, since `ZipError` is unrecoverable, but still giving the option
-    retryPolicy = retryPolicy.handle(ZipError.class)
-        .withMaxAttempts(10);
-
-    String result = Failsafe.with(retryPolicy).get(() -> {
-      if (counter.getAndIncrement() < 9) {
-        throw new ZipError("");
-      }
-      return "result";
-    });
-
-    assertEquals(result, "result");
-    assertEquals(counter.get(), 10);
-  }
-
   public void shouldNotWrapErrorInFailsafeExceptionWhenAsync() throws InterruptedException {
     Throwable throwable = null;
 
@@ -89,5 +71,23 @@ public class Issue182Test {
     }
 
     assertTrue(throwable instanceof Error);
+  }
+
+  public void shouldStillRetryOnErrorsIfExplicitlyHandled() {
+    AtomicInteger counter = new AtomicInteger(1);
+
+    // Not sure why one would ever want to do this, since `ZipError` is unrecoverable, but still giving the option
+    retryPolicy = retryPolicy.handle(ZipError.class)
+        .withMaxAttempts(10);
+
+    String result = Failsafe.with(retryPolicy).get(() -> {
+      if (counter.getAndIncrement() < 9) {
+        throw new ZipError("");
+      }
+      return "result";
+    });
+
+    assertEquals(result, "result");
+    assertEquals(counter.get(), 10);
   }
 }
