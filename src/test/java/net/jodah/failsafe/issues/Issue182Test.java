@@ -56,7 +56,7 @@ public class Issue182Test {
     retryPolicy = retryPolicy.handle(ZipError.class)
         .withMaxAttempts(10);
 
-    String result = Failsafe.with(fallback, retryPolicy).get(() -> {
+    String result = Failsafe.with(retryPolicy).get(() -> {
       if (counter.getAndIncrement() < 9) {
         throw new ZipError("");
       }
