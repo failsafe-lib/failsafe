@@ -7,7 +7,10 @@ import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.ZipError;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -44,6 +47,23 @@ public class Issue182Test {
     }
 
     assertTrue(throwable instanceof Error);
+  }
+
+  public void shouldStillRetryOnErrorsIfExplicitlyHandled() {
+    AtomicInteger counter = new AtomicInteger(1);
+
+    retryPolicy = retryPolicy.handle(ZipError.class)
+        .withMaxAttempts(10);
+
+    String result = Failsafe.with(fallback, retryPolicy).get(() -> {
+      if (counter.getAndIncrement() < 9) {
+        throw new ZipError("");
+      }
+      return "result";
+    });
+
+    assertEquals(result, "result");
+    assertEquals(counter.get(), 10);
   }
 
   public void shouldNotWrapErrorInFailsafeExceptionWhenAsync() throws InterruptedException {
