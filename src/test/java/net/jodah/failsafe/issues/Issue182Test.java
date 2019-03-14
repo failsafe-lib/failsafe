@@ -6,6 +6,8 @@ import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.ExecutionException;
+
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -13,58 +15,58 @@ import static org.testng.Assert.assertTrue;
  */
 @Test
 public class Issue182Test {
-    private RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
-    private Fallback<Object> fallback = Fallback.of("default-result");
-    private final CheckedSupplier<Object> errorThrower = () -> {
-        throw new Error();
-    };
+  private RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
+  private Fallback<Object> fallback = Fallback.of("default-result");
+  private final CheckedSupplier<Object> errorThrower = () -> {
+    throw new Error();
+  };
 
-    // Would recommend using http://joel-costigliola.github.io/assertj/ - then you can assertThatThrownBy(...)
-    public void shouldNotWrapErrorInFailsafeException() {
-        Throwable throwable = null;
+  // Would recommend using http://joel-costigliola.github.io/assertj/ - then you can assertThatThrownBy(...)
+  public void shouldNotWrapErrorInFailsafeException() {
+    Throwable throwable = null;
 
-        try {
-            Failsafe.with(retryPolicy).get(errorThrower);
-        } catch (Throwable t) {
-            throwable = t;
-        }
-
-        assertTrue(throwable instanceof Error);
+    try {
+      Failsafe.with(retryPolicy).get(errorThrower);
+    } catch (Throwable t) {
+      throwable = t;
     }
 
-    public void shouldThrowErrorsEvenIfFallbackProvided() {
-        Throwable throwable = null;
+    assertTrue(throwable instanceof Error);
+  }
 
-        try {
-            Failsafe.with(fallback, retryPolicy).get(errorThrower);
-        } catch (Throwable t) {
-            throwable = t;
-        }
+  public void shouldThrowErrorsEvenIfFallbackProvided() {
+    Throwable throwable = null;
 
-        assertTrue(throwable instanceof Error);
+    try {
+      Failsafe.with(fallback, retryPolicy).get(errorThrower);
+    } catch (Throwable t) {
+      throwable = t;
     }
 
-    public void shouldNotWrapErrorInFailsafeExceptionWhenAsync() {
-        Throwable throwable = null;
+    assertTrue(throwable instanceof Error);
+  }
 
-        try {
-            Failsafe.with(retryPolicy).getAsync(errorThrower).get();
-        } catch (Throwable t) {
-            throwable = t;
-        }
+  public void shouldNotWrapErrorInFailsafeExceptionWhenAsync() throws InterruptedException {
+    Throwable throwable = null;
 
-        assertTrue(throwable instanceof Error);
+    try {
+      Failsafe.with(retryPolicy).getAsync(errorThrower).get();
+    } catch (ExecutionException t) {
+      throwable = t.getCause();
     }
 
-    public void shouldThrowErrorsEvenIfFallbackProvidedWhenAsync() {
-        Throwable throwable = null;
+    assertTrue(throwable instanceof Error);
+  }
 
-        try {
-            Failsafe.with(Fallback.of("default-result"), retryPolicy).getAsync(errorThrower).get();
-        } catch (Throwable t) {
-            throwable = t;
-        }
+  public void shouldThrowErrorsEvenIfFallbackProvidedWhenAsync() throws InterruptedException {
+    Throwable throwable = null;
 
-        assertTrue(throwable instanceof Error);
+    try {
+      Failsafe.with(Fallback.of("default-result"), retryPolicy).getAsync(errorThrower).get();
+    } catch (ExecutionException t) {
+      throwable = t.getCause();
     }
+
+    assertTrue(throwable instanceof Error);
+  }
 }

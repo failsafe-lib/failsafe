@@ -315,10 +315,19 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     Supplier<ExecutionResult> supplier = Functions.resultSupplierOf(supplierFn.apply(execution), execution);
 
     ExecutionResult result = execution.executeSync(supplier);
-    if (result.getFailure() != null)
-      throw result.getFailure() instanceof RuntimeException ?
-          (RuntimeException) result.getFailure() :
-          new FailsafeException(result.getFailure());
+
+    if (result.getFailure() != null) {
+      Throwable failure = result.getFailure();
+      if (failure instanceof RuntimeException) {
+        throw (RuntimeException) failure;
+      }
+      // Errors are Jvm internals that should not be handled by users
+      if (failure instanceof Error) {
+        throw (Error) failure;
+      }
+      throw new FailsafeException(failure);
+    }
+
     return (T) result.getResult();
   }
 

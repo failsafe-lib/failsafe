@@ -112,6 +112,8 @@ public abstract class PolicyExecutor<P extends Policy> {
    * not a failure.
    */
   protected boolean isFailure(ExecutionResult result) {
+    if (result.getFailure() instanceof Error)
+      return true;
     if (result.isNonResult())
       return false;
     else if (policy instanceof FailurePolicy)

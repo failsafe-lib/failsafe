@@ -138,9 +138,11 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * @see #handleResultIf(Predicate)
    */
   boolean isFailure(ExecutionResult result) {
-    return failureConditions.isEmpty() ?
-        result.getFailure() != null :
-        isFailure((R) result.getResult(), result.getFailure());
+    if (failureConditions.isEmpty()) {
+      return result.getFailure() != null;
+    }
+    return result.getFailure() instanceof Error
+        || isFailure((R) result.getResult(), result.getFailure());
   }
 
   /**

@@ -136,7 +136,10 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   public R apply(R result, Throwable failure, ExecutionContext context) throws Exception {
-    return fallback.apply(new ExecutionAttemptedEvent<R>(result, failure, context));
+    if (failure instanceof Error) {
+      throw (Error) failure;
+    }
+    return fallback.apply(new ExecutionAttemptedEvent<>(result, failure, context));
   }
 
   /**
