@@ -52,6 +52,7 @@ public class Issue182Test {
   public void shouldStillRetryOnErrorsIfExplicitlyHandled() {
     AtomicInteger counter = new AtomicInteger(1);
 
+    // Not sure why one would ever want to do this, since `ZipError` is unrecoverable, but still giving the option
     retryPolicy = retryPolicy.handle(ZipError.class)
         .withMaxAttempts(10);
 
