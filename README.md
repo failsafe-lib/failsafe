@@ -30,7 +30,7 @@ Add the latest [Failsafe Maven dependency][maven] to your project.
 
 ## Migrating from 1.x
 
-Failsafe 2.0 has API and behavior changes from 1.x. See the [CHANGES](CHANGES.md#2.0) doc for more details.
+Failsafe 2.0 has API and behavior changes from 1.x. See the [CHANGES](CHANGES.md#20) doc for more details.
 
 ## Usage
 
