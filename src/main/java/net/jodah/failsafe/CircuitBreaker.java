@@ -38,7 +38,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
   private final CircuitBreakerStats stats = currentExecutions::get;
-  private Duration delay = Duration.ofMinutes(1);
+  private Duration delay = Duration.ZERO;
   private Duration timeout;
   private Ratio failureThreshold;
   private Ratio successThreshold;
