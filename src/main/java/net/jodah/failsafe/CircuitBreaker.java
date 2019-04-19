@@ -81,7 +81,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   }
 
   /**
-   * Returns the delay before allowing another execution on the circuit. Defaults to {@link Duration#ZERO}.
+   * Returns the delay before allowing another execution on the circuit. Defaults to 1 minute.
    *
    * @see #withDelay(Duration)
    */
