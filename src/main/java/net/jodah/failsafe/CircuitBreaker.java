@@ -193,6 +193,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
 
   /**
    * Calls the {@code runnable} when the circuit is closed.
+   * <p>Note: Any exceptions that are thrown from within the {@code runnable} are ignored.</p>
    */
   public CircuitBreaker<R> onClose(CheckedRunnable runnable) {
     onClose = runnable;
@@ -201,6 +202,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
 
   /**
    * Calls the {@code runnable} when the circuit is half-opened.
+   * <p>Note: Any exceptions that are thrown within the {@code runnable} are ignored.</p>
    */
   public CircuitBreaker<R> onHalfOpen(CheckedRunnable runnable) {
     onHalfOpen = runnable;
@@ -209,6 +211,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
 
   /**
    * Calls the {@code runnable} when the circuit is opened.
+   * <p>Note: Any exceptions that are thrown within the {@code runnable} are ignored.</p>
    */
   public CircuitBreaker<R> onOpen(CheckedRunnable runnable) {
     onOpen = runnable;
