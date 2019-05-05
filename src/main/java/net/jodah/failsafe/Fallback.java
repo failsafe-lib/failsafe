@@ -127,12 +127,10 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
 
   /**
    * Configures the {@code fallback} result to be returned if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings("rawtypes")
   public static <R> Fallback<R> of(R fallback) {
-    return new Fallback<>(Functions.fnOf(Assert.notNull(fallback, "fallback")), false);
+    return new Fallback<>(Functions.fnOf(fallback), false);
   }
 
   public R apply(R result, Throwable failure, ExecutionContext context) throws Exception {
