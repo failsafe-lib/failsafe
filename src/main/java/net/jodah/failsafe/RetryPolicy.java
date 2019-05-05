@@ -79,8 +79,6 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
     Duration computeDelay(R result, F failure, ExecutionContext context);
   }
 
-  static final RetryPolicy NEVER = new RetryPolicy<>().withMaxRetries(0);
-
   // Policy config
   private Duration delay;
   private Duration delayMin;
