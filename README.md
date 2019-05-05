@@ -484,7 +484,7 @@ See the [RxJava example][RxJava] for a more detailed implementation.
 
 #### Policy SPI
 
-Failsafe provides an SPI that allows you to implement your own [Policy] and plug it into Failsafe. Each [Policy] implementation must returns a [PolicyExecutor] which is responsible for performing synchronous or asynchronous execution, handling pre-execution requests, or handling post-execution results. The existing [PolicyExecutor] [implementations][policy-executor-impls] are a good reference for creating additional implementations.
+Failsafe provides an SPI that allows you to implement your own [Policy] and plug it into Failsafe. Each [Policy] implementation must return a [PolicyExecutor] which is responsible for performing synchronous or asynchronous execution, handling pre-execution requests, or handling post-execution results. The existing [PolicyExecutor] [implementations][policy-executor-impls] are a good reference for creating additional implementations.
 
 ## Additional Resources
 
