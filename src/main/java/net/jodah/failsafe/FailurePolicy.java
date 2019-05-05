@@ -48,7 +48,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   }
 
   /**
-   * Specifies the failure to retryOn. Any failure that is assignable from the {@code failure} will be handled.
+   * Specifies the failure to handle. Any failure that is assignable from the {@code failure} will be handled.
    *
    * @throws NullPointerException if {@code failure} is null
    */
@@ -58,7 +58,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   }
 
   /**
-   * Specifies the failures to retryOn. Any failures that are assignable from the {@code failures} will be handled.
+   * Specifies the failures to handle. Any failures that are assignable from the {@code failures} will be handled.
    *
    * @throws NullPointerException if {@code failures} is null
    * @throws IllegalArgumentException if failures is empty
@@ -70,7 +70,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   }
 
   /**
-   * Specifies the failures to retryOn. Any failures that are assignable from the {@code failures} will be handled.
+   * Specifies the failures to handle. Any failures that are assignable from the {@code failures} will be handled.
    *
    * @throws NullPointerException if {@code failures} is null
    * @throws IllegalArgumentException if failures is null or empty
