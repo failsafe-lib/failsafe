@@ -394,7 +394,7 @@ But for other policies we may declare a more specific result type:
 
 ```java
 RetryPolicy<HttpResponse> retryPolicy = new RetryPolicy<HttpResponse>()
-  .handleResultIf(reponse -> response.getStatusCode == 500)
+  .handleResultIf(response -> response.getStatusCode == 500)
   .onFailedAttempt(e -> log.warn("Failed attempt: {}", e.getLastResult().getStatusCode()));
 ```
 
