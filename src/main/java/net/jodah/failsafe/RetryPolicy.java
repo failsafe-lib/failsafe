@@ -132,6 +132,8 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
     this.failedAttemptListener = rp.failedAttemptListener;
     this.retriesExceededListener = rp.retriesExceededListener;
     this.retryListener = rp.retryListener;
+    this.failureListener = rp.failureListener;
+    this.successListener = rp.successListener;
   }
 
   /**

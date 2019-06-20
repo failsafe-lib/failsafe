@@ -206,17 +206,22 @@ public class RetryPolicyTest {
     assertEquals(new RetryPolicy().withMaxRetries(1).getMaxAttempts(), 2);
   }
 
+  @SuppressWarnings("unchecked")
   public void testCopy() {
     RetryPolicy rp = new RetryPolicy();
     rp.withBackoff(2, 20, ChronoUnit.SECONDS, 2.5);
     rp.withMaxDuration(Duration.ofSeconds(60));
     rp.withMaxRetries(3);
+    rp.onFailure(event -> System.out.println("Failed."));
+    rp.onSuccess(event -> System.out.println("Success."));
 
     RetryPolicy rp2 = rp.copy();
-    assertEquals(rp.getDelay().toNanos(), rp2.getDelay().toNanos());
-    assertEquals(rp.getDelayFactor(), rp2.getDelayFactor());
-    assertEquals(rp.getMaxDelay().toNanos(), rp2.getMaxDelay().toNanos());
-    assertEquals(rp.getMaxDuration().toNanos(), rp2.getMaxDuration().toNanos());
-    assertEquals(rp.getMaxRetries(), rp2.getMaxRetries());
+    assertEquals(rp2.getDelay().toNanos(), rp.getDelay().toNanos());
+    assertEquals(rp2.getDelayFactor(), rp.getDelayFactor());
+    assertEquals(rp2.getMaxDelay().toNanos(), rp.getMaxDelay().toNanos());
+    assertEquals(rp2.getMaxDuration().toNanos(), rp.getMaxDuration().toNanos());
+    assertEquals(rp2.getMaxRetries(), rp.getMaxRetries());
+    assertEquals(rp2.failureListener, rp.failureListener);
+    assertEquals(rp2.successListener, rp.successListener);
   }
 }
