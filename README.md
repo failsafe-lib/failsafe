@@ -133,7 +133,7 @@ A random delay for some range:
 retryPolicy.withDelay(1, 10, ChronoUnit.SECONDS);
 ```
 
-Or a [computed delay][computed-delay] based on an execution. You can add a random [jitter factor][jitter-factor] to a delay:
+Or a [computed delay][computed-delay] based on an execution result. You can add a random [jitter factor][jitter-factor] to a delay:
 
 ```java
 retryPolicy.withJitter(.1);
@@ -197,6 +197,8 @@ After opening, a breaker will delay for 1 minute by default before before attemp
 ```java
 breaker.withDelay(Duration.ofSeconds(30));
 ```
+
+Or a [computed delay][computed-delay-breaker] based on an execution result. 
 
 The breaker can be configured to *close* again if a number of trial executions succeed, else it will re-*open*:
 
@@ -509,7 +511,8 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 
 [policies]: #failure-policies
 [backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.time.temporal.ChronoUnit-
-[computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.RetryPolicy.DelayFunction-
+[computed-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-net.jodah.failsafe.function.DelayFunction-
+[computed-delay-breaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withDelay-net.jodah.failsafe.function.DelayFunction-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
 [max-attempts]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxAttempts-int-

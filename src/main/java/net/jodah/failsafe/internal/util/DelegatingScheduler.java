@@ -65,7 +65,7 @@ public final class DelegatingScheduler implements Scheduler {
     // Guarded by this
     volatile Future<V> delegate;
     // Guarded by this
-    volatile Thread forkJoinPoolThread;
+    Thread forkJoinPoolThread;
     private final long time;
 
     ScheduledCompletableFuture(long delay, TimeUnit unit) {

@@ -42,8 +42,6 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private volatile boolean retriesExceeded;
   /** The fixed, backoff, random or computed delay time in nanoseconds. */
   private volatile long delayNanos = -1;
-  /** The wait time, which is the delay time adjusted for jitter and max duration, in nanoseconds. */
-  private volatile long waitNanos;
 
   // Listeners
   private EventListener abortListener;
@@ -172,7 +170,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
         delayNanos = (long) Math.min(delayNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
     }
 
-    waitNanos = computedDelayNanos != -1 ? computedDelayNanos : delayNanos;
+    // The wait time, which is the delay time adjusted for jitter and max duration, in nanoseconds
+    long waitNanos = computedDelayNanos != -1 ? computedDelayNanos : delayNanos;
 
     // Adjust the wait time for jitter
     if (policy.getJitter() != null)

@@ -30,7 +30,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   private ExecutionContext execution;
 
   // Mutable state
-  private volatile Future<T> delegate;
+  private Future<T> delegate;
 
   FailsafeFuture(FailsafeExecutor<T> executor) {
     this.executor = executor;

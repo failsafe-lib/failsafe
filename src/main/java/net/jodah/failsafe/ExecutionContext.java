@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Contextual execution information.
@@ -25,7 +26,7 @@ import java.time.Duration;
 public class ExecutionContext {
   private final Duration startTime;
   /** Number of execution attempts */
-  volatile int attempts;
+  AtomicInteger attempts = new AtomicInteger();
 
   ExecutionContext(Duration startTime) {
     this.startTime = startTime;
@@ -47,7 +48,7 @@ public class ExecutionContext {
    * Gets the number of execution attempts so far.
    */
   public int getAttemptCount() {
-    return attempts;
+    return attempts.get();
   }
 
   /**
