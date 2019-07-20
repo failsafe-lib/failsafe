@@ -1,5 +1,9 @@
 # 2.1.0
 
+### Improvements
+
+- Added support for `Failsafe.with(List<Policy<R>>)`
+
 ### Bug Fixes
 
 - Issue #192 - Problem with detecting completion when performing async execution.
