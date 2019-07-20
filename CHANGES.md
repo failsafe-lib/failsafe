@@ -2,10 +2,12 @@
 
 ### Improvements
 
-- Added support for `Failsafe.with(List<Policy<R>>)`
+- Added support for `Failsafe.with(List<Policy<R>>)`.
+- Allow `null` `Fallback` values.
 
 ### Bug Fixes
 
+- Issue #191 - Add missing listeners to RetryPolicy copy constructor.
 - Issue #192 - Problem with detecting completion when performing async execution.
 
 ### Behavior Changes
