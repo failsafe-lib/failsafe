@@ -45,7 +45,7 @@ public class ExecutionResult {
    * Records an initial execution result where {@code success} is set to true if {@code failure} is not null.
    */
   public ExecutionResult(Object result, Throwable failure) {
-    this(result, failure, false, 0, false, failure == null, null);
+    this(result, failure, false, 0, false, failure == null, failure == null);
   }
 
   private ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean complete,

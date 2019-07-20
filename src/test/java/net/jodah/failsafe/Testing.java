@@ -20,6 +20,9 @@ import net.jodah.failsafe.function.CheckedSupplier;
 import net.jodah.failsafe.internal.CircuitState;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Testing {
@@ -78,6 +81,18 @@ public class Testing {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  public static CompletableFuture<Object> futureResult(ScheduledExecutorService executor, Object result) {
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    executor.schedule(() -> future.complete(result), 0, TimeUnit.MILLISECONDS);
+    return future;
+  }
+
+  public static CompletableFuture<Object> futureException(ScheduledExecutorService executor, Exception exception) {
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    executor.schedule(() -> future.completeExceptionally(exception), 0, TimeUnit.MILLISECONDS);
+    return future;
   }
 
   public static void sleep(long duration) {

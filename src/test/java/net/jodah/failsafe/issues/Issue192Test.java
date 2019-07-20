@@ -3,12 +3,15 @@ package net.jodah.failsafe.issues;
 import net.jodah.failsafe.Asserts;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.Testing;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Test
@@ -52,22 +55,17 @@ public class Issue192Test {
       .onRetry(evt -> exceptionC.incrementAndGet());
 
     Asserts.assertThrows(() -> Failsafe.with(policyA, policyB, policyC)
-      .getAsyncExecution(execution -> throwSomeException().whenComplete((result, failure) -> {
-        if (execution.complete(result, failure))
-          System.out.println("Result = " + result + "; failure = " + failure);
-        else if (!execution.retry())
-          System.out.println("Connection attempts failed " + failure);
-      }))
+      .getAsyncExecution(
+        execution -> Testing.futureException(executor, new ExceptionB()).whenComplete((result, failure) -> {
+          if (execution.complete(result, failure))
+            ;//System.out.println("Result = " + result + "; failure = " + failure);
+          else if (!execution.retry())
+            ;//System.out.println("Connection attempts failed " + failure);
+        }))
       .get(), ExecutionException.class, ExceptionB.class);
 
     Assert.assertEquals(exceptionA.get(), 0);
     Assert.assertEquals(exceptionB.get(), 3);
     Assert.assertEquals(exceptionC.get(), 0);
-  }
-
-  private CompletableFuture<Object> throwSomeException() {
-    CompletableFuture<Object> future = new CompletableFuture<>();
-    executor.schedule(() -> future.completeExceptionally(new ExceptionB()), 0, TimeUnit.SECONDS);
-    return future;
   }
 }
