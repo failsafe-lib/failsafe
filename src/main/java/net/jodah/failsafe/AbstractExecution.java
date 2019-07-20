@@ -35,6 +35,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   // Internally mutable state
   volatile Object lastResult;
   volatile Throwable lastFailure;
+  volatile boolean resultHandled;
 
   /** The wait time in nanoseconds. */
   private volatile long waitNanos;
@@ -65,6 +66,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   void preExecute() {
+    resultHandled = false;
   }
 
   /**
@@ -74,11 +76,14 @@ public abstract class AbstractExecution extends ExecutionContext {
    */
   synchronized boolean postExecute(ExecutionResult result) {
     record(result);
-    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+    boolean allComplete = true;
+    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors) {
       result = policyExecutor.postExecute(result);
+      allComplete = allComplete && result.isComplete();
+    }
 
     waitNanos = result.getWaitNanos();
-    completed = result.isComplete();
+    completed = allComplete;
     return completed;
   }
 
@@ -107,7 +112,8 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   /**
-   * Returns whether the execution is complete or if it can be retried.
+   * Returns whether the execution is complete or if it can be retried. An execution is considered complete only when
+   * all configured policies consider the execution complete.
    */
   public boolean isComplete() {
     return completed;

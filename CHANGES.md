@@ -1,3 +1,13 @@
+# 2.1.0
+
+### Bug Fixes
+
+- Issue #192 - Problem with detecting completion when performing async execution.
+
+### Behavior Changes
+
+- A [standalone](https://github.com/jhalterman/failsafe#execution-tracking) or [async execution](https://github.com/jhalterman/failsafe#asynchronous-api-integration) will only be marked as complete when all policies are complete. `Execution.isComplete` reflects this. 
+
 # 2.0.1
 
 ### Improvements

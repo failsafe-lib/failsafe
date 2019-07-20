@@ -28,10 +28,12 @@ public class ExecutionPolicyOrderingTest {
   }
 
   public void testCircuitBreakerAndRetryPolicy() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(2);
+    RetryPolicy rp = new RetryPolicy().withMaxRetries(1);
     CircuitBreaker cb = new CircuitBreaker().withFailureThreshold(5);
 
     Execution execution = new Execution(cb, rp);
+    execution.recordFailure(new Exception());
+    assertFalse(execution.isComplete());
     execution.recordFailure(new Exception());
     assertTrue(execution.isComplete());
 

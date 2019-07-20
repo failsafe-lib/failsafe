@@ -138,6 +138,7 @@ public final class AsyncExecution extends AbstractExecution {
    * Prepares for an execution by resetting internal flags.
    */
   void preExecute() {
+    super.preExecute();
     completeCalled = false;
     retryCalled = false;
   }
@@ -155,6 +156,7 @@ public final class AsyncExecution extends AbstractExecution {
         if (super.postExecute(result))
           complete(result, null);
         completeCalled = true;
+        resultHandled = true;
       }
 
       return completed;

@@ -141,7 +141,7 @@ public abstract class PolicyExecutor<P extends Policy> {
    */
   protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
       FailsafeFuture<Object> future) {
-    return CompletableFuture.completedFuture(onFailure(result));
+    return CompletableFuture.completedFuture(execution.resultHandled ? result : onFailure(result));
   }
 
   private void callSuccessListener(ExecutionResult result) {
