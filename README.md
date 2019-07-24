@@ -257,7 +257,7 @@ Fallback<Object> fallback = Fallback.of(null);
 Throw a custom exception:
 
 ```java
-Fallback<Object> fallback = Fallback.of(failure -> { throw new CustomException(failure); });
+Fallback<Object> fallback = Fallback.ofException(e -> new CustomException(e.getLastFailure()));
 ```
 
 Or compute an alternative result such as from a backup resource:

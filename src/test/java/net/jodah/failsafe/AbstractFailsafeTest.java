@@ -58,8 +58,9 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(retryPolicy).get(supplier)
-        : Failsafe.with(retryPolicy).with(executor).getAsync(supplier).get());
+    return unwrapExceptions(() -> executor == null ?
+      Failsafe.with(retryPolicy).get(supplier) :
+      Failsafe.with(retryPolicy).with(executor).getAsync(supplier).get());
   }
 
   /**
@@ -67,8 +68,9 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T failsafeGet(CircuitBreaker<T> circuitBreaker, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(circuitBreaker).get(supplier)
-        : Failsafe.with(circuitBreaker).with(executor).getAsync(supplier).get());
+    return unwrapExceptions(() -> executor == null ?
+      Failsafe.with(circuitBreaker).get(supplier) :
+      Failsafe.with(circuitBreaker).with(executor).getAsync(supplier).get());
   }
 
   /**
@@ -85,19 +87,23 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback, CheckedSupplier<T> supplier) {
+  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback,
+    CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(Fallback.of(fallback), breaker).get(supplier)
-        : Failsafe.with(Fallback.ofAsync(fallback), breaker).with(executor).getAsync(supplier).get());
+    return unwrapExceptions(() -> executor == null ?
+      Failsafe.with(Fallback.of(fallback), breaker).get(supplier) :
+      Failsafe.with(Fallback.ofAsync(fallback), breaker).with(executor).getAsync(supplier).get());
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback, CheckedSupplier<T> supplier) {
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback,
+    CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ? Failsafe.with(Fallback.of(fallback), retryPolicy).get(supplier)
-        : Failsafe.with(Fallback.ofAsync(fallback), retryPolicy).with(executor).getAsync(supplier).get());
+    return unwrapExceptions(() -> executor == null ?
+      Failsafe.with(Fallback.of(fallback), retryPolicy).get(supplier) :
+      Failsafe.with(Fallback.ofAsync(fallback), retryPolicy).with(executor).getAsync(supplier).get());
   }
 
   /**
@@ -125,6 +131,14 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     assertThrows(() -> failsafeGet(retryPolicy, service::connect), IllegalStateException.class);
     verify(service, times(3)).connect();
+  }
+
+  public void shouldFallbackOfException() {
+    Fallback<Object> fallback = Fallback.ofException(e -> new IllegalStateException(e.getLastFailure()));
+
+    assertThrows(() -> Failsafe.with(fallback).run(() -> {
+      throw new Exception();
+    }), IllegalStateException.class);
   }
 
   /**

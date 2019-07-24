@@ -284,7 +284,8 @@ final class Functions {
       } catch (Throwable t) {
         result = ExecutionResult.failure(t);
       } finally {
-        execution.record(result);
+        if (result != null)
+          execution.record(result);
       }
       return result;
     };
