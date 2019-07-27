@@ -35,7 +35,7 @@ public class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
       policy.preExecute();
       return null;
     }
-    return ExecutionResult.failure(new CircuitBreakerOpenException());
+    return ExecutionResult.failure(new CircuitBreakerOpenException(policy));
   }
 
   @Override

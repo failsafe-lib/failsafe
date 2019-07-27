@@ -3,6 +3,7 @@
 ### Improvements
 
 - Added `ExecutionContext.getLastResult` and `.getLastFailure` to support retries that depend on previous executions
+- Added `CircuitBreakerOpenException.getCircuitBreaker`
 
 # 2.1.1
 

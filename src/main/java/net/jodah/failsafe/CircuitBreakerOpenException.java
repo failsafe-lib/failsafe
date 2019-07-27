@@ -17,9 +17,20 @@ package net.jodah.failsafe;
 
 /**
  * Thrown when an execution is attempted while a configured CircuitBreaker is open.
- * 
+ *
  * @author Jonathan Halterman
  */
 public class CircuitBreakerOpenException extends FailsafeException {
   private static final long serialVersionUID = 1L;
+
+  private final CircuitBreaker circuitBreaker;
+
+  public CircuitBreakerOpenException(CircuitBreaker circuitBreaker) {
+    this.circuitBreaker = circuitBreaker;
+  }
+
+  /** Retruns the {@link CircuitBreaker} that caused the exception. */
+  public CircuitBreaker getCircuitBreaker() {
+    return circuitBreaker;
+  }
 }
