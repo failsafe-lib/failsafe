@@ -384,6 +384,12 @@ Failsafe.with(retryPolicy).run(ctx -> {
 });
 ```
 
+[ExecutionContext] also allows you to create retries that depend on previous execution results:
+
+```java
+int result = Failsafe.with(retryPolicy).get(ctx -> ctx.getLastResult(0) + 1);
+```
+
 #### Strong typing
 
 Failsafe Policies are typed based on the expected result. For generic policies that are used for various executions, the result type may just be `Object`:

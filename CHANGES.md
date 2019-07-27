@@ -1,3 +1,9 @@
+# Next
+
+### Improvements
+
+- Added `ExecutionContext.getLastResult` and `.getLastFailure` to support retries that depend on previous executions
+
 # 2.1.1
 
 ### Improvements

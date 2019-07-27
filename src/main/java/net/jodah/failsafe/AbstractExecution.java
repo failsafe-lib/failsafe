@@ -33,10 +33,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
   // Internally mutable state
-  volatile Object lastResult;
-  volatile Throwable lastFailure;
   volatile boolean resultHandled;
-
   /** The wait time in nanoseconds. */
   private volatile long waitNanos;
   volatile boolean completed;
@@ -85,22 +82,6 @@ public abstract class AbstractExecution extends ExecutionContext {
     waitNanos = result.getWaitNanos();
     completed = allComplete;
     return completed;
-  }
-
-  /**
-   * Returns the last failure that was recorded.
-   */
-  @SuppressWarnings("unchecked")
-  public <T extends Throwable> T getLastFailure() {
-    return (T) lastFailure;
-  }
-
-  /**
-   * Returns the last result that was recorded.
-   */
-  @SuppressWarnings("unchecked")
-  public <T> T getLastResult() {
-    return (T) lastResult;
   }
 
   /**

@@ -22,6 +22,7 @@ import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.function.CheckedFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.function.ContextualSupplier;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -54,7 +55,7 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
-   * Does a failsafe getAsync with an optional executor.
+   * Does a failsafe get with an optional executor.
    */
   <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
@@ -64,7 +65,17 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
-   * Does a failsafe getAsync with an optional executor.
+   * Does a contextual failsafe get with an optional executor.
+   */
+  <T> T failsafeGet(RetryPolicy<T> retryPolicy, ContextualSupplier<T> supplier) {
+    ScheduledExecutorService executor = getExecutor();
+    return unwrapExceptions(() -> executor == null ?
+      Failsafe.with(retryPolicy).get(supplier) :
+      Failsafe.with(retryPolicy).with(executor).getAsync(supplier).get());
+  }
+
+  /**
+   * Does a failsafe get with an optional executor.
    */
   <T> T failsafeGet(CircuitBreaker<T> circuitBreaker, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
@@ -74,7 +85,7 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
-   * Does a failsafe runAsync with an optional executor.
+   * Does a failsafe run with an optional executor.
    */
   void failsafeRun(CircuitBreaker<?> breaker, CheckedRunnable runnable) {
     ScheduledExecutorService executor = getExecutor();
@@ -242,6 +253,15 @@ public abstract class AbstractFailsafeTest {
       return false;
     }, service::connect), Boolean.FALSE);
     verify(service, times(0)).connect();
+  }
+
+  public void shouldGetLastResult() {
+    RetryPolicy<Integer> retryPolicy = new RetryPolicy<Integer>().withMaxAttempts(5)
+      .handleResultIf(r -> true);
+    Waiter waiter = new Waiter();
+
+    int result = failsafeGet(retryPolicy, ctx -> ctx.getLastResult(10) + 1);
+    assertEquals(result, 15);
   }
 
   private <T> T unwrapExceptions(CheckedSupplier<T> supplier) {

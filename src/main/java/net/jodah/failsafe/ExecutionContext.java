@@ -28,6 +28,10 @@ public class ExecutionContext {
   /** Number of execution attempts */
   AtomicInteger attempts = new AtomicInteger();
 
+  // Internally mutable state
+  volatile Object lastResult;
+  volatile Throwable lastFailure;
+
   ExecutionContext(Duration startTime) {
     this.startTime = startTime;
   }
@@ -35,6 +39,8 @@ public class ExecutionContext {
   private ExecutionContext(ExecutionContext context) {
     this.startTime = context.startTime;
     this.attempts = context.attempts;
+    this.lastResult = context.lastResult;
+    this.lastFailure = context.lastFailure;
   }
 
   /**
@@ -49,6 +55,30 @@ public class ExecutionContext {
    */
   public int getAttemptCount() {
     return attempts.get();
+  }
+
+  /**
+   * Returns the last failure that was recorded.
+   */
+  @SuppressWarnings("unchecked")
+  public <T extends Throwable> T getLastFailure() {
+    return (T) lastFailure;
+  }
+
+  /**
+   * Returns the last result that was recorded.
+   */
+  @SuppressWarnings("unchecked")
+  public <T> T getLastResult() {
+    return (T) lastResult;
+  }
+
+  /**
+   * Returns the last result that was recorded else the {@code defaultValue}.
+   */
+  @SuppressWarnings("unchecked")
+  public <T> T getLastResult(T defaultValue) {
+    return lastResult != null ? (T) lastResult : defaultValue;
   }
 
   /**
