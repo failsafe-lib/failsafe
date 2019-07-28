@@ -19,7 +19,6 @@ import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.RetryPolicy.DelayFunction;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -28,26 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class ComputedDelayTest {
+public class DelayableRetryPolicyTest {
   static class UncheckedExpectedException extends RuntimeException {
   }
 
   static class DelayException extends UncheckedExpectedException {
-  }
-
-  @Test(expectedExceptions = NullPointerException.class)
-  public void testNullDelayFunction() {
-    new RetryPolicy<>().withDelay((DelayFunction<Object, ? extends Throwable>) null);
-  }
-
-  @Test(expectedExceptions = NullPointerException.class)
-  public void testNullResult() {
-    new RetryPolicy<>().withDelayWhen((result, failure, context) -> Duration.ofSeconds(1), null);
-  }
-
-  @Test(expectedExceptions = NullPointerException.class)
-  public void testNullFailureType() {
-    new RetryPolicy<>().withDelayOn((result, failure, context) -> Duration.ofSeconds(1), null);
   }
 
   @Test(expectedExceptions = UncheckedExpectedException.class)

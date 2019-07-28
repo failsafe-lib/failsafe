@@ -96,12 +96,12 @@ public class RetryPolicyTest {
     assertTrue(policy.isFailure(5, new Exception()));
   }
 
-  public void testCanAbortForNull() {
+  public void testIsAbortableNull() {
     RetryPolicy<Object> policy = new RetryPolicy<>();
     assertFalse(policy.isAbortable(null, null));
   }
 
-  public void testCanAbortForCompletionPredicate() {
+  public void testIsAbortableCompletionPredicate() {
     RetryPolicy<Object> policy = new RetryPolicy<>()
         .abortIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.isAbortable("test", null));
@@ -110,13 +110,13 @@ public class RetryPolicyTest {
     assertFalse(policy.isAbortable(null, new IllegalStateException()));
   }
 
-  public void testCanAbortForFailurePredicate() {
+  public void testIsAbortableFailurePredicate() {
     RetryPolicy<Object> policy = new RetryPolicy<>().abortOn(failure -> failure instanceof ConnectException);
     assertTrue(policy.isAbortable(null, new ConnectException()));
     assertFalse(policy.isAbortable(null, new IllegalArgumentException()));
   }
 
-  public void testCanAbortForResultPredicate() {
+  public void testIsAbortablePredicate() {
     RetryPolicy<Integer> policy = new RetryPolicy<Integer>().abortIf(result -> result > 100);
     assertTrue(policy.isAbortable(110, null));
     assertFalse(policy.isAbortable(50, null));
@@ -124,7 +124,7 @@ public class RetryPolicyTest {
   }
 
   @SuppressWarnings("unchecked")
-  public void testCanAbortForFailure() {
+  public void testIsAbortableFailure() {
     RetryPolicy policy = new RetryPolicy().abortOn(Exception.class);
     assertTrue(policy.isAbortable(null, new Exception()));
     assertTrue(policy.isAbortable(null, new IllegalArgumentException()));
@@ -141,34 +141,11 @@ public class RetryPolicyTest {
     assertFalse(policy.isAbortable(null, new IllegalStateException()));
   }
 
-  public void testCanAbortForResult() {
+  public void testIsAbortableResult() {
     RetryPolicy<Object> policy = new RetryPolicy<>().abortWhen(10);
     assertTrue(policy.isAbortable(10, null));
     assertFalse(policy.isAbortable(5, null));
     assertFalse(policy.isAbortable(5, new IllegalArgumentException()));
-  }
-
-  public void testWithDelayFunction() {
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>();
-    assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
-    retryPolicy.withDelay((r, f, ctx) -> Duration.ofMillis(10));
-    assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalArgumentException()));
-  }
-
-  public void testWithDelayOn() {
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelayOn((r, f, ctx) -> Duration.ofMillis(10),
-        IllegalStateException.class);
-    assertTrue(retryPolicy.canApplyDelayFn("foo", new IllegalStateException()));
-    assertFalse(retryPolicy.canApplyDelayFn("foo", null));
-    assertFalse(retryPolicy.canApplyDelayFn("foo", new IllegalArgumentException()));
-  }
-
-  public void testWithDelayWhen() {
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelayWhen((r, f, ctx) -> Duration.ofMillis(10),
-        "expected");
-    assertTrue(retryPolicy.canApplyDelayFn("expected", new IllegalStateException()));
-    assertFalse(retryPolicy.canApplyDelayFn(null, new IllegalStateException()));
-    assertFalse(retryPolicy.canApplyDelayFn("not expected", new IllegalStateException()));
   }
 
   public void shouldRequireValidBackoff() {

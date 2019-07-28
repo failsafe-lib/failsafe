@@ -25,6 +25,9 @@ import net.jodah.failsafe.internal.util.Assert;
 
 /**
  * A Policy that handles failures using a fallback function or result.
+ * <p>
+ * Note: Fallback extends {@link FailurePolicy} which offers additional configuration.
+ * </p>
  *
  * @param <R> result type
  * @author Jonathan Halterman

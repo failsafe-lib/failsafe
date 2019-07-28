@@ -38,46 +38,17 @@ import java.util.function.Predicate;
  * handleResult} methods describe when a retry should be performed for a particular result. If multiple {@code handle}
  * or {@code handleResult} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
  * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
+ * <p>
+ * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional
+ * configuration.
+ * </p>
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
+public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   private static final int DEFAULT_MAX_RETRIES = 2;
-
-  /**
-   * A functional interface for computing delays between retries in conjunction with {@link #withDelay(DelayFunction)}.
-   *
-   * @param <R> result type
-   * @param <F> failure type
-   */
-  @FunctionalInterface
-  public interface DelayFunction<R, F extends Throwable> {
-    /**
-     * Returns the amount of delay before the next retry based on the result or failure of the last attempt and the
-     * execution context (executions so far). This method must complete quickly and should not have side-effects.
-     * Unchecked exceptions thrown by this method will <strong>not</strong> be treated as part of the fail-safe
-     * processing and will instead abort that processing.
-     * <p>
-     * Notes:
-     * <ul>
-     * <li>A negative return value will cause Failsafe to use a configured fixed or backoff delay
-     * <li>Any configured jitter is still applied to DelayFunction provided values
-     * <li>Any configured max duration is still applied to DelayFunction provided values
-     * </ul>
-     *
-     * @param result the result, if any, of the last attempt
-     * @param failure the {@link Throwable} thrown, if any, during the last attempt
-     * @param context the {@link ExecutionContext} that describes executions so far
-     * @return a non-negative duration to be used as the delay before next retry, otherwise (null or negative duration)
-     * means fall back to the fixed or backoff delay for next retry
-     * @see #withDelay(DelayFunction)
-     * @see #withDelayOn(DelayFunction, Class)
-     * @see #withDelayWhen(DelayFunction, R)
-     */
-    Duration computeDelay(R result, F failure, ExecutionContext context);
-  }
 
   // Policy config
   private Duration delay;
@@ -85,9 +56,6 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   private Duration delayMax;
   private double delayFactor;
   private Duration maxDelay;
-  private DelayFunction<R, ? extends Throwable> delayFn;
-  private Object delayResult;
-  private Class<? extends Throwable> delayFailure;
   private Duration jitter;
   private double jitterFactor;
   private Duration maxDuration;
@@ -291,18 +259,6 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Returns whether any configured delay function can be applied for an execution result.
-   *
-   * @see #withDelay(DelayFunction)
-   * @see #withDelayOn(DelayFunction, Class)
-   * @see #withDelayWhen(DelayFunction, Object)
-   */
-  public boolean canApplyDelayFn(R result, Throwable failure) {
-    return (delayResult == null || delayResult.equals(result)) && (delayFailure == null || (failure != null
-      && delayFailure.isAssignableFrom(failure.getClass())));
-  }
-
-  /**
    * Returns a copy of this RetryPolicy.
    */
   public RetryPolicy<R> copy() {
@@ -336,17 +292,6 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
    */
   public Duration getDelayMax() {
     return delayMax;
-  }
-
-  /**
-   * Returns the function that determines the next delay given a failed attempt with the given {@link Throwable}.
-   *
-   * @see #withDelay(DelayFunction)
-   * @see #withDelayOn(DelayFunction, Class)
-   * @see #withDelayWhen(DelayFunction, Object)
-   */
-  public DelayFunction<R, ? extends Throwable> getDelayFn() {
-    return delayFn;
   }
 
   /**
@@ -497,52 +442,6 @@ public class RetryPolicy<R> extends FailurePolicy<RetryPolicy<R>, R> {
     Assert.state(maxDelay == null, "Backoff delays have already been set");
     this.delayMin = delayMinDuration;
     this.delayMax = delayMaxDuration;
-    return this;
-  }
-
-  /**
-   * Sets the {@code delayFunction} that computes the next delay before retrying.
-   *
-   * @param delayFunction the function to use to compute the delay before a next attempt
-   * @throws NullPointerException if {@code delayFunction} is null
-   * @see DelayFunction
-   */
-  public RetryPolicy<R> withDelay(DelayFunction<R, ? extends Throwable> delayFunction) {
-    Assert.notNull(delayFunction, "delayFunction");
-    this.delayFn = delayFunction;
-    return this;
-  }
-
-  /**
-   * Sets the {@code delayFunction} that computes the next delay before retrying. Delays will only occur for failures
-   * that are assignable from the {@code failure}.
-   *
-   * @param delayFunction the function to use to compute the delay before a next attempt
-   * @param failure the execution failure that is expected in order to trigger the delay
-   * @param <F> failure type
-   * @throws NullPointerException if {@code delayFunction} or {@code failure} are null
-   * @see DelayFunction
-   */
-  public <F extends Throwable> RetryPolicy<R> withDelayOn(DelayFunction<R, F> delayFunction, Class<F> failure) {
-    withDelay(delayFunction);
-    Assert.notNull(failure, "failure");
-    this.delayFailure = failure;
-    return this;
-  }
-
-  /**
-   * Sets the {@code delayFunction} that computes the next delay before retrying. Delays will only occur for results
-   * that equal the {@code result}.
-   *
-   * @param delayFunction the function to use to compute the delay before a next attempt
-   * @param result the execution result that is expected in order to trigger the delay
-   * @throws NullPointerException if {@code delayFunction} or {@code result} are null
-   * @see DelayFunction
-   */
-  public RetryPolicy<R> withDelayWhen(DelayFunction<R, ? extends Throwable> delayFunction, R result) {
-    withDelay(delayFunction);
-    Assert.notNull(result, "result");
-    this.delayResult = result;
     return this;
   }
 

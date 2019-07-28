@@ -17,6 +17,7 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.internal.CircuitBreakerInternals;
 import net.jodah.failsafe.internal.CircuitState;
 
 import java.lang.reflect.Field;
@@ -99,6 +100,16 @@ public class Testing {
     try {
       Thread.sleep(duration);
     } catch (InterruptedException ignore) {
+    }
+  }
+
+  public static CircuitBreakerInternals getInternals(CircuitBreaker circuitBreaker) {
+    try {
+      Field internalsField = CircuitBreaker.class.getDeclaredField("internals");
+      internalsField.setAccessible(true);
+      return (CircuitBreakerInternals) internalsField.get(circuitBreaker);
+    } catch (Exception e) {
+      return null;
     }
   }
 }

@@ -17,31 +17,35 @@ package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
+import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
 public class HalfOpenState extends CircuitState {
-  private final CircuitBreaker circuit;
+  private final CircuitBreaker breaker;
+  private final CircuitBreakerInternals internals;
 
-  public HalfOpenState(CircuitBreaker circuit) {
-    this.circuit = circuit;
-    setSuccessThreshold(circuit.getSuccessThreshold() != null ?
-        circuit.getSuccessThreshold() :
-        circuit.getFailureThreshold() != null ? circuit.getFailureThreshold() : ONE_OF_ONE);
+  public HalfOpenState(CircuitBreaker breaker, CircuitBreakerInternals internals) {
+    this.breaker = breaker;
+    this.internals = internals;
+    setSuccessThreshold(breaker.getSuccessThreshold() != null ?
+        breaker.getSuccessThreshold() :
+        breaker.getFailureThreshold() != null ? breaker.getFailureThreshold() : ONE_OF_ONE);
   }
 
   @Override
-  public boolean allowsExecution(CircuitBreakerStats stats) {
-    return stats.getCurrentExecutions() < maxConcurrentExecutions();
+  public boolean allowsExecution() {
+    return internals.getCurrentExecutions() < maxConcurrentExecutions();
   }
 
   @Override
-  public State getState() {
+  public State getInternals() {
     return State.HALF_OPEN;
   }
 
   @Override
-  public synchronized void recordFailure() {
+  public synchronized void recordFailure(ExecutionResult result, ExecutionContext context) {
     bitSet.setNext(false);
     checkThreshold();
   }
@@ -54,7 +58,7 @@ public class HalfOpenState extends CircuitState {
 
   @Override
   public void setFailureThreshold(Ratio threshold) {
-    if (circuit.getSuccessThreshold() == null)
+    if (breaker.getSuccessThreshold() == null)
       bitSet = new CircularBitSet(threshold.getDenominator(), bitSet);
   }
 
@@ -76,28 +80,28 @@ public class HalfOpenState extends CircuitState {
    * Else when no thresholds are configured, the circuit opens or closes on a single failure or success.
    */
   synchronized void checkThreshold() {
-    Ratio successRatio = circuit.getSuccessThreshold();
-    Ratio failureRatio = circuit.getFailureThreshold();
+    Ratio successRatio = breaker.getSuccessThreshold();
+    Ratio failureRatio = breaker.getFailureThreshold();
 
     if (successRatio != null) {
       if (bitSet.occupiedBits() == successRatio.getDenominator() || (successRatio.getValue() == 1.0
           && bitSet.positiveRatioValue() < 1.0))
         if (bitSet.positiveRatioValue() >= successRatio.getValue())
-          circuit.close();
+          breaker.close();
         else
-          circuit.open();
+          breaker.open();
     } else if (failureRatio != null) {
       if (bitSet.occupiedBits() == failureRatio.getDenominator() || (failureRatio.getValue() == 1.0
           && bitSet.negativeRatioValue() < 1.0))
         if (bitSet.negativeRatioValue() >= failureRatio.getValue())
-          circuit.open();
+          breaker.open();
         else
-          circuit.close();
+          breaker.close();
     } else {
       if (bitSet.positiveRatioValue() == 1)
-        circuit.close();
+        breaker.close();
       else
-        circuit.open();
+        breaker.open();
     }
   }
 
@@ -105,10 +109,10 @@ public class HalfOpenState extends CircuitState {
    * Returns the max allowed concurrent executions.
    */
   int maxConcurrentExecutions() {
-    if (circuit.getSuccessThreshold() != null)
-      return circuit.getSuccessThreshold().getDenominator();
-    else if (circuit.getFailureThreshold() != null)
-      return circuit.getFailureThreshold().getDenominator();
+    if (breaker.getSuccessThreshold() != null)
+      return breaker.getSuccessThreshold().getDenominator();
+    else if (breaker.getFailureThreshold() != null)
+      return breaker.getFailureThreshold().getDenominator();
     else
       return 1;
   }

@@ -89,7 +89,7 @@ public class CircuitBreakerTest {
   }
 
   public void shouldRequireValidDelay() {
-    assertThrows(() -> new CircuitBreaker().withDelay(null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay((Duration) null), NullPointerException.class);
     assertThrows(() -> new CircuitBreaker().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 

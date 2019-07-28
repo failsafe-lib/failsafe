@@ -28,16 +28,19 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
+ * <p>
+ * Note: CircuitBreaker extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional
+ * configuration.
+ * </p>
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
+public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /** Writes guarded by "this" */
   private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
-  private final CircuitBreakerStats stats = currentExecutions::get;
   private Duration delay = Duration.ofMinutes(1);
   private Duration timeout;
   private Ratio failureThreshold;
@@ -52,7 +55,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    */
   public CircuitBreaker() {
     failureConditions = new ArrayList<>();
-    state.set(new ClosedState(this));
+    state.set(new ClosedState(this, internals));
   }
 
   /**
@@ -64,20 +67,21 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
     /** The circuit is opened and not allowing executions to occur. */
     OPEN,
     /** The circuit is temporarily allowing executions to occur. */
-    HALF_OPEN }
+    HALF_OPEN
+  }
 
   /**
    * Returns whether the circuit allows execution, possibly triggering a state transition.
    */
   public boolean allowsExecution() {
-    return state.get().allowsExecution(stats);
+    return state.get().allowsExecution();
   }
 
   /**
    * Closes the circuit.
    */
   public void close() {
-    transitionTo(State.CLOSED, onClose);
+    transitionTo(State.CLOSED, onClose, null, null);
   }
 
   /**
@@ -140,7 +144,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    * Gets the state of the circuit.
    */
   public State getState() {
-    return state.get().getState();
+    return state.get().getInternals();
   }
 
   /**
@@ -167,7 +171,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    * Half-opens the circuit.
    */
   public void halfOpen() {
-    transitionTo(State.HALF_OPEN, onHalfOpen);
+    transitionTo(State.HALF_OPEN, onHalfOpen, null, null);
   }
 
   /**
@@ -222,7 +226,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    * Opens the circuit.
    */
   public void open() {
-    transitionTo(State.OPEN, onOpen);
+    transitionTo(State.OPEN, onOpen, null, null);
   }
 
   /**
@@ -237,11 +241,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    * Records an execution failure.
    */
   public void recordFailure() {
-    try {
-      state.get().recordFailure();
-    } finally {
-      currentExecutions.decrementAndGet();
-    }
+    internals.recordFailure(null, null);
   }
 
   /**
@@ -310,8 +310,8 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    *
    * @param failures The number of failures that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code failures} against
-   * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is >
-   *     {@code executions}
+   * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is > {@code
+   * executions}
    */
   public synchronized CircuitBreaker<R> withFailureThreshold(int failures, int executions) {
     Assert.isTrue(failures >= 1, "failures must be greater than or equal to 1");
@@ -340,8 +340,8 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
    *
    * @param successes The number of successful executions that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code successes} against
-   * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is >
-   *     {@code executions}
+   * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is > {@code
+   * executions}
    */
   public synchronized CircuitBreaker<R> withSuccessThreshold(int successes, int executions) {
     Assert.isTrue(successes >= 1, "successes must be greater than or equal to 1");
@@ -369,7 +369,7 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   void recordResult(R result, Throwable failure) {
     try {
       if (isFailure(result, failure))
-        state.get().recordFailure();
+        state.get().recordFailure(null, null);
       else
         state.get().recordSuccess();
     } finally {
@@ -380,19 +380,21 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
   /**
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
-  private void transitionTo(State newState, CheckedRunnable listener) {
+  private void transitionTo(State newState, CheckedRunnable listener, ExecutionResult result,
+    ExecutionContext context) {
     boolean transitioned = false;
     synchronized (this) {
       if (!getState().equals(newState)) {
         switch (newState) {
           case CLOSED:
-            state.set(new ClosedState(this));
+            state.set(new ClosedState(this, internals));
             break;
           case OPEN:
-            state.set(new OpenState(this, state.get()));
+            Duration computedDelay = computeDelay(result, context);
+            state.set(new OpenState(this, state.get(), computedDelay != null ? computedDelay : delay));
             break;
           case HALF_OPEN:
-            state.set(new HalfOpenState(this));
+            state.set(new HalfOpenState(this, internals));
             break;
         }
         transitioned = true;
@@ -407,8 +409,33 @@ public class CircuitBreaker<R> extends FailurePolicy<CircuitBreaker<R>, R> {
     }
   }
 
+  // Internal delegate implementation
+  final CircuitBreakerInternals internals = new CircuitBreakerInternals() {
+    @Override
+    public int getCurrentExecutions() {
+      return currentExecutions.get();
+    }
+
+    /**
+     * Records an execution failure.
+     */
+    @Override
+    public void recordFailure(ExecutionResult result, ExecutionContext context) {
+      try {
+        state.get().recordFailure(result, context);
+      } finally {
+        currentExecutions.decrementAndGet();
+      }
+    }
+
+    @Override
+    public void open(ExecutionResult result, ExecutionContext context) {
+      transitionTo(State.OPEN, onOpen, result, context);
+    }
+  };
+
   @Override
   public PolicyExecutor toExecutor(AbstractExecution execution) {
-    return new CircuitBreakerExecutor(this, execution);
+    return new CircuitBreakerExecutor(this, internals, execution);
   }
 }
