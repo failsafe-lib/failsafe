@@ -58,7 +58,7 @@ public class ExecutionContext {
   }
 
   /**
-   * Returns the last failure that was recorded.
+   * Returns the last failure that was recorded else {@code null}.
    */
   @SuppressWarnings("unchecked")
   public <T extends Throwable> T getLastFailure() {
@@ -66,7 +66,7 @@ public class ExecutionContext {
   }
 
   /**
-   * Returns the last result that was recorded.
+   * Returns the last result that was recorded else {@code null}.
    */
   @SuppressWarnings("unchecked")
   public <T> T getLastResult() {
