@@ -69,6 +69,10 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
   - Some of the time related policy configurations have been changed to use `Duration` instead of `long` + `TimeUnit`.
 - Policy configuration
   - Multiple policies can no longer be configured by chaining multiple `Failsafe.with` calls. Instead they must be supplied in a single `Failsafe.with` call. This is was intentional to require users to consider the ordering of composed policies. See the README section on [policy composition](README.md#policy-composition) for more details.
+- RetryPoilicy
+  - The `retryOn`, `retryIf`, and `retryWhen` methods have been replace with `handleOn`, etc.
+- CircuitBreaker
+  - The `failOn`, `failIf`, and `failWhen` methods have been replace with `handleOn`, etc.
 - Fallbacks
   - Fallbacks must be wrapped in a `Fallback` instance via `Fallback.of`
 - Failsafe APIs
