@@ -37,7 +37,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   private boolean async;
 
   /**
-   * Configures the {@code fallback} action to be executed if execution fails.
+   * Returns the {@code fallback} action to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
@@ -47,7 +47,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed if execution fails.
+   * Returns the {@code fallback} to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
@@ -56,7 +56,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed if execution fails.
+   * Returns the {@code fallback} to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
@@ -66,7 +66,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed if execution fails. The {@code fallback} accepts an {@link
+   * Returns the {@code fallback} to be executed if execution fails. The {@code fallback} accepts an {@link
    * ExecutionAttemptedEvent}.
    *
    * @throws NullPointerException if {@code fallback} is null
@@ -77,7 +77,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed if execution fails. The {@code fallback} applies an {@link
+   * Returns the {@code fallback} to be executed if execution fails. The {@code fallback} applies an {@link
    * ExecutionAttemptedEvent}.
    *
    * @throws NullPointerException if {@code fallback} is null
@@ -88,7 +88,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed if execution fails and allows an alternative exception to be
+   * Returns the {@code fallback} to be executed if execution fails and allows an alternative exception to be
    * supplied instead. The {@code fallback} applies an {@link ExecutionAttemptedEvent} and must return an exception.
    *
    * @throws NullPointerException if {@code fallback} is null
@@ -103,7 +103,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} result to be returned if execution fails.
+   * Returns the {@code fallback} result to be returned if execution fails.
    */
   @SuppressWarnings("rawtypes")
   public static <R> Fallback<R> of(R fallback) {
@@ -111,7 +111,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed asynchronously if execution fails.
+   * Returns the {@code fallback} to be executed asynchronously if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
@@ -120,7 +120,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed asynchronously if execution fails.
+   * Returns the {@code fallback} to be executed asynchronously if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
@@ -130,7 +130,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} accepts an
+   * Returns the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} accepts an
    * {@link ExecutionAttemptedEvent}.
    *
    * @throws NullPointerException if {@code fallback} is null
@@ -141,7 +141,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Configures the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} applies an
+   * Returns the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} applies an
    * {@link ExecutionAttemptedEvent}.
    *
    * @throws NullPointerException if {@code fallback} is null

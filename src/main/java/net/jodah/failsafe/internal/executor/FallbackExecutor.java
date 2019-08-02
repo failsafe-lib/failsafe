@@ -24,7 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A PolicyExecutor that handles failures according to a fallback.
+ * A PolicyExecutor that handles failures according to a {@link Fallback}.
  */
 public class FallbackExecutor extends PolicyExecutor<Fallback> {
   public FallbackExecutor(Fallback fallback, AbstractExecution execution) {
