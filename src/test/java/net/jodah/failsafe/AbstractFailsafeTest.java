@@ -57,64 +57,43 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedSupplier<T> supplier) {
+  <T> T failsafeGet(Policy<T> policy, CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(retryPolicy).get(supplier) :
-      Failsafe.with(retryPolicy).with(executor).getAsync(supplier).get());
+      Failsafe.with(policy).get(supplier) :
+      Failsafe.with(policy).with(executor).getAsync(supplier).get());
   }
 
   /**
    * Does a contextual failsafe get with an optional executor.
    */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, ContextualSupplier<T> supplier) {
+  <T> T failsafeGet(Policy<T> policy, ContextualSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(retryPolicy).get(supplier) :
-      Failsafe.with(retryPolicy).with(executor).getAsync(supplier).get());
+      Failsafe.with(policy).get(supplier) :
+      Failsafe.with(policy).with(executor).getAsync(supplier).get());
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
-  <T> T failsafeGet(CircuitBreaker<T> circuitBreaker, CheckedSupplier<T> supplier) {
+  <T> T failsafeGetWithFallback(Policy<T> policy, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback,
+    CheckedSupplier<T> supplier) {
     ScheduledExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(circuitBreaker).get(supplier) :
-      Failsafe.with(circuitBreaker).with(executor).getAsync(supplier).get());
+      Failsafe.with(Fallback.of(fallback), policy).get(supplier) :
+      Failsafe.with(Fallback.ofAsync(fallback), policy).with(executor).getAsync(supplier).get());
   }
 
   /**
    * Does a failsafe run with an optional executor.
    */
-  void failsafeRun(CircuitBreaker<?> breaker, CheckedRunnable runnable) {
+  void failsafeRun(Policy<?> policy, CheckedRunnable runnable) {
     ScheduledExecutorService executor = getExecutor();
     if (executor == null)
-      Failsafe.with(breaker).run(runnable);
+      Failsafe.with(policy).run(runnable);
     else
-      Failsafe.with(breaker).with(executor).runAsync(runnable);
-  }
-
-  /**
-   * Does a failsafe get with an optional executor.
-   */
-  <T> T failsafeGet(CircuitBreaker<T> breaker, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback,
-    CheckedSupplier<T> supplier) {
-    ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(Fallback.of(fallback), breaker).get(supplier) :
-      Failsafe.with(Fallback.ofAsync(fallback), breaker).with(executor).getAsync(supplier).get());
-  }
-
-  /**
-   * Does a failsafe get with an optional executor.
-   */
-  <T> T failsafeGet(RetryPolicy<T> retryPolicy, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback,
-    CheckedSupplier<T> supplier) {
-    ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(Fallback.of(fallback), retryPolicy).get(supplier) :
-      Failsafe.with(Fallback.ofAsync(fallback), retryPolicy).with(executor).getAsync(supplier).get());
+      Failsafe.with(policy).with(executor).runAsync(runnable);
   }
 
   /**
@@ -183,7 +162,7 @@ public abstract class AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When / Then
-    assertEquals(failsafeGet(retryPolicy, e -> {
+    assertEquals(failsafeGetWithFallback(retryPolicy, e -> {
       waiter.assertNull(e.getLastResult());
       waiter.assertEquals(failure, e.getLastFailure());
       return false;
@@ -195,7 +174,7 @@ public abstract class AbstractFailsafeTest {
     when(service.connect()).thenThrow(failures(3, failure));
 
     // When / Then
-    assertThrows(() -> failsafeGet(retryPolicy, e -> {
+    assertThrows(() -> failsafeGetWithFallback(retryPolicy, e -> {
       waiter.assertNull(e.getLastResult());
       waiter.assertEquals(failure, e.getLastFailure());
       throw new RuntimeException(e.getLastFailure());
@@ -214,7 +193,7 @@ public abstract class AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When / Then
-    assertEquals(failsafeGet(breaker, e -> {
+    assertEquals(failsafeGetWithFallback(breaker, e -> {
       waiter.assertNull(e.getLastResult());
       waiter.assertEquals(failure, e.getLastFailure());
       return false;
@@ -227,7 +206,7 @@ public abstract class AbstractFailsafeTest {
     when(service.connect()).thenThrow(failure);
 
     // When / Then
-    assertThrows(() -> failsafeGet(breaker, e -> {
+    assertThrows(() -> failsafeGetWithFallback(breaker, e -> {
       waiter.assertNull(e.getLastResult());
       waiter.assertEquals(failure, e.getLastFailure());
       throw new RuntimeException(e.getLastFailure());
@@ -247,7 +226,7 @@ public abstract class AbstractFailsafeTest {
     Waiter waiter = new Waiter();
 
     // When / Then
-    assertEquals(failsafeGet(breaker, e -> {
+    assertEquals(failsafeGetWithFallback(breaker, e -> {
       waiter.assertNull(e.getLastResult());
       waiter.assertTrue(e.getLastFailure() instanceof CircuitBreakerOpenException);
       return false;
@@ -256,8 +235,7 @@ public abstract class AbstractFailsafeTest {
   }
 
   public void shouldGetLastResult() {
-    RetryPolicy<Integer> retryPolicy = new RetryPolicy<Integer>().withMaxAttempts(5)
-      .handleResultIf(r -> true);
+    RetryPolicy<Integer> retryPolicy = new RetryPolicy<Integer>().withMaxAttempts(5).handleResultIf(r -> true);
     Waiter waiter = new Waiter();
 
     int result = failsafeGet(retryPolicy, ctx -> ctx.getLastResult(10) + 1);
