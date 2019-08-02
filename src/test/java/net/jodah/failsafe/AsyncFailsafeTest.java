@@ -441,7 +441,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertEquals(counter.get(), 1, "Supplier should have been executed before executor was shutdown");
   }
 
-  private void assertInterruptedExecptionOnCancel(FailsafeExecutor<Boolean> failsafe) throws Throwable {
+  private void assertInterruptedExceptionOnCancel(FailsafeExecutor<Boolean> failsafe) throws Throwable {
     CompletableFuture<Void> future = failsafe.runAsync(() -> {
       try {
         Thread.sleep(1000);
@@ -457,16 +457,16 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldInterruptExecutionOnCancelWithForkJoinPool() throws Throwable {
-    assertInterruptedExecptionOnCancel(Failsafe.with(retryAlways));
+    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways));
   }
 
   public void shouldInterruptExecutionOnCancelWithScheduledExecutorService() throws Throwable {
-    assertInterruptedExecptionOnCancel(Failsafe.with(retryAlways).with(executor));
+    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways).with(executor));
   }
 
   public void shouldInterruptExecutionOnCancelWithExecutorService() throws Throwable {
     ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    assertInterruptedExecptionOnCancel(Failsafe.with(retryAlways).with(executorService));
+    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways).with(executorService));
   }
 
   @SuppressWarnings("unused")
