@@ -29,8 +29,17 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
  * <p>
- * Note: CircuitBreaker extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional
- * configuration.
+ * A circuit breaker has three states: <i>closed</i>, <i>open</i>, and <i>half-open</i>. When a circuit breaker is in
+ * the <i>closed</i> (initial) state, executions are allowed. If a {@link #withFailureThreshold(int) configurable
+ * number} of failures occur, the circuit breaker transitions to the <i>open</i> state. In the <i>open</i> state a
+ * circuit breaker will fail executions with {@link CircuitBreakerOpenException}. After a {@link #withDelay(Duration)
+ * configurable delay}, the circuit breaker will transition to a <i>half-open</i> state. In the
+ * <i>half-open</i> state a {@link #withSuccessThreshold(int) configurable number} of trial executions will be allowed,
+ * after which the circuit breaker will transition back to <i>closed</i> or <i>open</i> depending on how many were
+ * successful.
+ * </p>
+ * <p>
+ * Note: CircuitBreaker extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
  * </p>
  *
  * @param <R> result type
@@ -295,6 +304,11 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
 
   /**
    * Sets the number of successive failures that must occur when in a closed state in order to open the circuit.
+   * <p>
+   * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} will also
+   * be used when the circuit breaker is in a half-open state to determine whether to transition back to open or
+   * closed.
+   * </p>
    *
    * @throws IllegalArgumentException if {@code failureThresh} < 1
    */
@@ -307,6 +321,11 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Sets the ratio of successive failures that must occur when in a closed state in order to open the circuit. For
    * example: 5, 10 would open the circuit if 5 out of the last 10 executions result in a failure. The circuit will not
    * be opened until at least the given number of {@code executions} have taken place.
+   * <p>
+   * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} will also
+   * be used when the circuit breaker is in a half-open state to determine whether to transition back to open or
+   * closed.
+   * </p>
    *
    * @param failures The number of failures that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code failures} against
