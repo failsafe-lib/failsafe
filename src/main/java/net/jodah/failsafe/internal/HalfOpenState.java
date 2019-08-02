@@ -18,7 +18,6 @@ package net.jodah.failsafe.internal;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.ExecutionContext;
-import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
@@ -45,7 +44,7 @@ public class HalfOpenState extends CircuitState {
   }
 
   @Override
-  public synchronized void recordFailure(ExecutionResult result, ExecutionContext context) {
+  public synchronized void recordFailure(ExecutionContext context) {
     bitSet.setNext(false);
     checkThreshold();
   }

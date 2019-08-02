@@ -145,7 +145,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     failedAttempts++;
 
     // Determine the computed delay
-    Duration computedDelay = policy.computeDelay(result, execution);
+    Duration computedDelay = policy.computeDelay(execution);
 
     // Determine the non-computed delay
     if (computedDelay == null) {

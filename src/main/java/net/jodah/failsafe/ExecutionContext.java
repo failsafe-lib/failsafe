@@ -91,4 +91,16 @@ public class ExecutionContext {
   public ExecutionContext copy() {
     return new ExecutionContext(this);
   }
+
+  static ExecutionContext ofResult(Object result) {
+    ExecutionContext context = new ExecutionContext((Duration)null);
+    context.lastResult = result;
+    return context;
+  }
+
+  static ExecutionContext ofFailure(Throwable failure) {
+    ExecutionContext context = new ExecutionContext((Duration)null);
+    context.lastFailure = failure;
+    return context;
+  }
 }

@@ -16,7 +16,6 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.ExecutionContext;
-import net.jodah.failsafe.ExecutionResult;
 
 /**
  * Internal CircuitBreaker APIs.
@@ -31,13 +30,13 @@ public interface CircuitBreakerInternals {
   int getCurrentExecutions();
 
   /**
-   * Records an execution failure for the {@code result} and {@code context}.
+   * Records an execution failure for the {@code context}.
    */
-  void recordFailure(ExecutionResult result, ExecutionContext context);
+  void recordFailure(ExecutionContext context);
 
   /**
-   * Opens the circuit breaker and considers the {@code result} and {@code context} when computing the delay before the
+   * Opens the circuit breaker and considers the {@code context} when computing the delay before the
    * circuit breaker will transition to half open.
    */
-  void open(ExecutionResult result, ExecutionContext context);
+  void open(ExecutionContext context);
 }

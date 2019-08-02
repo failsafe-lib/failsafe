@@ -81,7 +81,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Closes the circuit.
    */
   public void close() {
-    transitionTo(State.CLOSED, onClose, null, null);
+    transitionTo(State.CLOSED, onClose, null);
   }
 
   /**
@@ -171,7 +171,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Half-opens the circuit.
    */
   public void halfOpen() {
-    transitionTo(State.HALF_OPEN, onHalfOpen, null, null);
+    transitionTo(State.HALF_OPEN, onHalfOpen, null);
   }
 
   /**
@@ -226,7 +226,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Opens the circuit.
    */
   public void open() {
-    transitionTo(State.OPEN, onOpen, null, null);
+    transitionTo(State.OPEN, onOpen, null);
   }
 
   /**
@@ -241,7 +241,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Records an execution failure.
    */
   public void recordFailure() {
-    internals.recordFailure(null, null);
+    internals.recordFailure(null);
   }
 
   /**
@@ -369,7 +369,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   void recordResult(R result, Throwable failure) {
     try {
       if (isFailure(result, failure))
-        state.get().recordFailure(null, null);
+        state.get().recordFailure(null);
       else
         state.get().recordSuccess();
     } finally {
@@ -380,8 +380,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
-  private void transitionTo(State newState, CheckedRunnable listener, ExecutionResult result,
-    ExecutionContext context) {
+  private void transitionTo(State newState, CheckedRunnable listener, ExecutionContext context) {
     boolean transitioned = false;
     synchronized (this) {
       if (!getState().equals(newState)) {
@@ -390,7 +389,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
             state.set(new ClosedState(this, internals));
             break;
           case OPEN:
-            Duration computedDelay = computeDelay(result, context);
+            Duration computedDelay = computeDelay(context);
             state.set(new OpenState(this, state.get(), computedDelay != null ? computedDelay : delay));
             break;
           case HALF_OPEN:
@@ -420,17 +419,17 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
      * Records an execution failure.
      */
     @Override
-    public void recordFailure(ExecutionResult result, ExecutionContext context) {
+    public void recordFailure(ExecutionContext context) {
       try {
-        state.get().recordFailure(result, context);
+        state.get().recordFailure(context);
       } finally {
         currentExecutions.decrementAndGet();
       }
     }
 
     @Override
-    public void open(ExecutionResult result, ExecutionContext context) {
-      transitionTo(State.OPEN, onOpen, result, context);
+    public void open(ExecutionContext context) {
+      transitionTo(State.OPEN, onOpen, context);
     }
   };
 

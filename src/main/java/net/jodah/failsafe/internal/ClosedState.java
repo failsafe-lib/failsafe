@@ -18,7 +18,6 @@ package net.jodah.failsafe.internal;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.ExecutionContext;
-import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
@@ -43,15 +42,15 @@ public class ClosedState extends CircuitState {
   }
 
   @Override
-  public synchronized void recordFailure(ExecutionResult result, ExecutionContext context) {
+  public synchronized void recordFailure(ExecutionContext context) {
     bitSet.setNext(false);
-    checkThreshold(result, context);
+    checkThreshold(context);
   }
 
   @Override
   public synchronized void recordSuccess() {
     bitSet.setNext(true);
-    checkThreshold(null, null);
+    checkThreshold(null);
   }
 
   @Override
@@ -69,16 +68,16 @@ public class ClosedState extends CircuitState {
    * If a failure threshold is configured, the circuit is opened if the expected number of executions fails else it's
    * closed if a single execution succeeds.
    */
-  synchronized void checkThreshold(ExecutionResult result, ExecutionContext context) {
+  synchronized void checkThreshold(ExecutionContext context) {
     Ratio failureRatio = breaker.getFailureThreshold();
 
     // Handle failure threshold ratio
     if (failureRatio != null && bitSet.occupiedBits() >= failureRatio.getDenominator()
         && bitSet.negativeRatioValue() >= failureRatio.getValue())
-      internals.open(result, context);
+      internals.open(context);
 
     // Handle no thresholds configured
     else if (failureRatio == null && bitSet.negativeRatioValue() == 1)
-      internals.open(result, context);
+      internals.open(context);
   }
 }

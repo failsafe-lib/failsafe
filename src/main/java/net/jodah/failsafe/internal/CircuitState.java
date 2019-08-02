@@ -17,7 +17,6 @@ package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.ExecutionContext;
-import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
@@ -51,7 +50,7 @@ public abstract class CircuitState {
     return bitSet.positiveRatio();
   }
 
-  public void recordFailure(ExecutionResult result, ExecutionContext context) {
+  public void recordFailure(ExecutionContext context) {
   }
 
   public void recordSuccess() {

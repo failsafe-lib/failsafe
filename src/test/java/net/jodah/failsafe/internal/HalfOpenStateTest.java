@@ -37,7 +37,7 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isClosed());
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -54,11 +54,11 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isOpen());
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -77,7 +77,7 @@ public class HalfOpenStateTest {
     for (int i = 0; i < 3; i++) {
       assertFalse(breaker.isOpen());
       assertFalse(breaker.isClosed());
-      state.recordFailure(null, null);
+      state.recordFailure(null);
     }
 
     // Then
@@ -95,11 +95,11 @@ public class HalfOpenStateTest {
 
     // When
     state.recordSuccess();
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -119,7 +119,7 @@ public class HalfOpenStateTest {
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -136,11 +136,11 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isOpen());
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -157,11 +157,11 @@ public class HalfOpenStateTest {
 
     // When
     state.recordSuccess();
-    state.recordFailure(null, null);
-    state.recordFailure(null, null);
+    state.recordFailure(null);
+    state.recordFailure(null);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -180,7 +180,7 @@ public class HalfOpenStateTest {
 
     // When
     state.recordSuccess();
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -198,7 +198,7 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isClosed());
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -232,7 +232,7 @@ public class HalfOpenStateTest {
     HalfOpenState state = new HalfOpenState(breaker, getInternals(breaker));
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
@@ -254,7 +254,7 @@ public class HalfOpenStateTest {
     assertFalse(breaker.isClosed());
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
 
     // Then
@@ -272,7 +272,7 @@ public class HalfOpenStateTest {
 
     // When
     state.recordSuccess();
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
@@ -312,7 +312,7 @@ public class HalfOpenStateTest {
     HalfOpenState state = new HalfOpenState(breaker, getInternals(breaker));
 
     // When
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     state.recordSuccess();
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
@@ -334,7 +334,7 @@ public class HalfOpenStateTest {
     // When
     state.recordSuccess();
     state.recordSuccess();
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
     state.recordSuccess();
@@ -394,9 +394,9 @@ public class HalfOpenStateTest {
 
     // When
     breaker.withFailureThreshold(2);
-    state.recordFailure(null, null);
+    state.recordFailure(null);
     assertTrue(breaker.isHalfOpen());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -407,13 +407,13 @@ public class HalfOpenStateTest {
     state = Testing.stateFor(breaker);
 
     // When
-    state.recordFailure(null, null);
-    state.recordFailure(null, null);
+    state.recordFailure(null);
+    state.recordFailure(null);
     breaker.withFailureThreshold(3, 5);
     state.recordSuccess();
     state.recordSuccess();
     assertTrue(breaker.isHalfOpen());
-    state.recordFailure(null, null);
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -444,8 +444,8 @@ public class HalfOpenStateTest {
     state = Testing.stateFor(breaker);
 
     // When
-    state.recordFailure(null, null);
-    state.recordFailure(null, null);
+    state.recordFailure(null);
+    state.recordFailure(null);
     breaker.withSuccessThreshold(2, 4);
     state.recordSuccess();
     assertTrue(breaker.isHalfOpen());

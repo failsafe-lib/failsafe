@@ -38,26 +38,26 @@ public class DelayablePolicyTest {
   public void shouldComputeDelay() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy policy = new FooPolicy<>().withDelay((r, f, c) -> expected);
-    assertEquals(policy.computeDelay(ExecutionResult.NONE, null), expected);
+    assertEquals(policy.computeDelay(ExecutionContext.ofResult(null)), expected);
   }
 
   public void shouldComputeDelayForResultValue() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy policy = new FooPolicy<>().withDelayWhen(delay5Millis, true);
-    assertEquals(policy.computeDelay(ExecutionResult.success(true), null), expected);
-    assertNull(policy.computeDelay(ExecutionResult.success(false), null));
+    assertEquals(policy.computeDelay(ExecutionContext.ofResult(true)), expected);
+    assertNull(policy.computeDelay(ExecutionContext.ofResult(false)));
   }
 
   public void shouldComputeDelayForNegativeValue() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy policy = new FooPolicy<>().withDelay((r, f, c) -> Duration.ofMillis(-1));
-    assertNull(policy.computeDelay(ExecutionResult.success(true), null));
+    assertNull(policy.computeDelay(ExecutionContext.ofResult(true)));
   }
 
   public void shouldComputeDelayForFailureType() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy policy = new FooPolicy<>().withDelayOn(delay5Millis, IllegalStateException.class);
-    assertEquals(policy.computeDelay(ExecutionResult.failure(new IllegalStateException()), null), expected);
-    assertNull(policy.computeDelay(ExecutionResult.failure(new IllegalArgumentException()), null));
+    assertEquals(policy.computeDelay(ExecutionContext.ofFailure(new IllegalStateException())), expected);
+    assertNull(policy.computeDelay(ExecutionContext.ofFailure(new IllegalArgumentException())));
   }
 }
