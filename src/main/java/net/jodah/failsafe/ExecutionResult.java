@@ -15,6 +15,8 @@
  */
 package net.jodah.failsafe;
 
+import java.util.Objects;
+
 /**
  * The result of an execution. Immutable.
  * <p>
@@ -49,7 +51,7 @@ public class ExecutionResult {
   }
 
   private ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean complete,
-      boolean success, Boolean successAll) {
+    boolean success, Boolean successAll) {
     this.nonResult = nonResult;
     this.result = result;
     this.failure = failure;
@@ -116,7 +118,7 @@ public class ExecutionResult {
    */
   ExecutionResult with(boolean completed, boolean success) {
     return new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
-        successAll == null ? success : success && successAll);
+      successAll == null ? success : success && successAll);
   }
 
   /**
@@ -124,7 +126,7 @@ public class ExecutionResult {
    */
   public ExecutionResult with(long waitNanos, boolean completed, boolean success) {
     return new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
-        successAll == null ? success : success && successAll);
+      successAll == null ? success : success && successAll);
   }
 
   boolean getSuccessAll() {
@@ -134,7 +136,22 @@ public class ExecutionResult {
   @Override
   public String toString() {
     return "ExecutionResult[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult
-        + ", waitNanos=" + waitNanos + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll
-        + ']';
+      + ", waitNanos=" + waitNanos + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll
+      + ']';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    ExecutionResult that = (ExecutionResult) o;
+    return Objects.equals(result, that.result) && Objects.equals(failure, that.failure);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(result, failure);
   }
 }

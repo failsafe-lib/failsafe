@@ -47,20 +47,23 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
     if (delegate != null)
       cancelResult = delegate.cancel(mayInterruptIfRunning);
-    Throwable failure = new CancellationException();
-    complete(null, failure);
-    executor.handleComplete(ExecutionResult.failure(failure), execution);
+    ExecutionResult result = ExecutionResult.failure(new CancellationException());
+    super.completeExceptionally(result.getFailure());
+    executor.handleComplete(result, execution);
     return cancelResult;
   }
 
-  synchronized void complete(T result, Throwable failure) {
+  @SuppressWarnings("unchecked")
+  public synchronized void completeResult(ExecutionResult result) {
     if (isDone())
       return;
 
-    if (failure != null)
-      super.completeExceptionally(failure);
+    Throwable failure = result.getFailure();
+    if (failure == null)
+      super.complete((T) result.getResult());
     else
-      super.complete(result);
+      super.completeExceptionally(failure);
+    executor.handleComplete(result, execution);
   }
 
   public synchronized void inject(Future<T> delegate) {
