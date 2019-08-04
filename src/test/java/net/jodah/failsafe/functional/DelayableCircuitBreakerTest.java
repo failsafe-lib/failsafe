@@ -16,6 +16,7 @@
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
+import net.jodah.failsafe.functional.DelayableRetryPolicyTest.UncheckedExpectedException;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -27,12 +28,6 @@ import static org.testng.AssertJUnit.assertFalse;
 
 @Test
 public class DelayableCircuitBreakerTest {
-  static class UncheckedExpectedException extends RuntimeException {
-  }
-
-  static class DelayException extends UncheckedExpectedException {
-  }
-
   @Test(expectedExceptions = RuntimeException.class)
   public void testUncheckedExceptionInDelayFunction() {
     CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay((result, failure, context) -> {
