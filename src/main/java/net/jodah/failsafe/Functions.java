@@ -68,10 +68,10 @@ final class Functions {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       Callable<Object> callable = () -> supplier.get().handle((result, error) -> {
         // Propagate result
-        if (result != null)
-          promise.complete(result);
-        else
+        if (error != null)
           promise.completeExceptionally(error);
+        else
+          promise.complete(result);
         return result;
       });
 

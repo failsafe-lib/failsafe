@@ -100,7 +100,9 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
 
           // Propagate execution and handle result
           return supplier.get().handle((result, error) -> {
-            if (result != null) {
+            if (error != null)
+              promise.completeExceptionally(error);
+            else if (result != null) {
               // Prepare post execution handler
               Consumer<ExecutionResult> postExecutionHandler = postResult -> {
                 if (retriesExceeded || postResult.isComplete())
@@ -127,9 +129,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                 postExecuteAsync(result, scheduler, future).thenAccept(postExecutionHandler);
               else
                 postExecutionHandler.accept(result);
-            } else if (error != null)
-              promise.completeExceptionally(error);
-            else
+            } else
               promise.complete(null);
             return null;
           });
