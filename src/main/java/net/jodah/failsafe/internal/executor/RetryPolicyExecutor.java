@@ -48,8 +48,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private EventListener retriesExceededListener;
   private EventListener retryListener;
 
-  public RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener, EventListener failedAttemptListener,
-      EventListener retriesExceededListener, EventListener retryListener) {
+  public RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener,
+    EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener) {
     super(retryPolicy, execution);
     this.abortListener = abortListener;
     this.failedAttemptListener = failedAttemptListener;
@@ -58,7 +58,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   }
 
   @Override
-  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier) {
+  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
     return () -> {
       while (true) {
         ExecutionResult result = supplier.get();
@@ -86,7 +86,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   @Override
   @SuppressWarnings("unchecked")
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-      Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       Callable<Object> callable = new Callable<Object>() {
@@ -98,18 +98,26 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
           if (retryListener != null && previousResult != null)
             retryListener.handle(previousResult, execution);
 
+          // Propagate execution and handle result
           return supplier.get().handle((result, error) -> {
             if (result != null) {
               // Prepare post execution handler
               Consumer<ExecutionResult> postExecutionHandler = postResult -> {
                 if (retriesExceeded || postResult.isComplete())
                   promise.complete(postResult);
-                else if (!future.isDone() && !future.isCancelled()) {
-                  try {
-                    previousResult = postResult;
-                    future.inject((Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
-                  } catch (Exception e) {
-                    promise.completeExceptionally(e);
+                else {
+                  // Guard against race with future.complete or future.cancel
+                  synchronized (future) {
+                    if (!future.isDone()) {
+                      try {
+                        previousResult = postResult;
+                        future.inject(
+                          (Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
+                      } catch (Exception e) {
+                        // Hard scheduling failure
+                        promise.completeExceptionally(e);
+                      }
+                    }
                   }
                 }
               };
@@ -123,8 +131,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
               promise.completeExceptionally(error);
             else
               promise.complete(null);
-
-            return result;
+            return null;
           });
         }
       };

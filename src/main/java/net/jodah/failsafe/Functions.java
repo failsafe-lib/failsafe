@@ -63,7 +63,7 @@ final class Functions {
    */
   @SuppressWarnings("unchecked")
   static Supplier<CompletableFuture<ExecutionResult>> makeAsync(Supplier<CompletableFuture<ExecutionResult>> supplier,
-      Scheduler scheduler, FailsafeFuture<Object> future) {
+    Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       Callable<Object> callable = () -> supplier.get().handle((result, error) -> {
@@ -85,7 +85,7 @@ final class Functions {
   }
 
   static <T> Supplier<CompletableFuture<ExecutionResult>> promiseOf(CheckedSupplier<T> supplier,
-      AbstractExecution execution) {
+    AbstractExecution execution) {
     Assert.notNull(supplier, "supplier");
     return () -> {
       ExecutionResult result;
@@ -117,7 +117,7 @@ final class Functions {
   }
 
   static <T> Supplier<CompletableFuture<ExecutionResult>> promiseOf(ContextualSupplier<T> supplier,
-      AbstractExecution execution) {
+    AbstractExecution execution) {
     Assert.notNull(supplier, "supplier");
     return () -> {
       ExecutionResult result;
@@ -133,7 +133,7 @@ final class Functions {
   }
 
   static Supplier<CompletableFuture<ExecutionResult>> promiseOf(ContextualRunnable runnable,
-      AbstractExecution execution) {
+    AbstractExecution execution) {
     Assert.notNull(runnable, "runnable");
     return () -> {
       ExecutionResult result;
@@ -150,7 +150,7 @@ final class Functions {
   }
 
   static <T> Supplier<CompletableFuture<ExecutionResult>> asyncOfExecution(AsyncSupplier<T> supplier,
-      AsyncExecution execution) {
+    AsyncExecution execution) {
     Assert.notNull(supplier, "supplier");
     return new Supplier<CompletableFuture<ExecutionResult>>() {
       @Override
@@ -167,7 +167,7 @@ final class Functions {
   }
 
   static Supplier<CompletableFuture<ExecutionResult>> asyncOfExecution(AsyncRunnable runnable,
-      AsyncExecution execution) {
+    AsyncExecution execution) {
     Assert.notNull(runnable, "runnable");
     return new Supplier<CompletableFuture<ExecutionResult>>() {
       @Override
@@ -184,7 +184,7 @@ final class Functions {
   }
 
   static <T> Supplier<CompletableFuture<ExecutionResult>> promiseOfStage(
-      CheckedSupplier<? extends CompletionStage<? extends T>> supplier, AbstractExecution execution) {
+    CheckedSupplier<? extends CompletionStage<? extends T>> supplier, AbstractExecution execution) {
     Assert.notNull(supplier, "supplier");
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
@@ -193,8 +193,8 @@ final class Functions {
         supplier.get().whenComplete((innerResult, failure) -> {
           // Unwrap CompletionException cause
           ExecutionResult result;
-          if ( failure != null ) {
-            if ( failure instanceof CompletionException) {
+          if (failure != null) {
+            if (failure instanceof CompletionException) {
               failure = failure.getCause();
             }
             result = ExecutionResult.failure(failure);
@@ -214,7 +214,7 @@ final class Functions {
   }
 
   static <T> Supplier<CompletableFuture<ExecutionResult>> promiseOfStage(
-      ContextualSupplier<? extends CompletionStage<? extends T>> supplier, AbstractExecution execution) {
+    ContextualSupplier<? extends CompletionStage<? extends T>> supplier, AbstractExecution execution) {
     Assert.notNull(supplier, "supplier");
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
@@ -223,8 +223,8 @@ final class Functions {
         supplier.get(execution).whenComplete((innerResult, failure) -> {
           // Unwrap CompletionException cause
           ExecutionResult result;
-          if ( failure != null ) {
-            if ( failure instanceof CompletionException) {
+          if (failure != null) {
+            if (failure instanceof CompletionException) {
               failure = failure.getCause();
             }
             result = ExecutionResult.failure(failure);
@@ -244,7 +244,7 @@ final class Functions {
   }
 
   static <T> Supplier<CompletableFuture<ExecutionResult>> asyncOfFutureExecution(
-      AsyncSupplier<? extends CompletionStage<? extends T>> supplier, AsyncExecution execution) {
+    AsyncSupplier<? extends CompletionStage<? extends T>> supplier, AsyncExecution execution) {
     Assert.notNull(supplier, "supplier");
     return new Supplier<CompletableFuture<ExecutionResult>>() {
       Semaphore asyncFutureLock = new Semaphore(1);
@@ -258,7 +258,7 @@ final class Functions {
             try {
               if (failure != null)
                 execution.completeOrHandle(innerResult,
-                    failure instanceof CompletionException ? failure.getCause() : failure);
+                  failure instanceof CompletionException ? failure.getCause() : failure);
             } finally {
               asyncFutureLock.release();
             }
@@ -282,6 +282,8 @@ final class Functions {
       try {
         result = ExecutionResult.success(supplier.get());
       } catch (Throwable t) {
+        if (t instanceof InterruptedException)
+          Thread.currentThread().interrupt();
         result = ExecutionResult.failure(t);
       } finally {
         if (result != null)

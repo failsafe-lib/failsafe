@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.DelegatingScheduler;
 
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -36,12 +37,12 @@ public class Execution extends AbstractExecution {
    */
   @SuppressWarnings("unchecked")
   public Execution(Policy... policies) {
-    super(new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
+    super(DelegatingScheduler.INSTANCE, new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
   }
 
   @SuppressWarnings("unchecked")
   Execution(FailsafeExecutor<?> executor) {
-    super((FailsafeExecutor<Object>) executor);
+    super(DelegatingScheduler.INSTANCE, (FailsafeExecutor<Object>) executor);
   }
 
   /**
@@ -113,7 +114,7 @@ public class Execution extends AbstractExecution {
    */
   ExecutionResult executeSync(Supplier<ExecutionResult> supplier) {
     for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
-      supplier = policyExecutor.supply(supplier);
+      supplier = policyExecutor.supply(supplier, scheduler);
 
     ExecutionResult result = supplier.get();
     completed = result.isComplete();

@@ -27,12 +27,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
+import java.time.Duration;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.failures;
+import static net.jodah.failsafe.Testing.*;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 
@@ -43,6 +43,7 @@ public abstract class AbstractFailsafeTest {
   RetryPolicy<Boolean> retryTwice = new RetryPolicy<Boolean>().withMaxRetries(2);
   Service service = mock(Service.class);
   AtomicInteger counter;
+  Waiter waiter;
 
   public interface FastService extends Service {
   }
@@ -52,26 +53,37 @@ public abstract class AbstractFailsafeTest {
   @BeforeMethod
   void beforeMethod(Method method) {
     System.out.println("Testing " + method);
+    waiter = new Waiter();
   }
 
   /**
    * Does a failsafe get with an optional executor.
    */
   <T> T failsafeGet(Policy<T> policy, CheckedSupplier<T> supplier) {
-    ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(policy).get(supplier) :
-      Failsafe.with(policy).with(executor).getAsync(supplier).get());
+    return get(Failsafe.with(policy), supplier);
+  }
+
+  /**
+   * Does a failsafe get with an optional executor.
+   */
+  <T> T get(FailsafeExecutor<T> failsafe, CheckedSupplier<T> supplier) {
+    return unwrapExceptions(
+      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.with(getExecutor()).getAsync(supplier).get());
   }
 
   /**
    * Does a contextual failsafe get with an optional executor.
    */
   <T> T failsafeGet(Policy<T> policy, ContextualSupplier<T> supplier) {
-    ScheduledExecutorService executor = getExecutor();
-    return unwrapExceptions(() -> executor == null ?
-      Failsafe.with(policy).get(supplier) :
-      Failsafe.with(policy).with(executor).getAsync(supplier).get());
+    return get(Failsafe.with(policy), supplier);
+  }
+
+  /**
+   * Does a contextual failsafe get with an optional executor.
+   */
+  <T> T get(FailsafeExecutor<T> failsafe, ContextualSupplier<T> supplier) {
+    return unwrapExceptions(
+      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.with(getExecutor()).getAsync(supplier).get());
   }
 
   /**
@@ -138,7 +150,6 @@ public abstract class AbstractFailsafeTest {
     // Given
     CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
     breaker.halfOpen();
-    Waiter waiter = new Waiter();
     for (int i = 0; i < 3; i++)
       Testing.runInThread(() -> failsafeRun(breaker, () -> {
         waiter.resume();
@@ -159,7 +170,6 @@ public abstract class AbstractFailsafeTest {
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failures(3, failure));
-    Waiter waiter = new Waiter();
 
     // When / Then
     assertEquals(failsafeGetWithFallback(retryPolicy, e -> {
@@ -190,7 +200,6 @@ public abstract class AbstractFailsafeTest {
     CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failure);
-    Waiter waiter = new Waiter();
 
     // When / Then
     assertEquals(failsafeGetWithFallback(breaker, e -> {
@@ -223,7 +232,6 @@ public abstract class AbstractFailsafeTest {
     breaker.open();
     Exception failure = new ConnectException();
     when(service.connect()).thenThrow(failure);
-    Waiter waiter = new Waiter();
 
     // When / Then
     assertEquals(failsafeGetWithFallback(breaker, e -> {
@@ -234,24 +242,132 @@ public abstract class AbstractFailsafeTest {
     verify(service, times(0)).connect();
   }
 
-  public void shouldGetLastResult() {
-    RetryPolicy<Integer> retryPolicy = new RetryPolicy<Integer>().withMaxAttempts(5).handleResultIf(r -> true);
-    Waiter waiter = new Waiter();
+  public void shouldNotTimeout() throws Throwable {
+    // Given
+    Timeout<Object> timeout = Timeout.of(Duration.ofSeconds(1));
+    CheckedSupplier supplier = () -> "foo";
 
-    int result = failsafeGet(retryPolicy, ctx -> ctx.getLastResult(10) + 1);
-    assertEquals(result, 15);
+    // When / Then
+    FailsafeExecutor<Object> failsafe = Failsafe.with(timeout).onSuccess(f -> {
+      waiter.assertEquals("foo", f.getResult());
+      waiter.resume();
+    });
+    assertEquals(get(failsafe, supplier), "foo");
+    waiter.await(1, TimeUnit.SECONDS);
   }
 
-  private <T> T unwrapExceptions(CheckedSupplier<T> supplier) {
-    try {
-      return supplier.get();
-    } catch (ExecutionException e) {
-      throw (RuntimeException) e.getCause();
-    } catch (FailsafeException e) {
-      RuntimeException cause = (RuntimeException) e.getCause();
-      throw cause == null ? e : cause;
-    } catch (Exception e) {
-      throw (RuntimeException) e;
-    }
+  /**
+   * Times out twice then completes successfully.
+   */
+  public void shouldTimeout() throws Throwable {
+    // Given
+    RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(
+      e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutException)).withMaxRetries(2);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).onFailure(e -> {
+      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.resume();
+    }).onSuccess(e -> {
+      waiter.assertEquals(e.getResult(), "foo2");
+      waiter.resume();
+    });
+    ContextualSupplier supplier = ctx -> {
+      if (ctx.getAttemptCount() != 2)
+        Thread.sleep(100);
+      return "foo" + ctx.getAttemptCount();
+    };
+
+    // When / Then
+    FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onSuccess(e -> {
+      waiter.assertEquals(e.getAttemptCount(), 3);
+      waiter.assertEquals("foo2", e.getResult());
+      waiter.assertNull(e.getFailure());
+      waiter.resume();
+    });
+    assertEquals(get(failsafe, supplier), "foo2");
+    waiter.await(1, TimeUnit.SECONDS, 4);
+  }
+
+  /**
+   * Times out then is cancelled without interruption twice then completes successfully.
+   */
+  public void shouldTimeoutAndCancel() throws Throwable {
+    // Given
+    RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(
+      e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutException)).withMaxRetries(2);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withCancel(false);
+    ContextualSupplier supplier = ctx -> {
+      if (ctx.getAttemptCount() != 2) {
+        Thread.sleep(100);
+        waiter.assertTrue(ctx.isCancelled());
+      } else
+        waiter.assertFalse(ctx.isCancelled()); // Cancellation should be cleared on last attempt
+      return "foo" + ctx.getAttemptCount();
+    };
+
+    // When / Then
+    FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onSuccess(e -> {
+      waiter.assertEquals(e.getAttemptCount(), 3);
+      waiter.assertEquals("foo2", e.getResult());
+      waiter.assertNull(e.getFailure());
+      waiter.resume();
+    });
+    assertEquals(get(failsafe, supplier), "foo2");
+    waiter.await(1, TimeUnit.SECONDS);
+  }
+
+  /**
+   * Times out then is cancelled with interruption 3 times.
+   */
+  public void shouldTimeoutAndCancelAndInterrupt() throws Throwable {
+    // Given
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withCancel(true).onFailure(e -> {
+      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.resume();
+    });
+    ContextualSupplier supplier = ctx -> {
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        waiter.assertTrue(ctx.isCancelled());
+        waiter.resume();
+      }
+      return "foo";
+    };
+
+    // When / Then
+    FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onFailure(e -> {
+      waiter.assertEquals(e.getAttemptCount(), 3);
+      waiter.assertNull(e.getResult());
+      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.resume();
+    });
+    assertThrows(() -> get(failsafe, supplier), TimeoutException.class);
+    waiter.await(1, TimeUnit.SECONDS, 7);
+  }
+
+  public void shouldFallbackWhenTimeoutExceeded() {
+    // Given
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(10));
+    CheckedSupplier supplier = () -> {
+      Thread.sleep(100);
+      return "foo";
+    };
+
+    // When / Then
+    assertEquals(failsafeGetWithFallback(timeout, e -> {
+      waiter.assertNull(e.getLastResult());
+      waiter.assertTrue(e.getLastFailure() instanceof TimeoutException);
+      return false;
+    }, supplier), Boolean.FALSE);
+  }
+
+  public void shouldGetLastResult() {
+    // Given
+    RetryPolicy<Integer> retryPolicy = new RetryPolicy<Integer>().withMaxAttempts(5).handleResultIf(r -> true);
+
+    // When / Then
+    int result = failsafeGet(retryPolicy, ctx -> ctx.getLastResult(10) + 1);
+    assertEquals(result, 15);
   }
 }

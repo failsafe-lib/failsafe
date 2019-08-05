@@ -10,15 +10,17 @@
 
 Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It  works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed](#policy-composition) as needed. These policies include:
 
-* [Retries](#retries) 
+* [Retries](#retries)
+* [Timeouts](#timeouts)
+* [Fallbacks](#fallbacks)
 * [Circuit breakers](#circuit-breakers) 
-* [Fallbacks](#fallbacks) 
 
 It also provides features that allow you to integrate with various scenarios, including:
 
 * [Configurable schedulers](#configurable-schedulers)
-* [Event listeners](#event-listeners) and [Execution context](#execution-context)
+* [Event listeners](#event-listeners)
 * [Strong typing](#strong-typing)
+* [Execution context](#execution-context) and [cancellation](#execution-cancellation)
 * [Asynchronous API integration](#asynchronous-api-integration)
 * [CompletionStage](#completionstage-integration) and [functional interface](#functional-interface-integration) integration
 * [Execution tracking](#execution-tracking)
@@ -162,6 +164,48 @@ retryPolicy
 
 And of course you can arbitrarily combine any of these things into a single policy.
 
+## Timeouts
+
+[Timeouts][Timeout] allow you to fail an execution with `TimeoutException` if it takes too long to complete:
+
+```java
+Timeout<Object> timeout = Timeout.of(Duration.ofSeconds(10));
+```
+
+You can also cancel an execution and perform an optional interrupt if it times out:
+
+```
+timeout.withCancel(shouldInterrupt);
+```
+
+If a cancellation is triggered by a `Timeout`, the execution is still completed with `TimeoutException`. See the [execution cancellation](#execution-cancellation) section for more on cancellation.
+
+## Fallbacks
+
+[Fallbacks][Fallback] allow you to provide an alternative result for a failed execution. They can also be used to suppress exceptions and provide a default result:
+
+```java
+Fallback<Object> fallback = Fallback.of(null);
+```
+
+Throw a custom exception:
+
+```java
+Fallback<Object> fallback = Fallback.ofException(e -> new CustomException(e.getLastFailure()));
+```
+
+Or compute an alternative result such as from a backup resource:
+
+```java
+Fallback<Object> fallback = Fallback.of(this::connectToBackup);
+```
+
+For computations that block, a Fallback can be configured to run asynchronously:
+
+```java
+Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
+```
+
 ## Circuit Breakers
 
 [Circuit breakers][fowler-circuit-breaker] allow you to create systems that [fail-fast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
@@ -212,7 +256,7 @@ The breaker can also be configured to *close* again if, for example, the last 3 
 breaker.withSuccessThreshold(3, 5);
 ```
 
-And the breaker can be configured to recognize executions that exceed a certain [timeout] as failures:
+And the breaker can be configured to recognize executions that exceed a certain [breaker-timeout] as failures:
 
 ```java
 breaker.withTimeout(Duration.ofSeconds(10));
@@ -246,54 +290,28 @@ if (breaker.allowsExecution()) {
 }
 ```
 
-## Fallbacks
-
-[Fallbacks][Fallback] allow you to provide an alternative result for a failed execution. They can also be used to suppress exceptions and provide a default result:
-
-```java
-Fallback<Object> fallback = Fallback.of(null);
-```
-
-Throw a custom exception:
-
-```java
-Fallback<Object> fallback = Fallback.ofException(e -> new CustomException(e.getLastFailure()));
-```
-
-Or compute an alternative result such as from a backup resource:
-
-```java
-Fallback<Object> fallback = Fallback.of(this::connectToBackup);
-```
-
-For computations that block, a Fallback can be configured to run asynchronously:
-
-```java
-Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
-```
-
 ## Policy Composition
 
 Policies can be composed in any way desired, including multiple policies of the same type. Policies handle execution results in reverse order, similar to the way that function composition works. For example, consider:
 
 ```java
-Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
+Failsafe.with(fallback, retryPolicy, circuitBreaker, timeout).get(supplier);
 ```
 
 This results in the following internal composition when executing the `supplier` and handling its result:
 
 ```
-Fallback(RetryPolicy(CircuitBreaker(Supplier)))
+Fallback(RetryPolicy(CircuitBreaker(Timeout(Supplier))))
 ```
 
-This means the `CircuitBreaker` is first to evaluate the `Supplier`'s result, then the `RetryPolicy`, then the `Fallback`. Each policy makes its own determination as to whether the result represents a failure. This allows different policies to be used for handling different types of failures.
+This means the `Timeout` is first to evaluate the `Supplier`'s result, then the `CircuitBreaker`, the `RetryPolicy`, and the `Fallback`. Each policy makes its own determination as to whether the result represents a failure. This allows different policies to be used for handling different types of failures.
 
 #### Typical Composition
 
-A typical Failsafe configuration that uses multiple policies will place a `Fallback` as the outer-most policy, followed by a `RetryPolicy`, and a `CircuitBreaker` as the inner-most policy:
+A Failsafe configuration that uses multiple policies might place a `Fallback` as the outer-most policy, followed by a `RetryPolicy`, `CircuitBreaker`, and a `Timeout` as the inner-most policy:
 
 ```java
-Failsafe.with(fallback, retryPolicy, circuitBreaker)
+Failsafe.with(fallback, retryPolicy, circuitBreaker, timeout)
 ```
 
 That said, it really depends on how the policies are being used, and different compositions make sense for different use cases.
@@ -373,23 +391,6 @@ circuitBreaker
   .onHalfOpen(() -> log.info("The circuit breaker was half-opened"))
 ```
 
-#### Execution Context
-
-Failsafe can provide an [ExecutionContext] containing execution related information such as the number of execution attempts as well as start and elapsed times:
-
-```java
-Failsafe.with(retryPolicy).run(ctx -> {
-  log.debug("Connection attempt #{}", ctx.getAttemptCount());
-  connect();
-});
-```
-
-[ExecutionContext] also allows you to create retries that depend on previous execution results:
-
-```java
-int result = Failsafe.with(retryPolicy).get(ctx -> ctx.getLastResult(0) + 1);
-```
-
 #### Strong typing
 
 Failsafe Policies are typed based on the expected result. For generic policies that are used for various executions, the result type may just be `Object`:
@@ -414,9 +415,48 @@ HttpResponse response = Failsafe.with(retryPolicy)
   .get(this::sendHttpRequest);
 ```
 
+#### Execution Context
+
+Failsafe can provide an [ExecutionContext] containing execution related information such as the number of execution attempts, start and elapsed times, and the last result or failure:
+
+```java
+Failsafe.with(retryPolicy).run(ctx -> {
+  log.debug("Connection attempt #{}", ctx.getAttemptCount());
+  connect();
+});
+```
+
+This is useful for retrying executions that depend on results from a previous attempt:
+
+```java
+int result = Failsafe.with(retryPolicy).get(ctx -> ctx.getLastResult(0) + 1);
+```
+
+#### Execution Cancellation
+
+Failsafe supports cancellation and optional interruption of asynchronous executions:
+
+```java
+Future<Connection> future = Failsafe.with(retryPolicy).getAsync(this::connect);
+future.cancel(shouldInterrupt);
+```
+
+The `shouldInterrupt` argument indicates whether the cancellation should be *non-interrupting* or *interrupting*.
+
+Executable code can cooperate with a *non-interrupting* cancellation by checking `ExecutionContext.isCancelled()`:
+
+```java
+Failsafe.with(timeout).getAsync(ctx -> {
+  while (!ctx.isCancelled())
+    doWork();
+});
+```
+
+Alternatively, an *interrupting* cancellation can be used to forcefully interrupt an execution with `InterruptedException`.
+
 #### Asynchronous API Integration
 
-Failsafe can be integrated with asynchronous code that reports completion via callbacks. The [runAsyncExecution], [getAsyncExecution] and [futureAsyncExecution] methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
+Failsafe can be integrated with asynchronous code that reports completion via callbacks. The [runAsyncExecution], [getAsyncExecution] and [getStageAsyncExecution] methods provide an [AsyncExecution] reference that can be used to manually schedule retries or complete the execution from inside asynchronous callbacks:
 
 ```java
 Failsafe.with(retryPolicy)
@@ -498,6 +538,7 @@ Failsafe provides an SPI that allows you to implement your own [Policy] and plug
 
 * [Gitter Chat Room][gitter]
 * [Javadocs](https://jhalterman.github.com/failsafe/javadoc)
+* [FAQs](https://github.com/jhalterman/failsafe/wiki/Frequently-Asked-Questions)
 * [Example Integrations](https://github.com/jhalterman/failsafe/wiki/Example-Integrations)
 * [3rd Party Tools](https://github.com/jhalterman/failsafe/wiki/3rd-Party-Tools)
 * [Comparisons](https://github.com/jhalterman/failsafe/wiki/Comparisons)
@@ -524,11 +565,11 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-
 [jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-java.time.Duration-
 [jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
-[timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-
+[breaker-timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-
 [runAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#runAsyncExecution-net.jodah.failsafe.function.AsyncRunnable-
 [getAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
-[futureAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#futureAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
-[retries-exceeded]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeConfig.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedBiConsumer-
+[getStageAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getStageAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
+[retries-exceeded]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedConsumer-
 [breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
 [breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
 [policy-executor-impls]: https://github.com/jhalterman/failsafe/tree/master/src/main/java/net/jodah/failsafe/internal/executor
@@ -537,8 +578,9 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
 [FailurePolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailurePolicy.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
-[CircuitBreaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html
+[Timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Timeout.html
 [Fallback]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Fallback.html
+[CircuitBreaker]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html
 [PolicyExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/PolicyExecutor.html
 [ExecutionContext]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/ExecutionContext.html
 [Execution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Execution

@@ -29,11 +29,29 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   private final FailsafeExecutor<T> executor;
   private ExecutionContext execution;
 
-  // Mutable state
+  // Mutable state, guarded by "this"
   private Future<T> delegate;
+  private Future<T> timeoutDelegate;
 
   FailsafeFuture(FailsafeExecutor<T> executor) {
     this.executor = executor;
+  }
+
+  /**
+   * If not already completed, completes  the future with the {@code value}, calling the complete and success handlers.
+   */
+  @Override
+  public synchronized boolean complete(T value) {
+    return completeResult(ExecutionResult.success(value));
+  }
+
+  /**
+   * If not already completed, completes the future with the {@code failure}, calling the complete and failure
+   * handlers.
+   */
+  @Override
+  public boolean completeExceptionally(Throwable failure) {
+    return completeResult(ExecutionResult.failure(failure));
   }
 
   /**
@@ -47,27 +65,47 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
     if (delegate != null)
       cancelResult = delegate.cancel(mayInterruptIfRunning);
+    if (timeoutDelegate != null)
+      timeoutDelegate.cancel(true);
     ExecutionResult result = ExecutionResult.failure(new CancellationException());
     super.completeExceptionally(result.getFailure());
     executor.handleComplete(result, execution);
     return cancelResult;
   }
 
+  /**
+   * Completes the execution with the {@code result} and calls completion listeners.
+   */
   @SuppressWarnings("unchecked")
-  public synchronized void completeResult(ExecutionResult result) {
+  synchronized boolean completeResult(ExecutionResult result) {
     if (isDone())
-      return;
+      return false;
 
     Throwable failure = result.getFailure();
+    boolean completed;
     if (failure == null)
-      super.complete((T) result.getResult());
+      completed = super.complete((T) result.getResult());
     else
-      super.completeExceptionally(failure);
-    executor.handleComplete(result, execution);
+      completed = super.completeExceptionally(failure);
+    if (completed)
+      executor.handleComplete(result, execution);
+    return completed;
+  }
+
+  public synchronized Future<T> getDelegate() {
+    return delegate;
+  }
+
+  synchronized Future<T> getTimeoutDelegate() {
+    return timeoutDelegate;
   }
 
   public synchronized void inject(Future<T> delegate) {
     this.delegate = delegate;
+  }
+
+  public synchronized void injectTimeout(Future<T> delegate) {
+    this.timeoutDelegate = delegate;
   }
 
   void inject(ExecutionContext execution) {

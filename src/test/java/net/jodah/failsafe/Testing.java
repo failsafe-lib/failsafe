@@ -22,6 +22,7 @@ import net.jodah.failsafe.internal.CircuitState;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -101,6 +102,28 @@ public class Testing {
       Thread.sleep(duration);
     } catch (InterruptedException ignore) {
     }
+  }
+
+  /**
+   * Unwraps and throws ExecutionException and FailsafeException causes.
+   */
+  public static <T> T unwrapExceptions(CheckedSupplier<T> supplier) {
+    try {
+      return supplier.get();
+    } catch (ExecutionException e) {
+      sneakyThrow(e.getCause());
+      return null;
+    } catch (FailsafeException e) {
+      sneakyThrow(e.getCause() == null ? e : e.getCause());
+      return null;
+    } catch (Exception e) {
+      throw (RuntimeException) e;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+    throw (E) e;
   }
 
   public static CircuitBreakerInternals getInternals(CircuitBreaker circuitBreaker) {

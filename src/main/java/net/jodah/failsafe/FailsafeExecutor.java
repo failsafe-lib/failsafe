@@ -32,9 +32,9 @@ import java.util.function.Supplier;
  * An executor that handles failures according to configured {@link FailurePolicy policies}. Can be created via {@link
  * Failsafe#with(Policy[])}.
  * <p>
- * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be
- * configured via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable via the returned
- * CompletableFuture, even those run by a {@link ForkJoinPool} implementation.
+ * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be configured
+ * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable via the
+ * returned CompletableFuture, even those run by a {@link ForkJoinPool} implementation.
  * <p>
  * Executions that are cancelled or timed out while blocked or waiting will be interrupted with an {@link
  * InterruptedException}. Executions that do not block can cooperate with cancellation by periodiically checking for
@@ -61,8 +61,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
-   *     waiting to perform a retry.
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or is interrupted while
+   * executing
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
@@ -73,8 +73,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
-   *     waiting to perform a retry.
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or is interrupted while
+   * executing
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public <T extends R> T get(ContextualSupplier<T> supplier) {
@@ -204,7 +204,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
-      AsyncSupplier<? extends CompletionStage<T>> supplier) {
+    AsyncSupplier<? extends CompletionStage<T>> supplier) {
     return callAsync(execution -> Functions.asyncOfFutureExecution(supplier, execution), true);
   }
 
@@ -212,8 +212,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
-   *     waiting to perform a retry.
+   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or is interrupted while
+   * executing
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(CheckedRunnable runnable) {
@@ -224,8 +224,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or if interrupted while
-   *     waiting to perform a retry.
+   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or is interrupted while
+   * executing
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(ContextualRunnable runnable) {
@@ -308,8 +308,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Calls the {@code supplier} synchronously, handling results according to the configured policies.
    *
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while
-   *     waiting to perform a retry.
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while waiting to
+   * perform a retry.
    * @throws CircuitBreakerOpenException if a configured circuit breaker is open
    */
   @SuppressWarnings("unchecked")
@@ -320,8 +320,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     ExecutionResult result = execution.executeSync(supplier);
     if (result.getFailure() != null)
       throw result.getFailure() instanceof RuntimeException ?
-          (RuntimeException) result.getFailure() :
-          new FailsafeException(result.getFailure());
+        (RuntimeException) result.getFailure() :
+        new FailsafeException(result.getFailure());
     return (T) result.getResult();
   }
 
@@ -338,7 +338,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   @SuppressWarnings("unchecked")
   private <T> CompletableFuture<T> callAsync(
-      Function<AsyncExecution, Supplier<CompletableFuture<ExecutionResult>>> supplierFn, boolean asyncExecution) {
+    Function<AsyncExecution, Supplier<CompletableFuture<ExecutionResult>>> supplierFn, boolean asyncExecution) {
     FailsafeFuture<T> future = new FailsafeFuture(this);
     AsyncExecution execution = new AsyncExecution(scheduler, future, this);
     future.inject(execution);

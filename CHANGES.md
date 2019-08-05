@@ -1,3 +1,15 @@
+# 2.2.0
+
+### Improvements
+
+- Added a new `Timeout` policy.
+- Added `ExecutionContext.isCancelled()`.
+
+### Bug Fixes
+
+- Reset interrupt flag when a synchronous execution is interrupted
+- Improved handling around externally completing a Failsafe `CompletableFuture`
+
 # 2.1.1
 
 ### Improvements

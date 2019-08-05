@@ -40,10 +40,10 @@ import static org.testng.Assert.*;
 public class SyncFailsafeTest extends AbstractFailsafeTest {
   // Results from a synchronous Failsafe call
   private @SuppressWarnings("unchecked") Class<? extends Throwable>[] syncThrowables = new Class[] {
-      ConnectException.class };
+    ConnectException.class };
   // Results from a get against a future that wraps a synchronous Failsafe call
   private @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureSyncThrowables = new Class[] {
-      ExecutionException.class, ConnectException.class };
+    ExecutionException.class, ConnectException.class };
 
   @BeforeMethod
   protected void beforeMethod() {
@@ -124,8 +124,8 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
     // When
     CompletableFuture.supplyAsync(() -> Failsafe.with(retryPolicy).get(() -> service.connect()))
-        .thenRun(() -> Failsafe.with(retryPolicy).get(() -> service.disconnect()))
-        .get();
+      .thenRun(() -> Failsafe.with(retryPolicy).get(() -> service.disconnect()))
+      .get();
 
     // Then
     verify(service, times(4)).connect();
@@ -137,8 +137,8 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     assertThrows(
-        () -> CompletableFuture.supplyAsync(() -> Failsafe.with(retryTwice).get(() -> service.connect())).get(),
-        futureSyncThrowables);
+      () -> CompletableFuture.supplyAsync(() -> Failsafe.with(retryTwice).get(() -> service.connect())).get(),
+      futureSyncThrowables);
     verify(service, times(3)).connect();
   }
 
@@ -196,15 +196,15 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldRetryAndOpenCircuit() {
-    CircuitBreaker<Boolean> circuit = new CircuitBreaker<Boolean>().withFailureThreshold(3).withDelay(Duration.ofMinutes(10));
+    CircuitBreaker<Boolean> circuit = new CircuitBreaker<Boolean>().withFailureThreshold(3)
+      .withDelay(Duration.ofMinutes(10));
 
     // Given - Fail twice then succeed
     when(service.connect()).thenThrow(failures(20, new ConnectException())).thenReturn(true);
 
     // When
-    assertThrows(
-        () -> Failsafe.with(retryAlways.handle(ConnectException.class), circuit).run(() -> service.connect()),
-        CircuitBreakerOpenException.class);
+    assertThrows(() -> Failsafe.with(retryAlways.handle(ConnectException.class), circuit).run(() -> service.connect()),
+      CircuitBreakerOpenException.class);
 
     // Then
     verify(service, times(3)).connect();
@@ -300,6 +300,27 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     assertThrows(() -> Failsafe.with(new RetryPolicy<>().withMaxRetries(1)).run(() -> {
       throw new TimeoutException();
     }), FailsafeException.class, TimeoutException.class);
+  }
+
+  public void shouldResetInterruptFlag() throws Throwable {
+    // Given
+    Thread t = Thread.currentThread();
+    new Thread(() -> {
+      try {
+        Thread.sleep(100);
+        t.interrupt();
+      } catch (InterruptedException e) {
+      }
+    }).start();
+
+    // Then
+    assertThrows(() -> Failsafe.with(retryNever).run(() -> {
+      Thread.sleep(1000);
+    }), FailsafeException.class, InterruptedException.class);
+    t.interrupt();
+
+    // Then
+    assertTrue(Thread.interrupted());
   }
 
   private void run(FailsafeExecutor<?> failsafe, Object runnable) {

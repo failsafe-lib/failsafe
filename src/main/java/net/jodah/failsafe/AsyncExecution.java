@@ -35,14 +35,12 @@ public final class AsyncExecution extends AbstractExecution {
   private SettableSupplier<CompletableFuture<ExecutionResult>> innerExecutionSupplier;
   private Supplier<CompletableFuture<ExecutionResult>> outerExecutionSupplier;
   final FailsafeFuture<Object> future;
-  final Scheduler scheduler;
   private volatile boolean completeCalled;
   private volatile boolean retryCalled;
 
   @SuppressWarnings("unchecked")
   <T> AsyncExecution(Scheduler scheduler, FailsafeFuture<T> future, FailsafeExecutor<?> executor) {
-    super((FailsafeExecutor<Object>) executor);
-    this.scheduler = scheduler;
+    super(scheduler, (FailsafeExecutor<Object>) executor);
     this.future = (FailsafeFuture<Object>) future;
   }
 
@@ -137,6 +135,7 @@ public final class AsyncExecution extends AbstractExecution {
   /**
    * Prepares for an execution by resetting internal flags.
    */
+  @Override
   void preExecute() {
     super.preExecute();
     completeCalled = false;
@@ -200,7 +199,7 @@ public final class AsyncExecution extends AbstractExecution {
       return;
 
     completed = true;
-    if (!future.isDone() && !future.isCancelled()) {
+    if (!future.isDone()) {
       if (result != null)
         future.completeResult(result);
       else

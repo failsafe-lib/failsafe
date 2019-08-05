@@ -39,7 +39,7 @@ public class ExecutionEvent {
   }
 
   /**
-   * Gets the number of execution attempts so far.
+   * Gets the number of completed execution attempts so far.
    */
   public int getAttemptCount() {
     return context.getAttemptCount();

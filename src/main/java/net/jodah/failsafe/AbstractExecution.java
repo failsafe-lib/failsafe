@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.ListIterator;
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractExecution extends ExecutionContext {
+  final Scheduler scheduler;
   final FailsafeExecutor<Object> executor;
   final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
@@ -41,8 +43,9 @@ public abstract class AbstractExecution extends ExecutionContext {
   /**
    * Creates a new AbstractExecution for the {@code executor}.
    */
-  AbstractExecution(FailsafeExecutor<Object> executor) {
+  AbstractExecution(Scheduler scheduler, FailsafeExecutor<Object> executor) {
     super(Duration.ofNanos(System.nanoTime()));
+    this.scheduler = scheduler;
     this.executor = executor;
     policyExecutors = new ArrayList<>(executor.policies.size());
     ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
@@ -63,6 +66,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   void preExecute() {
+    cancelled = false;
     resultHandled = false;
   }
 

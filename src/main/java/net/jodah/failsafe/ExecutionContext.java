@@ -29,6 +29,7 @@ public class ExecutionContext {
   AtomicInteger attempts = new AtomicInteger();
 
   // Internally mutable state
+  volatile boolean cancelled;
   volatile Object lastResult;
   volatile Throwable lastFailure;
 
@@ -51,7 +52,7 @@ public class ExecutionContext {
   }
 
   /**
-   * Gets the number of execution attempts so far.
+   * Gets the number of completed execution attempts so far.
    */
   public int getAttemptCount() {
     return attempts.get();
@@ -86,6 +87,13 @@ public class ExecutionContext {
    */
   public Duration getStartTime() {
     return startTime;
+  }
+
+  /**
+   * Returns whether the execution has ben cancelled. In this case the implementor shuold attempt to stop execution.
+   */
+  public boolean isCancelled() {
+    return cancelled;
   }
 
   public ExecutionContext copy() {
