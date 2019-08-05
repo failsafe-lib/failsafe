@@ -50,7 +50,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
    * handlers.
    */
   @Override
-  public boolean completeExceptionally(Throwable failure) {
+  public synchronized boolean completeExceptionally(Throwable failure) {
     return completeResult(ExecutionResult.failure(failure));
   }
 
