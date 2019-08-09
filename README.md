@@ -388,7 +388,7 @@ For [CircuitBreakers][CircuitBreaker], Failsafe can notify you when the state ch
 circuitBreaker
   .onClose(() -> log.info("The circuit breaker was closed"));
   .onOpen(() -> log.info("The circuit breaker was opened"))
-  .onHalfOpen(() -> log.info("The circuit breaker was half-opened"))
+  .onHalfOpen(() -> log.info("The circuit breaker was half-opened"));
 ```
 
 #### Strong typing

@@ -89,8 +89,9 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Records an execution and returns true if a retry has been scheduled for else returns returns false and completes
-   * the execution and associated {@code CompletableFuture}.
+   * Records an execution if one has not been recorded yet, attempts to schedule a retry if necessary, and returns
+   * {@code true} if a retry has been scheduled else returns {@code false} and completes the execution and associated
+   * {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
@@ -99,8 +100,9 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Records an execution and returns true if a retry has been scheduled for the {@code result}, else returns false and
-   * marks the execution and associated {@code CompletableFuture} as complete.
+   * Records an execution if one has not been recorded yet for the {@code result}, attempts to schedule a retry if
+   * necessary, and returns {@code true} if a retry has been scheduled else returns {@code false} and completes the
+   * execution and associated {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
@@ -109,8 +111,9 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Records an execution and returns true if a retry has been scheduled for the {@code result} or {@code failure}, else
-   * returns false and marks the execution and associated {@code CompletableFuture} as complete.
+   * Records an execution if one has not been recorded yet for the {@code result} or {@code failure}, attempts to
+   * schedule a retry if necessary, and returns {@code true} if a retry has been scheduled else returns {@code false}
+   * and completes the execution and associated {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
