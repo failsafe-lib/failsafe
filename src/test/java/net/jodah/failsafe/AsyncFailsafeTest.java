@@ -297,10 +297,10 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When
     FailsafeFuture<Boolean> future = (FailsafeFuture<Boolean>) Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {
       waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     }).getAsync(ctx -> {
-      waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutException);
+      waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
       Consumer<Boolean> asserts = (expected) -> {
         waiter.assertEquals(expected, ctx.isCancelled());
         waiter.assertEquals(expected, futureRef.get().getDelegate().isCancelled());
@@ -325,7 +325,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     waiter.await(1000, 4);
     assertFalse(future.isCancelled());
     assertTrue(future.isDone());
-    assertThrows(future::get, ExecutionException.class, TimeoutException.class);
+    assertThrows(future::get, ExecutionException.class, TimeoutExceededException.class);
   }
 
   private void assertCancel(Function<FailsafeExecutor<?>, Future<?>> executorCallable, Policy<?> policy)
@@ -476,7 +476,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When / Then
     Failsafe.with(rp, timeout).onComplete(e -> {
       assertNull(e.getResult());
-      assertTrue(e.getFailure() instanceof TimeoutException);
+      assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     }).runAsyncExecution(exec -> {
       Thread.sleep(100);

@@ -262,9 +262,9 @@ public abstract class AbstractFailsafeTest {
   public void shouldTimeout() throws Throwable {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(
-      e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutException)).withMaxRetries(2);
+      e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutExceededException)).withMaxRetries(2);
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).onFailure(e -> {
-      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     }).onSuccess(e -> {
       waiter.assertEquals(e.getResult(), "foo2");
@@ -293,7 +293,7 @@ public abstract class AbstractFailsafeTest {
   public void shouldTimeoutAndCancel() throws Throwable {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(
-      e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutException)).withMaxRetries(2);
+      e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutExceededException)).withMaxRetries(2);
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withCancel(false);
     ContextualSupplier supplier = ctx -> {
       if (ctx.getAttemptCount() != 2) {
@@ -322,7 +322,7 @@ public abstract class AbstractFailsafeTest {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withCancel(true).onFailure(e -> {
-      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     });
     ContextualSupplier supplier = ctx -> {
@@ -340,10 +340,10 @@ public abstract class AbstractFailsafeTest {
     FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onFailure(e -> {
       waiter.assertEquals(e.getAttemptCount(), 3);
       waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     });
-    assertThrows(() -> get(failsafe, supplier), TimeoutException.class);
+    assertThrows(() -> get(failsafe, supplier), TimeoutExceededException.class);
     waiter.await(1, TimeUnit.SECONDS, 7);
   }
 
@@ -358,7 +358,7 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     assertEquals(failsafeGetWithFallback(timeout, e -> {
       waiter.assertNull(e.getLastResult());
-      waiter.assertTrue(e.getLastFailure() instanceof TimeoutException);
+      waiter.assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
       return false;
     }, supplier), Boolean.FALSE);
   }

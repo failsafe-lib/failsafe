@@ -63,6 +63,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
@@ -75,6 +76,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(ContextualSupplier<T> supplier) {
@@ -85,8 +87,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
    * exceeded.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -99,8 +106,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
    * exceeded.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -114,8 +126,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
    * one of the {@code AsyncExecution.retry} methods.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -168,8 +185,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -182,8 +204,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -197,8 +224,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * policies are exceeded. This method is intended for integration with asynchronous code. Retries must be manually
    * scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed exceptionally with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -214,6 +246,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(CheckedRunnable runnable) {
@@ -226,6 +259,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(ContextualRunnable runnable) {
@@ -235,8 +269,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
@@ -248,8 +287,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
@@ -263,8 +307,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * method is intended for integration with asynchronous code. Retries must be manually scheduled via one of the {@code
    * AsyncExecution.retry} methods.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
@@ -308,9 +357,10 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Calls the {@code supplier} synchronously, handling results according to the configured policies.
    *
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or if interrupted while waiting to
-   * perform a retry.
-   * @throws CircuitBreakerOpenException if a configured circuit breaker is open
+   * @throws FailsafeException if the {@code supplierFn} fails with a checked Exception or if interrupted while waiting
+   * to perform a retry.
+   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
+   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   @SuppressWarnings("unchecked")
   private <T> T call(Function<Execution, CheckedSupplier<?>> supplierFn) {
@@ -329,8 +379,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Calls the asynchronous {@code supplier} via the configured Scheduler, handling results according to the configured
    * policies.
    * <p>
-   * If a configured circuit breaker is open, the resulting future is completed with {@link
+   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
+   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * </p>
+   * <p>
+   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
    * CircuitBreakerOpenException}.
+   * </p>
    *
    * @param asyncExecution whether this is a detached, async execution that must be manually completed
    * @throws NullPointerException if the {@code supplierFn} is null

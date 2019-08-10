@@ -168,9 +168,9 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     // When / Then
     assertThrows(() -> Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {
       assertNull(e.getResult());
-      assertTrue(e.getFailure() instanceof TimeoutException);
+      assertTrue(e.getFailure() instanceof TimeoutExceededException);
     }).get(ctx -> {
-      assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutException);
+      assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
 
       try {
         assertFalse(ctx.isCancelled());
@@ -181,7 +181,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
       }
       fail("Expected InterruptedException");
       return false;
-    }), FailsafeException.class, TimeoutException.class);
+    }), TimeoutExceededException.class);
   }
 
   public void shouldOpenCircuitWhenTimeoutExceeded() {
@@ -193,7 +193,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     // When
     assertThrows(() -> Failsafe.with(breaker, timeout).run(() -> {
       Thread.sleep(20);
-    }), FailsafeException.class, TimeoutException.class);
+    }), TimeoutExceededException.class);
 
     // Then
     assertTrue(breaker.isOpen());

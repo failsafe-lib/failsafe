@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@
 package net.jodah.failsafe;
 
 /**
- * Thrown when an execution is attempted while a configured {@link CircuitBreaker} is open.
+ * Thrown when an execution exceeds a configured {@link Timeout}.
  *
  * @author Jonathan Halterman
  */
-public class CircuitBreakerOpenException extends FailsafeException {
+public class TimeoutExceededException extends FailsafeException {
   private static final long serialVersionUID = 1L;
 
-  private final CircuitBreaker circuitBreaker;
+  private final Timeout timeout;
 
-  public CircuitBreakerOpenException(CircuitBreaker circuitBreaker) {
-    this.circuitBreaker = circuitBreaker;
+  public TimeoutExceededException(Timeout timeout) {
+    this.timeout = timeout;
   }
 
-  /** Retruns the {@link CircuitBreaker} that caused the exception. */
-  public CircuitBreaker getCircuitBreaker() {
-    return circuitBreaker;
+  /** Retruns the {@link Timeout} that caused the exception. */
+  public Timeout getTimeout() {
+    return timeout;
   }
 }

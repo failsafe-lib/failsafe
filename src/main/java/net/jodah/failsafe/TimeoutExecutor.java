@@ -20,7 +20,6 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -37,19 +36,20 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
     // Handle sync and async execution timeouts
     boolean timeoutExceeded =
       execution.isAsyncExecution() && execution.getElapsedAttemptTime().toNanos() >= policy.getTimeout().toNanos();
-    return timeoutExceeded || (!result.isNonResult() && result.getFailure() instanceof TimeoutException);
+    return timeoutExceeded || (!result.isNonResult() && result.getFailure() instanceof TimeoutExceededException);
   }
 
   @Override
   protected ExecutionResult onFailure(ExecutionResult result) {
     // Handle async execution timeouts
-    if (!(result.getFailure() instanceof TimeoutException))
-      result = ExecutionResult.failure(new TimeoutException());
+    if (!(result.getFailure() instanceof TimeoutExceededException))
+      result = ExecutionResult.failure(new TimeoutExceededException(policy));
     return result.withComplete();
   }
 
   /**
-   * Schedules a separate timeout call that fails with {@link TimeoutException} if the policy's timeout is exceeded.
+   * Schedules a separate timeout call that fails with {@link TimeoutExceededException} if the policy's timeout is
+   * exceeded.
    */
   @Override
   @SuppressWarnings("unchecked")
@@ -63,7 +63,8 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
       try {
         // Schedule timeout check
         timeoutFuture = (Future) scheduler.schedule(() -> {
-          if (result.getAndUpdate(v -> v != null ? v : ExecutionResult.failure(new TimeoutException())) == null) {
+          if (result.getAndUpdate(v -> v != null ? v : ExecutionResult.failure(new TimeoutExceededException(policy)))
+            == null) {
             if (policy.canCancel()) {
               boolean canInterrupt = policy.canInterrupt();
               if (canInterrupt)
@@ -89,7 +90,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
   }
 
   /**
-   * Schedules a separate timeout call that blocks and fails with {@link TimeoutException} if the policy's timeout is
+   * Schedules a separate timeout call that blocks and fails with {@link TimeoutExceededException} if the policy's timeout is
    * exceeded.
    */
   @Override
@@ -109,7 +110,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
             if (!future.isDone()) {
               // Schedule timeout check
               timeoutFuture.set((Future) scheduler.schedule(() -> {
-                if (!promise.isDone() && promise.complete(ExecutionResult.failure(new TimeoutException()))
+                if (!promise.isDone() && promise.complete(ExecutionResult.failure(new TimeoutExceededException(policy)))
                   && policy.canCancel()) {
                   boolean canInterrupt = policy.canInterrupt();
                   if (canInterrupt)
