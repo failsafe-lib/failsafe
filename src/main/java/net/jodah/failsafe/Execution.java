@@ -38,11 +38,13 @@ public class Execution extends AbstractExecution {
   @SuppressWarnings("unchecked")
   public Execution(Policy... policies) {
     super(DelegatingScheduler.INSTANCE, new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
+    preExecute();
   }
 
   @SuppressWarnings("unchecked")
   Execution(FailsafeExecutor<?> executor) {
     super(DelegatingScheduler.INSTANCE, (FailsafeExecutor<Object>) executor);
+    preExecute();
   }
 
   /**
@@ -52,6 +54,7 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryFor(Object result) {
+    preExecute();
     return !postExecute(new ExecutionResult(result, null));
   }
 
@@ -62,6 +65,7 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean canRetryFor(Object result, Throwable failure) {
+    preExecute();
     return !postExecute(new ExecutionResult(result, failure));
   }
 
@@ -74,6 +78,7 @@ public class Execution extends AbstractExecution {
    */
   public boolean canRetryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
+    preExecute();
     return !postExecute(new ExecutionResult(null, failure));
   }
 
@@ -93,6 +98,7 @@ public class Execution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
+    preExecute();
     return postExecute(new ExecutionResult(result, null));
   }
 

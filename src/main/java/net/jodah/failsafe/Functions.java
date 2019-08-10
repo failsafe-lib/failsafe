@@ -280,6 +280,7 @@ final class Functions {
     return () -> {
       ExecutionResult result = null;
       try {
+        execution.preExecute();
         result = ExecutionResult.success(supplier.get());
       } catch (Throwable t) {
         if (t instanceof InterruptedException)

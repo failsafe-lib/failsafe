@@ -24,7 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Jonathan Halterman
  */
 public class ExecutionContext {
-  private final Duration startTime;
+  volatile Duration startTime = Duration.ZERO;
+  volatile Duration attemptStartTime = Duration.ZERO;
   /** Number of execution attempts */
   AtomicInteger attempts = new AtomicInteger();
 
@@ -33,12 +34,12 @@ public class ExecutionContext {
   volatile Object lastResult;
   volatile Throwable lastFailure;
 
-  ExecutionContext(Duration startTime) {
-    this.startTime = startTime;
+  ExecutionContext() {
   }
 
   private ExecutionContext(ExecutionContext context) {
     this.startTime = context.startTime;
+    this.attemptStartTime = context.attemptStartTime;
     this.attempts = context.attempts;
     this.lastResult = context.lastResult;
     this.lastFailure = context.lastFailure;
@@ -49,6 +50,13 @@ public class ExecutionContext {
    */
   public Duration getElapsedTime() {
     return Duration.ofNanos(System.nanoTime() - startTime.toNanos());
+  }
+
+  /**
+   * Returns the elapsed time since the last execution attempt began.
+   */
+  public Duration getElapsedAttemptTime() {
+    return Duration.ofNanos(System.nanoTime() - attemptStartTime.toNanos());
   }
 
   /**
@@ -101,13 +109,13 @@ public class ExecutionContext {
   }
 
   static ExecutionContext ofResult(Object result) {
-    ExecutionContext context = new ExecutionContext((Duration)null);
+    ExecutionContext context = new ExecutionContext();
     context.lastResult = result;
     return context;
   }
 
   static ExecutionContext ofFailure(Throwable failure) {
-    ExecutionContext context = new ExecutionContext((Duration)null);
+    ExecutionContext context = new ExecutionContext();
     context.lastFailure = failure;
     return context;
   }

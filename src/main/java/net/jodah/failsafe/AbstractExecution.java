@@ -44,7 +44,6 @@ public abstract class AbstractExecution extends ExecutionContext {
    * Creates a new AbstractExecution for the {@code executor}.
    */
   AbstractExecution(Scheduler scheduler, FailsafeExecutor<Object> executor) {
-    super(Duration.ofNanos(System.nanoTime()));
     this.scheduler = scheduler;
     this.executor = executor;
     policyExecutors = new ArrayList<>(executor.policies.size());
@@ -66,8 +65,15 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   void preExecute() {
+    attemptStartTime = Duration.ofNanos(System.nanoTime());
+    if (startTime == Duration.ZERO)
+      startTime = attemptStartTime;
     cancelled = false;
     resultHandled = false;
+  }
+
+  boolean isAsyncExecution() {
+    return false;
   }
 
   /**

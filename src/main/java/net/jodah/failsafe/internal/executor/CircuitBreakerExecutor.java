@@ -45,7 +45,7 @@ public class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
 
   @Override
   protected boolean isFailure(ExecutionResult result) {
-    long elapsedNanos = execution.getElapsedTime().toNanos();
+    long elapsedNanos = execution.getElapsedAttemptTime().toNanos();
     Duration timeout = policy.getTimeout();
     boolean timeoutExceeded = timeout != null && elapsedNanos >= timeout.toNanos();
     return timeoutExceeded || super.isFailure(result);
