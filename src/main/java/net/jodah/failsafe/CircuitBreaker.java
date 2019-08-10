@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see CircuitBreakerOpenException
  */
 @SuppressWarnings("WeakerAccess")
 public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
@@ -170,6 +171,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Returns timeout for executions else {@code null} if none has been configured.
    *
+   * @deprecated Use {@link Timeout} instead
    * @see #withTimeout(Duration)
    */
   public Duration getTimeout() {
@@ -375,6 +377,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Sets the {@code timeout} for executions. Executions that exceed this timeout are not interrupted, but are recorded
    * as failures once they naturally complete.
    *
+   * @deprecated Use {@link Timeout} instead
    * @throws NullPointerException if {@code timeout} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
    */

@@ -1,5 +1,6 @@
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.function.AsyncSupplier;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.executor.TimeoutExecutor;
 import net.jodah.failsafe.internal.util.Assert;
@@ -13,6 +14,9 @@ import java.time.Duration;
  * The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers can be
  * used to handle a timeout being exceeded or not.
  * </p>
+ * <p>Note: {@link #withCancel(boolean) Cancellation and interruption} are not supported when performing an {@link
+ * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} and will have no effect since the async thread is
+ * unkown to Failsafe.</p>
  * <p>
  * This class is threadsafe.
  * </p>
@@ -60,8 +64,17 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    * Asynchronous executions are cancelled by calling {@link java.util.concurrent.Future#cancel(boolean) cancel} on
    * their underlying future.
    * <p>
-   * Note: Executions that are cancelled after they timeout are still completed with {@link
+   * Notes:
+   * <ul>
+   *   <li>
+   * Executions that are cancelled after they timeout are still completed with {@link
    * java.util.concurrent.TimeoutException TimeoutException}.
+   *   </li>
+   *   <li>
+   * Cancellation and interruption are not supported when performing an {@link FailsafeExecutor#getAsyncExecution(AsyncSupplier)
+   * async execution} and will have no effect since the async thread is unkown to Failsafe.</p>
+   *   </li>
+   * </ul>
    * </p>
    *
    * @param mayInterruptIfRunning Whether the policy should interrupt an execution in addition to cancelling it if the

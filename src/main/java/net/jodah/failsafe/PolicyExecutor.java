@@ -15,13 +15,16 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.function.AsyncRunnable;
+import net.jodah.failsafe.function.AsyncSupplier;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * Handles execution and execution results according to a policy. May contain pre and post execution behaviors.
+ * Handles execution and execution results according to a policy. May contain pre and post execution behaviors. Each
+ * PolicyExecutor makes its own determination about whether an execution result is a success or failure.
  * <p>
  * Part of the Failsafe SPI.
  *
@@ -147,6 +150,14 @@ public abstract class PolicyExecutor<P extends Policy> {
    */
   protected void setCancelled(boolean cancelled) {
     execution.cancelled = cancelled;
+  }
+
+  /**
+   * Returns whether the execution is an async execution, created by {@link FailsafeExecutor#runAsyncExecution(AsyncRunnable)}
+   * or {@link FailsafeExecutor#getAsyncExecution(AsyncSupplier)}.
+   */
+  protected boolean isAsyncExecution() {
+    return execution.isAsyncExecution();
   }
 
   private void callSuccessListener(ExecutionResult result) {

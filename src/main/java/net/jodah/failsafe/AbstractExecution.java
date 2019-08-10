@@ -77,11 +77,12 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   /**
-   * Performs post-execution handling of the {@code result}, returning true if complete else false.
+   * Performs post-execution handling of the {@code result}, completes the execution if all policies are complete for
+   * the {@code result}, and returns the result from the policies.
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  synchronized boolean postExecute(ExecutionResult result) {
+  synchronized ExecutionResult postExecute(ExecutionResult result) {
     record(result);
     boolean allComplete = true;
     for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors) {
@@ -91,7 +92,7 @@ public abstract class AbstractExecution extends ExecutionContext {
 
     waitNanos = result.getWaitNanos();
     completed = allComplete;
-    return completed;
+    return result;
   }
 
   /**

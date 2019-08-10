@@ -158,13 +158,14 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldOpenCircuitWhenTimeoutExceeded() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withTimeout(Duration.ofMillis(10));
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1));
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     assertTrue(breaker.isClosed());
 
     // When
-    Failsafe.with(breaker).run(() -> {
+    assertThrows(() -> Failsafe.with(breaker, timeout).run(() -> {
       Thread.sleep(20);
-    });
+    }), FailsafeException.class, TimeoutException.class);
 
     // Then
     assertTrue(breaker.isOpen());

@@ -55,7 +55,8 @@ public class Execution extends AbstractExecution {
    */
   public boolean canRetryFor(Object result) {
     preExecute();
-    return !postExecute(new ExecutionResult(result, null));
+    postExecute(new ExecutionResult(result, null));
+    return !completed;
   }
 
   /**
@@ -66,7 +67,8 @@ public class Execution extends AbstractExecution {
    */
   public boolean canRetryFor(Object result, Throwable failure) {
     preExecute();
-    return !postExecute(new ExecutionResult(result, failure));
+    postExecute(new ExecutionResult(result, failure));
+    return !completed;
   }
 
   /**
@@ -79,7 +81,8 @@ public class Execution extends AbstractExecution {
   public boolean canRetryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
     preExecute();
-    return !postExecute(new ExecutionResult(null, failure));
+    postExecute(new ExecutionResult(null, failure));
+    return !completed;
   }
 
   /**
@@ -99,7 +102,8 @@ public class Execution extends AbstractExecution {
    */
   public boolean complete(Object result) {
     preExecute();
-    return postExecute(new ExecutionResult(result, null));
+    postExecute(new ExecutionResult(result, null));
+    return completed;
   }
 
   /**

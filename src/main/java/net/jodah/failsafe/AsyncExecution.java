@@ -71,7 +71,8 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result) {
-    return postExecute(new ExecutionResult(result, null));
+    postExecute(new ExecutionResult(result, null));
+    return completed;
   }
 
   /**
@@ -85,7 +86,8 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   public boolean complete(Object result, Throwable failure) {
-    return postExecute(new ExecutionResult(result, failure));
+    postExecute(new ExecutionResult(result, failure));
+    return completed;
   }
 
   /**
@@ -145,6 +147,11 @@ public final class AsyncExecution extends AbstractExecution {
     retryCalled = false;
   }
 
+  @Override
+  boolean isAsyncExecution() {
+    return innerExecutionSupplier != null;
+  }
+
   /**
    * Attempts to complete the parent execution, calls failure handlers, and completes the future if needed. Runs
    * synchrnously since a concrete result is needed.
@@ -152,16 +159,17 @@ public final class AsyncExecution extends AbstractExecution {
    * @throws IllegalStateException if the execution is already complete
    */
   @Override
-  boolean postExecute(ExecutionResult result) {
+  ExecutionResult postExecute(ExecutionResult result) {
     synchronized (future) {
       if (!completeCalled) {
-        if (super.postExecute(result))
+        result = super.postExecute(result);
+        if (completed)
           complete(result, null);
         completeCalled = true;
         resultHandled = true;
       }
 
-      return completed;
+      return result;
     }
   }
 

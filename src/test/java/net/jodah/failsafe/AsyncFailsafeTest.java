@@ -421,14 +421,34 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     waiter.await(5000);
   }
 
+  public void shouldTimeoutAndRetry() throws Throwable {
+    // Given
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2).handleResult(false);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1));
+
+    // When / Then
+    Failsafe.with(rp, timeout).onComplete(e -> {
+      assertNull(e.getResult());
+      assertTrue(e.getFailure() instanceof TimeoutException);
+      waiter.resume();
+    }).runAsyncExecution(exec -> {
+      Thread.sleep(100);
+      if (!exec.complete(false))
+        exec.retry();
+    });
+
+    waiter.await(1000);
+  }
+
   public void shouldOpenCircuitWhenTimeoutExceeded() throws Throwable {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withTimeout(Duration.ofMillis(10));
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(10));
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     assertTrue(breaker.isClosed());
 
     // When
-    Failsafe.with(breaker).with(executor).runAsyncExecution(exec -> {
-      Thread.sleep(20);
+    Failsafe.with(breaker, timeout).with(executor).runAsyncExecution(exec -> {
+      Thread.sleep(100);
       exec.complete();
       waiter.resume();
     });

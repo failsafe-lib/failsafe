@@ -18,7 +18,10 @@ package net.jodah.failsafe.internal.executor;
 import net.jodah.failsafe.*;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -32,11 +35,17 @@ public class TimeoutExecutor extends PolicyExecutor<Timeout> {
 
   @Override
   protected boolean isFailure(ExecutionResult result) {
-    return !result.isNonResult() && result.getFailure() instanceof TimeoutException;
+    // Handle sync and async execution timeouts
+    boolean timeoutExceeded =
+      isAsyncExecution() && execution.getElapsedAttemptTime().toNanos() >= policy.getTimeout().toNanos();
+    return timeoutExceeded || (!result.isNonResult() && result.getFailure() instanceof TimeoutException);
   }
 
   @Override
   protected ExecutionResult onFailure(ExecutionResult result) {
+    // Handle async execution timeouts
+    if (!(result.getFailure() instanceof TimeoutException))
+      result = ExecutionResult.failure(new TimeoutException());
     return result.withComplete();
   }
 
@@ -90,33 +99,38 @@ public class TimeoutExecutor extends PolicyExecutor<Timeout> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       AtomicReference<Future<Object>> timeoutFuture = new AtomicReference<>();
 
-      try {
-        // Guard against race with future.complete or future.cancel
-        synchronized (future) {
-          if (!future.isDone()) {
-            // Schedule timeout check
-            timeoutFuture.set((Future) scheduler.schedule(() -> {
-              if (!promise.isDone() && promise.complete(ExecutionResult.failure(new TimeoutException()))
-                && policy.canCancel()) {
-                setCancelled(true);
-                future.getDelegate().cancel(policy.canInterrupt());
-              }
-              return null;
-            }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS));
-            future.injectTimeout(timeoutFuture.get());
+      // Schedule timeout if not an async execution
+      if (!isAsyncExecution()) {
+        try {
+          // Guard against race with future.complete or future.cancel
+          synchronized (future) {
+            if (!future.isDone()) {
+              // Schedule timeout check
+              timeoutFuture.set((Future) scheduler.schedule(() -> {
+                if (!promise.isDone() && promise.complete(ExecutionResult.failure(new TimeoutException()))
+                  && policy.canCancel()) {
+                  setCancelled(true);
+                  future.getDelegate().cancel(policy.canInterrupt());
+                }
+                return null;
+              }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS));
+              future.injectTimeout(timeoutFuture.get());
+            }
           }
+        } catch (Throwable t) {
+          // Hard scheduling failure
+          promise.completeExceptionally(t);
+          return promise;
         }
-      } catch (Throwable t) {
-        // Hard scheduling failure
-        promise.completeExceptionally(t);
-        return promise;
       }
 
       // Propagate execution and handle result
       supplier.get().handle((result, error) -> {
-        if (!promise.isDone())
-          timeoutFuture.get().cancel(false);
-        else {
+        if (!promise.isDone()) {
+          Future<Object> maybeFuture = timeoutFuture.get();
+          if (maybeFuture != null)
+            maybeFuture.cancel(false);
+        } else {
           try {
             result = promise.get();
           } catch (Exception ignore) {

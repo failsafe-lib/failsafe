@@ -63,7 +63,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws CircuitBreakerOpenException if a configured circuit is open.
+   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
     return call(execution -> Assert.notNull(supplier, "supplier"));
@@ -75,7 +75,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws CircuitBreakerOpenException if a configured circuit is open.
+   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(ContextualSupplier<T> supplier) {
     return call(execution -> Functions.supplierOf(supplier, execution));
@@ -214,7 +214,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws CircuitBreakerOpenException if a configured circuit is open.
+   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(CheckedRunnable runnable) {
     call(execution -> Functions.supplierOf(runnable));
@@ -226,7 +226,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws CircuitBreakerOpenException if a configured circuit is open.
+   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(ContextualRunnable runnable) {
     call(execution -> Functions.supplierOf(runnable, execution));
