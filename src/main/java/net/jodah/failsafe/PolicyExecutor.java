@@ -15,8 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.AsyncRunnable;
-import net.jodah.failsafe.function.AsyncSupplier;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
@@ -143,21 +141,6 @@ public abstract class PolicyExecutor<P extends Policy> {
   protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
     FailsafeFuture<Object> future) {
     return CompletableFuture.completedFuture(execution.resultHandled ? result : onFailure(result));
-  }
-
-  /**
-   * Sets the {@code cancelled} value for the execution.
-   */
-  protected void setCancelled(boolean cancelled) {
-    execution.cancelled = cancelled;
-  }
-
-  /**
-   * Returns whether the execution is an async execution, created by {@link FailsafeExecutor#runAsyncExecution(AsyncRunnable)}
-   * or {@link FailsafeExecutor#getAsyncExecution(AsyncSupplier)}.
-   */
-  protected boolean isAsyncExecution() {
-    return execution.isAsyncExecution();
   }
 
   private void callSuccessListener(ExecutionResult result) {

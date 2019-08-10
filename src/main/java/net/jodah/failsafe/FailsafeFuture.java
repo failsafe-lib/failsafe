@@ -15,23 +15,25 @@
  */
 package net.jodah.failsafe;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
- * A CompletableFuture implementation that propogates cancellations.
+ * A CompletableFuture implementation that propogates cancellations and calls completion handlers.
  *
  * @param <T> result type
  * @author Jonathan Halterman
  */
-public class FailsafeFuture<T> extends CompletableFuture<T> {
+class FailsafeFuture<T> extends CompletableFuture<T> {
   private final FailsafeExecutor<T> executor;
   private ExecutionContext execution;
 
   // Mutable state, guarded by "this"
   private Future<T> delegate;
-  private Future<T> timeoutDelegate;
+  private List<Future<T>> timeoutDelegates;
 
   FailsafeFuture(FailsafeExecutor<T> executor) {
     this.executor = executor;
@@ -63,10 +65,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
       return false;
 
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
-    if (delegate != null)
-      cancelResult = delegate.cancel(mayInterruptIfRunning);
-    if (timeoutDelegate != null)
-      timeoutDelegate.cancel(true);
+    cancelResult = cancelDelegates(mayInterruptIfRunning, cancelResult);
     ExecutionResult result = ExecutionResult.failure(new CancellationException());
     super.completeExceptionally(result.getFailure());
     executor.handleComplete(result, execution);
@@ -92,20 +91,32 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     return completed;
   }
 
-  public synchronized Future<T> getDelegate() {
+  synchronized Future<T> getDelegate() {
     return delegate;
   }
 
-  synchronized Future<T> getTimeoutDelegate() {
-    return timeoutDelegate;
+  synchronized boolean cancelDelegates(boolean interruptDelegate, boolean result) {
+    if (delegate != null)
+      result = delegate.cancel(interruptDelegate);
+    if (timeoutDelegates != null)
+      for (Future<T> timeoutDelegate : timeoutDelegates)
+        timeoutDelegate.cancel(false);
+    return result;
   }
 
-  public synchronized void inject(Future<T> delegate) {
+  synchronized List<Future<T>> getTimeoutDelegates() {
+    return timeoutDelegates;
+  }
+
+  synchronized void inject(Future<T> delegate) {
     this.delegate = delegate;
+    timeoutDelegates = null;
   }
 
-  public synchronized void injectTimeout(Future<T> delegate) {
-    this.timeoutDelegate = delegate;
+  synchronized void injectTimeout(Future<T> timeoutDelegate) {
+    if (timeoutDelegates == null)
+      timeoutDelegates = new ArrayList<>(3);
+    timeoutDelegates.add(timeoutDelegate);
   }
 
   void inject(ExecutionContext execution) {

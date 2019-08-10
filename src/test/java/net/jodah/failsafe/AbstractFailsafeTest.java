@@ -331,6 +331,7 @@ public abstract class AbstractFailsafeTest {
       } catch (InterruptedException e) {
         waiter.assertTrue(ctx.isCancelled());
         waiter.resume();
+        throw e;
       }
       return "foo";
     };

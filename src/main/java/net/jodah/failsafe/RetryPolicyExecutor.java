@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.internal.executor;
+package net.jodah.failsafe;
 
-import net.jodah.failsafe.*;
 import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
@@ -35,7 +34,7 @@ import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
  *
  * @author Jonathan Halterman
  */
-public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
+class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   // Mutable state
   private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
@@ -48,7 +47,7 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private EventListener retriesExceededListener;
   private EventListener retryListener;
 
-  public RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener,
+  RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener,
     EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener) {
     super(retryPolicy, execution);
     this.abortListener = abortListener;
@@ -72,7 +71,8 @@ public class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
         try {
           Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getWaitNanos()));
         } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
+          if (!execution.interrupted)
+            Thread.currentThread().interrupt();
           return ExecutionResult.failure(new FailsafeException(e));
         }
 

@@ -283,7 +283,8 @@ final class Functions {
         execution.preExecute();
         result = ExecutionResult.success(supplier.get());
       } catch (Throwable t) {
-        if (t instanceof InterruptedException)
+        // Propogate InterruptedException if not intentionally interrupted by a timeout
+        if (!execution.interrupted && t instanceof InterruptedException)
           Thread.currentThread().interrupt();
         result = ExecutionResult.failure(t);
       } finally {

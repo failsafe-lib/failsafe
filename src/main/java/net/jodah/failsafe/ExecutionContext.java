@@ -119,4 +119,10 @@ public class ExecutionContext {
     context.lastFailure = failure;
     return context;
   }
+
+  @Override
+  public String toString() {
+    return "ExecutionContext[" + "attempts=" + attempts + ", lastResult=" + lastResult + ", lastFailure=" + lastFailure
+      + ']';
+  }
 }

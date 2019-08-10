@@ -4,6 +4,7 @@
 
 - Added a new `Timeout` policy.
 - Added `ExecutionContext.isCancelled()`.
+- Added `ExecutionContext.getElapsedAttemptTime()`.
 
 ### Bug Fixes
 

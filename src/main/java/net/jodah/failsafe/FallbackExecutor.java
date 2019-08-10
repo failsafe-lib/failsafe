@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.internal.executor;
+package net.jodah.failsafe;
 
-import net.jodah.failsafe.*;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.Callable;
@@ -26,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * A PolicyExecutor that handles failures according to a {@link Fallback}.
  */
-public class FallbackExecutor extends PolicyExecutor<Fallback> {
-  public FallbackExecutor(Fallback fallback, AbstractExecution execution) {
+class FallbackExecutor extends PolicyExecutor<Fallback> {
+  FallbackExecutor(Fallback fallback, AbstractExecution execution) {
     super(fallback, execution);
   }
 
@@ -43,7 +42,7 @@ public class FallbackExecutor extends PolicyExecutor<Fallback> {
 
   @SuppressWarnings("unchecked")
   protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
-      FailsafeFuture<Object> future) {
+    FailsafeFuture<Object> future) {
     if (!policy.isAsync())
       return CompletableFuture.completedFuture(onFailure(result));
 

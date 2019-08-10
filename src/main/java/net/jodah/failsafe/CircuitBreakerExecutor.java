@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.internal.executor;
+package net.jodah.failsafe;
 
-import net.jodah.failsafe.*;
 import net.jodah.failsafe.internal.CircuitBreakerInternals;
 
 import java.time.Duration;
@@ -25,10 +24,10 @@ import java.time.Duration;
  *
  * @author Jonathan Halterman
  */
-public class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
+class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
   private final CircuitBreakerInternals breakerInternals;
 
-  public CircuitBreakerExecutor(CircuitBreaker circuitBreaker, CircuitBreakerInternals breakerInternals,
+  CircuitBreakerExecutor(CircuitBreaker circuitBreaker, CircuitBreakerInternals breakerInternals,
     AbstractExecution execution) {
     super(circuitBreaker, execution);
     this.breakerInternals = breakerInternals;

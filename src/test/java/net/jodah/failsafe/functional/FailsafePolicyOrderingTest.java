@@ -8,6 +8,7 @@ import net.jodah.failsafe.function.ContextualSupplier;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -155,13 +156,13 @@ public class FailsafePolicyOrderingTest {
     AtomicInteger rp2FailedAttempts = new AtomicInteger();
     AtomicInteger rp2Failures = new AtomicInteger();
     RetryPolicy<Object> rp1 = new RetryPolicy<>().handle(IllegalStateException.class)
-        .withMaxRetries(2)
-        .onFailedAttempt(e -> rp1FailedAttempts.incrementAndGet())
-        .onFailure(e -> rp1Failures.incrementAndGet());
+      .withMaxRetries(2)
+      .onFailedAttempt(e -> rp1FailedAttempts.incrementAndGet())
+      .onFailure(e -> rp1Failures.incrementAndGet());
     RetryPolicy<Object> rp2 = new RetryPolicy<>().handle(IllegalArgumentException.class)
-        .withMaxRetries(3)
-        .onFailedAttempt(e -> rp2FailedAttempts.incrementAndGet())
-        .onFailure(e -> rp2Failures.incrementAndGet());
+      .withMaxRetries(3)
+      .onFailedAttempt(e -> rp2FailedAttempts.incrementAndGet())
+      .onFailure(e -> rp2Failures.incrementAndGet());
     Fallback<Object> fallback = Fallback.ofAsync(() -> true);
     FailsafeExecutor<Object> failsafe = Failsafe.with(fallback, rp2, rp1).onComplete(e -> {
       waiter.assertEquals(5, e.getAttemptCount());
@@ -241,13 +242,13 @@ public class FailsafePolicyOrderingTest {
     AtomicInteger rp2FailedAttempts = new AtomicInteger();
     AtomicInteger rp2Failures = new AtomicInteger();
     RetryPolicy<Object> rp1 = new RetryPolicy<>().handle(IllegalStateException.class)
-        .withMaxRetries(1)
-        .onFailedAttempt(e -> rp1FailedAttempts.incrementAndGet())
-        .onFailure(e -> rp1Failures.incrementAndGet());
+      .withMaxRetries(1)
+      .onFailedAttempt(e -> rp1FailedAttempts.incrementAndGet())
+      .onFailure(e -> rp1Failures.incrementAndGet());
     RetryPolicy<Object> rp2 = new RetryPolicy<>().handle(IllegalStateException.class)
-        .withMaxRetries(10)
-        .onFailedAttempt(e -> rp2FailedAttempts.incrementAndGet())
-        .onFailure(e -> rp2Failures.incrementAndGet());
+      .withMaxRetries(10)
+      .onFailedAttempt(e -> rp2FailedAttempts.incrementAndGet())
+      .onFailure(e -> rp2Failures.incrementAndGet());
     FailsafeExecutor<Object> failsafe = Failsafe.with(rp2, rp1).onComplete(e -> {
       waiter.assertEquals(6, e.getAttemptCount());
       waiter.resume();
@@ -277,19 +278,59 @@ public class FailsafePolicyOrderingTest {
   private <T> T failsafeGet(FailsafeExecutor<T> failsafe, Object supplier, boolean sync) {
     if (sync)
       return Testing.ignoreExceptions(() -> supplier instanceof CheckedSupplier ?
-          failsafe.get((CheckedSupplier<T>) supplier) :
-          failsafe.get((ContextualSupplier<T>) supplier));
+        failsafe.get((CheckedSupplier<T>) supplier) :
+        failsafe.get((ContextualSupplier<T>) supplier));
     else
       return Testing.ignoreExceptions(() -> (supplier instanceof CheckedSupplier ?
-          failsafe.getAsync((CheckedSupplier<T>) supplier) :
-          failsafe.getAsync((ContextualSupplier<T>) supplier)).get());
+        failsafe.getAsync((CheckedSupplier<T>) supplier) :
+        failsafe.getAsync((ContextualSupplier<T>) supplier)).get());
   }
 
   private <T> void assertFailsafeFailure(FailsafeExecutor<T> failsafe, CheckedSupplier<T> supplier, boolean sync,
-      Class<? extends Throwable> expectedException) {
+    Class<? extends Throwable> expectedException) {
     if (sync)
       Asserts.assertThrows(() -> failsafe.get(supplier), expectedException);
     else
       Asserts.assertThrows(() -> failsafe.getAsync(supplier).get(), ExecutionException.class, expectedException);
+  }
+
+  /**
+   * Tests a scenario with a fallback, retry policy and nested timeouts.
+   */
+  private void assertFallbackRetryPolicyAndNestedTimeous(boolean sync) throws Throwable {
+    // Given
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    AtomicInteger timeout1Failures = new AtomicInteger();
+    AtomicInteger timeout2Failures = new AtomicInteger();
+    Timeout<Object> timeout1 = Timeout.of(Duration.ofMillis(50)).onFailure(e -> timeout1Failures.incrementAndGet());
+    Timeout<Object> timeout2 = Timeout.of(Duration.ofMillis(100)).onFailure(e -> timeout2Failures.incrementAndGet());
+    Fallback<Object> fallback = Fallback.of(true);
+    FailsafeExecutor<Object> failsafe = Failsafe.with(fallback, rp, timeout1, timeout2).onComplete(e -> {
+      waiter.assertEquals(3, e.getAttemptCount());
+      waiter.assertEquals(e.getResult(), true);
+      waiter.assertNull(e.getFailure());
+      waiter.resume();
+    });
+    CheckedSupplier supplier = () -> {
+      Thread.sleep(200);
+      return null;
+    };
+
+    // When
+    Object result = failsafeGet(failsafe, supplier, sync);
+
+    // Then
+    waiter.await(1000);
+    assertEquals(result, true);
+    assertEquals(timeout1Failures.get(), 3);
+    assertEquals(timeout2Failures.get(), 3);
+  }
+
+  public void testFallbackRetryPolicyAndNestedTimeousSync() throws Throwable {
+    assertFallbackRetryPolicyAndNestedTimeous(true);
+  }
+
+  public void testFallbackRetryPolicyAndNestedTimeousAsync() throws Throwable {
+    assertFallbackRetryPolicyAndNestedTimeous(true);
   }
 }

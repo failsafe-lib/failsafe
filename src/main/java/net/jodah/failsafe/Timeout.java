@@ -2,7 +2,6 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.AsyncSupplier;
 import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.internal.executor.TimeoutExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.time.Duration;
@@ -67,7 +66,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    * Notes:
    * <ul>
    *   <li>
-   * Executions that are cancelled after they timeout are still completed with {@link
+   * Executions that are cancelled or interrupted after they timeout are still completed with {@link
    * java.util.concurrent.TimeoutException TimeoutException}.
    *   </li>
    *   <li>

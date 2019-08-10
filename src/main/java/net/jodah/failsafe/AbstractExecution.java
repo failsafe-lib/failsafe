@@ -39,6 +39,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   /** The wait time in nanoseconds. */
   private volatile long waitNanos;
   volatile boolean completed;
+  volatile boolean interrupted;
 
   /**
    * Creates a new AbstractExecution for the {@code executor}.
@@ -53,15 +54,18 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   /**
-   * Records an execution attempt.
+   * Records an execution attempt so long as the execution has not already been completed or interrupted. In the case of
+   * interruption, an execution will be recorded by the interrupting thread.
    *
    * @throws IllegalStateException if the execution is already complete
    */
   void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
-    attempts.incrementAndGet();
-    lastResult = result.getResult();
-    lastFailure = result.getFailure();
+    if (!interrupted) {
+      attempts.incrementAndGet();
+      lastResult = result.getResult();
+      lastFailure = result.getFailure();
+    }
   }
 
   void preExecute() {
@@ -69,6 +73,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
     cancelled = false;
+    interrupted = false;
     resultHandled = false;
   }
 

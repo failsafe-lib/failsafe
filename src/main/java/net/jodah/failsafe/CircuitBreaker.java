@@ -17,7 +17,6 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.internal.*;
-import net.jodah.failsafe.internal.executor.CircuitBreakerExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.Ratio;
 

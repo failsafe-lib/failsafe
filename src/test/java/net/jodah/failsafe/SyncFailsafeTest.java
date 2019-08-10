@@ -156,6 +156,34 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     verify(service, times(3)).connect();
   }
 
+  /**
+   * Tests a scenario where three timeouts should cause all delegates to be cancelled with interrupts.
+   */
+  public void shouldCancelNestedTimeoutsWithInterrupt() throws Throwable {
+    // Given
+    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2);
+    Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
+    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withCancel(true);
+
+    // When / Then
+    assertThrows(() -> Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {
+      assertNull(e.getResult());
+      assertTrue(e.getFailure() instanceof TimeoutException);
+    }).get(ctx -> {
+      assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutException);
+
+      try {
+        assertFalse(ctx.isCancelled());
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        assertTrue(ctx.isCancelled());
+        throw e;
+      }
+      fail("Expected InterruptedException");
+      return false;
+    }), FailsafeException.class, TimeoutException.class);
+  }
+
   public void shouldOpenCircuitWhenTimeoutExceeded() {
     // Given
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1));
@@ -172,7 +200,34 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   /**
-   * Asserts that Failsafe throws when interrupting a waiting thread.
+   * Asserts that Failsafe throws when interrupting while blocked in an execution.
+   */
+  public void shouldThrowWhenInterruptedDuringSynchronousExecution() {
+    Thread mainThread = Thread.currentThread();
+    new Thread(() -> {
+      try {
+        Thread.sleep(100);
+        mainThread.interrupt();
+      } catch (Exception e) {
+      }
+    }).start();
+
+    try {
+      Failsafe.with(new RetryPolicy<>().withMaxRetries(0)).run(() -> {
+        Thread.sleep(10000);
+      });
+    } catch (Exception e) {
+      assertTrue(e instanceof FailsafeException);
+      assertTrue(e.getCause() instanceof InterruptedException);
+      // Clear interrupt flag
+      assertTrue(Thread.interrupted());
+      return;
+    }
+    fail("Exception expected");
+  }
+
+  /**
+   * Asserts that Failsafe throws when interrupting while blocked between executions.
    */
   public void shouldThrowWhenInterruptedDuringSynchronousDelay() {
     Thread mainThread = Thread.currentThread();
@@ -192,8 +247,10 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
       assertTrue(e instanceof FailsafeException);
       assertTrue(e.getCause() instanceof InterruptedException);
       // Clear interrupt flag
-      Thread.interrupted();
+      assertTrue(Thread.interrupted());
+      return;
     }
+    fail("Exception expected");
   }
 
   public void shouldRetryAndOpenCircuit() {

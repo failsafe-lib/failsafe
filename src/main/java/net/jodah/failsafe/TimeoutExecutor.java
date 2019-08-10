@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.internal.executor;
+package net.jodah.failsafe;
 
-import net.jodah.failsafe.*;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
@@ -28,8 +27,8 @@ import java.util.function.Supplier;
 /**
  * A PolicyExecutor that handles failures according to a {@link Timeout}.
  */
-public class TimeoutExecutor extends PolicyExecutor<Timeout> {
-  public TimeoutExecutor(Timeout timeout, AbstractExecution execution) {
+class TimeoutExecutor extends PolicyExecutor<Timeout> {
+  TimeoutExecutor(Timeout timeout, AbstractExecution execution) {
     super(timeout, execution);
   }
 
@@ -37,7 +36,7 @@ public class TimeoutExecutor extends PolicyExecutor<Timeout> {
   protected boolean isFailure(ExecutionResult result) {
     // Handle sync and async execution timeouts
     boolean timeoutExceeded =
-      isAsyncExecution() && execution.getElapsedAttemptTime().toNanos() >= policy.getTimeout().toNanos();
+      execution.isAsyncExecution() && execution.getElapsedAttemptTime().toNanos() >= policy.getTimeout().toNanos();
     return timeoutExceeded || (!result.isNonResult() && result.getFailure() instanceof TimeoutException);
   }
 
@@ -60,15 +59,18 @@ public class TimeoutExecutor extends PolicyExecutor<Timeout> {
       AtomicReference<ExecutionResult> result = new AtomicReference<>();
       Future<Object> timeoutFuture;
       Thread executionThread = Thread.currentThread();
-      setCancelled(false);
 
       try {
         // Schedule timeout check
         timeoutFuture = (Future) scheduler.schedule(() -> {
           if (result.getAndUpdate(v -> v != null ? v : ExecutionResult.failure(new TimeoutException())) == null) {
             if (policy.canCancel()) {
-              setCancelled(true);
-              if (policy.canInterrupt())
+              boolean canInterrupt = policy.canInterrupt();
+              if (canInterrupt)
+                execution.record(result.get());
+              execution.cancelled = true;
+              execution.interrupted = canInterrupt;
+              if (canInterrupt)
                 executionThread.interrupt();
             }
           }
@@ -100,7 +102,7 @@ public class TimeoutExecutor extends PolicyExecutor<Timeout> {
       AtomicReference<Future<Object>> timeoutFuture = new AtomicReference<>();
 
       // Schedule timeout if not an async execution
-      if (!isAsyncExecution()) {
+      if (!execution.isAsyncExecution()) {
         try {
           // Guard against race with future.complete or future.cancel
           synchronized (future) {
@@ -109,8 +111,12 @@ public class TimeoutExecutor extends PolicyExecutor<Timeout> {
               timeoutFuture.set((Future) scheduler.schedule(() -> {
                 if (!promise.isDone() && promise.complete(ExecutionResult.failure(new TimeoutException()))
                   && policy.canCancel()) {
-                  setCancelled(true);
-                  future.getDelegate().cancel(policy.canInterrupt());
+                  boolean canInterrupt = policy.canInterrupt();
+                  if (canInterrupt)
+                    execution.record(promise.get());
+                  execution.cancelled = true;
+                  execution.interrupted = canInterrupt;
+                  future.cancelDelegates(canInterrupt, false);
                 }
                 return null;
               }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS));

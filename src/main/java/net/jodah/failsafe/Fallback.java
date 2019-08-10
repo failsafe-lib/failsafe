@@ -20,7 +20,6 @@ import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.function.CheckedFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
-import net.jodah.failsafe.internal.executor.FallbackExecutor;
 import net.jodah.failsafe.internal.util.Assert;
 
 /**
