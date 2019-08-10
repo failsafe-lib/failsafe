@@ -90,11 +90,12 @@ public final class DelegatingScheduler implements Scheduler {
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
       boolean result = super.cancel(mayInterruptIfRunning);
-      synchronized(this) {
-        if (delegate != null)
+      synchronized (this) {
+        if (delegate != null) {
           result = delegate.cancel(mayInterruptIfRunning);
-        if (forkJoinPoolThread != null && mayInterruptIfRunning)
-          forkJoinPoolThread.interrupt();
+          if (forkJoinPoolThread != null && mayInterruptIfRunning)
+            forkJoinPoolThread.interrupt();
+        }
       }
       return result;
     }
@@ -115,6 +116,9 @@ public final class DelegatingScheduler implements Scheduler {
           }
         }
         promise.complete(callable.call());
+        synchronized (promise) {
+          promise.forkJoinPoolThread = null;
+        }
       } catch (Throwable t) {
         promise.completeExceptionally(t);
       }
