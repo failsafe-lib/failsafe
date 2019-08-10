@@ -61,8 +61,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or is interrupted while
-   * executing
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
+   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
@@ -73,8 +73,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception or is interrupted while
-   * executing
+   * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
+   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public <T extends R> T get(ContextualSupplier<T> supplier) {
@@ -212,8 +212,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or is interrupted while
-   * executing
+   * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
+   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(CheckedRunnable runnable) {
@@ -224,8 +224,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code runnable} fails with a checked Exception or is interrupted while
-   * executing
+   * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
+   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
    * @throws CircuitBreakerOpenException if a configured circuit is open.
    */
   public void run(ContextualRunnable runnable) {
