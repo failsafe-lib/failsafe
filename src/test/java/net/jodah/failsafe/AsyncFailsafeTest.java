@@ -354,8 +354,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnGetAsync() throws Throwable {
-    assertCancel(executor -> getAsync(executor, (CheckedSupplier<?>) () -> {
-      Thread.sleep(1000);
+    assertCancel(executor -> getAsync(executor, (ContextualSupplier<?>) ctx -> {
+      try {
+        waiter.assertFalse(ctx.isCancelled());
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        waiter.assertTrue(ctx.isCancelled());
+        throw e;
+      }
       return "test";
     }), retryAlways);
   }

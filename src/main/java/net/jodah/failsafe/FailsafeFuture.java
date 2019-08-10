@@ -29,7 +29,7 @@ import java.util.concurrent.Future;
  */
 class FailsafeFuture<T> extends CompletableFuture<T> {
   private final FailsafeExecutor<T> executor;
-  private ExecutionContext execution;
+  private AbstractExecution execution;
 
   // Mutable state, guarded by "this"
   private Future<T> delegate;
@@ -95,7 +95,13 @@ class FailsafeFuture<T> extends CompletableFuture<T> {
     return delegate;
   }
 
+  /**
+   * Cancels the delegate passing in the {@code interruptDelegate} flag, cancels all timeout delegates, and marks the
+   * execution as cancelled.
+   */
   synchronized boolean cancelDelegates(boolean interruptDelegate, boolean result) {
+    execution.cancelled = true;
+    execution.interrupted = interruptDelegate;
     if (delegate != null)
       result = delegate.cancel(interruptDelegate);
     if (timeoutDelegates != null)
@@ -119,7 +125,7 @@ class FailsafeFuture<T> extends CompletableFuture<T> {
     timeoutDelegates.add(timeoutDelegate);
   }
 
-  void inject(ExecutionContext execution) {
+  void inject(AbstractExecution execution) {
     this.execution = execution;
   }
 }

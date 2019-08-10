@@ -115,8 +115,6 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
                   boolean canInterrupt = policy.canInterrupt();
                   if (canInterrupt)
                     execution.record(promise.get());
-                  execution.cancelled = true;
-                  execution.interrupted = canInterrupt;
                   future.cancelDelegates(canInterrupt, false);
                 }
                 return null;
