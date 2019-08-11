@@ -30,11 +30,6 @@ public interface CircuitBreakerInternals {
   int getCurrentExecutions();
 
   /**
-   * Records an execution failure for the {@code context}.
-   */
-  void recordFailure(ExecutionContext context);
-
-  /**
    * Opens the circuit breaker and considers the {@code context} when computing the delay before the
    * circuit breaker will transition to half open.
    */

@@ -251,7 +251,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Records an execution failure.
    */
   public void recordFailure() {
-    internals.recordFailure(null);
+    recordExecutionFailure(null);
   }
 
   /**
@@ -429,23 +429,22 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
     }
   }
 
+  /**
+   * Records an execution failure.
+   */
+  void recordExecutionFailure(ExecutionContext context) {
+    try {
+      state.get().recordFailure(context);
+    } finally {
+      currentExecutions.decrementAndGet();
+    }
+  }
+
   // Internal delegate implementation
   final CircuitBreakerInternals internals = new CircuitBreakerInternals() {
     @Override
     public int getCurrentExecutions() {
       return currentExecutions.get();
-    }
-
-    /**
-     * Records an execution failure.
-     */
-    @Override
-    public void recordFailure(ExecutionContext context) {
-      try {
-        state.get().recordFailure(context);
-      } finally {
-        currentExecutions.decrementAndGet();
-      }
     }
 
     @Override

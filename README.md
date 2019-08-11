@@ -450,7 +450,7 @@ Failsafe.with(timeout).getAsync(ctx -> {
 });
 ```
 
-Alternatively, an *interrupting* cancellation can be used to forcefully [interrupt] an execution.
+Alternatively, an *interrupting* cancellation can be used to forcefully [interrupt] an execution thread.
 
 #### Asynchronous API Integration
 
