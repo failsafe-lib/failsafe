@@ -172,7 +172,7 @@ And of course you can arbitrarily combine any of these things into a single poli
 Timeout<Object> timeout = Timeout.of(Duration.ofSeconds(10));
 ```
 
-You can also cancel an execution and perform an optional interrupt if it times out:
+You can also cancel an execution and perform an optional [interrupt] if it times out:
 
 ```
 timeout.withCancel(shouldInterrupt);
@@ -434,16 +434,14 @@ int result = Failsafe.with(retryPolicy).get(ctx -> ctx.getLastResult(0) + 1);
 
 #### Execution Cancellation
 
-Failsafe supports cancellation and optional interruption of asynchronous executions:
+Failsafe supports cancellation and optional interruption of executions. Cancellation and interruption can be triggered by a [Timeout](#timeouts) or through an async execution result:
 
 ```java
 Future<Connection> future = Failsafe.with(retryPolicy).getAsync(this::connect);
 future.cancel(shouldInterrupt);
 ```
 
-The `shouldInterrupt` argument indicates whether the cancellation should be *non-interrupting* or *interrupting*.
-
-Executable code can cooperate with a *non-interrupting* cancellation by checking `ExecutionContext.isCancelled()`:
+Executions can cooperate with a *non-interrupting* cancellation by checking `ExecutionContext.isCancelled()`:
 
 ```java
 Failsafe.with(timeout).getAsync(ctx -> {
@@ -452,7 +450,7 @@ Failsafe.with(timeout).getAsync(ctx -> {
 });
 ```
 
-Alternatively, an *interrupting* cancellation can be used to forcefully interrupt an execution with `InterruptedException`.
+Alternatively, an *interrupting* cancellation can be used to forcefully [interrupt] an execution.
 
 #### Asynchronous API Integration
 
@@ -595,6 +593,7 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [ExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html
 [RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
 [Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
+[interrupt]: https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#interrupt--
 
 [fail-fast]: https://en.wikipedia.org/wiki/Fail-fast
 [fowler-circuit-breaker]: http://martinfowler.com/bliki/CircuitBreaker.html

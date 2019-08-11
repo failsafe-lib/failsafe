@@ -2,14 +2,18 @@
 
 ### Improvements
 
-- Added a new `Timeout` policy.
+- Added a new `Timeout` policy that fails with `TimeoutExceededException`.
 - Added `ExecutionContext.isCancelled()`.
 - Added `ExecutionContext.getElapsedAttemptTime()`.
 
+### API Changes
+
+- Deprecated `CircuitBreaker.withTimeout` in favor of using a separate `Timeout` policy.
+
 ### Bug Fixes
 
-- Reset interrupt flag when a synchronous execution is interrupted
-- Improved handling around externally completing a Failsafe `CompletableFuture`
+- Reset interrupt flag when a synchronous execution is interrupted.
+- Improved handling around externally completing a Failsafe `CompletableFuture`.
 
 # 2.1.1
 
