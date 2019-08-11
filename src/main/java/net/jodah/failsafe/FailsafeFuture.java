@@ -104,9 +104,11 @@ class FailsafeFuture<T> extends CompletableFuture<T> {
     execution.interrupted = interruptDelegate;
     if (delegate != null)
       result = delegate.cancel(interruptDelegate);
-    if (timeoutDelegates != null)
+    if (timeoutDelegates != null) {
       for (Future<T> timeoutDelegate : timeoutDelegates)
         timeoutDelegate.cancel(false);
+      timeoutDelegates.clear();
+    }
     return result;
   }
 
@@ -116,7 +118,10 @@ class FailsafeFuture<T> extends CompletableFuture<T> {
 
   synchronized void inject(Future<T> delegate) {
     this.delegate = delegate;
-    timeoutDelegates = null;
+    if (timeoutDelegates != null) {
+      // Timeout delegates should already be cancelled
+      timeoutDelegates.clear();
+    }
   }
 
   synchronized void injectTimeout(Future<T> timeoutDelegate) {

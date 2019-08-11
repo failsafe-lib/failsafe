@@ -82,7 +82,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
         return postExecute(ExecutionResult.failure(t));
       }
 
-      // Propagate execution and handle result
+      // Propagate execution, cancel timeout future if not done, and handle result
       if (result.compareAndSet(null, supplier.get()))
         timeoutFuture.cancel(false);
       return postExecute(result.get());
@@ -90,8 +90,8 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
   }
 
   /**
-   * Schedules a separate timeout call that blocks and fails with {@link TimeoutExceededException} if the policy's timeout is
-   * exceeded.
+   * Schedules a separate timeout call that blocks and fails with {@link TimeoutExceededException} if the policy's
+   * timeout is exceeded.
    */
   @Override
   @SuppressWarnings("unchecked")
@@ -129,7 +129,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
         }
       }
 
-      // Propagate execution and handle result
+      // Propagate execution, cancel timeout future if not done, and handle result
       supplier.get().handle((result, error) -> {
         if (!promise.isDone()) {
           Future<Object> maybeFuture = timeoutFuture.get();

@@ -293,6 +293,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
     Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withCancel(true);
     AtomicReference<FailsafeFuture<Boolean>> futureRef = new AtomicReference<>();
+    CountDownLatch futureLatch = new CountDownLatch(1);
 
     // When
     FailsafeFuture<Boolean> future = (FailsafeFuture<Boolean>) Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {
@@ -300,11 +301,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     }).getAsync(ctx -> {
+      // Wait for futureRef to be set
+      futureLatch.await();
       waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
       Consumer<Boolean> asserts = (expected) -> {
         waiter.assertEquals(expected, ctx.isCancelled());
         waiter.assertEquals(expected, futureRef.get().getDelegate().isCancelled());
-        waiter.assertEquals(expected, futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
+        if (!futureRef.get().getTimeoutDelegates().isEmpty())
+          waiter.assertEquals(expected, futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
       };
 
       try {
@@ -321,6 +325,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       return false;
     });
     futureRef.set(future);
+    futureLatch.countDown();
 
     // Then
     waiter.await(1000, 4);
