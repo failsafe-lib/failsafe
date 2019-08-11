@@ -52,7 +52,8 @@ public class Failsafe {
    */
   @SafeVarargs
   public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P... policies) {
-    return new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies")));
+    Assert.notNull(policies, "policies");
+    return new FailsafeExecutor<>(Arrays.asList(policies));
   }
 
   /**
@@ -75,7 +76,6 @@ public class Failsafe {
    * represents a failure. This allows different policies to be used for handling different types of failures.
    *
    * @param <R> result type
-   * @param <P> policy type
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */

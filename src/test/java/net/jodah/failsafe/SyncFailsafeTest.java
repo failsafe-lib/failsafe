@@ -214,7 +214,13 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
 
     try {
       Failsafe.with(new RetryPolicy<>().withMaxRetries(0)).run(() -> {
-        Thread.sleep(10000);
+        try {
+          Thread.sleep(10000);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw e;
+        }
+        fail("Expected interruption");
       });
     } catch (Exception e) {
       assertTrue(e instanceof FailsafeException);

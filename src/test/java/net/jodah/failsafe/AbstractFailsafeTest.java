@@ -35,6 +35,7 @@ import static net.jodah.failsafe.Asserts.assertThrows;
 import static net.jodah.failsafe.Testing.*;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 @Test
 public abstract class AbstractFailsafeTest {
@@ -333,6 +334,7 @@ public abstract class AbstractFailsafeTest {
         waiter.resume();
         throw e;
       }
+      fail("Expected interruption");
       return "foo";
     };
 
