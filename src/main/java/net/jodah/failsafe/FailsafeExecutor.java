@@ -324,8 +324,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
 
   /**
    * Configures the {@code executor} to use for performing asynchronous executions and listener callbacks.
+   * <p>
+   * Note: The {@code executor} should have a core pool size of at least 2 in order for {@link Timeout timeouts} to
+   * work.
+   * </p>
    *
    * @throws NullPointerException if {@code executor} is null
+   * @throws IllegalArgumentException if the {@code executor} has a core pool size of less than 2
    */
   public FailsafeExecutor<R> with(ScheduledExecutorService executor) {
     this.scheduler = Scheduler.of(executor);
@@ -336,6 +341,10 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Configures the {@code executor} to use for performing asynchronous executions and listener callbacks. For
    * executions that require a delay, an internal ScheduledExecutorService will be used for the delay, then the {@code
    * executor} will be used for actual execution.
+   * <p>
+   * Note: The {@code executor} should have a core pool size or parallelism of at least 2 in order for {@link Timeout
+   * timeouts} to work.
+   * </p>
    *
    * @throws NullPointerException if {@code executor} is null
    */

@@ -179,7 +179,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
         assertTrue(ctx.isCancelled());
         throw e;
       }
-      fail("Expected InterruptedException");
+      fail("Expected interruption");
       return false;
     }), TimeoutExceededException.class);
   }

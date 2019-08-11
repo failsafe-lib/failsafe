@@ -5,6 +5,7 @@
 - Added a new `Timeout` policy that fails with `TimeoutExceededException`.
 - Added `ExecutionContext.isCancelled()`.
 - Added `ExecutionContext.getElapsedAttemptTime()`.
+- Made the internal delay scheduler more adaptive.
 
 ### API Changes
 

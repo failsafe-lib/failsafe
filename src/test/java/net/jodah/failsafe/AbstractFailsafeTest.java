@@ -69,7 +69,7 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T get(FailsafeExecutor<T> failsafe, CheckedSupplier<T> supplier) {
     return unwrapExceptions(
-      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.with(getExecutor()).getAsync(supplier).get());
+      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
   }
 
   /**
@@ -84,7 +84,7 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T get(FailsafeExecutor<T> failsafe, ContextualSupplier<T> supplier) {
     return unwrapExceptions(
-      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.with(getExecutor()).getAsync(supplier).get());
+      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
   }
 
   /**
@@ -334,7 +334,7 @@ public abstract class AbstractFailsafeTest {
         waiter.resume();
         throw e;
       }
-      fail("Expected interruption");
+      waiter.fail("Expected interruption");
       return "foo";
     };
 

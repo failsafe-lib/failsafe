@@ -21,16 +21,21 @@ import java.util.concurrent.*;
 
 /**
  * A {@link Scheduler} implementation that schedules delays on an internal, common ScheduledExecutorService and executes
- * tasks on either a provided ExecutorService or {@link ForkJoinPool#commonPool()}. Supports cancellation of {@link
- * ForkJoinPool} tasks.
+ * tasks on either a provided ExecutorService, {@link ForkJoinPool#commonPool()}, or an internal {@link ForkJoinPool}
+ * instance. If no {@link ExecutorService} is supplied, the {@link ForkJoinPool#commonPool()} will be used, unless the
+ * common pool's parallelism is 1, then an internal {@link ForkJoinPool} with parallelism of 2 will be created and
+ * used.
+ * <p>
+ * Supports cancellation of {@link ForkJoinPool} tasks.
+ * </p>
  *
  * @author Jonathan Halterman
  * @author Ben Manes
  */
 public final class DelegatingScheduler implements Scheduler {
   public static final DelegatingScheduler INSTANCE = new DelegatingScheduler();
-  private static final ExecutorService COMMON_POOL = ForkJoinPool.commonPool();
-  private static volatile ScheduledExecutorService delayer;
+  private static volatile ForkJoinPool FORK_JOIN_POOL;
+  private static volatile ScheduledExecutorService DELAYER;
 
   private final ExecutorService executorService;
 
@@ -42,14 +47,30 @@ public final class DelegatingScheduler implements Scheduler {
     this.executorService = executor;
   }
 
-  private static ScheduledExecutorService delayer() {
-    if (delayer == null) {
+  private ScheduledExecutorService delayer() {
+    if (DELAYER == null) {
       synchronized (DelegatingScheduler.class) {
-        if (delayer == null)
-          delayer = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
+        if (DELAYER == null)
+          DELAYER = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
       }
     }
-    return delayer;
+    return DELAYER;
+  }
+
+  private ExecutorService executorService() {
+    if (executorService != null)
+      return executorService;
+    if (FORK_JOIN_POOL == null) {
+      synchronized (DelegatingScheduler.class) {
+        if (FORK_JOIN_POOL == null) {
+          if (ForkJoinPool.getCommonPoolParallelism() > 1)
+            FORK_JOIN_POOL = ForkJoinPool.commonPool();
+          else
+            FORK_JOIN_POOL = new ForkJoinPool(2);
+        }
+      }
+    }
+    return FORK_JOIN_POOL;
   }
 
   static final class DelayerThreadFactory implements ThreadFactory {
@@ -90,7 +111,7 @@ public final class DelegatingScheduler implements Scheduler {
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
       boolean result = super.cancel(mayInterruptIfRunning);
-      synchronized(this) {
+      synchronized (this) {
         if (delegate != null)
           result = delegate.cancel(mayInterruptIfRunning);
         if (forkJoinPoolThread != null && mayInterruptIfRunning)
@@ -104,7 +125,7 @@ public final class DelegatingScheduler implements Scheduler {
   @SuppressWarnings("unchecked")
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
     ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
-    ExecutorService es = executorService != null ? executorService : COMMON_POOL;
+    ExecutorService es = executorService();
     boolean isForkJoinPool = es instanceof ForkJoinPool;
     Callable<?> completingCallable = () -> {
       try {

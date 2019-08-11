@@ -317,7 +317,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         waiter.resume();
         throw e;
       }
-      fail("Expected interruption");
+      waiter.fail("Expected interruption");
       return false;
     });
     futureRef.set(future);
