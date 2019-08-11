@@ -33,7 +33,7 @@ public interface EventListener {
       try {
         ((CheckedConsumer<ExecutionCompletedEvent<R>>) handler).accept(
             new ExecutionCompletedEvent<>((R) result, failure, context));
-      } catch (Exception ignore) {
+      } catch (Throwable ignore) {
       }
     };
   }
@@ -44,7 +44,7 @@ public interface EventListener {
       try {
         ((CheckedConsumer<ExecutionAttemptedEvent<R>>) handler).accept(
             new ExecutionAttemptedEvent<>((R) result, failure, context));
-      } catch (Exception ignore) {
+      } catch (Throwable ignore) {
       }
     };
   }

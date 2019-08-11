@@ -19,23 +19,22 @@ import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Testing.ConnectException;
 import net.jodah.failsafe.Testing.Service;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
-import net.jodah.failsafe.function.CheckedFunction;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.CheckedSupplier;
-import net.jodah.failsafe.function.ContextualSupplier;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.function.*;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.*;
+import static net.jodah.failsafe.Testing.failures;
+import static net.jodah.failsafe.Testing.unwrapExceptions;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 @Test
 public abstract class AbstractFailsafeTest {
@@ -68,8 +67,7 @@ public abstract class AbstractFailsafeTest {
    * Does a failsafe get with an optional executor.
    */
   <T> T get(FailsafeExecutor<T> failsafe, CheckedSupplier<T> supplier) {
-    return unwrapExceptions(
-      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
+    return unwrapExceptions(() -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
   }
 
   /**
@@ -83,8 +81,7 @@ public abstract class AbstractFailsafeTest {
    * Does a contextual failsafe get with an optional executor.
    */
   <T> T get(FailsafeExecutor<T> failsafe, ContextualSupplier<T> supplier) {
-    return unwrapExceptions(
-      () -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
+    return unwrapExceptions(() -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
   }
 
   /**
@@ -372,5 +369,44 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     int result = failsafeGet(retryPolicy, ctx -> ctx.getLastResult(10) + 1);
     assertEquals(result, 15);
+  }
+
+  /**
+   * Asserts that Failsafe does not block when an error occurs in an event listener.
+   */
+  public void shouldProperlyHandleErrorsInListeners() throws Throwable {
+    // Given
+    CheckedConsumer<ExecutionAttemptedEvent<Object>> attemptedError = e -> {
+      throw new AssertionError();
+    };
+    CheckedConsumer<ExecutionCompletedEvent<Object>> completedError = e -> {
+      throw new AssertionError();
+    };
+    CheckedSupplier<Object> noop = () -> null;
+    RetryPolicy<Object> rp;
+
+    // onFailedAttempt
+    rp = new RetryPolicy<>().onFailedAttempt(attemptedError).handleResult(null).withMaxRetries(0);
+    get(Failsafe.with(rp), noop);
+
+    // RetryPolicy.onRetry
+    rp = new RetryPolicy<>().onRetry(attemptedError).handleResult(null).withMaxRetries(1);
+    get(Failsafe.with(rp), noop);
+
+    // RetryPolicy.onAbort
+    rp = new RetryPolicy<>().onAbort(completedError).handleResult(null).abortWhen(null);
+    get(Failsafe.with(rp), noop);
+
+    // RetryPolicy.onRetriesExceeded
+    rp = new RetryPolicy<>().onRetriesExceeded(completedError).handleResult(null).withMaxRetries(0);
+    get(Failsafe.with(rp), noop);
+
+    // RetryPolicy.onFailure
+    rp = new RetryPolicy<>().onFailure(completedError).handleResult(null).withMaxRetries(0);
+    get(Failsafe.with(rp), noop);
+
+    // Failsafe.onComplete
+    rp = new RetryPolicy<>().handleResult(null).withMaxRetries(0);
+    get(Failsafe.with(rp).onComplete(completedError), noop);
   }
 }
