@@ -7,12 +7,11 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.*;
 
 @Test
 public class DelegatingSchedulerTest {
@@ -55,6 +54,33 @@ public class DelegatingSchedulerTest {
     }, 0, TimeUnit.MILLISECONDS);
     Thread.sleep(100);
     assertFalse(future1.cancel(true));
+    waiter.await(1000);
+  }
+
+  /**
+   * Asserts that ForkJoinPool clears interrupt flags.
+   */
+  public void shouldClearInterruptFlagInForkJoinPoolThreads() throws Throwable {
+    Scheduler scheduler = new DelegatingScheduler(new ForkJoinPool(1));
+    AtomicReference<Thread> threadRef = new AtomicReference<>();
+    Waiter waiter = new Waiter();
+
+    // Create interruptable execution
+    scheduler.schedule(() -> {
+      threadRef.set(Thread.currentThread());
+      waiter.resume();
+      Thread.sleep(10000);
+      return null;
+    }, 0, TimeUnit.MILLISECONDS);
+    waiter.await(1000);
+    threadRef.get().interrupt();
+
+    // Check for interrupt flag
+    scheduler.schedule(() -> {
+      waiter.assertFalse(Thread.currentThread().isInterrupted());
+      waiter.resume();
+      return null;
+    }, 0, TimeUnit.MILLISECONDS);
     waiter.await(1000);
   }
 }
