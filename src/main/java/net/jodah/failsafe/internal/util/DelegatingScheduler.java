@@ -47,33 +47,7 @@ public final class DelegatingScheduler implements Scheduler {
     this.executorService = executor;
   }
 
-  private ScheduledExecutorService delayer() {
-    if (DELAYER == null) {
-      synchronized (DelegatingScheduler.class) {
-        if (DELAYER == null)
-          DELAYER = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
-      }
-    }
-    return DELAYER;
-  }
-
-  private ExecutorService executorService() {
-    if (executorService != null)
-      return executorService;
-    if (FORK_JOIN_POOL == null) {
-      synchronized (DelegatingScheduler.class) {
-        if (FORK_JOIN_POOL == null) {
-          if (ForkJoinPool.getCommonPoolParallelism() > 1)
-            FORK_JOIN_POOL = ForkJoinPool.commonPool();
-          else
-            FORK_JOIN_POOL = new ForkJoinPool(2);
-        }
-      }
-    }
-    return FORK_JOIN_POOL;
-  }
-
-  static final class DelayerThreadFactory implements ThreadFactory {
+  private static final class DelayerThreadFactory implements ThreadFactory {
     public Thread newThread(Runnable r) {
       Thread t = new Thread(r);
       t.setDaemon(true);
@@ -157,5 +131,31 @@ public final class DelegatingScheduler implements Scheduler {
       }, delay, unit);
 
     return promise;
+  }
+
+  private ScheduledExecutorService delayer() {
+    if (DELAYER == null) {
+      synchronized (DelegatingScheduler.class) {
+        if (DELAYER == null)
+          DELAYER = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
+      }
+    }
+    return DELAYER;
+  }
+
+  private ExecutorService executorService() {
+    if (executorService != null)
+      return executorService;
+    if (FORK_JOIN_POOL == null) {
+      synchronized (DelegatingScheduler.class) {
+        if (FORK_JOIN_POOL == null) {
+          if (ForkJoinPool.getCommonPoolParallelism() > 1)
+            FORK_JOIN_POOL = ForkJoinPool.commonPool();
+          else
+            FORK_JOIN_POOL = new ForkJoinPool(2);
+        }
+      }
+    }
+    return FORK_JOIN_POOL;
   }
 }
