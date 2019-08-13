@@ -103,7 +103,9 @@ public class ExecutionResult {
    * Returns a copy of the ExecutionResult with the {@code result} value, and completed and success set to true.
    */
   public ExecutionResult withResult(Object result) {
-    return new ExecutionResult(result, null, nonResult, waitNanos, true, true, successAll);
+    return (this.result == null && result == null) || (this.result != null && this.result.equals(result)) ?
+      this :
+      new ExecutionResult(result, null, nonResult, waitNanos, true, true, successAll);
   }
 
   /**
@@ -117,16 +119,20 @@ public class ExecutionResult {
    * Returns a copy of the ExecutionResult with the {@code completed} and {@code success} values.
    */
   ExecutionResult with(boolean completed, boolean success) {
-    return new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
-      successAll == null ? success : success && successAll);
+    return this.complete == completed && this.success == success ?
+      this :
+      new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
+        successAll == null ? success : success && successAll);
   }
 
   /**
    * Returns a copy of the ExecutionResult with the {@code waitNanos}, {@code completed} and {@code success} values.
    */
   public ExecutionResult with(long waitNanos, boolean completed, boolean success) {
-    return new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
-      successAll == null ? success : success && successAll);
+    return this.waitNanos == waitNanos && this.complete == completed && this.success == success ?
+      this :
+      new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
+        successAll == null ? success : success && successAll);
   }
 
   boolean getSuccessAll() {
