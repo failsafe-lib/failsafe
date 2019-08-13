@@ -218,7 +218,7 @@ CircuitBreaker<Object> breaker = new CircuitBreaker<>()
   .withDelay(Duration.ofMinutes(1));
 ```
 
-When a configured threshold of execution failures occurs on a circuit breaker, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are attempted to determine whether the circuit should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
+When the number of execution failures exceed a configured threshold, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are allowed which determine whether the circuit should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
 
 #### Circuit Breaker Configuration
 
@@ -256,19 +256,13 @@ The breaker can also be configured to *close* again if, for example, the last 3 
 breaker.withSuccessThreshold(3, 5);
 ```
 
-And the breaker can be configured to recognize executions that exceed a certain [breaker-timeout] as failures:
-
-```java
-breaker.withTimeout(Duration.ofSeconds(10));
-```
-
 #### Circuit Breaker Metrics
 
 [CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state.
 
 #### Best Practices
 
-A circuit breaker can and *should* be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again. For example, if multiple connections or requests are made to the same external server, typically they should all go through the same circuit breaker.
+A circuit breaker can and *should* be shared across code that accesses common dependencies. This ensures that if the circuit breaker is opened, all executions that share the same dependency and use the same circuit breaker will be blocked until the circuit is closed again. For example, if multiple connections or requests are made to the same external server, typically they should all go through the same circuit breaker.
 
 #### Standalone Usage
 
@@ -570,7 +564,7 @@ Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2
 [retries-exceeded]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedConsumer-
 [breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
 [breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
-[policy-executor-impls]: https://github.com/jhalterman/failsafe/tree/master/src/main/java/net/jodah/failsafe/internal/executor
+[policy-executor-impls]: https://github.com/jhalterman/failsafe/tree/master/src/main/java/net/jodah/failsafe
 
 [FailsafeExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html
 [Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
