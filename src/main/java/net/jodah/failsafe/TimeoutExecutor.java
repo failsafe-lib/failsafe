@@ -115,6 +115,8 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
                   boolean canInterrupt = policy.canInterrupt();
                   if (canInterrupt)
                     execution.record(promise.get());
+
+                  // Cancel and interrupt
                   future.cancelDelegates(canInterrupt, false);
                 }
                 return null;
@@ -130,25 +132,24 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
       }
 
       // Propagate execution, cancel timeout future if not done, and handle result
-      supplier.get().handle((result, error) -> {
-        if (!promise.isDone()) {
-          Future<Object> maybeFuture = timeoutFuture.get();
-          if (maybeFuture != null)
-            maybeFuture.cancel(false);
-        } else {
-          try {
-            result = promise.get();
-          } catch (Exception ignore) {
-          }
-        }
-
+      supplier.get().whenComplete((result, error) -> {
         if (error != null)
           promise.completeExceptionally(error);
-        else
-          promise.complete(result);
-        if (result != null)
+        else {
+          if (!promise.isDone()) {
+            promise.complete(result);
+            Future<Object> maybeFuture = timeoutFuture.get();
+            if (maybeFuture != null)
+              maybeFuture.cancel(false);
+          } else {
+            try {
+              result = promise.get();
+            } catch (Exception notPossible) {
+            }
+          }
+
           postExecuteAsync(result, scheduler, future);
-        return null;
+        }
       });
 
       return promise;
