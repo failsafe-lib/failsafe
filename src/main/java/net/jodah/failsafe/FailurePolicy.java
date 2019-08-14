@@ -63,7 +63,8 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * @throws NullPointerException if {@code failures} is null
    * @throws IllegalArgumentException if failures is empty
    */
-  public S handle(Class<? extends Throwable>... failures) {
+  @SafeVarargs
+  public final S handle(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "Failures cannot be empty");
     return handle(Arrays.asList(failures));
