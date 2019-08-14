@@ -285,17 +285,21 @@ final class Functions {
         result = ExecutionResult.success(supplier.get());
       } catch (Throwable t) {
         throwable = t;
-        // Propogate InterruptedException if not intentionally interrupted by a timeout
-        if (!execution.interrupted && t instanceof InterruptedException)
-          Thread.currentThread().interrupt();
         result = ExecutionResult.failure(t);
       } finally {
-        // Clear interrupt flag if execution was meant to be interrupted
-        if (execution.interrupted && (throwable == null || !(throwable instanceof InterruptedException)))
-          Thread.interrupted();
+        // Guard against race with Timeout interruption
+        synchronized (execution) {
+          execution.canInterrupt = false;
+          if (execution.interrupted)
+            // Clear interrupt flag if interruption was intended
+            Thread.interrupted();
+          else if (throwable instanceof InterruptedException)
+            // Set interrupt flag if interrupt occurred but was not intentional
+            Thread.currentThread().interrupt();
 
-        if (result != null)
-          execution.record(result);
+          if (result != null)
+            execution.record(result);
+        }
       }
       return result;
     };

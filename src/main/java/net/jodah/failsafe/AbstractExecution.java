@@ -35,11 +35,16 @@ public abstract class AbstractExecution extends ExecutionContext {
   final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
   // Internally mutable state
+  /* Whether a result has been post-executed */
   volatile boolean resultHandled;
-  /** The wait time in nanoseconds. */
-  private volatile long waitNanos;
-  volatile boolean completed;
+  /* Whether the execution can be interrupted */
+  volatile boolean canInterrupt;
+  /* Whether the execution has been interrupted */
   volatile boolean interrupted;
+  /* The wait time in nanoseconds. */
+  private volatile long waitNanos;
+  /* Whether the execution has been completed */
+  volatile boolean completed;
 
   /**
    * Creates a new AbstractExecution for the {@code executor}.
@@ -72,9 +77,10 @@ public abstract class AbstractExecution extends ExecutionContext {
     attemptStartTime = Duration.ofNanos(System.nanoTime());
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
-    cancelled = false;
-    interrupted = false;
     resultHandled = false;
+    cancelled = false;
+    canInterrupt = true;
+    interrupted = false;
   }
 
   boolean isAsyncExecution() {

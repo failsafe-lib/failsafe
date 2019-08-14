@@ -66,13 +66,18 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           if (result.getAndUpdate(v -> v != null ? v : ExecutionResult.failure(new TimeoutExceededException(policy)))
             == null) {
             if (policy.canCancel()) {
-              boolean canInterrupt = policy.canInterrupt();
-              if (canInterrupt)
-                execution.record(result.get());
+              // Cancel and interrupt
               execution.cancelled = true;
-              execution.interrupted = canInterrupt;
-              if (canInterrupt)
-                executionThread.interrupt();
+              if (policy.canInterrupt()) {
+                // Guard against race with the execution completing
+                synchronized (execution) {
+                  if (execution.canInterrupt) {
+                    execution.record(result.get());
+                    execution.interrupted = true;
+                    executionThread.interrupt();
+                  }
+                }
+              }
             }
           }
           return null;
