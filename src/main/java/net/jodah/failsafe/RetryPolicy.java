@@ -146,8 +146,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * @throws NullPointerException if {@code failures} is null
    * @throws IllegalArgumentException if failures is empty
    */
-  @SuppressWarnings("unchecked")
-  public RetryPolicy<R> abortOn(Class<? extends Throwable>... failures) {
+  @SafeVarargs
+  public final RetryPolicy<R> abortOn(Class<? extends Throwable>... failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(failures.length > 0, "Failures cannot be empty");
     return abortOn(Arrays.asList(failures));
