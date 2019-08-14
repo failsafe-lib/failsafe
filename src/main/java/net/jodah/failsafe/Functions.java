@@ -279,15 +279,21 @@ final class Functions {
   static <T> Supplier<ExecutionResult> resultSupplierOf(CheckedSupplier<T> supplier, AbstractExecution execution) {
     return () -> {
       ExecutionResult result = null;
+      Throwable throwable = null;
       try {
         execution.preExecute();
         result = ExecutionResult.success(supplier.get());
       } catch (Throwable t) {
+        throwable = t;
         // Propogate InterruptedException if not intentionally interrupted by a timeout
         if (!execution.interrupted && t instanceof InterruptedException)
           Thread.currentThread().interrupt();
         result = ExecutionResult.failure(t);
       } finally {
+        // Clear interrupt flag if execution was meant to be interrupted
+        if (execution.interrupted && (throwable == null || !(throwable instanceof InterruptedException)))
+          Thread.interrupted();
+
         if (result != null)
           execution.record(result);
       }

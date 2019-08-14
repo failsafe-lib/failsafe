@@ -35,6 +35,7 @@ import static net.jodah.failsafe.Testing.failures;
 import static net.jodah.failsafe.Testing.unwrapExceptions;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
 @Test
 public abstract class AbstractFailsafeTest {
@@ -344,6 +345,27 @@ public abstract class AbstractFailsafeTest {
     });
     assertThrows(() -> get(failsafe, supplier), TimeoutExceededException.class);
     waiter.await(1, TimeUnit.SECONDS, 7);
+  }
+
+  /**
+   * Ensures that an interrupted execution should always have the interrupt flag cleared aferwards.
+   */
+  public void shouldHandleNonInterruptableExecution() throws Throwable {
+    // Given
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withCancel(true);
+    CheckedSupplier supplier = () -> {
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+      return null;
+    };
+
+    // When / Then
+    FailsafeExecutor<Object> failsafe = Failsafe.with(timeout);
+    assertThrows(() -> get(failsafe, supplier), TimeoutExceededException.class);
+    assertFalse(Thread.currentThread().isInterrupted(), "Interrupt flag should be cleared after Failsafe handling");
   }
 
   public void shouldFallbackWhenTimeoutExceeded() {
