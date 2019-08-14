@@ -23,7 +23,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelay;
@@ -103,34 +102,34 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
             if (error != null)
               promise.completeExceptionally(error);
             else if (result != null) {
-              // Prepare post execution handler
-              Consumer<ExecutionResult> postExecutionHandler = postResult -> {
-                if (retriesExceeded || postResult.isComplete())
-                  promise.complete(postResult);
-                else {
-                  // Guard against race with future.complete or future.cancel
-                  synchronized (future) {
-                    if (!future.isDone()) {
-                      try {
-                        previousResult = postResult;
-                        future.inject(
-                          (Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
-                      } catch (Exception e) {
-                        // Hard scheduling failure
-                        promise.completeExceptionally(e);
+              if (retriesExceeded)
+                promise.complete(result);
+              else  {
+                postExecuteAsync(result, scheduler, future).whenComplete((postResult, postError) -> {
+                  if (postError != null)
+                    promise.completeExceptionally(postError);
+                  else if (postResult != null) {
+                    if (retriesExceeded || postResult.isComplete())
+                      promise.complete(postResult);
+                    else {
+                      // Guard against race with future.complete or future.cancel
+                      synchronized (future) {
+                        if (!future.isDone()) {
+                          try {
+                            previousResult = postResult;
+                            future.inject(
+                              (Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
+                          } catch (Exception e) {
+                            // Hard scheduling failure
+                            promise.completeExceptionally(e);
+                          }
+                        }
                       }
                     }
                   }
-                }
-              };
-
-              // Perform post execution handling
-              if (!retriesExceeded)
-                postExecuteAsync(result, scheduler, future).thenAccept(postExecutionHandler);
-              else
-                postExecutionHandler.accept(result);
-            } else
-              promise.complete(null);
+                });
+              }
+            }
             return null;
           });
         }
