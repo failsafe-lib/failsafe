@@ -51,8 +51,8 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
 
     try {
       future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
-    } catch (Exception e) {
-      promise.completeExceptionally(e);
+    } catch (Throwable t) {
+      promise.completeExceptionally(t);
     }
 
     return promise;

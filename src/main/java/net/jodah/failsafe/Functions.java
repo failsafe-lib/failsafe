@@ -66,19 +66,18 @@ final class Functions {
     Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      Callable<Object> callable = () -> supplier.get().handle((result, error) -> {
+      Callable<Object> callable = () -> supplier.get().whenComplete((result, error) -> {
         // Propagate result
         if (error != null)
           promise.completeExceptionally(error);
         else
           promise.complete(result);
-        return result;
       });
 
       try {
         future.inject((Future) scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
-      } catch (Exception e) {
-        promise.completeExceptionally(e);
+      } catch (Throwable t) {
+        promise.completeExceptionally(t);
       }
       return promise;
     };

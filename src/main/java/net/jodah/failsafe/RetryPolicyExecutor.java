@@ -98,7 +98,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
             retryListener.handle(previousResult, execution);
 
           // Propagate execution and handle result
-          return supplier.get().handle((result, error) -> {
+          supplier.get().whenComplete((result, error) -> {
             if (error != null)
               promise.completeExceptionally(error);
             else if (result != null) {
@@ -119,9 +119,9 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                             previousResult = postResult;
                             future.inject(
                               (Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
-                          } catch (Exception e) {
+                          } catch (Throwable t) {
                             // Hard scheduling failure
-                            promise.completeExceptionally(e);
+                            promise.completeExceptionally(t);
                           }
                         }
                       }
@@ -130,8 +130,8 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                 });
               }
             }
-            return null;
           });
+          return null;
         }
       };
 
