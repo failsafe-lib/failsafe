@@ -34,11 +34,7 @@ import java.util.function.Supplier;
  * <p>
  * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be configured
  * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable via the
- * returned CompletableFuture, even those run by a {@link ForkJoinPool} implementation.
- * <p>
- * Executions that are cancelled or timed out while blocked or waiting will be interrupted with an {@link
- * InterruptedException}. Executions that do not block can cooperate with cancellation by periodiically checking for
- * {@code Thread.currentThread().isInterrupted()} and exit if {@code true}.
+ * returned CompletableFuture, even those run by a {@link ForkJoinPool} or {@link CompletionStage}.
  *
  * @param <R> result type
  * @author Jonathan Halterman
