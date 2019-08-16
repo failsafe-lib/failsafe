@@ -20,6 +20,7 @@ import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -48,7 +49,7 @@ public final class AsyncExecution extends AbstractExecution {
     if (!asyncExecution) {
       outerExecutionSupplier = supplier;
     } else {
-      outerExecutionSupplier = innerExecutionSupplier = Functions.settableSupplierOf(supplier);
+      outerExecutionSupplier = innerExecutionSupplier = Functions.toSettableSupplier(supplier);
     }
 
     for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
@@ -181,7 +182,7 @@ public final class AsyncExecution extends AbstractExecution {
   @SuppressWarnings("unchecked")
   void executeAsync(boolean asyncExecution) {
     if (!asyncExecution)
-      Functions.makeAsync(outerExecutionSupplier, scheduler, future).get().whenComplete(this::complete);
+      Functions.getPromiseAsync(outerExecutionSupplier, scheduler, future).get().whenComplete(this::complete);
     else
       future.inject((Future) scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
   }
@@ -213,8 +214,11 @@ public final class AsyncExecution extends AbstractExecution {
     if (!future.isDone()) {
       if (result != null)
         future.completeResult(result);
-      else
+      else {
+        if (error instanceof CompletionException)
+          error = error.getCause();
         future.completeResult(ExecutionResult.failure(error));
+      }
     }
   }
 }

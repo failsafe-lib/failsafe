@@ -23,6 +23,7 @@ import java.time.Duration;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see TimeoutExceededException
  */
 public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy<R> {
   private final Duration timeout;

@@ -27,6 +27,8 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static net.jodah.failsafe.Functions.*;
+
 /**
  * <p>
  * An executor that handles failures according to configured {@link FailurePolicy policies}. Can be created via {@link
@@ -76,7 +78,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(ContextualSupplier<T> supplier) {
-    return call(execution -> Functions.supplierOf(supplier, execution));
+    return call(execution -> toSupplier(supplier, execution));
   }
 
   /**
@@ -84,7 +86,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * exceeded.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -95,7 +97,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsync(CheckedSupplier<T> supplier) {
-    return callAsync(execution -> Functions.promiseOf(supplier, execution), false);
+    return callAsync(execution -> getPromise(toCtxSupplier(supplier), execution), false);
   }
 
   /**
@@ -103,7 +105,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * exceeded.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -114,7 +116,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsync(ContextualSupplier<T> supplier) {
-    return callAsync(execution -> Functions.promiseOf(supplier, execution), false);
+    return callAsync(execution -> getPromise(supplier, execution), false);
   }
 
   /**
@@ -123,7 +125,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * one of the {@code AsyncExecution.retry} methods.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -134,7 +136,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncSupplier<T> supplier) {
-    return callAsync(execution -> Functions.asyncOfExecution(supplier, execution), true);
+    return callAsync(execution -> getPromiseExecution(supplier, execution), true);
   }
 
   void handleComplete(ExecutionResult result, ExecutionContext context) {
@@ -182,7 +184,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * policies are exceeded.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -193,7 +195,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(execution -> Functions.promiseOfStage(supplier, execution), false);
+    return callAsync(execution -> getPromiseOfStage(toCtxSupplier(supplier), execution), false);
   }
 
   /**
@@ -201,7 +203,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * policies are exceeded.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -212,7 +214,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsync(ContextualSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(execution -> Functions.promiseOfStage(supplier, execution), false);
+    return callAsync(execution -> getPromiseOfStage(supplier, execution), false);
   }
 
   /**
@@ -221,7 +223,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * scheduled via one of the {@code AsyncExecution.retry} methods.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -233,7 +235,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
     AsyncSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(execution -> Functions.asyncOfFutureExecution(supplier, execution), true);
+    return callAsync(execution -> getPromiseOfStageExecution(supplier, execution), true);
   }
 
   /**
@@ -246,7 +248,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(CheckedRunnable runnable) {
-    call(execution -> Functions.supplierOf(runnable));
+    call(execution -> toSupplier(runnable));
   }
 
   /**
@@ -259,14 +261,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(ContextualRunnable runnable) {
-    call(execution -> Functions.supplierOf(runnable, execution));
+    call(execution -> toSupplier(runnable, execution));
   }
 
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -277,14 +279,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsync(CheckedRunnable runnable) {
-    return callAsync(execution -> Functions.promiseOf(runnable, execution), false);
+    return callAsync(execution -> getPromise(toCtxSupplier(runnable), execution), false);
   }
 
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -295,7 +297,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsync(ContextualRunnable runnable) {
-    return callAsync(execution -> Functions.promiseOf(runnable, execution), false);
+    return callAsync(execution -> getPromise(toCtxSupplier(runnable), execution), false);
   }
 
   /**
@@ -304,7 +306,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * AsyncExecution.retry} methods.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
@@ -315,7 +317,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsyncExecution(AsyncRunnable runnable) {
-    return callAsync(execution -> Functions.asyncOfExecution(runnable, execution), true);
+    return callAsync(execution -> getPromiseExecution(toAsyncSupplier(runnable), execution), true);
   }
 
   /**
@@ -370,13 +372,17 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   @SuppressWarnings("unchecked")
   private <T> T call(Function<Execution, CheckedSupplier<?>> supplierFn) {
     Execution execution = new Execution(this);
-    Supplier<ExecutionResult> supplier = Functions.resultSupplierOf(supplierFn.apply(execution), execution);
+    Supplier<ExecutionResult> supplier = Functions.get(supplierFn.apply(execution), execution);
 
     ExecutionResult result = execution.executeSync(supplier);
-    if (result.getFailure() != null)
-      throw result.getFailure() instanceof RuntimeException ?
-        (RuntimeException) result.getFailure() :
-        new FailsafeException(result.getFailure());
+    Throwable failure = result.getFailure();
+    if (failure != null) {
+      if (failure instanceof RuntimeException)
+        throw (RuntimeException) failure;
+      if (failure instanceof Error)
+        throw (Error) failure;
+      throw new FailsafeException(failure);
+    }
     return (T) result.getResult();
   }
 
@@ -385,7 +391,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * policies.
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
+   * TimeoutExceededException}.
    * </p>
    * <p>
    * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link

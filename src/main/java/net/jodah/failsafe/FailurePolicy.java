@@ -25,13 +25,10 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
- * A Policy that captures conditions to determine whether an execution is a failure. If no failure conditions are
- * configured:
- * <ul>
- * <li>If no other policies are configured, the execution is considered a failure if an Exception was thrown.</li>
- * <li>If other policies were configured, the execution is considered a failure if the previous configured Policy's
- * handling of the execution failed.</li>
- * </ul>
+ * A Policy that captures conditions to determine whether an execution is a failure.
+ * <p>
+ * If no handlers are configured, the execution is considered a failure if an Exception was thrown.
+ * </p>
  *
  * @param <S> self type
  * @param <R> result type
@@ -140,8 +137,8 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    */
   boolean isFailure(ExecutionResult result) {
     return failureConditions.isEmpty() ?
-        result.getFailure() != null :
-        isFailure((R) result.getResult(), result.getFailure());
+      result.getFailure() != null :
+      isFailure((R) result.getResult(), result.getFailure());
   }
 
   /**

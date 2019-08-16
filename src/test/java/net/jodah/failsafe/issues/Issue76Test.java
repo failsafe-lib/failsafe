@@ -2,7 +2,6 @@ package net.jodah.failsafe.issues;
 
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.Test;
 
@@ -22,8 +21,8 @@ public class Issue76Test {
         throw error;
       });
       fail();
-    } catch (FailsafeException e) {
-      assertEquals(e.getCause(), error);
+    } catch (AssertionError e) {
+      assertEquals(e, error);
     }
   }
 
@@ -31,14 +30,14 @@ public class Issue76Test {
     final AssertionError error = new AssertionError();
     Waiter waiter = new Waiter();
     Future<?> future = Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)
-        .onAbort(e -> {
-          waiter.assertEquals(e.getFailure(), error);
-          waiter.resume();
-        }))
-        .with(Executors.newSingleThreadScheduledExecutor())
-        .runAsync(() -> {
-          throw error;
-        });
+      .onAbort(e -> {
+        waiter.assertEquals(e.getFailure(), error);
+        waiter.resume();
+      }))
+      .with(Executors.newSingleThreadScheduledExecutor())
+      .runAsync(() -> {
+        throw error;
+      });
     waiter.await(1000);
 
     try {

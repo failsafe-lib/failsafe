@@ -393,6 +393,19 @@ public abstract class AbstractFailsafeTest {
     assertEquals(result, 15);
   }
 
+  public void shouldHandleError() throws Throwable {
+    // Given
+    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().onFailedAttempt(e -> waiter.resume())
+      .withMaxRetries(2);
+
+    // When / Then
+    FailsafeExecutor<Boolean> failsafe = Failsafe.with(retryPolicy).onComplete(e -> waiter.resume());
+    assertThrows(() -> get(failsafe, () -> {
+      throw new InternalError();
+    }), InternalError.class);
+    waiter.await(4);
+  }
+
   /**
    * Asserts that Failsafe does not block when an error occurs in an event listener.
    */

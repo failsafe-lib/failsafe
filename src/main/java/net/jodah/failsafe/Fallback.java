@@ -22,6 +22,8 @@ import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
 import net.jodah.failsafe.internal.util.Assert;
 
+import static net.jodah.failsafe.Functions.toFn;
+
 /**
  * A Policy that handles failures using a fallback function or result.
  * <p>
@@ -51,7 +53,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   public static <R> Fallback<R> of(CheckedRunnable fallback) {
-    return new Fallback<>(Functions.fnOf(Assert.notNull(fallback, "fallback")), false);
+    return new Fallback<>(toFn(Assert.notNull(fallback, "fallback")), false);
   }
 
   /**
@@ -61,7 +63,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    */
   @SuppressWarnings("unchecked")
   public static <R> Fallback<R> of(CheckedSupplier<? extends R> fallback) {
-    return new Fallback<>(Functions.fnOf((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")), false);
+    return new Fallback<>(toFn((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")), false);
   }
 
   /**
@@ -72,7 +74,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    */
   @SuppressWarnings("unchecked")
   public static <R> Fallback<R> of(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
-    return new Fallback<>(Functions.fnOf(Assert.notNull((CheckedConsumer) fallback, "fallback")), false);
+    return new Fallback<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), false);
   }
 
   /**
@@ -87,8 +89,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Returns the {@code fallback} to be executed if execution fails and allows an alternative exception to be
-   * supplied instead. The {@code fallback} applies an {@link ExecutionAttemptedEvent} and must return an exception.
+   * Returns the {@code fallback} to be executed if execution fails and allows an alternative exception to be supplied
+   * instead. The {@code fallback} applies an {@link ExecutionAttemptedEvent} and must return an exception.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
@@ -106,7 +108,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    */
   @SuppressWarnings("rawtypes")
   public static <R> Fallback<R> of(R fallback) {
-    return new Fallback<>(Functions.fnOf(fallback), false);
+    return new Fallback<>(toFn(fallback), false);
   }
 
   /**
@@ -115,7 +117,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   public static <R> Fallback<R> ofAsync(CheckedRunnable fallback) {
-    return new Fallback<>(Functions.fnOf(Assert.notNull(fallback, "fallback")), true);
+    return new Fallback<>(toFn(Assert.notNull(fallback, "fallback")), true);
   }
 
   /**
@@ -125,7 +127,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    */
   @SuppressWarnings("unchecked")
   public static <R> Fallback<R> ofAsync(CheckedSupplier<? extends R> fallback) {
-    return new Fallback<>(Functions.fnOf((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")), true);
+    return new Fallback<>(toFn((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")), true);
   }
 
   /**
@@ -136,7 +138,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    */
   @SuppressWarnings("unchecked")
   public static <R> Fallback<R> ofAsync(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
-    return new Fallback<>(Functions.fnOf(Assert.notNull((CheckedConsumer) fallback, "fallback")), true);
+    return new Fallback<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), true);
   }
 
   /**
