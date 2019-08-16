@@ -1,3 +1,13 @@
+# 2.3.0
+
+### API Changes
+
+- `FailsafeExecutor.get` and `FailsafeExecutor.run` will no longer wrap `Error` instances in `FailsafeException` before throwing.
+
+### Bug Fixes
+
+- Fixed potential race between `Timeout` interrupts and execution completion.
+
 # 2.2.0
 
 ### Improvements
@@ -37,15 +47,15 @@
 - Added support for `Failsafe.with(List<Policy<R>>)`.
 - Allow `null` `Fallback` values.
 
+### Behavior Changes
+
+- A [standalone](https://github.com/jhalterman/failsafe#execution-tracking) or [async execution](https://github.com/jhalterman/failsafe#asynchronous-api-integration) will only be marked as complete when all policies are complete. `Execution.isComplete` reflects this. 
+
 ### Bug Fixes
 
 - Issue #190 - Failure listener called on success for async executions.
 - Issue #191 - Add missing listeners to RetryPolicy copy constructor.
 - Issue #192 - Problem with detecting completion when performing async execution.
-
-### Behavior Changes
-
-- A [standalone](https://github.com/jhalterman/failsafe#execution-tracking) or [async execution](https://github.com/jhalterman/failsafe#asynchronous-api-integration) will only be marked as complete when all policies are complete. `Execution.isComplete` reflects this. 
 
 # 2.0.1
 
