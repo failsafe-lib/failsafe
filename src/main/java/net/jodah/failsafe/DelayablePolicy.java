@@ -13,9 +13,9 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
-  protected DelayFunction<R, ? extends Throwable> delayFn;
-  protected Object delayResult;
-  protected Class<? extends Throwable> delayFailure;
+  DelayFunction<R, ? extends Throwable> delayFn;
+  Object delayResult;
+  Class<? extends Throwable> delayFailure;
 
   /**
    * Returns the function that determines the next delay before allowing another execution.
