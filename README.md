@@ -444,7 +444,7 @@ Failsafe.with(timeout).getAsync(ctx -> {
 });
 ```
 
-Alternatively, an *interrupting* cancellation can be used to forcefully [interrupt] an execution thread. Executions can cooperate with interruption by periodically checking `ExecutionContext.isCancelled` or `Thread.currentThread().isInterrupted()`.
+Alternatively, an *interrupting* cancellation can be used to forcefully [interrupt] an execution thread. Executions can cooperate with interruption by periodically checking `ExecutionContext.isCancelled()` or `Thread.isInterrupted()`.
 
 #### Asynchronous API Integration
 

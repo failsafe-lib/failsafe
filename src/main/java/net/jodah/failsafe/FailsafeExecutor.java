@@ -139,46 +139,6 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     return callAsync(execution -> getPromiseExecution(supplier, execution), true);
   }
 
-  void handleComplete(ExecutionResult result, ExecutionContext context) {
-    if (successListener != null && result.getSuccessAll())
-      successListener.handle(result, context.copy());
-    else if (failureListener != null && !result.getSuccessAll())
-      failureListener.handle(result, context.copy());
-    if (completeListener != null)
-      completeListener.handle(result, context.copy());
-  }
-
-  /**
-   * Registers the {@code listener} to be called when an execution is complete for all of the configured policies are
-   * exceeded.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
-   */
-  public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    completeListener = EventListener.of(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  /**
-   * Registers the {@code listener} to be called when an execution fails. If multiple policies, are configured, this
-   * handler is called when execution is complete and <i>any</i> policy fails.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
-   */
-  @Override
-  public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    return super.onFailure(listener);
-  }
-
-  /**
-   * Registers the {@code listener} to be called when an execution is successful. If multiple policies, are configured,
-   * this handler is called when execution is complete and <i>all</i> policies succeed. If <i>all</i> policies do not
-   * succeed, then the {@link #onFailure(CheckedConsumer)} registered listener is called instead.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
-   */
-  @Override
-  public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    return super.onSuccess(listener);
-  }
-
   /**
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
@@ -318,6 +278,46 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public CompletableFuture<Void> runAsyncExecution(AsyncRunnable runnable) {
     return callAsync(execution -> getPromiseExecution(toAsyncSupplier(runnable), execution), true);
+  }
+
+  /**
+   * Registers the {@code listener} to be called when an execution is complete for all of the configured policies are
+   * exceeded.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   */
+  public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
+    completeListener = EventListener.of(Assert.notNull(listener, "listener"));
+    return this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called when an execution fails. If multiple policies, are configured, this
+   * handler is called when execution is complete and <i>any</i> policy fails.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   */
+  @Override
+  public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
+    return super.onFailure(listener);
+  }
+
+  /**
+   * Registers the {@code listener} to be called when an execution is successful. If multiple policies, are configured,
+   * this handler is called when execution is complete and <i>all</i> policies succeed. If <i>all</i> policies do not
+   * succeed, then the {@link #onFailure(CheckedConsumer)} registered listener is called instead.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   */
+  @Override
+  public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
+    return super.onSuccess(listener);
+  }
+
+  void handleComplete(ExecutionResult result, ExecutionContext context) {
+    if (successListener != null && result.getSuccessAll())
+      successListener.handle(result, context.copy());
+    else if (failureListener != null && !result.getSuccessAll())
+      failureListener.handle(result, context.copy());
+    if (completeListener != null)
+      completeListener.handle(result, context.copy());
   }
 
   /**
