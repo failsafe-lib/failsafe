@@ -35,7 +35,7 @@ import java.util.concurrent.*;
 public final class DelegatingScheduler implements Scheduler {
   public static final DelegatingScheduler INSTANCE = new DelegatingScheduler();
   private static volatile ForkJoinPool FORK_JOIN_POOL;
-  private static volatile ScheduledExecutorService DELAYER;
+  private static volatile ScheduledThreadPoolExecutor DELAYER;
 
   private final ExecutorService executorService;
 
@@ -95,49 +95,13 @@ public final class DelegatingScheduler implements Scheduler {
     }
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
-    ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
-    ExecutorService es = executorService();
-    boolean isForkJoinPool = es instanceof ForkJoinPool;
-    Callable<?> completingCallable = () -> {
-      try {
-        if (isForkJoinPool) {
-          // Guard against race with promise.cancel 
-          synchronized (promise) {
-            promise.forkJoinPoolThread = Thread.currentThread();
-          }
-        }
-        promise.complete(callable.call());
-        synchronized (promise) {
-          promise.forkJoinPoolThread = null;
-        }
-      } catch (Throwable t) {
-        promise.completeExceptionally(t);
-      }
-      return null;
-    };
-
-    if (delay == 0)
-      promise.delegate = es.submit(completingCallable);
-    else
-      promise.delegate = delayer().schedule(() -> {
-        // Guard against race with promise.cancel
-        synchronized (promise) {
-          if (!promise.isCancelled())
-            promise.delegate = es.submit(completingCallable);
-        }
-      }, delay, unit);
-
-    return promise;
-  }
-
-  private ScheduledExecutorService delayer() {
+  private static ScheduledExecutorService delayer() {
     if (DELAYER == null) {
       synchronized (DelegatingScheduler.class) {
-        if (DELAYER == null)
+        if (DELAYER == null) {
           DELAYER = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
+          DELAYER.setRemoveOnCancelPolicy(true);
+        }
       }
     }
     return DELAYER;
@@ -157,5 +121,45 @@ public final class DelegatingScheduler implements Scheduler {
       }
     }
     return FORK_JOIN_POOL;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
+    ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
+    ExecutorService es = executorService();
+    boolean isForkJoinPool = es instanceof ForkJoinPool;
+    Callable<?> completingCallable = () -> {
+      try {
+        if (isForkJoinPool) {
+          // Guard against race with promise.cancel 
+          synchronized (promise) {
+            promise.forkJoinPoolThread = Thread.currentThread();
+          }
+        }
+        promise.complete(callable.call());
+        if (isForkJoinPool) {
+          synchronized (promise) {
+            promise.forkJoinPoolThread = null;
+          }
+        }
+      } catch (Throwable t) {
+        promise.completeExceptionally(t);
+      }
+      return null;
+    };
+
+    if (delay == 0)
+      promise.delegate = es.submit(completingCallable);
+    else
+      promise.delegate = delayer().schedule(() -> {
+        // Guard against race with promise.cancel
+        synchronized (promise) {
+          if (!promise.isCancelled())
+            promise.delegate = es.submit(completingCallable);
+        }
+      }, delay, unit);
+
+    return promise;
   }
 }
