@@ -1,0 +1,30 @@
+title: Failsafe
+baseurl: "/failsafe" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+permalink: pretty
+safe: true
+exclude:
+  - Gemfile*
+  - bin
+  - vendor
+  - Rakefile
+  - README.md
+markdown: kramdown
+
+search_enabled: true
+
+aux_links:
+  "Failsafe on GitHub":
+    - "//github.com/jhalterman/failsafe"
+
+footer_content: "Copyright &copy; 2015-2019 Jonathan Halterman and friends. Released under the <a href=\"https://github.com/jhalterman/failsafe/blob/master/LICENSE\">Apache 2.0 license.</a>"
+
+ga_tracking: UA-145891145-1
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  startings: []
+  blank_lines: false
+  profile: false

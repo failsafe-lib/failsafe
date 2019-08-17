@@ -1,0 +1,6 @@
+_site
+.sass-cache
+.jekyll-metadata
+/target
+.DS_Store
+./idea
