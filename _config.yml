@@ -14,10 +14,8 @@ markdown: kramdown
 search_enabled: true
 
 aux_links:
-  "Failsafe on GitHub":
+  "View on GitHub":
     - "//github.com/jhalterman/failsafe"
-
-footer_content: "Copyright &copy; 2015-2019 Jonathan Halterman and friends. Released under the <a href=\"https://github.com/jhalterman/failsafe/blob/master/LICENSE\">Apache 2.0 license.</a>"
 
 ga_tracking: UA-145891145-1
 

@@ -51,17 +51,22 @@
 //$red-200: #e94c4c;
 //$red-300: #dd2e2e;
 
+// Custom
+$green-0: #0d968e;
+$gray-lt-1: #f6f6f6;
+$text-color: #333;
+
 //$body-background-color: $white;
-//$sidebar-color: $grey-lt-000;
+$sidebar-color: $gray-lt-1;
 //$search-background-color: $white;
 //$table-background-color: $white;
-//$code-background-color: $grey-lt-000;
+$code-background-color: $gray-lt-1;
 
-//$body-text-color: $grey-dk-100;
+$body-text-color: $text-color;
 //$body-heading-color: $grey-dk-300;
 //$search-result-preview-color: $grey-dk-000;
-//$nav-child-link-color: $grey-dk-100;
-//$link-color: $purple-000;
+$nav-child-link-color: $text-color;
+$link-color: $green-0;
 //$btn-primary-color: $purple-100;
 //$base-button-color: #f7f7f7;
 
@@ -102,7 +107,7 @@
 
 //$border: 1px solid;
 //$border-radius: 4px;
-//$border-color: $grey-lt-100;
+$border-color: #e4e4e4;
 
 ////
 //// Grid system

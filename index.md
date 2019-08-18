@@ -1,42 +1,19 @@
 ---
 layout: default
-title: Introduction
-nav_order: 1
+title: Fault tolerance and resilience patterns for the JVM
 ---
 
-## Introduction
+# Overview
 
-Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It  works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed](#policy-composition) as needed. These policies include:
-
-* [Retries](#retries)
-* [Timeouts](#timeouts)
-* [Fallbacks](#fallbacks)
-* [Circuit breakers](#circuit-breakers) 
-
-It also provides features that allow you to integrate with various scenarios, including:
-
-* [Configurable schedulers](#configurable-schedulers)
-* [Event listeners](#event-listeners)
-* [Strong typing](#strong-typing)
-* [Execution context](#execution-context) and [cancellation](#execution-cancellation)
-* [Asynchronous API integration](#asynchronous-api-integration)
-* [CompletionStage](#completionstage-integration) and [functional interface](#functional-interface-integration) integration
-* [Execution tracking](#execution-tracking)
-* [Policy SPI](#policy-spi)
+Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+. It has a concise API for handling everyday use cases and the flexibility to handle everything else. Failsafe works by wrapping executable logic with one or more resilience [policies], which can be combined and [composed][policy-composition] as needed.
 
 ## Setup
 
 Add the latest [Failsafe Maven dependency][maven] to your project.
 
-## Migrating from 1.x
+## Getting Started
 
-Failsafe 2.0 has API and behavior changes from 1.x. See the [CHANGES](CHANGES.md#20) doc for more details.
-
-## Usage
-
-#### Getting Started
-
-To start, we'll create a [RetryPolicy] that defines which failures should be handled and when retries should be performed:
+To start, we'll create a [RetryPolicy][retry] that defines which failures should be handled and when retries should be performed:
 
 ```java
 RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
@@ -55,7 +32,9 @@ Failsafe.with(retryPolicy).run(() -> connect());
 Connection connection = Failsafe.with(retryPolicy).get(() -> connect());
 ```
 
-We can also execute a `Runnable` or `Supplier` asynchronously *with* retries:
+### Asynchronous Execution
+
+Executing a `Runnable` or `Supplier` asynchronously *with* a policy is simple:
 
 ```java
 // Run with retries asynchronously
@@ -65,20 +44,21 @@ CompletableFuture<Void> future = Failsafe.with(retryPolicy).runAsync(() -> conne
 CompletableFuture<Connection> future = Failsafe.with(retryPolicy).getAsync(() -> connect());
 ```
 
-#### Composing Policies
+### Composing Policies
 
-Multiple [policies] can be arbitrarily composed to add additional layers of resilience or to handle different failures in different ways:
+Multiple [policies] can be created and arbitrarily composed to add additional layers of resilience or to handle different failures in different ways:
 
 ```java
 CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>();
 Fallback<Object> fallback = Fallback.of(this::connectToBackup);
 
+// Get with fallback, retries, and circuit breaker
 Failsafe.with(fallback, retryPolicy, circuitBreaker).get(this::connect);
 ```
 
-Order does matter when composing policies. See the [section below](#policy-composition) for more details.
+Order does matter when composing policies. See the [policy composition][policy-composition] section for more details.
 
-#### Failsafe Executor
+### Failsafe Executor
 
 Policy compositions can also be saved for later use via a [FailsafeExecutor]:
 
@@ -86,5 +66,9 @@ Policy compositions can also be saved for later use via a [FailsafeExecutor]:
 FailsafeExecutor<Object> executor = Failsafe.with(fallback, retryPolicy, circuitBreaker);
 executor.run(this::connect);
 ```
+
+## Further Reading
+
+Read more about [policies] and how they're used, then explore some of Failsafe's other features in the site menu.
 
 {% include common-links.html %}

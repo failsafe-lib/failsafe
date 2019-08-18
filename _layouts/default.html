@@ -11,7 +11,7 @@ layout: table_wrappers
   <div class="page-wrap">
     <div class="side-bar">
       <div class="site-header">
-        <a href="{{ site.url }}{{ site.baseurl }}" class="site-title lh-tight">{% include title.html %}</a>
+        <a href="{{ site.url }}{{ site.baseurl }}/" class="site-title lh-tight"><span class="logo" style="background-image: url('{{ "/assets/images/failsafe2.png" | relative_url }}')">{% include title.html %}</span></a>
         <button class="menu-button fs-3 js-main-nav-trigger" data-text-toggle="Hide" type="button">Menu</button>
       </div>
 
@@ -35,7 +35,7 @@ layout: table_wrappers
           </div>
           {% endif %}
           {% if site.aux_links != nil %}
-            <ul class="list-style-none text-small aux-nav">
+            <ul class="list-style-none text-medium aux-nav">
               {% for link in site.aux_links %}
                 <li class="d-inline-block my-0{% unless forloop.last %} mr-2{% endunless %}"><a href="{{ link.last }}">{{ link.first }}</a></li>
               {% endfor %}
@@ -43,21 +43,6 @@ layout: table_wrappers
           {% endif %}
         </div>
         <div class="page">
-          {% unless page.url == "/" %}
-            {% if page.parent %}
-              <nav class="breadcrumb-nav">
-                <ol class="breadcrumb-nav-list">
-                  {% if page.grand_parent %}
-                    <li class="breadcrumb-nav-list-item"><a href="{{ first_level_url }}">{{ page.grand_parent }}</a></li>
-                    <li class="breadcrumb-nav-list-item"><a href="{{ second_level_url }}">{{ page.parent }}</a></li>
-                  {% else %}
-                    <li class="breadcrumb-nav-list-item"><a href="{{ first_level_url }}">{{ page.parent }}</a></li>
-                  {% endif %}
-                  <li class="breadcrumb-nav-list-item"><span>{{ page.title }}</span></li>
-                </ol>
-              </nav>
-            {% endif %}
-          {% endunless %}
           <div id="main-content" class="page-content" role="main">
             {% if site.heading_anchors != false %}
               {% include vendor/anchor_headings.html html=content  beforeHeading = "true" anchorBody="<svg class=\"d-inline-block v-align-middle\" viewBox=\"0 0 16 16\" version=\"1.1\" width=\"18\" height=\"18\" aria-hidden=\"true\"><path fill-rule=\"evenodd\" d=\"M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z\"></path></svg>" anchorClass="anchor-heading" %}
@@ -65,27 +50,10 @@ layout: table_wrappers
               {{ content }}
             {% endif %}
 
-          {% if page.has_children == true and page.has_toc != false %}
-            <hr>
-            <h2 class="text-delta">Read more</h2>
-            {% assign children_list = site.pages | sort:"nav_order" %}
-            <ul>
-              {% for child in children_list %}
-                {% if child.parent == page.title and child.title != page.title %}
-                <li>
-                  <a href="{{ child.url | absolute_url }}">{{ child.title }}</a>
-                </li>
-                {% endif %}
-              {% endfor %}
-            </ul>
-          {% endif %}
-
-          {% if site.footer_content != nil %}
-            <hr>
-            <footer role="contentinfo">
-              <p class="text-small text-grey-dk-000 mb-0">{{ site.footer_content }}</p>
-            </footer>
-          {% endif %}
+          <hr>
+          <footer role="contentinfo">
+            <p class="text-small text-grey-dk-000 mb-0">Copyright &copy; 2015-2019 <a href="https://jodah.net">Jonathan Halterman</a> and <a href="https://github.com/jhalterman/failsafe/graphs/contributors">friends</a>. Released under the <a href="https://github.com/jhalterman/failsafe/blob/master/LICENSE">Apache 2.0 license.</a></p>
+          </footer>
 
         </div>
       </div>

@@ -68,7 +68,7 @@
 
 .page {
   @include container;
-  padding-top: $gutter-spacing-sm;
+  padding-top: 2rem;
   padding-bottom: $gutter-spacing-sm;
 
   @include mq(md) {
@@ -116,7 +116,7 @@
   @include container;
 
   @include mq(md) {
-    padding-top: $sp-8;
+    padding-top: 2rem;
     padding-bottom: $gutter-spacing-sm;
     overflow-y: auto;
     flex: 1 1 auto;
@@ -144,8 +144,18 @@
   align-items: center;
   padding-top: $gutter-spacing-sm;
   padding-bottom: $gutter-spacing-sm;
-  color: $body-heading-color;
+  color: #2d3837;
   @include fs-6;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.logo {
+  margin-left: -5px;
+  padding-left: 39px;
+  background-repeat: no-repeat;
+  background-size: 30px;
+  background-position: left center;
 }
 
 .menu-button {

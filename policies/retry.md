@@ -1,13 +1,11 @@
 ---
 layout: default
-title: Retry Policy
-parent: Policies
-nav_order: 1
+title: Retry
 ---
 
-## Retries
+# Retry Policy
 
-[Retry policies][RetryPolicy] express when retries should be performed for an execution failure. 
+[Retry policies][RetryPolicy] express when retries should be performed for an execution. 
 
 By default, a [RetryPolicy] will perform a maximum of 3 execution attempts. You can configure a max number of [attempts][max-attempts] or [retries][max-retries]:
 

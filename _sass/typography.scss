@@ -49,6 +49,10 @@ li {
   @include fs-2;
 }
 
+.text-medium {
+  @include fs-3;
+}
+
 .text-mono {
   font-family: $mono-font-family !important;
 }

@@ -1,11 +1,9 @@
 ---
 layout: default
 title: Timeout
-parent: Policies
-nav_order: 2
 ---
 
-## Timeouts
+# Timeout
 
 [Timeouts][Timeout] allow you to fail an execution with `TimeoutExceededException` if it takes too long to complete:
 
@@ -19,6 +17,6 @@ You can also cancel an execution and perform an optional [interrupt] if it times
 timeout.withCancel(shouldInterrupt);
 ```
 
-If a cancellation is triggered by a `Timeout`, the execution is still completed with `TimeoutExceededException`. See the [execution cancellation](#execution-cancellation) section for more on cancellation.
+If a cancellation is triggered by a `Timeout`, the execution is still completed with `TimeoutExceededException`. See the [execution cancellation][execution-cancellation] section for more on cancellation.
 
 {% include common-links.html %}

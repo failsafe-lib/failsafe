@@ -1,13 +1,11 @@
 ---
 layout: default
 title: Circuit Breaker
-parent: Policies
-nav_order: 4
 ---
 
-## Circuit Breakers
+# Circuit Breaker
 
-[Circuit breakers][fowler-circuit-breaker] allow you to create systems that [fail-fast] by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
+[Circuit breakers][fowler-circuit-breaker] allow you to create systems that fail fast by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
 
 ```java
 CircuitBreaker<Object> breaker = new CircuitBreaker<>()
@@ -17,9 +15,11 @@ CircuitBreaker<Object> breaker = new CircuitBreaker<>()
   .withDelay(Duration.ofMinutes(1));
 ```
 
-When the number of execution failures exceed a configured threshold, the circuit is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the circuit is *half-opened* and trial executions are allowed which determine whether the circuit should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
+## How it Works
 
-#### Circuit Breaker Configuration
+When the number of execution failures exceed a configured threshold, the breaker is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the breaker is *half-opened* and trial executions are allowed which determine whether the breaker should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
+
+## Circuit Breaker Configuration
 
 Circuit breakers can be flexibly configured to express when the circuit should be opened or closed.
 
@@ -55,15 +55,15 @@ The breaker can also be configured to *close* again if, for example, the last 3 
 breaker.withSuccessThreshold(3, 5);
 ```
 
-#### Circuit Breaker Metrics
+## Circuit Breaker Metrics
 
 [CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state.
 
-#### Best Practices
+## Best Practices
 
 A circuit breaker can and *should* be shared across code that accesses common dependencies. This ensures that if the circuit breaker is opened, all executions that share the same dependency and use the same circuit breaker will be blocked until the circuit is closed again. For example, if multiple connections or requests are made to the same external server, typically they should all go through the same circuit breaker.
 
-#### Standalone Usage
+## Standalone Usage
 
 A [CircuitBreaker] can also be manually operated in a standalone way:
 

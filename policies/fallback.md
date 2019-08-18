@@ -1,11 +1,9 @@
 ---
 layout: default
 title: Fallback
-parent: Policies
-nav_order: 3
 ---
 
-## Fallbacks
+# Fallback
 
 [Fallbacks][Fallback] allow you to provide an alternative result for a failed execution. They can also be used to suppress exceptions and provide a default result:
 
@@ -31,5 +29,12 @@ For computations that block, a Fallback can be configured to run asynchronously:
 Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
 ```
 
+And like any [FailurePolicy], Fallbacks can be configured to handle only [certain results or failures][failure-handling]:
+
+```java
+fallback
+  .handle(ConnectException.class)
+  .handleResult(null);
+```
 
 {% include common-links.html %}

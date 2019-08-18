@@ -1,70 +1,71 @@
 //
 // Main nav, breadcrumb, etc...
 //
-.navigation-list {
+.side-nav > ul {
   padding: 0;
   margin-top: 0;
   margin-bottom: 0;
   list-style: none;
-}
 
-.navigation-list-child-list {
-  padding-left: $sp-3;
-  list-style: none;
+  li {
+    font-weight: 600;
+    letter-spacing: .5px;
+    padding-bottom: 20px;
+    text-transform: uppercase;
 
-  .navigation-list-link {
-    color: $nav-child-link-color;
-  }
+    @include fs-4;
+    margin: 0;
 
-  .navigation-list-item {
-    position: relative;
-
-    &::before {
-      position: absolute;
-      margin-top: 0.3em;
-      margin-left: -0.8em;
-      color: rgba($body-text-color, 0.3);
-      content: "- ";
+    @include mq(md) {
+      @include fs-3;
     }
 
     &.active {
-      &::before {
-        color: $body-text-color;
+      .navigation-list-child-list {
+        display: block;
+      }
+    }
+
+    a {
+      background-image: none;
+      display: block;
+      padding-top: $sp-1;
+      padding-bottom: .2rem;
+
+      &.active {
+        font-weight: 600;
+        color: $body-heading-color;
+        text-decoration: none;
+      }
+
+      &:hover {
+        background-image: none;
+        text-decoration: underline;
+      }
+    }
+
+    ul {
+      padding-top: 5px;
+      padding-left: 0px;
+      list-style: none;
+
+      li {
+        padding-bottom: 0px;
+        letter-spacing: normal;
+        font-weight: 300;
+        text-transform: none;
+        position: relative;
+
+        &.active {
+          &::before {
+            color: $body-text-color;
+          }
+        }
       }
     }
   }
 }
 
-.navigation-list-item {
-  @include fs-4;
-  margin: 0;
-
-  @include mq(md) {
-    @include fs-3;
-  }
-
-  .navigation-list-child-list {
-    display: none;
-  }
-
-  &.active {
-    .navigation-list-child-list {
-      display: block;
-    }
-  }
-}
-
-.navigation-list-link {
-  display: block;
-  padding-top: $sp-1;
-  padding-bottom: $sp-1;
-
-  &.active {
-    font-weight: 600;
-    color: $body-heading-color;
-    text-decoration: none;
-  }
-}
 
 // Small screen nav
 
