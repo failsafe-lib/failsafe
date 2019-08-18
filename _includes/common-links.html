@@ -4,12 +4,15 @@
 [failure-handling]: {{ "/policies#failure-handling" | relative_url }}
 [policy-composition]: {{ "/policies#policy-composition" | relative_url }}
 [retry]: {{ "/policies/retry" | relative_url }}
+[retry-listeners]: {{ "/policies/retry#event-listeners" | relative_url }}
 [timeouts]: {{ "/policies/timeout" | relative_url }}
 [fallbacks]: {{ "/policies/fallback" | relative_url }}
 [circuit-breakers]: {{ "/policies/circuit-breaker" | relative_url }}
+[circuit-breaker-listeners]: {{ "/policies/circuit-breaker#event-listeners" | relative_url }}
 
-[event-listeners]: /features/event-listeners
-[execution-cancellation]: /features/execution-cancellation
+[event-listeners]: {{ "/features/event-listeners" | relative_url }}
+[policy-listeners]: {{ "/features/event-listeners#policy-listeners" | relative_url }}
+[execution-cancellation]: {{ "/features/execution-cancellation" | relative_url }}
 
 [schedulers]: {{ "/features/schedulers" | relative_url }}
 [event-listeners]: {{ "/features/event-listeners" | relative_url }}
@@ -26,6 +29,7 @@
 
 [backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.time.temporal.ChronoUnit-
 [computed-delay]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/DelayablePolicy.html#withDelay-net.jodah.failsafe.function.DelayFunction-
+[random-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-long-long-java.time.temporal.ChronoUnit-
 [abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
 [max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
 [max-attempts]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxAttempts-int-
@@ -43,6 +47,7 @@
 
 [FailsafeExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html
 [Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
+[PolicyListeners]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/PolicyListeners.html
 [FailurePolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailurePolicy.html
 [RetryPolicy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html
 [Timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Timeout.html
@@ -58,6 +63,7 @@
 
 [ForkJoinPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html
 [common-pool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
+[Future]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Future.html
 [CompletableFuture]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
 [CompletionStage]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html 
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
@@ -65,6 +71,7 @@
 [examples]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples
 [RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
 [Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
+[InterruptedException]: https://docs.oracle.com/javase/8/docs/api/java/lang/InterruptedException.html
 [interrupt]: https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#interrupt--
 
 [fowler-circuit-breaker]: http://martinfowler.com/bliki/CircuitBreaker.html

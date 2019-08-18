@@ -47,32 +47,9 @@ At the policy level, Failsafe can notify you when an execution succeeds or fails
 ```java
 policy
   .onSuccess(e -> log.info("Connected to {}", e.getResult()))
-  .onFailure(e -> log.error("Failed to create connection", e.getFailure()))
-  .get(this::connect);
+  .onFailure(e -> log.error("Failed to create connection", e.getFailure()));
 ```
 
-When an execution attempt fails and before a retry is performed for a [retry policy][retry]:
-
-```java
-retryPolicy
-  .onFailedAttempt(e -> log.error("Connection attempt failed", e.getLastFailure()))
-  .onRetry(e -> log.warn("Failure #{}. Retrying.", ctx.getAttemptCount()));
-```
-
-Or when an execution fails and the max retries are [exceeded][retries-exceeded] for a [retry policy][retry]:
-
-```java
-retryPolicy.onRetriesExceeded(e -> log.warn("Failed to connect. Max retries exceeded."));
-```
-
-For [circuit breakers][circuit-breakers], Failsafe can notify you when the state changes:
-
-```java
-circuitBreaker
-  .onClose(() -> log.info("The circuit breaker was closed"));
-  .onOpen(() -> log.info("The circuit breaker was opened"))
-  .onHalfOpen(() -> log.info("The circuit breaker was half-opened"));
-```
-
+Additional listeners are available for [retry policies][retry-listeners] and [circuit breakers][circuit-breaker-listeners].
 
 {% include common-links.html %}

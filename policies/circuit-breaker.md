@@ -19,9 +19,9 @@ CircuitBreaker<Object> breaker = new CircuitBreaker<>()
 
 When the number of execution failures exceed a configured threshold, the breaker is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the breaker is *half-opened* and trial executions are allowed which determine whether the breaker should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
 
-## Circuit Breaker Configuration
+## Configuration
 
-Circuit breakers can be flexibly configured to express when the circuit should be opened or closed.
+[Circuit breakers][CircuitBreaker] can be flexibly configured to express when the breaker should be opened, half-opened, and closed.
 
 A circuit breaker can be configured to *open* when a successive number of executions have failed:
 
@@ -35,7 +35,7 @@ Or when, for example, the last 3 out of 5 executions have failed:
 breaker.withFailureThreshold(3, 5);
 ```
 
-After opening, a breaker will delay for 1 minute by default before before attempting to *close* again, or you can configure a specific delay:
+After opening, a breaker will delay for 1 minute by default before before transitioning to *half-open*, or you can configure a specific delay:
 
 ```java
 breaker.withDelay(Duration.ofSeconds(30));
@@ -55,7 +55,30 @@ The breaker can also be configured to *close* again if, for example, the last 3 
 breaker.withSuccessThreshold(3, 5);
 ```
 
-## Circuit Breaker Metrics
+If a success threshold is not configured, then the failure threshold is used to determine if a breaker should transition from half-open to either closed or open.
+
+## Failure Handling
+
+Like any [FailurePolicy], a [CircuitBreaker] can be configured to handle only [certain results or failures][failure-handling], in combination with any of the configuration described above:
+
+```java
+circuitBreaker
+  .handle(ConnectException.class)
+  .handleResult(null);
+```
+
+## Event Listeners
+
+In addition to the standard [policy listeners][policy-listeners], a [CircuitBreaker] can notify you when the state of the breaker changes:
+
+```java
+circuitBreaker
+  .onClose(() -> log.info("The circuit breaker was closed"));
+  .onOpen(() -> log.info("The circuit breaker was opened"))
+  .onHalfOpen(() -> log.info("The circuit breaker was half-opened"));
+```
+
+## Metrics
 
 [CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state.
 

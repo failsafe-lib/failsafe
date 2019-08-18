@@ -29,12 +29,28 @@ For computations that block, a Fallback can be configured to run asynchronously:
 Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
 ```
 
-And like any [FailurePolicy], Fallbacks can be configured to handle only [certain results or failures][failure-handling]:
+## Failure Handling
+
+Like any [FailurePolicy], [Fallbacks] can be configured to handle only [certain results or failures][failure-handling]:
 
 ```java
 fallback
   .handle(ConnectException.class)
   .handleResult(null);
+```
+
+## Event Listeners
+
+[Fallbacks] support the standard [policy listeners][PolicyListeners] which can notify you when a fallback fails:
+
+```java
+fallback.onFailure(e -> log.error("Failed to connect to backup", e.getFailure()));
+```
+
+Or succeeds:
+
+```java
+fallback.onSuccess(e -> log.info("Connected to backup"));
 ```
 
 {% include common-links.html %}
