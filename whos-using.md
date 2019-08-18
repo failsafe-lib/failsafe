@@ -3,9 +3,9 @@ layout: default
 title: Notable Users
 ---
 
-# Notable Users
+# Who's Using Failsafe
 
-Many projects, organizations, and governments use Failsafe. Feel free to [edit](https://github.com/jhalterman/failsafe/edit/gh-pages/resources/notable-users.md) this page and add your project or organization.
+Many projects, organizations, and governments use Failsafe. If you're a happy user, feel free to [edit](https://github.com/jhalterman/failsafe/edit/gh-pages/notable-users.md) this page and add your project or organization.
 
 ## Projects
 

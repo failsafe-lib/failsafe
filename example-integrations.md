@@ -14,6 +14,6 @@ Failsafe was designed to integrate nicely with other libraries and APIs. Here ar
 * [Circuit Breaker Operator based on RxJava2](https://github.com/venth/failsafe-rxjava2)
 * [Circuit Breaker Operator based on Spring Reactor](https://github.com/venth/failsafe-reactor)
 
-Feel free to [edit](https://github.com/jhalterman/failsafe/edit/gh-pages/resources/example-integrations.md) this page add additional integrations.
+Feel free to [edit](https://github.com/jhalterman/failsafe/edit/gh-pages/example-integrations.md) this page add additional integrations.
 
 {% include common-links.html %}

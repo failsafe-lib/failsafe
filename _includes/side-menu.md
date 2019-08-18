@@ -22,11 +22,11 @@
 
 - Resources
   - [Javadocs][javadoc]
-  - [FAQs]({{ "/resources/faq" | relative_url }})
+  - [FAQs]({{ "/faqs" | relative_url }})
   - [Gitter Chat][gitter]
-  - [Example Integrations]({{ "/resources/example-integrations" | relative_url }})
-  - [Third Party Tools]({{ "/resources/third-party-tools" | relative_url }})
-  - [Comparisons]({{ "/resources/comparisons" | relative_url }})
-  - [Notable Users]({{ "/resources/notable-users" | relative_url }})
+  - [Example Integrations]({{ "/example-integrations" | relative_url }})
+  - [Third Party Tools]({{ "/third-party-tools" | relative_url }})
+  - [Comparisons]({{ "/comparisons" | relative_url }})
+  - [Who's Using Failsafe]({{ "/whos-using" | relative_url }})
 
 {% include common-links.html %}
