@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Event Listeners
-nav_order: 2
 ---
 
 # Event Listeners

@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Policy SPI
-nav_order: 10
 ---
 
 # Policy SPI

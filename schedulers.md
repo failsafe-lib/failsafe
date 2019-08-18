@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Schedulers
-nav_order: 1
 ---
 
 # Schedulers

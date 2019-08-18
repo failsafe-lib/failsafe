@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Functional Interface Support
-nav_order: 8
 ---
 
 # Functional Interface Support

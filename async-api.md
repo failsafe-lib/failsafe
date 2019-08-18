@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Async API Support
-nav_order: 6
 ---
 
 # Asynchronous API Support

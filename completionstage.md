@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: CompletionStage Support
-nav_order: 7
 ---
 
 # CompletionStage Support

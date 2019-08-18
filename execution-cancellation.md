@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Execution Cancellation
-nav_order: 5
 ---
 
 # Execution Cancellation

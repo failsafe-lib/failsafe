@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Strong Typing
-nav_order: 3
 ---
 
 # Strong typing

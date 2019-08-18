@@ -17,7 +17,7 @@ CircuitBreaker<Object> breaker = new CircuitBreaker<>()
 
 ## How it Works
 
-When the number of execution failures exceed a configured threshold, the breaker is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the breaker is *half-opened* and trial executions are allowed which determine whether the breaker should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal.
+When the number of execution failures exceed a configured threshold, the breaker is *opened* and further execution requests fail with `CircuitBreakerOpenException`. After a delay, the breaker is *half-opened* and trial executions are allowed which determine whether the breaker should be *closed* or *opened* again. If the trial executions meet a success threshold, the breaker is *closed* again and executions will proceed as normal, otherwise it's re-*opened*.
 
 ## Configuration
 
@@ -73,8 +73,8 @@ In addition to the standard [policy listeners][policy-listeners], a [CircuitBrea
 
 ```java
 circuitBreaker
-  .onClose(() -> log.info("The circuit breaker was closed"));
   .onOpen(() -> log.info("The circuit breaker was opened"))
+  .onClose(() -> log.info("The circuit breaker was closed"))
   .onHalfOpen(() -> log.info("The circuit breaker was half-opened"));
 ```
 

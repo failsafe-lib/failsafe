@@ -1,3 +1,7 @@
+## Pre-Requisites
+
+- [Jekyll](https://jekyllrb.com/docs/installation/)
+
 ## Run locally
 
 ```
@@ -7,5 +11,5 @@
 ## Generate search index
 
 ```
-./generate-search-index.sh
+./bin/generate-search-index.sh
 ```

@@ -1,3 +1,5 @@
+<!-- Site links -->
+
 [home]: {{ "/" | relative_url }}
 
 [policies]: {{ "/policies" | relative_url }}
@@ -10,12 +12,9 @@
 [circuit-breakers]: {{ "/circuit-breaker" | relative_url }}
 [circuit-breaker-listeners]: {{ "/circuit-breaker#event-listeners" | relative_url }}
 
-[event-listeners]: {{ "/event-listeners" | relative_url }}
-[policy-listeners]: {{ "/event-listeners#policy-listeners" | relative_url }}
-[execution-cancellation]: {{ "/execution-cancellation" | relative_url }}
-
 [schedulers]: {{ "/schedulers" | relative_url }}
 [event-listeners]: {{ "/event-listeners" | relative_url }}
+[policy-listeners]: {{ "/event-listeners#policy-listeners" | relative_url }}
 [strong-typing]: {{ "/strong-typing" | relative_url }}
 [execution-context]: {{ "/execution-context" | relative_url }}
 [execution-cancellation]: {{ "/execution-cancellation" | relative_url }}
@@ -24,26 +23,16 @@
 [functional-interface]: {{ "/functional-interface" | relative_url }}
 [execution-tracking]: {{ "/execution-tracking" | relative_url }}
 [policy-spi]: {{ "/policy-spi" | relative_url }}
+[policy-executor-impls]: https://github.com/jhalterman/failsafe/tree/master/src/main/java/net/jodah/failsafe
 
 [javadoc]: {{ "/javadoc" | relative_url }}
+[gitter]: https://gitter.im/jhalterman/failsafe
+[examples]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples
+[RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
+[Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
+[whos-using]: https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe
 
-[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.time.temporal.ChronoUnit-
-[computed-delay]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/DelayablePolicy.html#withDelay-net.jodah.failsafe.function.DelayFunction-
-[random-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-long-long-java.time.temporal.ChronoUnit-
-[abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
-[max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
-[max-attempts]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxAttempts-int-
-[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-
-[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-java.time.Duration-
-[jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
-[breaker-timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-
-[runAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#runAsyncExecution-net.jodah.failsafe.function.AsyncRunnable-
-[getAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
-[getStageAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getStageAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
-[retries-exceeded]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedConsumer-
-[breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
-[breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
-[policy-executor-impls]: https://github.com/jhalterman/failsafe/tree/master/src/main/java/net/jodah/failsafe
+<!-- Failsafe Javadocs - Classes -->
 
 [FailsafeExecutor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html
 [Policy]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/Policy.html
@@ -61,6 +50,27 @@
 [CircuitBreakerOpenException]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreakerOpenException.html
 [TimeoutExceededException]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/TimeoutExceededException.html
 
+<!-- Failsafe Javadocs - Methods -->
+
+[backoff]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withBackoff-long-long-java.time.temporal.ChronoUnit-
+[computed-delay]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/DelayablePolicy.html#withDelay-net.jodah.failsafe.function.DelayFunction-
+[random-delay]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withDelay-long-long-java.time.temporal.ChronoUnit-
+[abort-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#abortOn-java.lang.Class...-
+[max-retries]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-
+[max-attempts]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxAttempts-int-
+[max-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-
+[jitter-duration]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-java.time.Duration-
+[jitter-factor]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#withJitter-double-
+[breaker-timeout]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-
+[runAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#runAsyncExecution-net.jodah.failsafe.function.AsyncRunnable-
+[getAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
+[getStageAsyncExecution]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/FailsafeExecutor.html#getStageAsyncExecution-net.jodah.failsafe.function.AsyncSupplier-
+[retries-exceeded]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/RetryPolicy.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedConsumer-
+[breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
+[breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
+
+<!-- JDK Javadocs -->
+
 [ForkJoinPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html
 [common-pool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
 [Future]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Future.html
@@ -68,14 +78,10 @@
 [CompletionStage]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html 
 [ScheduledExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledExecutorService.html
 [ExecutorService]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html
-[examples]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples
-[RxJava]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/RxJavaExample.java
-[Vert.x]: https://github.com/jhalterman/failsafe/blob/master/src/test/java/net/jodah/failsafe/examples/VertxExample.java
 [InterruptedException]: https://docs.oracle.com/javase/8/docs/api/java/lang/InterruptedException.html
 [interrupt]: https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#interrupt--
 
+<!-- Misc links -->
+
 [fowler-circuit-breaker]: http://martinfowler.com/bliki/CircuitBreaker.html
 [maven]: https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe
-
-[whos-using]: https://github.com/jhalterman/failsafe/wiki/Who's-Using-Failsafe
-[gitter]: https://gitter.im/jhalterman/failsafe

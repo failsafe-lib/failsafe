@@ -1,8 +1,6 @@
 ---
 layout: default
-parent: Features
 title: Execution Tracking
-nav_order: 9
 ---
 
 # Execution Tracking
