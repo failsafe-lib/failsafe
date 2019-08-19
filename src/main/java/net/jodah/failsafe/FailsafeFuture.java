@@ -23,11 +23,13 @@ import java.util.concurrent.Future;
 
 /**
  * A CompletableFuture implementation that propogates cancellations and calls completion handlers.
+ * <p>
+ * Part of the Failsafe SPI.
  *
  * @param <T> result type
  * @author Jonathan Halterman
  */
-class FailsafeFuture<T> extends CompletableFuture<T> {
+public class FailsafeFuture<T> extends CompletableFuture<T> {
   private final FailsafeExecutor<T> executor;
   private AbstractExecution execution;
 
