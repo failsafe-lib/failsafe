@@ -149,7 +149,7 @@ public class RetryPolicyTest {
   }
 
   public void shouldRequireValidBackoff() {
-    shouldFail(() -> new RetryPolicy().withBackoff(0, 0, null), NullPointerException.class);
+    shouldFail(() -> new RetryPolicy().withBackoff(0, 0, (ChronoUnit) null), NullPointerException.class);
     shouldFail(
         () -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withBackoff(100, 120, ChronoUnit.MILLIS),
         IllegalStateException.class);

@@ -29,6 +29,12 @@ public class CircuitBreakerOpenException extends FailsafeException {
     this.circuitBreaker = circuitBreaker;
   }
 
+  /* Backwards compatability for 1.x -> 2.x migration */
+  @Deprecated
+  public CircuitBreakerOpenException() {
+    this.circuitBreaker = null;
+  }
+
   /** Retruns the {@link CircuitBreaker} that caused the exception. */
   public CircuitBreaker getCircuitBreaker() {
     return circuitBreaker;

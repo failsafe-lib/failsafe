@@ -26,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
@@ -373,6 +374,18 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
     return withBackoff(delay, maxDelay, chronoUnit, 2);
   }
 
+  /* Backwards compatability for 1.x -> 2.x migration */
+  @Deprecated
+  public RetryPolicy<R> withBackoff(long delay, long maxDelay, TimeUnit timeUnit) {
+    return withBackoff(delay, maxDelay, TimeUnitToChronoUnit.toChronoUnit(timeUnit), 2);
+  }
+
+  /* Backwards compatability for 1.x -> 2.x migration */
+  @Deprecated
+  public RetryPolicy<R> withBackoff(long delay, long maxDelay, TimeUnit timeUnit, double delayFactor)  {
+    return withBackoff(delay, maxDelay, TimeUnitToChronoUnit.toChronoUnit(timeUnit), delayFactor);
+  }
+
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
    * successive delays by the {@code delayFactor}.
@@ -488,6 +501,12 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
     return this;
   }
 
+  /* Backwards compatability for 1.x -> 2.x migration */
+  @Deprecated
+  public RetryPolicy<R> withJitter(long jitter, TimeUnit timeUnit) {
+    return withJitter(Duration.of(jitter, TimeUnitToChronoUnit.toChronoUnit(timeUnit)));
+  }
+
   /**
    * Sets the max number of execution attempts to perform. {@code -1} indicates no limit. This method has the same
    * effect as setting 1 more than {@link #withMaxRetries(int)}. For example, 2 retries equal 3 attempts.
@@ -513,6 +532,12 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
     Assert.state(maxDuration.toNanos() > delay.toNanos(), "maxDuration must be greater than the delay");
     this.maxDuration = maxDuration;
     return this;
+  }
+
+  /* Backwards compatability for 1.x -> 2.x migration */
+  @Deprecated
+  public RetryPolicy<R> withMaxDuration(long maxDuration, TimeUnit timeUnit) {
+    return withMaxDuration(Duration.of(maxDuration, TimeUnitToChronoUnit.toChronoUnit(timeUnit)));
   }
 
   /**

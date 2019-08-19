@@ -1,0 +1,96 @@
+<html><head><title>failsafe-1.0.3 → failsafe-2.3.0</title><style type="text/css">body {
+  font-family: Helvetica, Arial, Sans-Serif;
+  line-height: 1.5em;
+}
+
+h1 {
+  font-weight: 500;
+}
+
+h2 {
+  font-weight: 400;
+}
+
+header {
+  padding: 2px 30px 4px;
+  border-bottom: 1px solid grey;
+}
+
+main {
+  padding: 20px 30px;
+}
+
+.link {
+  font-size: 1em;
+  text-align: left;
+  color: #0091ae;
+  background: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus {
+  outline: none;
+}
+
+.class {
+  margin-bottom: 20px;
+  border: 1px solid grey;
+  background-color: #FBFBFB;
+}
+
+.class-header {
+  font-size: larger;
+  padding: 10px 16px;
+  border-bottom: 1px solid grey;
+  background-color: #E8E8E8;
+}
+
+.class-name {
+  font-weight: 500;
+}
+
+.package-name {
+  color: #555;
+}
+
+.datatype-change, .method-change {
+  padding: 10px 16px;
+}
+
+.method-change:nth-child(even) {
+  background-color: #F3F3F3;
+}
+
+.method-signature {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+</style></head><body><header><h1>failsafe-1.0.3 → failsafe-2.3.0</h1></header><main><div>
+          <button class="link" onclick="copyMarkdownSummaryToClipboard()">
+            Copy markdown summary to clipboard
+          </button>
+        </div><h2 id="changed-data-types">Changed datatypes</h2><div><div class="class"><div class="class-header"><span class="class-name">Failsafe.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Parameter at index 0 to method with changed from net.jodah.failsafe.CircuitBreaker to java.util.List&lt;? extends net.jodah.failsafe.Policy&lt;R extends java.lang.Object&gt;&gt;.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">FailsafeFuture.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Visibility was reduced from &#x27;public&#x27; to &#x27;package&#x27;.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Ratio.class</span><br/><small class="package-name">net.jodah.failsafe.util</small></div><div><div class="datatype-change"><div>Visibility was reduced from &#x27;public&#x27; to &#x27;private&#x27;.</div></div><div class="datatype-change"><div>Visibility was reduced from &#x27;public&#x27; to &#x27;private&#x27;.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">RetryPolicy.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Parameter at index 2 to method withBackoff changed from java.util.concurrent.TimeUnit to java.time.temporal.ChronoUnit.</div></div></div></div></div><h2 id="removed-data-types">Removed datatypes</h2><div><div class="class"><div class="class-header"><span class="class-name">AsyncCallable.class</span><br/><small class="package-name">net.jodah.failsafe.function</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">AsyncFailsafe.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">AsyncFailsafeConfig.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">BiPredicate.class</span><br/><small class="package-name">net.jodah.failsafe.function</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CancellableFuture.class</span><br/><small class="package-name">net.jodah.failsafe.internal.util</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CheckedBiConsumer.class</span><br/><small class="package-name">net.jodah.failsafe.function</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CheckedBiFunction.class</span><br/><small class="package-name">net.jodah.failsafe.function</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CircuitBreakerStats.class</span><br/><small class="package-name">net.jodah.failsafe.internal</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">ContextualCallable.class</span><br/><small class="package-name">net.jodah.failsafe.function</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">ContextualResultListener.class</span><br/><small class="package-name">net.jodah.failsafe.event</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Duration.class</span><br/><small class="package-name">net.jodah.failsafe.util</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">FailsafeConfig.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Listeners.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Predicate.class</span><br/><small class="package-name">net.jodah.failsafe.function</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Ratio.class</span><br/><small class="package-name">net.jodah.failsafe.util</small></div><div><div class="datatype-change"><div>Field removed from class.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">ReentrantCircuit.class</span><br/><small class="package-name">net.jodah.failsafe.internal.util</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Schedulers.class</span><br/><small class="package-name">net.jodah.failsafe.util.concurrent</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div><div class="class"><div class="class-header"><span class="class-name">SyncFailsafe.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="datatype-change"><div>Class was removed.</div></div></div></div></div><h2 id="changed-methods">Changed methods</h2><div><div class="class"><div class="class-header"><span class="class-name">AsyncExecution.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>getWaitTime( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CircuitBreaker.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>getDelay( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>getTimeout( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>onClose( CheckedRunnable ) void</code></div><div><div>The return type changed from &#x27;void&#x27; to  &#x27;net.jodah.failsafe.CircuitBreaker&lt;R extends java.lang.Object&gt;&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>onHalfOpen( CheckedRunnable ) void</code></div><div><div>The return type changed from &#x27;void&#x27; to  &#x27;net.jodah.failsafe.CircuitBreaker&lt;R extends java.lang.Object&gt;&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>onOpen( CheckedRunnable ) void</code></div><div><div>The return type changed from &#x27;void&#x27; to  &#x27;net.jodah.failsafe.CircuitBreaker&lt;R extends java.lang.Object&gt;&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>withDelay( long, TimeUnit ) CircuitBreaker</code></div><div><div>The number of parameters of the method have changed.</div></div></div><div class="method-change"><div class="method-signature"><code>withTimeout( long, TimeUnit ) CircuitBreaker</code></div><div><div>The number of parameters of the method have changed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CircuitBreakerOpenException.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>&lt;init&gt;( ) void</code></div><div><div>The number of parameters of the method have changed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CircuitState.class</span><br/><small class="package-name">net.jodah.failsafe.internal</small></div><div><div class="method-change"><div class="method-signature"><code>allowsExecution( CircuitBreakerStats ) boolean</code></div><div><div>The number of parameters of the method have changed.</div></div></div><div class="method-change"><div class="method-signature"><code>getInternals( ) CircuitBreaker.State</code></div><div><div>Abstract method was added.</div></div></div><div class="method-change"><div class="method-signature"><code>recordFailure( ) void</code></div><div><div>The number of parameters of the method have changed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CircularBitSet.class</span><br/><small class="package-name">net.jodah.failsafe.internal.util</small></div><div><div class="method-change"><div class="method-signature"><code>negativeRatio( ) double</code></div><div><div>The return type changed from &#x27;double&#x27; to  &#x27;net.jodah.failsafe.util.Ratio&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>positiveRatio( ) double</code></div><div><div>The return type changed from &#x27;double&#x27; to  &#x27;net.jodah.failsafe.util.Ratio&#x27;.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Execution.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>&lt;init&gt;( CircuitBreaker ) void</code></div><div><div>Visibility reduced from public to package.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">ExecutionContext.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>getElapsedTime( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>getStartTime( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Failsafe.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>with( CircuitBreaker ) SyncFailsafe&lt;T&gt;</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.SyncFailsafe&lt;T extends java.lang.Object&gt;&#x27; to  &#x27;net.jodah.failsafe.FailsafeExecutor&lt;R extends java.lang.Object&gt;&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>with( RetryPolicy ) SyncFailsafe&lt;T&gt;</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.SyncFailsafe&lt;T extends java.lang.Object&gt;&#x27; to  &#x27;net.jodah.failsafe.FailsafeExecutor&lt;R extends java.lang.Object&gt;&#x27;.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">RetryPolicy.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>getJitter( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>getMaxDelay( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>getMaxDuration( ) Duration</code></div><div><div>The return type changed from &#x27;net.jodah.failsafe.util.Duration&#x27; to  &#x27;java.time.Duration&#x27;.</div></div></div><div class="method-change"><div class="method-signature"><code>withJitter( long, TimeUnit ) RetryPolicy</code></div><div><div>The number of parameters of the method have changed.</div></div></div><div class="method-change"><div class="method-signature"><code>withMaxDuration( long, TimeUnit ) RetryPolicy</code></div><div><div>The number of parameters of the method have changed.</div></div></div></div></div></div><h2 id="removed-methods">Removed methods</h2><div><div class="class"><div class="class-header"><span class="class-name">CircuitBreaker.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>failIf( BiPredicate&lt;T, ? extends Throwable&gt; ) CircuitBreaker</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>failIf( Predicate&lt;T&gt; ) CircuitBreaker</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>failOn( Class&lt;? extends Throwable&gt;[] ) CircuitBreaker</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>failOn( List&lt;Class&lt;? extends Throwable&gt;&gt; ) CircuitBreaker</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>failOn( Predicate&lt;? extends Throwable&gt; ) CircuitBreaker</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>failWhen( Object ) CircuitBreaker</code></div><div><div>Method was removed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">CircuitState.class</span><br/><small class="package-name">net.jodah.failsafe.internal</small></div><div><div class="method-change"><div class="method-signature"><code>getState( ) CircuitBreaker.State</code></div><div><div>Method was removed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">Execution.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>&lt;init&gt;( RetryPolicy ) void</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>&lt;init&gt;( RetryPolicy, CircuitBreaker ) void</code></div><div><div>Method was removed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">ExecutionContext.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>getExecutions( ) int</code></div><div><div>Method was removed.</div></div></div></div></div><div class="class"><div class="class-header"><span class="class-name">RetryPolicy.class</span><br/><small class="package-name">net.jodah.failsafe</small></div><div><div class="method-change"><div class="method-signature"><code>canAbortFor( Object, Throwable ) boolean</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>canRetryFor( Object, Throwable ) boolean</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>retryIf( BiPredicate&lt;T, ? extends Throwable&gt; ) RetryPolicy</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>retryIf( Predicate&lt;T&gt; ) RetryPolicy</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>retryOn( Class&lt;? extends Throwable&gt;[] ) RetryPolicy</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>retryOn( List&lt;Class&lt;? extends Throwable&gt;&gt; ) RetryPolicy</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>retryOn( Predicate&lt;? extends Throwable&gt; ) RetryPolicy</code></div><div><div>Method was removed.</div></div></div><div class="method-change"><div class="method-signature"><code>retryWhen( Object ) RetryPolicy</code></div><div><div>Method was removed.</div></div></div></div></div></div></main><script>
+        function copyMarkdownSummaryToClipboard() {
+          (text => {
+  const textarea = document.createElement('textarea');
+  document.body.appendChild(textarea);
+  textarea.value = text;
+  textarea.select();
+  try {
+    const success = document.execCommand('copy');
+    console.log(success ? 'Copied to clipboard' : 'Copy to clipboard failed');
+  } catch (e) {
+    console.log('Copy to clipboard failed', e);
+  }
+  document.body.removeChild(textarea);
+})("## failsafe-1.0.3 → failsafe-2.3.0\n\n| Type | Count |\n| - | -: |\n| Changed datatypes | 5 |\n| Changed methods | 24 |\n| Removed datatypes | 18 |\n| Removed methods | 18 |\n");
+        };
+      </script></body></html>

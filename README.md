@@ -8,6 +8,9 @@
 
 Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It  works by wrapping executable logic with one or more resilience policies, which can be combined and composed as needed.
 
+## HubSpot - Migration From 1.X to 2.X compatability
+[Report of incompatabilities](failsafe-1.0.3-failsafe-2.3.0.html)
+
 ## Usage
 
 Visit the [project website](https://jodah.net/failsafe).
