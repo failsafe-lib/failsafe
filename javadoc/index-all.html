@@ -143,6 +143,10 @@
 <dd>
 <div class="block">Returns whether the policy can cancel an execution if the timeout is exceeded.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/FailsafeFuture.html#cancel-boolean-">cancel(boolean)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/FailsafeFuture.html" title="class in net.jodah.failsafe">FailsafeFuture</a></dt>
+<dd>
+<div class="block">Cancels this and the internal delegate.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/concurrent/DefaultScheduledFuture.html#cancel-boolean-">cancel(boolean)</a></span> - Method in class net.jodah.failsafe.util.concurrent.<a href="net/jodah/failsafe/util/concurrent/DefaultScheduledFuture.html" title="class in net.jodah.failsafe.util.concurrent">DefaultScheduledFuture</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/Timeout.html#canInterrupt--">canInterrupt()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe">Timeout</a></dt>
@@ -224,6 +228,15 @@
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/Execution.html#complete-java.lang.Object-">complete(Object)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/Execution.html" title="class in net.jodah.failsafe">Execution</a></dt>
 <dd>
 <div class="block">Records and attempts to complete the execution with the <code>result</code>.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/FailsafeFuture.html#complete-T-">complete(T)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/FailsafeFuture.html" title="class in net.jodah.failsafe">FailsafeFuture</a></dt>
+<dd>
+<div class="block">If not already completed, completes  the future with the <code>value</code>, calling the complete and success handlers.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/FailsafeFuture.html#completeExceptionally-java.lang.Throwable-">completeExceptionally(Throwable)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/FailsafeFuture.html" title="class in net.jodah.failsafe">FailsafeFuture</a></dt>
+<dd>
+<div class="block">If not already completed, completes the future with the <code>failure</code>, calling the complete and failure
+ handlers.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/DelayablePolicy.html#computeDelay-net.jodah.failsafe.ExecutionContext-">computeDelay(ExecutionContext)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/DelayablePolicy.html" title="class in net.jodah.failsafe">DelayablePolicy</a></dt>
 <dd>
@@ -343,6 +356,10 @@
 <dd>
 <div class="block">
  An executor that handles failures according to configured <a href="net/jodah/failsafe/FailurePolicy.html" title="class in net.jodah.failsafe"><code>policies</code></a>.</div>
+</dd>
+<dt><a href="net/jodah/failsafe/FailsafeFuture.html" title="class in net.jodah.failsafe"><span class="typeNameLink">FailsafeFuture</span></a>&lt;<a href="net/jodah/failsafe/FailsafeFuture.html" title="type parameter in FailsafeFuture">T</a>&gt; - Class in <a href="net/jodah/failsafe/package-summary.html">net.jodah.failsafe</a></dt>
+<dd>
+<div class="block">A CompletableFuture implementation that propogates cancellations and calls completion handlers.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#failure-java.lang.Throwable-">failure(Throwable)</a></span> - Static method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>
