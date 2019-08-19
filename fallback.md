@@ -8,7 +8,7 @@ title: Fallback
 [Fallbacks][Fallback] allow you to provide an alternative result for a failed execution. They can also be used to suppress exceptions and provide a default result:
 
 ```java
-Fallback<Object> fallback = Fallback.of(null);
+Fallback<Object> fallback = Fallback.of(defaultResult);
 ```
 
 Throw a custom exception:
