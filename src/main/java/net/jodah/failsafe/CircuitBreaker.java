@@ -53,7 +53,6 @@ public class CircuitBreaker {
   private Duration timeout;
   private Ratio failureThreshold;
   private Ratio successThreshold;
-  private int maxConcurrentExecutions = Integer.MAX_VALUE;
   /** Indicates whether failures are checked by a configured failure condition */
   private boolean failuresChecked;
   private List<BiPredicate<Object, Throwable>> failureConditions;
@@ -85,7 +84,7 @@ public class CircuitBreaker {
    * Returns whether the circuit allows execution, possibly triggering a state transition.
    */
   public boolean allowsExecution() {
-    return stats.getCurrentExecutions() < maxConcurrentExecutions && state.get().allowsExecution(stats);
+    return state.get().allowsExecution(stats);
   }
 
   /**
@@ -422,12 +421,6 @@ public class CircuitBreaker {
     Assert.notNull(timeUnit, "timeUnit");
     Assert.isTrue(timeout > 0, "timeout must be greater than 0");
     this.timeout = new Duration(timeout, timeUnit);
-    return this;
-  }
-
-  public CircuitBreaker withMaxConcurrentExecutions(int executions) {
-    Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
-    this.maxConcurrentExecutions = executions;
     return this;
   }
 
