@@ -1,3 +1,9 @@
+# 2.3.1
+
+### Improvements
+
+- Set `setRemoveOnCancelPolicy(true)` for the internal delay scheduler.
+
 # 2.3.0
 
 ### API Changes
