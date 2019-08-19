@@ -15,9 +15,6 @@
  */
 package net.jodah.failsafe.examples;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
@@ -26,12 +23,15 @@ import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  static RetryPolicy retryPolicy = new RetryPolicy()
-      .retryOn((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
+  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+      .handleIf((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
           || ReplyFailure.TIMEOUT.equals(failure.failureType()));
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
@@ -42,7 +42,6 @@ public class VertxExample {
       } catch (Exception ignore) {
       }
     };
-
     return new DefaultScheduledFuture<Object>() {
       long timerId;
 
@@ -55,8 +54,8 @@ public class VertxExample {
 
       @Override
       public boolean cancel(boolean mayInterruptIfRunning) {
-        return delay == 0 ? false : vertx.cancelTimer(timerId);
-      };
+        return delay != 0 && vertx.cancelTimer(timerId);
+      }
     };
   };
 
@@ -75,9 +74,9 @@ public class VertxExample {
     });
 
     // Retryable sender
-    Failsafe.with(retryPolicy.copy().withDelay(1, TimeUnit.SECONDS))
+    Failsafe.with(retryPolicy.copy().withDelay(Duration.ofSeconds(1)))
         .with(scheduler)
-        .runAsync(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
+        .runAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
           if (reply.succeeded())
             System.out.println("Received reply " + reply.result().body());
           else if (!execution.retryOn(reply.cause()))

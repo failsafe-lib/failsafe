@@ -15,15 +15,15 @@
  */
 package net.jodah.failsafe.util.concurrent;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.DelegatingScheduler;
+
+import java.util.concurrent.*;
 
 /**
  * Schedules executions.
- * 
+ *
  * @author Jonathan Halterman
- * @see Schedulers
  * @see net.jodah.failsafe.util.concurrent.DefaultScheduledFuture
  */
 public interface Scheduler {
@@ -31,4 +31,23 @@ public interface Scheduler {
    * Schedules the {@code callable} to be called after the {@code delay} for the {@code unit}.
    */
   ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit);
+
+  /**
+   * Returns a Scheduler adapted from the {@code executor}.
+   *
+   * @throws NullPointerException if {@code executor} is null
+   */
+  static Scheduler of(final ScheduledExecutorService executor) {
+    Assert.notNull(executor, "executor");
+    return executor::schedule;
+  }
+
+  /**
+   * Returns a Scheduler adapted from the {@code executor}.
+   *
+   * @throws NullPointerException if {@code executor} is null
+   */
+  static Scheduler of(final ExecutorService executor) {
+    return new DelegatingScheduler(Assert.notNull(executor, "executor"));
+  }
 }

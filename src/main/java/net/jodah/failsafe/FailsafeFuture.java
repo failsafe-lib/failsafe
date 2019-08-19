@@ -15,173 +15,122 @@
  */
 package net.jodah.failsafe;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import net.jodah.failsafe.function.CheckedBiFunction;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.ReentrantCircuit;
 
 /**
- * The future result of an asynchronous Failsafe execution.
- * 
- * @author Jonathan Halterman
+ * A CompletableFuture implementation that propogates cancellations and calls completion handlers.
+ *
  * @param <T> result type
+ * @author Jonathan Halterman
  */
-public class FailsafeFuture<T> implements Future<T> {
-  private final ReentrantCircuit circuit = new ReentrantCircuit();
-  private final FailsafeConfig<T, ?> config;
-  private ExecutionContext execution;
-  private java.util.concurrent.CompletableFuture<T> completableFuture;
+class FailsafeFuture<T> extends CompletableFuture<T> {
+  private final FailsafeExecutor<T> executor;
+  private AbstractExecution execution;
 
-  // Mutable state
-  private volatile Future<T> delegate;
-  private volatile boolean done;
-  private volatile boolean cancelled;
-  private volatile T result;
-  private volatile Throwable failure;
+  // Mutable state, guarded by "this"
+  private Future<T> delegate;
+  private List<Future<T>> timeoutDelegates;
 
-  FailsafeFuture(FailsafeConfig<T, ?> config) {
-    this.config = config;
-    circuit.open();
+  FailsafeFuture(FailsafeExecutor<T> executor) {
+    this.executor = executor;
   }
 
   /**
-   * Attempts to cancel this execution. This attempt will fail if the execution has already completed, has already been
-   * cancelled, or could not be cancelled for some other reason. If successful, and this execution has not started when
-   * {@code cancel} is called, this execution should never run. If the execution has already started, then the
-   * {@code mayInterruptIfRunning} parameter determines whether the thread executing this task should be interrupted in
-   * an attempt to stop the execution.
-   *
-   * <p>
-   * After this method returns, subsequent calls to {@link #isDone} will always return {@code true}. Subsequent calls to
-   * {@link #isCancelled} will always return {@code true} if this method returned {@code true}.
-   *
-   * @param mayInterruptIfRunning {@code true} if the thread executing this execution should be interrupted; otherwise,
-   *          in-progress executions are allowed to complete
-   * @return {@code false} if the execution could not be cancelled, typically because it has already completed normally;
-   *         {@code true} otherwise
+   * If not already completed, completes  the future with the {@code value}, calling the complete and success handlers.
+   */
+  @Override
+  public synchronized boolean complete(T value) {
+    return completeResult(ExecutionResult.success(value));
+  }
+
+  /**
+   * If not already completed, completes the future with the {@code failure}, calling the complete and failure
+   * handlers.
+   */
+  @Override
+  public synchronized boolean completeExceptionally(Throwable failure) {
+    return completeResult(ExecutionResult.failure(failure));
+  }
+
+  /**
+   * Cancels this and the internal delegate.
    */
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-    if (done)
+    if (isDone())
       return false;
 
-    boolean cancelResult = delegate.cancel(mayInterruptIfRunning);
-    failure = new CancellationException();
-    cancelled = true;
-    config.handleComplete(null, failure, execution, false);
-    complete(null, failure, config.fallback, false);
+    boolean cancelResult = super.cancel(mayInterruptIfRunning);
+    cancelResult = cancelDelegates(mayInterruptIfRunning, cancelResult);
+    ExecutionResult result = ExecutionResult.failure(new CancellationException());
+    super.completeExceptionally(result.getFailure());
+    executor.handleComplete(result, execution);
     return cancelResult;
   }
 
   /**
-   * Waits if necessary for the execution to complete, and then returns its result.
-   *
-   * @return the execution result
-   * @throws CancellationException if the execution was cancelled
-   * @throws ExecutionException if the execution threw an exception
-   * @throws InterruptedException if the current thread was interrupted while waiting
+   * Completes the execution with the {@code result} and calls completion listeners.
    */
-  @Override
-  public T get() throws InterruptedException, ExecutionException {
-    circuit.await();
-    if (failure != null) {
-      if (failure instanceof CancellationException)
-        throw (CancellationException) failure;
-      throw new ExecutionException(failure);
-    }
-    return result;
-  }
+  @SuppressWarnings("unchecked")
+  synchronized boolean completeResult(ExecutionResult result) {
+    if (isDone())
+      return false;
 
-  /**
-   * Waits if necessary for at most the given time for the execution to complete, and then returns its result, if
-   * available.
-   *
-   * @param timeout the maximum time to wait
-   * @param unit the time unit of the timeout argument
-   * @return the execution result
-   * @throws CancellationException if the execution was cancelled
-   * @throws ExecutionException if the execution threw an exception
-   * @throws InterruptedException if the current thread was interrupted while waiting
-   * @throws TimeoutException if the wait timed out
-   * @throws NullPointerException if {@code unit} is null
-   * @throws IllegalArgumentException if {@code timeout} is < 0
-   */
-  @Override
-  public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-    Assert.isTrue(timeout >= 0, "timeout cannot be negative");
-    if (!circuit.await(timeout, Assert.notNull(unit, "unit")))
-      throw new TimeoutException();
-    if (failure != null)
-      throw new ExecutionException(failure);
-    return result;
-  }
-
-  /**
-   * Returns {@code true} if this execution was cancelled before it completed normally.
-   *
-   * @return {@code true} if this execution was cancelled before it completed
-   */
-  @Override
-  public boolean isCancelled() {
-    return cancelled;
-  }
-
-  /**
-   * Returns {@code true} if this execution completed.
-   *
-   * Completion may be due to normal termination, an exception, or cancellation -- in all of these cases, this method
-   * will return {@code true}.
-   *
-   * @return {@code true} if this execution completed
-   */
-  @Override
-  public boolean isDone() {
-    return done;
-  }
-
-  synchronized void complete(T result, Throwable failure, CheckedBiFunction<T, Throwable, T> fallback,
-      boolean success) {
-    if (done)
-      return;
-
-    if (success || fallback == null) {
-      this.result = result;
-      this.failure = failure;
-    } else {
-      try {
-        this.result = fallback.apply(result, failure);
-      } catch (Throwable fallbackFailure) {
-        this.failure = fallbackFailure;
-      }
-    }
-
-    done = true;
-    if (completableFuture != null)
-      completeFuture();
-    circuit.close();
-  }
-
-  void inject(java.util.concurrent.CompletableFuture<T> completableFuture) {
-    this.completableFuture = completableFuture;
-  }
-
-  void inject(Future<T> delegate) {
-    this.delegate = delegate;
-  }
-
-  void inject(ExecutionContext execution) {
-    this.execution = execution;
-  }
-
-  private void completeFuture() {
+    Throwable failure = result.getFailure();
+    boolean completed;
     if (failure == null)
-      completableFuture.complete(result);
+      completed = super.complete((T) result.getResult());
     else
-      completableFuture.completeExceptionally(failure);
+      completed = super.completeExceptionally(failure);
+    if (completed)
+      executor.handleComplete(result, execution);
+    return completed;
+  }
+
+  synchronized Future<T> getDelegate() {
+    return delegate;
+  }
+
+  /**
+   * Cancels the delegate passing in the {@code interruptDelegate} flag, cancels all timeout delegates, and marks the
+   * execution as cancelled.
+   */
+  synchronized boolean cancelDelegates(boolean interruptDelegate, boolean result) {
+    execution.cancelled = true;
+    execution.interrupted = interruptDelegate;
+    if (delegate != null)
+      result = delegate.cancel(interruptDelegate);
+    if (timeoutDelegates != null) {
+      for (Future<T> timeoutDelegate : timeoutDelegates)
+        timeoutDelegate.cancel(false);
+      timeoutDelegates.clear();
+    }
+    return result;
+  }
+
+  synchronized List<Future<T>> getTimeoutDelegates() {
+    return timeoutDelegates;
+  }
+
+  synchronized void inject(Future<T> delegate) {
+    this.delegate = delegate;
+    if (timeoutDelegates != null) {
+      // Timeout delegates should already be cancelled
+      timeoutDelegates.clear();
+    }
+  }
+
+  synchronized void injectTimeout(Future<T> timeoutDelegate) {
+    if (timeoutDelegates == null)
+      timeoutDelegates = new ArrayList<>(3);
+    timeoutDelegates.add(timeoutDelegate);
+  }
+
+  void inject(AbstractExecution execution) {
+    this.execution = execution;
   }
 }

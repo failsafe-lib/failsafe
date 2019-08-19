@@ -15,13 +15,13 @@
  */
 package net.jodah.failsafe.internal;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import org.testng.annotations.Test;
-
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Testing;
+import org.testng.annotations.Test;
+
+import static net.jodah.failsafe.Testing.getInternals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class ClosedStateTest {
@@ -32,11 +32,11 @@ public class ClosedStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker();
     breaker.close();
-    ClosedState state = new ClosedState(breaker);
+    ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertFalse(breaker.isOpen());
 
     // When
-    state.recordFailure();
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -49,13 +49,13 @@ public class ClosedStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(2, 3);
     breaker.close();
-    ClosedState state = new ClosedState(breaker);
+    ClosedState state = new ClosedState(breaker, getInternals(breaker));
 
     // When
-    state.recordFailure();
+    state.recordFailure(null);
     state.recordSuccess();
     assertTrue(breaker.isClosed());
-    state.recordFailure();
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -68,15 +68,15 @@ public class ClosedStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(3);
     breaker.close();
-    ClosedState state = new ClosedState(breaker);
+    ClosedState state = new ClosedState(breaker, getInternals(breaker));
 
     // When
-    state.recordFailure();
+    state.recordFailure(null);
     state.recordSuccess();
-    state.recordFailure();
-    state.recordFailure();
+    state.recordFailure(null);
+    state.recordFailure(null);
     assertTrue(breaker.isClosed());
-    state.recordFailure();
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -89,7 +89,7 @@ public class ClosedStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker();
     breaker.close();
-    ClosedState state = new ClosedState(breaker);
+    ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertTrue(breaker.isClosed());
 
     // When
@@ -106,13 +106,13 @@ public class ClosedStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(3, 4);
     breaker.close();
-    ClosedState state = new ClosedState(breaker);
+    ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertTrue(breaker.isClosed());
 
     // When / Then
     for (int i = 0; i < 20; i++) {
       state.recordSuccess();
-      state.recordFailure();
+      state.recordFailure(null);
       assertTrue(breaker.isClosed());
     }
   }
@@ -124,13 +124,13 @@ public class ClosedStateTest {
     // Given
     CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(2);
     breaker.close();
-    ClosedState state = new ClosedState(breaker);
+    ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertTrue(breaker.isClosed());
 
     // When / Then
     for (int i = 0; i < 20; i++) {
       state.recordSuccess();
-      state.recordFailure();
+      state.recordFailure(null);
       assertTrue(breaker.isClosed());
     }
   }
@@ -148,9 +148,9 @@ public class ClosedStateTest {
     state.recordSuccess();
     assertTrue(breaker.isClosed());
     breaker.withFailureThreshold(2);
-    state.recordFailure();
+    state.recordFailure(null);
     assertTrue(breaker.isClosed());
-    state.recordFailure();
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());
@@ -163,9 +163,9 @@ public class ClosedStateTest {
     state.recordSuccess();
     assertTrue(breaker.isClosed());
     breaker.withFailureThreshold(2, 3);
-    state.recordFailure();
+    state.recordFailure(null);
     assertTrue(breaker.isClosed());
-    state.recordFailure();
+    state.recordFailure(null);
 
     // Then
     assertTrue(breaker.isOpen());

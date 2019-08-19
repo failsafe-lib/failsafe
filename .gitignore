@@ -5,3 +5,6 @@ target/
 .settings/
 test-output/
 docs/
+.idea
+*.iml
+_site

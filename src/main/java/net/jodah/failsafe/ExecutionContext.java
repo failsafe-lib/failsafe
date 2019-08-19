@@ -15,41 +15,79 @@
  */
 package net.jodah.failsafe;
 
-import java.util.concurrent.TimeUnit;
-
-import net.jodah.failsafe.util.Duration;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Contextual execution information.
- * 
+ *
  * @author Jonathan Halterman
  */
 public class ExecutionContext {
-  final Duration startTime;
+  volatile Duration startTime = Duration.ZERO;
+  volatile Duration attemptStartTime = Duration.ZERO;
   /** Number of execution attempts */
-  volatile int executions;
+  AtomicInteger attempts = new AtomicInteger();
 
-  ExecutionContext(Duration startTime) {
-    this.startTime = startTime;
+  // Internally mutable state
+  volatile boolean cancelled;
+  volatile Object lastResult;
+  volatile Throwable lastFailure;
+
+  ExecutionContext() {
   }
 
-  ExecutionContext(ExecutionContext context) {
+  private ExecutionContext(ExecutionContext context) {
     this.startTime = context.startTime;
-    this.executions = context.executions;
+    this.attemptStartTime = context.attemptStartTime;
+    this.attempts = context.attempts;
+    this.lastResult = context.lastResult;
+    this.lastFailure = context.lastFailure;
   }
 
   /**
    * Returns the elapsed time since initial execution began.
    */
   public Duration getElapsedTime() {
-    return new Duration(System.nanoTime() - startTime.toNanos(), TimeUnit.NANOSECONDS);
+    return Duration.ofNanos(System.nanoTime() - startTime.toNanos());
   }
 
   /**
-   * Gets the number of executions so far.
+   * Returns the elapsed time since the last execution attempt began.
    */
-  public int getExecutions() {
-    return executions;
+  public Duration getElapsedAttemptTime() {
+    return Duration.ofNanos(System.nanoTime() - attemptStartTime.toNanos());
+  }
+
+  /**
+   * Gets the number of completed execution attempts so far.
+   */
+  public int getAttemptCount() {
+    return attempts.get();
+  }
+
+  /**
+   * Returns the last failure that was recorded else {@code null}.
+   */
+  @SuppressWarnings("unchecked")
+  public <T extends Throwable> T getLastFailure() {
+    return (T) lastFailure;
+  }
+
+  /**
+   * Returns the last result that was recorded else {@code null}.
+   */
+  @SuppressWarnings("unchecked")
+  public <T> T getLastResult() {
+    return (T) lastResult;
+  }
+
+  /**
+   * Returns the last result that was recorded else the {@code defaultValue}.
+   */
+  @SuppressWarnings("unchecked")
+  public <T> T getLastResult(T defaultValue) {
+    return lastResult != null ? (T) lastResult : defaultValue;
   }
 
   /**
@@ -59,7 +97,32 @@ public class ExecutionContext {
     return startTime;
   }
 
-  ExecutionContext copy() {
+  /**
+   * Returns whether the execution has ben cancelled. In this case the implementor shuold attempt to stop execution.
+   */
+  public boolean isCancelled() {
+    return cancelled;
+  }
+
+  public ExecutionContext copy() {
     return new ExecutionContext(this);
+  }
+
+  static ExecutionContext ofResult(Object result) {
+    ExecutionContext context = new ExecutionContext();
+    context.lastResult = result;
+    return context;
+  }
+
+  static ExecutionContext ofFailure(Throwable failure) {
+    ExecutionContext context = new ExecutionContext();
+    context.lastFailure = failure;
+    return context;
+  }
+
+  @Override
+  public String toString() {
+    return "ExecutionContext[" + "attempts=" + attempts + ", lastResult=" + lastResult + ", lastFailure=" + lastFailure
+      + ']';
   }
 }

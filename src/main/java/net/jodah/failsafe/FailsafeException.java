@@ -16,7 +16,7 @@
 package net.jodah.failsafe;
 
 /**
- * Thrown when a synchronous Failsafe run() call fails with an exception. Use {@link Throwable#getCause()} to learn the
+ * Thrown when a synchronous Failsafe execution fails with an exception. Use {@link Throwable#getCause()} to learn the
  * cause of the failure.
  * 
  * @author Jonathan Halterman

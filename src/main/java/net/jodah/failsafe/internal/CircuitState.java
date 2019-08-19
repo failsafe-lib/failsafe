@@ -16,21 +16,41 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker.State;
+import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
 /**
  * The state of a circuit.
- * 
+ *
  * @author Jonathan Halterman
  */
 public abstract class CircuitState {
   static final Ratio ONE_OF_ONE = new Ratio(1, 1);
 
-  public abstract boolean allowsExecution(CircuitBreakerStats stats);
+  protected CircularBitSet bitSet;
 
-  public abstract State getState();
+  public abstract boolean allowsExecution();
 
-  public void recordFailure() {
+  public abstract State getInternals();
+
+  public int getFailureCount() {
+    return bitSet.negatives();
+  }
+
+  public Ratio getFailureRatio() {
+    return bitSet.negativeRatio();
+  }
+
+  public int getSuccessCount() {
+    return bitSet.positives();
+  }
+
+  public Ratio getSuccessRatio() {
+    return bitSet.positiveRatio();
+  }
+
+  public void recordFailure(ExecutionContext context) {
   }
 
   public void recordSuccess() {

@@ -15,179 +15,133 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.function.CheckedRunnable;
+import net.jodah.failsafe.internal.*;
+import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.util.Ratio;
+
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.jodah.failsafe.function.BiPredicate;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.Predicate;
-import net.jodah.failsafe.internal.CircuitBreakerStats;
-import net.jodah.failsafe.internal.CircuitState;
-import net.jodah.failsafe.internal.ClosedState;
-import net.jodah.failsafe.internal.HalfOpenState;
-import net.jodah.failsafe.internal.OpenState;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.Duration;
-import net.jodah.failsafe.util.Ratio;
-
 /**
  * A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.
- * 
+ * <p>
+ * A circuit breaker has three states: <i>closed</i>, <i>open</i>, and <i>half-open</i>. When a circuit breaker is in
+ * the <i>closed</i> (initial) state, executions are allowed. If a {@link #withFailureThreshold(int) configurable
+ * number} of failures occur, the circuit breaker transitions to the <i>open</i> state. In the <i>open</i> state a
+ * circuit breaker will fail executions with {@link CircuitBreakerOpenException}. After a {@link #withDelay(Duration)
+ * configurable delay}, the circuit breaker will transition to a <i>half-open</i> state. In the
+ * <i>half-open</i> state a {@link #withSuccessThreshold(int) configurable number} of trial executions will be allowed,
+ * after which the circuit breaker will transition back to <i>closed</i> or <i>open</i> depending on how many were
+ * successful.
+ * </p>
+ * <p>
+ * Note: CircuitBreaker extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
+ * </p>
+ *
+ * @param <R> result type
  * @author Jonathan Halterman
+ * @see CircuitBreakerOpenException
  */
-public class CircuitBreaker {
+@SuppressWarnings("WeakerAccess")
+public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /** Writes guarded by "this" */
-  private final AtomicReference<CircuitState> state = new AtomicReference<CircuitState>();
+  private final AtomicReference<CircuitState> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
-  private final CircuitBreakerStats stats = new CircuitBreakerStats() {
-    @Override
-    public int getCurrentExecutions() {
-      return currentExecutions.get();
-    }
-  };
-  private Duration delay = Duration.NONE;
+  private Duration delay = Duration.ofMinutes(1);
   private Duration timeout;
   private Ratio failureThreshold;
   private Ratio successThreshold;
-  /** Indicates whether failures are checked by a configured failure condition */
-  private boolean failuresChecked;
-  private List<BiPredicate<Object, Throwable>> failureConditions;
   CheckedRunnable onOpen;
   CheckedRunnable onHalfOpen;
   CheckedRunnable onClose;
 
   /**
-   * Creates a Circuit that opens after a single failure, closes after a single success, and has no delay by default.
+   * Creates a Circuit that opens after a single failure, closes after a single success, and has a 1 minute delay by
+   * default.
    */
   public CircuitBreaker() {
-    failureConditions = new ArrayList<BiPredicate<Object, Throwable>>();
-    state.set(new ClosedState(this));
+    failureConditions = new ArrayList<>();
+    state.set(new ClosedState(this, internals));
   }
 
   /**
    * The state of the circuit.
    */
   public enum State {
-    /* The circuit is closed and fully functional, allowing executions to occur. */
+    /** The circuit is closed and fully functional, allowing executions to occur. */
     CLOSED,
-    /* The circuit is opened and not allowing executions to occur. */
+    /** The circuit is opened and not allowing executions to occur. */
     OPEN,
-    /* The circuit is temporarily allowing executions to occur. */
-    HALF_OPEN;
+    /** The circuit is temporarily allowing executions to occur. */
+    HALF_OPEN
   }
 
   /**
    * Returns whether the circuit allows execution, possibly triggering a state transition.
    */
   public boolean allowsExecution() {
-    return state.get().allowsExecution(stats);
+    return state.get().allowsExecution();
   }
 
   /**
    * Closes the circuit.
    */
   public void close() {
-    transitionTo(State.CLOSED, onClose);
+    transitionTo(State.CLOSED, onClose, null);
   }
 
   /**
-   * Specifies that a failure should be recorded if the {@code completionPredicate} matches the completion result.
-   * 
-   * @throws NullPointerException if {@code completionPredicate} is null
-   */
-  @SuppressWarnings("unchecked")
-  public <T> CircuitBreaker failIf(BiPredicate<T, ? extends Throwable> completionPredicate) {
-    Assert.notNull(completionPredicate, "completionPredicate");
-    failuresChecked = true;
-    failureConditions.add((BiPredicate<Object, Throwable>) completionPredicate);
-    return this;
-  }
-
-  /**
-   * Specifies that a failure should be recorded if the {@code resultPredicate} matches the result.
-   * 
-   * @throws NullPointerException if {@code resultPredicate} is null
-   */
-  public <T> CircuitBreaker failIf(Predicate<T> resultPredicate) {
-    Assert.notNull(resultPredicate, "resultPredicate");
-    failureConditions.add(Predicates.resultPredicateFor(resultPredicate));
-    return this;
-  }
-
-  /**
-   * Specifies the type to fail on. Applies to any type that is assignable from the {@code failure}.
-   * 
-   * @throws NullPointerException if {@code failure} is null
-   */
-  public CircuitBreaker failOn(Class<? extends Throwable> failure) {
-    Assert.notNull(failure, "failure");
-    return failOn(Arrays.asList(failure));
-  }
-  
-  /**
-   * Specifies the types to fail on. Applies to any type that is assignable from the {@code failures}.
-   * 
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
-   */
-  @SuppressWarnings("unchecked")
-  public CircuitBreaker failOn(Class<? extends Throwable>... failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(failures.length > 0, "failures cannot be empty");
-    return failOn(Arrays.asList(failures));
-  }
-
-  /**
-   * Specifies the types to fail on. Applies to any type that is assignable from the {@code failures}.
-   * 
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
-   */
-  public CircuitBreaker failOn(List<Class<? extends Throwable>> failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    failuresChecked = true;
-    failureConditions.add(Predicates.failurePredicateFor(failures));
-    return this;
-  }
-
-  /**
-   * Specifies that a failure should be recorded if the {@code failurePredicate} matches the failure.
-   * 
-   * @throws NullPointerException if {@code failurePredicate} is null
-   */
-  public CircuitBreaker failOn(Predicate<? extends Throwable> failurePredicate) {
-    Assert.notNull(failurePredicate, "failurePredicate");
-    failuresChecked = true;
-    failureConditions.add(Predicates.failurePredicateFor(failurePredicate));
-    return this;
-  }
-
-  /**
-   * Specifies that a failure should be recorded if the execution result matches the {@code result}.
-   */
-  public CircuitBreaker failWhen(Object result) {
-    failureConditions.add(Predicates.resultPredicateFor(result));
-    return this;
-  }
-
-  /**
-   * Returns the delay before allowing another execution on the circuit. Defaults to {@link Duration#NONE}.
-   * 
-   * @see #withDelay(long, TimeUnit)
+   * Returns the delay before allowing another execution on the circuit. Defaults to 1 minute.
+   *
+   * @see #withDelay(Duration)
    */
   public Duration getDelay() {
     return delay;
   }
 
   /**
+   * Returns the number of failures recorded in the current state when the state is CLOSED or HALF_OPEN. When the state
+   * is OPEN, returns the failures recorded during the previous CLOSED state. The max number of failures is based on the
+   * configured {@link #getFailureThreshold() failure threshold}.
+   */
+  public long getFailureCount() {
+    return state.get().getFailureCount();
+  }
+
+  /**
+   * Returns the ratio of failures to successes in the current state when the state is CLOSED or HALF_OPEN. When the
+   * state is OPEN, returns the ratio recorded during the previous CLOSED state. The ratio is based on the configured
+   * {@link #getFailureThreshold() failure threshold}.
+   */
+  public Ratio getFailureRatio() {
+    return state.get().getFailureRatio();
+  }
+
+  /**
+   * Returns the number of successes recorded in the current state when the state is CLOSED or HALF_OPEN. When the state
+   * is OPEN, returns the successes recorded during the previous CLOSED state.The max number of successes is based on
+   * the configured {@link #getSuccessThreshold() success threshold}.
+   */
+  public int getSuccessCount() {
+    return state.get().getSuccessCount();
+  }
+
+  /**
+   * Returns the ratio of successes to failures in the current state when the state is CLOSED or HALF_OPEN. When the
+   * state is OPEN, returns the ratio recorded during the previous CLOSED state. The ratio is based on the configured
+   * {@link #getSuccessThreshold() success threshold}.
+   */
+  public Ratio getSuccessRatio() {
+    return state.get().getSuccessRatio();
+  }
+
+  /**
    * Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit else
    * {@code null} if none has been configured.
-   * 
+   *
    * @see #withFailureThreshold(int)
    * @see #withFailureThreshold(int, int)
    */
@@ -199,13 +153,13 @@ public class CircuitBreaker {
    * Gets the state of the circuit.
    */
   public State getState() {
-    return state.get().getState();
+    return state.get().getInternals();
   }
 
   /**
    * Gets the ratio of successive successful executions that must occur when in a half-open state in order to close the
    * circuit else {@code null} if none has been configured.
-   * 
+   *
    * @see #withSuccessThreshold(int)
    * @see #withSuccessThreshold(int, int)
    */
@@ -215,8 +169,9 @@ public class CircuitBreaker {
 
   /**
    * Returns timeout for executions else {@code null} if none has been configured.
-   * 
-   * @see #withTimeout(long, TimeUnit)
+   *
+   * @deprecated Use {@link Timeout} instead
+   * @see #withTimeout(Duration)
    */
   public Duration getTimeout() {
     return timeout;
@@ -226,7 +181,7 @@ public class CircuitBreaker {
    * Half-opens the circuit.
    */
   public void halfOpen() {
-    transitionTo(State.HALF_OPEN, onHalfOpen);
+    transitionTo(State.HALF_OPEN, onHalfOpen, null);
   }
 
   /**
@@ -234,27 +189,6 @@ public class CircuitBreaker {
    */
   public boolean isClosed() {
     return State.CLOSED.equals(getState());
-  }
-
-  /**
-   * Returns whether the circuit breaker considers the {@code result} or {@code throwable} a failure based on the
-   * configured conditions, or if {@code failure} is not null it is not checked by any configured condition.
-   * 
-   * @see #failIf(BiPredicate)
-   * @see #failIf(Predicate)
-   * @see #failOn(Class...)
-   * @see #failOn(List)
-   * @see #failOn(Predicate)
-   * @see #failWhen(Object)
-   */
-  public boolean isFailure(Object result, Throwable failure) {
-    for (BiPredicate<Object, Throwable> predicate : failureConditions) {
-      if (predicate.test(result, failure))
-        return true;
-    }
-
-    // Return true if the failure is not checked by a configured condition
-    return failure != null && !failuresChecked;
   }
 
   /**
@@ -273,24 +207,27 @@ public class CircuitBreaker {
 
   /**
    * Calls the {@code runnable} when the circuit is closed.
+   * <p>Note: Any exceptions that are thrown from within the {@code runnable} are ignored.</p>
    */
-  public CircuitBreaker onClose(CheckedRunnable runnable) {
+  public CircuitBreaker<R> onClose(CheckedRunnable runnable) {
     onClose = runnable;
     return this;
   }
 
   /**
    * Calls the {@code runnable} when the circuit is half-opened.
+   * <p>Note: Any exceptions that are thrown within the {@code runnable} are ignored.</p>
    */
-  public CircuitBreaker onHalfOpen(CheckedRunnable runnable) {
+  public CircuitBreaker<R> onHalfOpen(CheckedRunnable runnable) {
     onHalfOpen = runnable;
     return this;
   }
 
   /**
    * Calls the {@code runnable} when the circuit is opened.
+   * <p>Note: Any exceptions that are thrown within the {@code runnable} are ignored.</p>
    */
-  public CircuitBreaker onOpen(CheckedRunnable runnable) {
+  public CircuitBreaker<R> onOpen(CheckedRunnable runnable) {
     onOpen = runnable;
     return this;
   }
@@ -299,14 +236,29 @@ public class CircuitBreaker {
    * Opens the circuit.
    */
   public void open() {
-    transitionTo(State.OPEN, onOpen);
+    transitionTo(State.OPEN, onOpen, null);
+  }
+
+  /**
+   * Records an execution that is about to take place by incrementing the internal executions count. Required for
+   * standalone CircuitBreaker usage.
+   */
+  public void preExecute() {
+    currentExecutions.incrementAndGet();
+  }
+
+  /**
+   * Records an execution failure.
+   */
+  public void recordFailure() {
+    recordExecutionFailure(null);
   }
 
   /**
    * Records an execution {@code failure} as a success or failure based on the failure configuration as determined by
-   * {@link #isFailure(Object, Throwable)}.
-   * 
-   * @see #isFailure(Object, Throwable)
+   * {@link #isFailure(R, Throwable)}.
+   *
+   * @see #isFailure(R, Throwable)
    */
   public void recordFailure(Throwable failure) {
     recordResult(null, failure);
@@ -314,11 +266,11 @@ public class CircuitBreaker {
 
   /**
    * Records an execution {@code result} as a success or failure based on the failure configuration as determined by
-   * {@link #isFailure(Object, Throwable)}.
-   * 
-   * @see #isFailure(Object, Throwable)
+   * {@link #isFailure(R, Throwable)}.
+   *
+   * @see #isFailure(R, Throwable)
    */
-  public void recordResult(Object result) {
+  public void recordResult(R result) {
     recordResult(result, null);
   }
 
@@ -340,23 +292,28 @@ public class CircuitBreaker {
 
   /**
    * Sets the {@code delay} to wait in open state before transitioning to half-open.
-   * 
-   * @throws NullPointerException if {@code timeUnit} is null
-   * @throws IllegalArgumentException if {@code delay} <= 0
+   *
+   * @throws NullPointerException if {@code delay} is null
+   * @throws IllegalArgumentException if {@code delay} < 0
    */
-  public CircuitBreaker withDelay(long delay, TimeUnit timeUnit) {
-    Assert.notNull(timeUnit, "timeUnit");
-    Assert.isTrue(delay > 0, "delay must be greater than 0");
-    this.delay = new Duration(delay, timeUnit);
+  public CircuitBreaker<R> withDelay(Duration delay) {
+    Assert.notNull(delay, "delay");
+    Assert.isTrue(delay.toNanos() >= 0, "delay must not be negative");
+    this.delay = delay;
     return this;
   }
 
   /**
    * Sets the number of successive failures that must occur when in a closed state in order to open the circuit.
-   * 
+   * <p>
+   * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} will also
+   * be used when the circuit breaker is in a half-open state to determine whether to transition back to open or
+   * closed.
+   * </p>
+   *
    * @throws IllegalArgumentException if {@code failureThresh} < 1
    */
-  public CircuitBreaker withFailureThreshold(int failureThreshold) {
+  public CircuitBreaker<R> withFailureThreshold(int failureThreshold) {
     Assert.isTrue(failureThreshold >= 1, "failureThreshold must be greater than or equal to 1");
     return withFailureThreshold(failureThreshold, failureThreshold);
   }
@@ -365,13 +322,18 @@ public class CircuitBreaker {
    * Sets the ratio of successive failures that must occur when in a closed state in order to open the circuit. For
    * example: 5, 10 would open the circuit if 5 out of the last 10 executions result in a failure. The circuit will not
    * be opened until at least the given number of {@code executions} have taken place.
-   * 
+   * <p>
+   * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} will also
+   * be used when the circuit breaker is in a half-open state to determine whether to transition back to open or
+   * closed.
+   * </p>
+   *
    * @param failures The number of failures that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code failures} against
-   * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is <
-   *           {@code executions}
+   * @throws IllegalArgumentException if {@code failures} < 1, {@code executions} < 1, or {@code failures} is > {@code
+   * executions}
    */
-  public synchronized CircuitBreaker withFailureThreshold(int failures, int executions) {
+  public synchronized CircuitBreaker<R> withFailureThreshold(int failures, int executions) {
     Assert.isTrue(failures >= 1, "failures must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= failures, "executions must be greater than or equal to failures");
@@ -383,10 +345,10 @@ public class CircuitBreaker {
   /**
    * Sets the number of successive successful executions that must occur when in a half-open state in order to close the
    * circuit, else the circuit is re-opened when a failure occurs.
-   * 
+   *
    * @throws IllegalArgumentException if {@code successThreshold} < 1
    */
-  public CircuitBreaker withSuccessThreshold(int successThreshold) {
+  public CircuitBreaker<R> withSuccessThreshold(int successThreshold) {
     Assert.isTrue(successThreshold >= 1, "successThreshold must be greater than or equal to 1");
     return withSuccessThreshold(successThreshold, successThreshold);
   }
@@ -395,13 +357,13 @@ public class CircuitBreaker {
    * Sets the ratio of successive successful executions that must occur when in a half-open state in order to close the
    * circuit. For example: 5, 10 would close the circuit if 5 out of the last 10 executions were successful. The circuit
    * will not be closed until at least the given number of {@code executions} have taken place.
-   * 
+   *
    * @param successes The number of successful executions that must occur in order to open the circuit
    * @param executions The number of executions to measure the {@code successes} against
-   * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is <
-   *           {@code executions}
+   * @throws IllegalArgumentException if {@code successes} < 1, {@code executions} < 1, or {@code successes} is > {@code
+   * executions}
    */
-  public synchronized CircuitBreaker withSuccessThreshold(int successes, int executions) {
+  public synchronized CircuitBreaker<R> withSuccessThreshold(int successes, int executions) {
     Assert.isTrue(successes >= 1, "successes must be greater than or equal to 1");
     Assert.isTrue(executions >= 1, "executions must be greater than or equal to 1");
     Assert.isTrue(executions >= successes, "executions must be greater than or equal to successes");
@@ -413,36 +375,22 @@ public class CircuitBreaker {
   /**
    * Sets the {@code timeout} for executions. Executions that exceed this timeout are not interrupted, but are recorded
    * as failures once they naturally complete.
-   * 
-   * @throws NullPointerException if {@code timeUnit} is null
+   *
+   * @deprecated Use {@link Timeout} instead
+   * @throws NullPointerException if {@code timeout} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
    */
-  public CircuitBreaker withTimeout(long timeout, TimeUnit timeUnit) {
-    Assert.notNull(timeUnit, "timeUnit");
-    Assert.isTrue(timeout > 0, "timeout must be greater than 0");
-    this.timeout = new Duration(timeout, timeUnit);
+  public CircuitBreaker<R> withTimeout(Duration timeout) {
+    Assert.notNull(timeout, "timeout");
+    Assert.isTrue(timeout.toNanos() > 0, "timeout must be greater than 0");
+    this.timeout = timeout;
     return this;
   }
 
-  void before() {
-    currentExecutions.incrementAndGet();
-  }
-
-  /**
-   * Records an execution failure.
-   */
-  void recordFailure() {
-    try {
-      state.get().recordFailure();
-    } finally {
-      currentExecutions.decrementAndGet();
-    }
-  }
-
-  void recordResult(Object result, Throwable failure) {
+  void recordResult(R result, Throwable failure) {
     try {
       if (isFailure(result, failure))
-        state.get().recordFailure();
+        state.get().recordFailure(null);
       else
         state.get().recordSuccess();
     } finally {
@@ -453,19 +401,20 @@ public class CircuitBreaker {
   /**
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
-  private void transitionTo(State newState, CheckedRunnable listener) {
+  private void transitionTo(State newState, CheckedRunnable listener, ExecutionContext context) {
     boolean transitioned = false;
     synchronized (this) {
       if (!getState().equals(newState)) {
         switch (newState) {
           case CLOSED:
-            state.set(new ClosedState(this));
+            state.set(new ClosedState(this, internals));
             break;
           case OPEN:
-            state.set(new OpenState(this));
+            Duration computedDelay = computeDelay(context);
+            state.set(new OpenState(this, state.get(), computedDelay != null ? computedDelay : delay));
             break;
           case HALF_OPEN:
-            state.set(new HalfOpenState(this));
+            state.set(new HalfOpenState(this, internals));
             break;
         }
         transitioned = true;
@@ -478,5 +427,34 @@ public class CircuitBreaker {
       } catch (Exception ignore) {
       }
     }
+  }
+
+  /**
+   * Records an execution failure.
+   */
+  void recordExecutionFailure(ExecutionContext context) {
+    try {
+      state.get().recordFailure(context);
+    } finally {
+      currentExecutions.decrementAndGet();
+    }
+  }
+
+  // Internal delegate implementation
+  final CircuitBreakerInternals internals = new CircuitBreakerInternals() {
+    @Override
+    public int getCurrentExecutions() {
+      return currentExecutions.get();
+    }
+
+    @Override
+    public void open(ExecutionContext context) {
+      transitionTo(State.OPEN, onOpen, context);
+    }
+  };
+
+  @Override
+  public PolicyExecutor toExecutor(AbstractExecution execution) {
+    return new CircuitBreakerExecutor(this, execution);
   }
 }

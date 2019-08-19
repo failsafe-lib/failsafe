@@ -15,33 +15,30 @@
  */
 package net.jodah.failsafe.internal;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.TimeUnit;
-
-import org.testng.annotations.Test;
-
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
-import net.jodah.failsafe.internal.OpenState;
+import net.jodah.failsafe.Testing;
+import org.testng.annotations.Test;
+
+import java.time.Duration;
+
+import static org.testng.Assert.*;
 
 @Test
 public class OpenStateTest {
   public void testAllowsExecution() throws Throwable {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withDelay(100, TimeUnit.MILLISECONDS);
+    CircuitBreaker breaker = new CircuitBreaker().withDelay(Duration.ofMillis(100));
     breaker.open();
-    OpenState state = new OpenState(breaker);
+    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)), breaker.getDelay());
     assertTrue(breaker.isOpen());
-    assertFalse(state.allowsExecution(null));
+    assertFalse(state.allowsExecution());
 
     // When
     Thread.sleep(110);
 
     // Then
-    assertTrue(state.allowsExecution(null));
+    assertTrue(state.allowsExecution());
     assertEquals(breaker.getState(), State.HALF_OPEN);
   }
 }

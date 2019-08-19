@@ -17,48 +17,50 @@ package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
+import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
 public class ClosedState extends CircuitState {
-  private final CircuitBreaker circuit;
-  private CircularBitSet bitSet;
+  private final CircuitBreaker breaker;
+  private final CircuitBreakerInternals internals;
 
-  public ClosedState(CircuitBreaker circuit) {
-    this.circuit = circuit;
-    setFailureThreshold(circuit.getFailureThreshold() != null ? circuit.getFailureThreshold() : ONE_OF_ONE);
+  public ClosedState(CircuitBreaker breaker, CircuitBreakerInternals internals) {
+    this.breaker = breaker;
+    this.internals = internals;
+    setFailureThreshold(breaker.getFailureThreshold() != null ? breaker.getFailureThreshold() : ONE_OF_ONE);
   }
 
   @Override
-  public boolean allowsExecution(CircuitBreakerStats stats) {
+  public boolean allowsExecution() {
     return true;
   }
 
   @Override
-  public State getState() {
+  public State getInternals() {
     return State.CLOSED;
   }
 
   @Override
-  public synchronized void recordFailure() {
+  public synchronized void recordFailure(ExecutionContext context) {
     bitSet.setNext(false);
-    checkThreshold();
+    checkThreshold(context);
   }
 
   @Override
   public synchronized void recordSuccess() {
     bitSet.setNext(true);
-    checkThreshold();
+    checkThreshold(null);
   }
 
   @Override
   public void setFailureThreshold(Ratio threshold) {
-    bitSet = new CircularBitSet(threshold.denominator, bitSet);
+    bitSet = new CircularBitSet(threshold.getDenominator(), bitSet);
   }
 
   /**
    * Checks to determine if a threshold has been met and the circuit should be opened or closed.
-   * 
+   *
    * <p>
    * When a failure ratio is configured, the circuit is opened after the expected number of executions based on whether
    * the ratio was exceeded.
@@ -66,16 +68,16 @@ public class ClosedState extends CircuitState {
    * If a failure threshold is configured, the circuit is opened if the expected number of executions fails else it's
    * closed if a single execution succeeds.
    */
-  synchronized void checkThreshold() {
-    Ratio failureRatio = circuit.getFailureThreshold();
+  synchronized void checkThreshold(ExecutionContext context) {
+    Ratio failureRatio = breaker.getFailureThreshold();
 
     // Handle failure threshold ratio
-    if (failureRatio != null && bitSet.occupiedBits() >= failureRatio.denominator
-        && bitSet.negativeRatio() >= failureRatio.ratio)
-      circuit.open();
+    if (failureRatio != null && bitSet.occupiedBits() >= failureRatio.getDenominator()
+        && bitSet.negativeRatioValue() >= failureRatio.getValue())
+      internals.open(context);
 
     // Handle no thresholds configured
-    if (failureRatio == null && bitSet.negativeRatio() == 1)
-      circuit.open();
+    else if (failureRatio == null && bitSet.negativeRatioValue() == 1)
+      internals.open(context);
   }
 }

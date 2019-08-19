@@ -15,34 +15,49 @@
  */
 package net.jodah.failsafe;
 
-import static net.jodah.failsafe.Asserts.assertThrows;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import net.jodah.failsafe.util.Ratio;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
-import org.testng.annotations.Test;
+import static net.jodah.failsafe.Asserts.assertThrows;
+import static org.testng.Assert.*;
 
 @Test
 public class CircuitBreakerTest {
   public void testIsFailureForNull() {
-    CircuitBreaker breaker = new CircuitBreaker();
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     assertFalse(breaker.isFailure(null, null));
   }
 
   public void testIsFailureForFailurePredicate() {
-    CircuitBreaker breaker = new CircuitBreaker().failOn(failure -> failure instanceof ConnectException);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().handleIf(failure -> failure instanceof ConnectException);
     assertTrue(breaker.isFailure(null, new ConnectException()));
     assertFalse(breaker.isFailure(null, new IllegalStateException()));
   }
 
   public void testIsFailureForResultPredicate() {
-    CircuitBreaker breaker = new CircuitBreaker().failIf((Integer result) -> result > 100);
+    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleResultIf(result -> result > 100);
     assertTrue(breaker.isFailure(110, null));
     assertFalse(breaker.isFailure(50, null));
+  }
+
+  public void testIgnoresThrowingPredicate() {
+    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleIf((result, failure) -> {
+      throw new NullPointerException();
+    });
+    assertFalse(breaker.isFailure(1, null));
+  }
+
+  @Test(expectedExceptions = OutOfMemoryError.class)
+  public void testThrowsFatalErrors() {
+    CircuitBreaker<String> breaker = new CircuitBreaker<String>().handleIf((result, failure) -> {
+      throw new OutOfMemoryError();
+    });
+    breaker.isFailure("result", null);
   }
 
   @SuppressWarnings("unchecked")
@@ -51,36 +66,36 @@ public class CircuitBreakerTest {
     assertTrue(breaker.isFailure(null, new Exception()));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
 
-    breaker = new CircuitBreaker().failOn(Exception.class);
+    breaker = new CircuitBreaker<>().handle(Exception.class);
     assertTrue(breaker.isFailure(null, new Exception()));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
 
-    breaker = new CircuitBreaker().failOn(IllegalArgumentException.class, IOException.class);
+    breaker = new CircuitBreaker<>().handle(IllegalArgumentException.class, IOException.class);
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
     assertTrue(breaker.isFailure(null, new IOException()));
     assertFalse(breaker.isFailure(null, new RuntimeException()));
     assertFalse(breaker.isFailure(null, new IllegalStateException()));
 
-    breaker = new CircuitBreaker().failOn(Arrays.asList(IllegalArgumentException.class));
+    breaker = new CircuitBreaker<>().handle(Arrays.asList(IllegalArgumentException.class));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
     assertFalse(breaker.isFailure(null, new RuntimeException()));
     assertFalse(breaker.isFailure(null, new IllegalStateException()));
   }
 
   public void testIsFailureForResult() {
-    CircuitBreaker breaker = new CircuitBreaker().failWhen(10);
+    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleResult(10);
     assertTrue(breaker.isFailure(10, null));
     assertFalse(breaker.isFailure(5, null));
   }
 
   public void shouldRequireValidDelay() {
-    assertThrows(() -> new CircuitBreaker().withDelay(5, null), NullPointerException.class);
-    assertThrows(() -> new CircuitBreaker().withDelay(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay((Duration) null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidTimeout() {
-    assertThrows(() -> new CircuitBreaker().withTimeout(5, null), NullPointerException.class);
-    assertThrows(() -> new CircuitBreaker().withTimeout(-1, TimeUnit.MILLISECONDS), IllegalArgumentException.class);
+    assertThrows(() -> new CircuitBreaker().withTimeout(null), NullPointerException.class);
+    assertThrows(() -> new CircuitBreaker().withTimeout(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
   public void shouldRequireValidFailureThreshold() {
@@ -101,5 +116,58 @@ public class CircuitBreakerTest {
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(0, 2), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 0), IllegalArgumentException.class);
     assertThrows(() -> new CircuitBreaker().withSuccessThreshold(2, 1), IllegalArgumentException.class);
+  }
+
+  public void shouldDefaulDelay() throws Throwable {
+    CircuitBreaker breaker = new CircuitBreaker();
+    breaker.recordFailure();
+    Thread.sleep(100);
+    breaker.allowsExecution();
+    assertTrue(breaker.isOpen());
+  }
+
+  public void shouldGetSuccessAndFailureStats() {
+    // Given
+    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(5, 10).withSuccessThreshold(10, 20);
+
+    // When
+    for (int i = 0; i < 7; i++)
+      if (i % 2 == 0)
+        breaker.recordSuccess();
+      else
+        breaker.recordFailure();
+
+    // Then
+    assertEquals(breaker.getFailureCount(), 3);
+    assertEquals(breaker.getFailureRatio(), new Ratio(3, 7));
+    assertEquals(breaker.getSuccessCount(), 4);
+    assertEquals(breaker.getSuccessRatio(), new Ratio(4, 7));
+
+    // When
+    for (int i = 0; i < 15; i++)
+      if (i % 4 == 0)
+        breaker.recordFailure();
+      else
+        breaker.recordSuccess();
+
+    // Then
+    assertEquals(breaker.getFailureCount(), 2);
+    assertEquals(breaker.getFailureRatio(), new Ratio(2, 10));
+    assertEquals(breaker.getSuccessCount(), 8);
+    assertEquals(breaker.getSuccessRatio(), new Ratio(8, 10));
+
+    // When
+    breaker.halfOpen();
+    for (int i = 0; i < 15; i++)
+      if (i % 3 == 0)
+        breaker.recordFailure();
+      else
+        breaker.recordSuccess();
+
+    // Then
+    assertEquals(breaker.getFailureCount(), 5);
+    assertEquals(breaker.getFailureRatio(), new Ratio(5, 15));
+    assertEquals(breaker.getSuccessCount(), 10);
+    assertEquals(breaker.getSuccessRatio(), new Ratio(10, 15));
   }
 }

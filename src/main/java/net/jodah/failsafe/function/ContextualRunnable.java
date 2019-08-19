@@ -18,10 +18,11 @@ package net.jodah.failsafe.function;
 import net.jodah.failsafe.ExecutionContext;
 
 /**
- * A runnable that provides execution context.
+ * A Runnable that provides execution context.
  * 
  * @author Jonathan Halterman
  */
+@FunctionalInterface
 public interface ContextualRunnable {
   void run(ExecutionContext context) throws Exception;
 }
