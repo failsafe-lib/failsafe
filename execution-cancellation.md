@@ -4,6 +4,10 @@ title: Execution Cancellation
 ---
 
 # Execution Cancellation
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 Failsafe supports cancellation and optional interruption of executions. Cancellation and interruption can be triggered by a [Timeout][timeouts] or through an async execution's [Future]:
 
@@ -27,7 +31,7 @@ Failsafe.with(timeout).getAsync(ctx -> {
 
 ## Handling Interruption
 
-Execution [Interruption][interrupt] will cause certain blocking calls to unblock and may throw [InterruptedException] within your execution.
+Execution [interruption][interrupt] will cause certain blocking calls to unblock and may throw [InterruptedException] within your execution.
 
 Non-blocking executions can cooperate with [interruption][interrupt] by periodically checking `Thread.isInterrupted()`:
 

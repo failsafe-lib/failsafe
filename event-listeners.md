@@ -4,6 +4,10 @@ title: Event Listeners
 ---
 
 # Event Listeners
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 Failsafe supports event listeners, both at the top level [Failsafe][FailsafeExecutor] API, and in the different [Policy][FailurePolicy] implementations.
 

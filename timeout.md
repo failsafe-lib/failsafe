@@ -4,6 +4,10 @@ title: Timeout
 ---
 
 # Timeout
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 [Timeouts][Timeout] allow you to fail an execution with `TimeoutExceededException` if it takes too long to complete:
 

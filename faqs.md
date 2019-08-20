@@ -36,7 +36,7 @@ When you do, you may want to make sure that the `RetryPolicy` or `Fallback` are 
 By default, a policy will handle all `Exception` types. But if you configure specific [result or failure handlers][FailurePolicy], then it may not recognize a `TimeoutExceededException` as a failure and may not handle it. Ex:
 
 ```java
-// Only handles ConnectException, not CircuitBreakerOpenException
+// Only handles ConnectException, not TimeoutExceededException
 retryPolicy.handle(ConnectException.class);
 ```
 

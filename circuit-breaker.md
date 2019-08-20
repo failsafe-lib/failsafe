@@ -4,6 +4,10 @@ title: Circuit Breaker
 ---
 
 # Circuit Breaker
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 [Circuit breakers][fowler-circuit-breaker] allow you to create systems that fail fast by temporarily disabling execution as a way of preventing system overload. Creating a [CircuitBreaker] is straightforward:
 

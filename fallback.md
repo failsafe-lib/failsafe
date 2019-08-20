@@ -4,6 +4,10 @@ title: Fallback
 ---
 
 # Fallback
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 [Fallbacks][Fallback] allow you to provide an alternative result for a failed execution. They can also be used to suppress exceptions and provide a default result:
 

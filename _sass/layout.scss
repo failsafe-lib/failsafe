@@ -51,6 +51,12 @@
 }
 
 .main-content {
+  @include mq(sm) {
+    #markdown-toc {
+      display: none;
+    }
+  }
+
   @include mq(md) {
     position: relative;
     max-width: $content-width;

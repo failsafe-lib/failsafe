@@ -9,7 +9,7 @@ Failsafe is a lightweight, zero-dependency library for handling failures in Java
 
 ## Setup
 
-Add the latest [Failsafe Maven dependency][maven] to your project.
+Add the latest [Failsafe dependency][maven] to your project.
 
 ## Getting Started
 
@@ -52,7 +52,7 @@ Multiple [policies] can be created and arbitrarily composed to add additional la
 CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>();
 Fallback<Object> fallback = Fallback.of(this::connectToBackup);
 
-// Get with fallback, retries, and circuit breaker
+// Get with circuit breaker, retries and fallback
 Failsafe.with(fallback, retryPolicy, circuitBreaker).get(this::connect);
 ```
 
