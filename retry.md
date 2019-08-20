@@ -22,7 +22,6 @@ retryPolicy.withMaxAttempts(3);
 Or a max number of [retries][max-retries]
 
 ```java
-// Equivalent to RetryPolicy.withMaxAttempts(3)
 retryPolicy.withMaxRetries(2);
 ```
 
