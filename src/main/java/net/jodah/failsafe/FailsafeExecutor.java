@@ -19,7 +19,6 @@ import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.DelegatingScheduler;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.List;
@@ -42,7 +41,7 @@ import static net.jodah.failsafe.Functions.*;
  * @author Jonathan Halterman
  */
 public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
-  private Scheduler scheduler = DelegatingScheduler.INSTANCE;
+  private Scheduler scheduler = Scheduler.DEFAULT;
   /** Policies sorted outer-most first */
   final List<Policy<R>> policies;
   private EventListener completeListener;
