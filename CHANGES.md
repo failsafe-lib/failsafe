@@ -1,8 +1,13 @@
 # 2.3.1
 
+### Bug Fixes
+
+- Fixed #206 - Problem with Fallback converting from failure to success.
+
 ### Improvements
 
 - Set `setRemoveOnCancelPolicy(true)` for the internal delay scheduler.
+- Added `Scheduler.DEFAULT` to return the default scheduler Failsafe uses.
 
 # 2.3.0
 
