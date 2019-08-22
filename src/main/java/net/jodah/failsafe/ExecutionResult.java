@@ -100,10 +100,11 @@ public class ExecutionResult {
   }
 
   /**
-   * Returns a copy of the ExecutionResult with the {@code result} value, and completed and success set to true.
+   * Returns a copy of the ExecutionResult with the {@code result} value, and completed and success set to true. Returns
+   * {@code this} if {@link #success}, and {@link #result} are unchanged.
    */
   public ExecutionResult withResult(Object result) {
-    return (this.result == null && result == null) || (this.result != null && this.result.equals(result)) ?
+    return success && ((this.result == null && result == null) || (this.result != null && this.result.equals(result))) ?
       this :
       new ExecutionResult(result, null, nonResult, waitNanos, true, true, successAll);
   }
