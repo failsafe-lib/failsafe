@@ -9,7 +9,7 @@ title: Notable Users
 1. TOC
 {:toc}
 
-Many projects, organizations, and governments use Failsafe. If you're a happy user, feel free to [edit](https://github.com/jhalterman/failsafe/edit/gh-pages/notable-users.md) this page and add your project or organization.
+Many projects, organizations, and governments use Failsafe. If you're a happy user, feel free to [edit this page](https://github.com/jhalterman/failsafe/edit/gh-pages/whos-using.md) and add your project or organization.
 
 ## Projects
 
