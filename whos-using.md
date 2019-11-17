@@ -79,6 +79,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [Steamroot](https://streamroot.io)
 * [StubbornJava](https://www.stubbornjava.com/)
 * [Telstra](https://www.telstra.com.au/)
+* [Tink](https://www.tink.com/)
 * [TouchTunes](http://touchtunes.com/)
 * [Treasure Data](https://www.treasuredata.com/)
 * [Turnitin](http://turnitin.com/)
