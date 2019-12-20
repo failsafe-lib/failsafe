@@ -34,8 +34,17 @@ import static net.jodah.failsafe.Functions.toFn;
  * @author Jonathan Halterman
  */
 public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
+  /**
+   * A fallback that will return a void result if execution fails.
+   */
+  public static final Fallback<Void> VOID = new Fallback<>();
+
   private final CheckedFunction<ExecutionAttemptedEvent, R> fallback;
   private boolean async;
+
+  private Fallback(){
+    fallback = null;
+  }
 
   /**
    * Returns the {@code fallback} action to be executed if execution fails.

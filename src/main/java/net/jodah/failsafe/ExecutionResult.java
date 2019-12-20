@@ -100,8 +100,18 @@ public class ExecutionResult {
   }
 
   /**
+   * Returns a copy of the ExecutionResult with a non-result, and completed and success set to true. Returns
+   * {@code this} if {@link #success} and {@link #result} are unchanged.
+   */
+  ExecutionResult withNonResult() {
+    return success && this.result == null && nonResult ?
+      this :
+      new ExecutionResult(null, null, true, waitNanos, true, true, successAll);
+  }
+
+  /**
    * Returns a copy of the ExecutionResult with the {@code result} value, and completed and success set to true. Returns
-   * {@code this} if {@link #success}, and {@link #result} are unchanged.
+   * {@code this} if {@link #success} and {@link #result} are unchanged.
    */
   public ExecutionResult withResult(Object result) {
     return success && ((this.result == null && result == null) || (this.result != null && this.result.equals(result))) ?
