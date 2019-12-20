@@ -162,7 +162,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
       if (delayNanos == -1 && delay != null && !delay.equals(Duration.ZERO))
         delayNanos = delay.toNanos();
       else if (delayMin != null && delayMax != null)
-        delayNanos = randomDelayInRange(delayMin.toNanos(), delayMin.toNanos(), Math.random());
+        delayNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
 
       // Adjust for backoff
       if (execution.getAttemptCount() != 1 && policy.getMaxDelay() != null)
