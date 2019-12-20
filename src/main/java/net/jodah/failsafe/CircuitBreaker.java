@@ -97,9 +97,18 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Returns the delay before allowing another execution on the circuit. Defaults to 1 minute.
    *
    * @see #withDelay(Duration)
+   * @see #getRemainingDelay()
    */
   public Duration getDelay() {
     return delay;
+  }
+
+  /**
+   * When in the open state, returns the remaining delay until the circuit is half-closed and allows another execution,
+   * else returns {@code Duration.ZERO}.
+   */
+  public Duration getRemainingDelay() {
+    return state.get().getRemainingDelay();
   }
 
   /**

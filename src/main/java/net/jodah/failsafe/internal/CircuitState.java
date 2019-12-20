@@ -20,6 +20,8 @@ import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.internal.util.CircularBitSet;
 import net.jodah.failsafe.util.Ratio;
 
+import java.time.Duration;
+
 /**
  * The state of a circuit.
  *
@@ -33,6 +35,10 @@ public abstract class CircuitState {
   public abstract boolean allowsExecution();
 
   public abstract State getInternals();
+
+  public Duration getRemainingDelay() {
+    return Duration.ZERO;
+  }
 
   public int getFailureCount() {
     return bitSet.negatives();
