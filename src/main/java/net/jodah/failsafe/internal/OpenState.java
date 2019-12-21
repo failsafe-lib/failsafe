@@ -42,6 +42,13 @@ public class OpenState extends CircuitState {
   }
 
   @Override
+  public Duration getRemainingDelay() {
+    long elapsedTime = System.nanoTime() - startTime;
+    long remainingDelay = delayNanos - elapsedTime;
+    return Duration.ofNanos(Math.max(remainingDelay, 0));
+  }
+
+  @Override
   public State getInternals() {
     return State.OPEN;
   }
