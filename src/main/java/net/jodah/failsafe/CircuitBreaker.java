@@ -18,6 +18,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.internal.*;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.Durations;
 import net.jodah.failsafe.util.Ratio;
 
 import java.time.Duration;
@@ -307,7 +308,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    */
   public CircuitBreaker<R> withDelay(Duration delay) {
     Assert.notNull(delay, "delay");
-    Assert.isTrue(delay.toNanos() >= 0, "delay must not be negative");
+    Assert.isTrue(!delay.isNegative(), "delay must not be negative");
     this.delay = delay;
     return this;
   }
@@ -391,7 +392,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    */
   public CircuitBreaker<R> withTimeout(Duration timeout) {
     Assert.notNull(timeout, "timeout");
-    Assert.isTrue(timeout.toNanos() > 0, "timeout must be greater than 0");
+    Assert.isTrue(Durations.isPositive(timeout), "timeout must be greater than 0");
     this.timeout = timeout;
     return this;
   }

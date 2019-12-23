@@ -20,6 +20,7 @@ import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.Durations;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -38,8 +39,7 @@ import java.util.function.Predicate;
  * or {@code handleResult} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
  * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
  * <p>
- * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional
- * configuration.
+ * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
  * </p>
  *
  * @param <R> result type
@@ -194,7 +194,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * @see #withMaxDuration(Duration)
    */
   public boolean allowsRetries() {
-    return (maxRetries == -1 || maxRetries > 0) && (maxDuration == null || maxDuration.toNanos() > 0);
+    return (maxRetries == -1 || maxRetries > 0) && (maxDuration == null || Durations.isPositive(maxDuration));
   }
 
   /**
@@ -368,6 +368,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(Duration) maxDuration},
    * if delays have already been set, or if random delays have already been set
+   * @throws ArithmeticException if a numeric overflow occurs for the {@code delay} or {@code maxDelay} and {@code chronoUnit}
    */
   public RetryPolicy<R> withBackoff(long delay, long maxDelay, ChronoUnit chronoUnit) {
     return withBackoff(delay, maxDelay, chronoUnit, 2);
@@ -382,20 +383,20 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * delayFactor} is <= 1
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(Duration) maxDuration},
    * if delays have already been set, or if random delays have already been set
+   * @throws ArithmeticException if a numeric overflow occurs for the {@code delay} or {@code maxDelay} and {@code chronoUnit}
    */
   public RetryPolicy<R> withBackoff(long delay, long maxDelay, ChronoUnit chronoUnit, double delayFactor) {
     Assert.notNull(chronoUnit, "chronoUnit");
     Assert.isTrue(delay > 0, "The delay must be greater than 0");
     Duration delayDuration = Duration.of(delay, chronoUnit);
-    Duration maxDelayDuration = Duration.of(maxDelay, chronoUnit);
-    Assert.state(maxDuration == null || delayDuration.toNanos() < maxDuration.toNanos(),
+    Assert.state(maxDuration == null || delayDuration.compareTo(maxDuration) < 0,
       "delay must be less than the maxDuration");
-    Assert.isTrue(delayDuration.toNanos() < maxDelayDuration.toNanos(), "delay must be less than the maxDelay");
+    Assert.isTrue(delay < maxDelay, "delay must be less than the maxDelay");
     Assert.isTrue(delayFactor > 1, "delayFactor must be greater than 1");
     Assert.state(this.delay == null || this.delay.equals(Duration.ZERO), "Delays have already been set");
     Assert.state(delayMin == null, "Random delays have already been set");
     this.delay = delayDuration;
-    this.maxDelay = maxDelayDuration;
+    this.maxDelay = Duration.of(maxDelay, chronoUnit);
     this.delayFactor = delayFactor;
     return this;
   }
@@ -410,9 +411,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    */
   public RetryPolicy<R> withDelay(Duration delay) {
     Assert.notNull(delay, "delay");
-    Assert.isTrue(delay.toNanos() > 0, "delay must be greater than 0");
-    Assert.state(maxDuration == null || delay.toNanos() < maxDuration.toNanos(),
-      "delay must be less than the maxDuration");
+    Assert.isTrue(Durations.isPositive(delay), "delay must be greater than 0");
+    Assert.state(maxDuration == null || delay.compareTo(maxDuration) < 0, "delay must be less than the maxDuration");
     Assert.state(delayMin == null, "Random delays have already been set");
     Assert.state(maxDelay == null, "Backoff delays have already been set");
     this.delay = delay;
@@ -427,19 +427,19 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * delayMax}
    * @throws IllegalStateException if {@code delayMax} is >= the {@link RetryPolicy#withMaxDuration(Duration)
    * maxDuration}, if delays have already been set, if backoff delays have already been set
+   * @throws ArithmeticException if a numeric overflow occurs for the {@code delayMin} or {@code delayMax} and {@code chronoUnit}
    */
   public RetryPolicy<R> withDelay(long delayMin, long delayMax, ChronoUnit chronoUnit) {
     Assert.notNull(chronoUnit, "chronoUnit");
     Assert.isTrue(delayMin > 0, "delayMin must be greater than 0");
     Assert.isTrue(delayMax > 0, "delayMax must be greater than 0");
-    Duration delayMinDuration = Duration.of(delayMin, chronoUnit);
+    Assert.isTrue(delayMin < delayMax, "delayMin must be less than delayMax");
     Duration delayMaxDuration = Duration.of(delayMax, chronoUnit);
-    Assert.isTrue(delayMinDuration.toNanos() < delayMaxDuration.toNanos(), "delayMin must be less than delayMax");
-    Assert.state(maxDuration == null || delayMaxDuration.toNanos() < maxDuration.toNanos(),
+    Assert.state(maxDuration == null || delayMaxDuration.compareTo(maxDuration) < 0,
       "delayMax must be less than the maxDuration");
     Assert.state(delay == null || delay.equals(Duration.ZERO), "Delays have already been set");
     Assert.state(maxDelay == null, "Backoff delays have already been set");
-    this.delayMin = delayMinDuration;
+    this.delayMin = Duration.of(delayMin, chronoUnit);
     this.delayMax = delayMaxDuration;
     return this;
   }
@@ -460,7 +460,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   public RetryPolicy<R> withJitter(double jitterFactor) {
     Assert.isTrue(jitterFactor >= 0.0 && jitterFactor <= 1.0, "jitterFactor must be >= 0 and <= 1");
     Assert.state(delay != null || delayMin != null, "A delay must be configured");
-    Assert.state(jitter == null, "withJitter(Duration) has already been called");
+    Assert.state(jitter == null, "Jitter has already been set");
     this.jitterFactor = jitterFactor;
     return this;
   }
@@ -475,15 +475,15 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    *
    * @throws NullPointerException if {@code jitter} is null
    * @throws IllegalArgumentException if {@code jitter} is <= 0
-   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(double)} has already been
-   * called
+   * @throws IllegalStateException if no delay has been configured, {@link #withJitter(double)} has already been called,
+   * or jitter is not less than or equal to the configured delay
    */
   public RetryPolicy<R> withJitter(Duration jitter) {
     Assert.notNull(jitter, "jitter");
-    Assert.isTrue(jitter.toNanos() > 0, "jitter must be > 0");
+    Assert.isTrue(Durations.isPositive(jitter), "jitter must be greater than 0");
     Assert.state(delay != null || delayMin != null, "A delay must be configured");
     Assert.state(jitterFactor == 0.0, "withJitter(double) has already been called");
-    Assert.state(jitter.toNanos() <= delay.toNanos(), "jitter must be less than the configured delay");
+    Assert.state(jitter.compareTo(delay) <= 0, "jitter must be less than or equal to the configured delay");
     this.jitter = jitter;
     return this;
   }
@@ -510,7 +510,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    */
   public RetryPolicy<R> withMaxDuration(Duration maxDuration) {
     Assert.notNull(maxDuration, "maxDuration");
-    Assert.state(maxDuration.toNanos() > delay.toNanos(), "maxDuration must be greater than the delay");
+    Assert.state(maxDuration.compareTo(delay) > 0, "maxDuration must be greater than the delay");
     this.maxDuration = maxDuration;
     return this;
   }

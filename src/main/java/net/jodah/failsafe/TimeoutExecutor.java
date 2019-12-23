@@ -35,7 +35,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
   protected boolean isFailure(ExecutionResult result) {
     // Handle sync and async execution timeouts
     boolean timeoutExceeded =
-      execution.isAsyncExecution() && execution.getElapsedAttemptTime().toNanos() >= policy.getTimeout().toNanos();
+      execution.isAsyncExecution() && execution.getElapsedAttemptTime().compareTo(policy.getTimeout()) >= 0;
     return timeoutExceeded || (!result.isNonResult() && result.getFailure() instanceof TimeoutExceededException);
   }
 

@@ -3,6 +3,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.function.AsyncSupplier;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.Durations;
 
 import java.time.Duration;
 
@@ -100,7 +101,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    */
   public static <R> Timeout<R> of(Duration timeout) {
     Assert.notNull(timeout, "timeout");
-    Assert.isTrue(timeout.toNanos() > 0, "timeout must be > 0");
+    Assert.isTrue(Durations.isPositive(timeout), "timeout must be greater than 0");
     return new Timeout<>(timeout);
   }
 
