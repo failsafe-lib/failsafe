@@ -44,6 +44,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [CloudWise](http://www.cloudwise.com)
 * [Connexta](https://connexta.com/)
 * [ConsenSys](http://www.consensys.net)
+* [CryptoRefills](http://www.cryptorefills.com)
 * [Didi Chuxing](http://www.xiaojukeji.com/)
 * [Dog AI](https://dog.ai)
 * [dotCMS](http://dotcms.com)
