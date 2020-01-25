@@ -4,6 +4,7 @@
 PROJECT=failsafe
 
 build () {
+  echo "Building javadocs"
   mvn javadoc:javadoc -Djv=$apiVersion
   rm -rf target/docs
   git clone git@github.com:jhalterman/$PROJECT.git target/docs -b gh-pages
@@ -14,6 +15,7 @@ build () {
 }
 
 patchFavIcon () {
+  echo "Patching favicons"
   for f in $1/*.html ; do
     if [ -f "$f" ]; then     # if no .html files exist, f is literal "*.html"
       tmpfile=`mktemp patch_favicon_XXXXX`
@@ -42,8 +44,6 @@ commit() {
   git push -fq origin gh-pages > /dev/null
 }
 
-echo "Building javadocs"
 build
-echo "Patching favicons"
 patchFavIcon "javadoc" "../assets/images/favicon.png"
 commit && echo "Published Javadocs"
