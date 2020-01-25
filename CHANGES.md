@@ -1,13 +1,24 @@
-# 2.3.1
+# 2.3.2
+
+### Improvements
+
+- Added `CircuitBreaker.getRemainingDelay()`.
+- Added support for `Fallback.VOID`.
 
 ### Bug Fixes
 
-- Fixed #206 - Problem with Fallback converting from failure to success.
+- Fixed #216 - Incorrect computation of randomDelay.
+
+# 2.3.1
 
 ### Improvements
 
 - Set `setRemoveOnCancelPolicy(true)` for the internal delay scheduler.
 - Added `Scheduler.DEFAULT` to return the default scheduler Failsafe uses.
+
+### Bug Fixes
+
+- Fixed #206 - Problem with Fallback converting from failure to success.
 
 # 2.3.0
 
