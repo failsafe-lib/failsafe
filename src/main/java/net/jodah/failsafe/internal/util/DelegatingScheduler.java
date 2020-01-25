@@ -99,8 +99,9 @@ public final class DelegatingScheduler implements Scheduler {
     if (DELAYER == null) {
       synchronized (DelegatingScheduler.class) {
         if (DELAYER == null) {
-          DELAYER = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
-          DELAYER.setRemoveOnCancelPolicy(true);
+          ScheduledThreadPoolExecutor delayer = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
+          delayer.setRemoveOnCancelPolicy(true);
+          DELAYER = delayer;
         }
       }
     }
