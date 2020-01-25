@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Notable Users
+title: Who's Using Failsafe
 ---
 
 # Who's Using Failsafe
@@ -14,6 +14,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 ## Projects
 
 * [Airlift](https://github.com/airlift/airlift)
+* [Apache Pulsar](https://pulsar.apache.org/)
 * [Apache Samza](https://github.com/apache/samza)
 * [Distributed Data Framework](http://codice.org/ddf/)
 * [Divolte Collector](https://divolte.io/)
