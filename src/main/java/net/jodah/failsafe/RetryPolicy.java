@@ -38,8 +38,7 @@ import java.util.function.Predicate;
  * or {@code handleResult} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
  * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
  * <p>
- * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional
- * configuration.
+ * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
  * </p>
  *
  * @param <R> result type
@@ -454,12 +453,10 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * random} or {@link #withBackoff(long, long, ChronoUnit) exponential backoff} delays.
    *
    * @throws IllegalArgumentException if {@code jitterFactor} is < 0 or > 1
-   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(Duration)} has already been
-   * called
+   * @throws IllegalStateException if {@link #withJitter(Duration)} has already been called
    */
   public RetryPolicy<R> withJitter(double jitterFactor) {
     Assert.isTrue(jitterFactor >= 0.0 && jitterFactor <= 1.0, "jitterFactor must be >= 0 and <= 1");
-    Assert.state(delay != null || delayMin != null, "A delay must be configured");
     Assert.state(jitter == null, "withJitter(Duration) has already been called");
     this.jitterFactor = jitterFactor;
     return this;
@@ -475,15 +472,15 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    *
    * @throws NullPointerException if {@code jitter} is null
    * @throws IllegalArgumentException if {@code jitter} is <= 0
-   * @throws IllegalStateException if no delay has been configured or {@link #withJitter(double)} has already been
-   * called
+   * @throws IllegalStateException if {@link #withJitter(double)} has already been called or the jitter is greater than
+   * the min configured delay
    */
   public RetryPolicy<R> withJitter(Duration jitter) {
     Assert.notNull(jitter, "jitter");
     Assert.isTrue(jitter.toNanos() > 0, "jitter must be > 0");
-    Assert.state(delay != null || delayMin != null, "A delay must be configured");
     Assert.state(jitterFactor == 0.0, "withJitter(double) has already been called");
-    Assert.state(jitter.toNanos() <= delay.toNanos(), "jitter must be less than the configured delay");
+    Assert.state(jitter.toNanos() <= (delayMin != null ? delayMin.toNanos() : delay.toNanos()),
+      "jitter must be less than the minimum configured delay");
     this.jitter = jitter;
     return this;
   }

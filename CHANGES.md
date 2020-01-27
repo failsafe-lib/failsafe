@@ -1,3 +1,9 @@
+# 2.3.3
+
+### Bug Fixes
+
+- Fixed #224 - Allow combining random delay and jitter.
+
 # 2.3.2
 
 ### Improvements
