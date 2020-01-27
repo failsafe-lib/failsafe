@@ -15,7 +15,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 
 * [Airlift](https://github.com/airlift/airlift)
 * [Apache Pulsar](https://pulsar.apache.org/)
-* [Apache Samza](https://github.com/apache/samza)
+* [Apache Samza](http://samza.apache.org/)
 * [Distributed Data Framework](http://codice.org/ddf/)
 * [Divolte Collector](https://divolte.io/)
 * [Eclipse MicroProfile](https://microprofile.io/)
@@ -25,7 +25,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [Netflix Spinnaker](https://www.spinnaker.io/)
 * [ONAP](https://www.onap.org)
 * [Oracle Helidon](https://helidon.io)
-* [Presto](https://github.com/prestosql/presto)
+* [Presto](https://prestosql.io/)
 * [Redhat Zanata](http://zanata.org/)
 * [Testify](http://testifyproject.org)
 * [Wasabi](https://github.com/intuit/wasabi)
