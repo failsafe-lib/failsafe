@@ -320,7 +320,7 @@ public abstract class AbstractFailsafeTest {
   public void shouldTimeoutAndCancelAndInterrupt() throws Throwable {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withCancel(true).onFailure(e -> {
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).onFailure(e -> {
       waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     });
@@ -348,11 +348,11 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
-   * Ensures that an interrupted execution should always have the interrupt flag cleared aferwards.
+   * Ensures that an interrupted execution should always have the interrupt flag cleared afterwards.
    */
   public void shouldHandleNonInterruptableExecution() throws Throwable {
     // Given
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withCancel(true);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1));
     CheckedSupplier supplier = () -> {
       try {
         Thread.sleep(1000);

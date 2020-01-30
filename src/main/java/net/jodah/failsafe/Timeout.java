@@ -7,9 +7,9 @@ import net.jodah.failsafe.internal.util.Assert;
 import java.time.Duration;
 
 /**
- * A policy that fails an excecution with a {@link net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}
+ * A policy that fails an execution with a {@link net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}
  * if it exceeds a timeout. Uses a separate thread on the configured scheduler or the common pool to perform timeouts
- * checks.
+ * checks. Will interrupt execution by default, use withCancel to modify this behaviour.
  * <p>
  * The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers can be
  * used to handle a timeout being exceeded or not.
@@ -27,8 +27,8 @@ import java.time.Duration;
  */
 public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy<R> {
   private final Duration timeout;
-  private volatile boolean cancellable;
-  private volatile boolean interruptable;
+  private volatile boolean cancellable = true;
+  private volatile boolean interruptable = true;
 
   private Timeout(Duration timeout) {
     this.timeout = timeout;
