@@ -49,6 +49,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [Didi Chuxing](http://www.xiaojukeji.com/)
 * [Dog AI](https://dog.ai)
 * [dotCMS](http://dotcms.com)
+* [Elastic](https://www.elastic.co)
 * [Electric Cloud](https://electric-cloud.com/)
 * [EVRYTHNG](http://evrythng.com)
 * [Grakn Labs](https://grakn.ai)
