@@ -19,6 +19,29 @@
     padding-left: 1.5em;
   }
 
+  ul.columns {
+    overflow: hidden;
+    padding-left: 0px;
+
+    li {
+      float: left;
+      display: inline;
+      width: 100%;
+    }
+
+    @include mq(md) {
+      li {
+        width: 50%;
+      }
+    }
+
+    @include mq(lg) {
+      li {
+        width: 33.333%;
+      }
+    }
+  }
+
   ol {
     > li {
       list-style-type: disc;

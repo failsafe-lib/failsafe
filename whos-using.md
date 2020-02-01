@@ -13,6 +13,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 
 ## Projects
 
+{:.columns}
 * [Airlift](https://github.com/airlift/airlift)
 * [Apache Pulsar](https://pulsar.apache.org/)
 * [Apache Samza](http://samza.apache.org/)
@@ -32,6 +33,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 
 ## Companies / Organizations
 
+{:.columns}
 * [52North](https://www.52north.org)
 * [Adobe](https://www.adobe.com/)
 * [Amazon](https://www.amazon.com/)
@@ -96,10 +98,11 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 
 ## Government
 
+{:.columns}
 * [Denmark - DBC](https://www.dbc.dk)
 * [EU - UniProt](http://www.uniprot.org)
-* [UK - Office for National Statistics](https://www.ons.gov.uk/)
-* [UK - Defence Science and Technology Laboratory](https://www.gov.uk/dstl)
-* [USA - Lawrence Livermore National Laboratory](https://software.llnl.gov)
+* [UK - ONS](https://www.ons.gov.uk/)
+* [UK - DSTL](https://www.gov.uk/dstl)
+* [USA - LLNL](https://software.llnl.gov)
 
 {% include common-links.html %}
