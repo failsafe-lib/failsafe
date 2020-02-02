@@ -167,33 +167,29 @@ final class Functions {
   static <T> Supplier<CompletableFuture<ExecutionResult>> getPromiseOfStageExecution(
     AsyncSupplier<? extends CompletionStage<? extends T>> supplier, AsyncExecution execution) {
     Assert.notNull(supplier, "supplier");
-    return new Supplier<CompletableFuture<ExecutionResult>>() {
-      Semaphore asyncFutureLock = new Semaphore(1);
-
-      @Override
-      public CompletableFuture<ExecutionResult> get() {
-        try {
-          execution.preExecute();
-          asyncFutureLock.acquire();
-          supplier.get(execution).whenComplete((innerResult, failure) -> {
-            try {
-              if (failure != null)
-                execution.completeOrHandle(innerResult,
-                  failure instanceof CompletionException ? failure.getCause() : failure);
-            } finally {
-              asyncFutureLock.release();
-            }
-          });
-        } catch (Throwable e) {
+    Semaphore asyncFutureLock = new Semaphore(1);
+    return () -> {
+      try {
+        execution.preExecute();
+        asyncFutureLock.acquire();
+        supplier.get(execution).whenComplete((innerResult, failure) -> {
           try {
-            execution.completeOrHandle(null, e);
+            if (failure != null)
+              execution.completeOrHandle(innerResult,
+                failure instanceof CompletionException ? failure.getCause() : failure);
           } finally {
             asyncFutureLock.release();
           }
+        });
+      } catch (Throwable e) {
+        try {
+          execution.completeOrHandle(null, e);
+        } finally {
+          asyncFutureLock.release();
         }
-
-        return NULL_FUTURE;
       }
+
+      return NULL_FUTURE;
     };
   }
 
