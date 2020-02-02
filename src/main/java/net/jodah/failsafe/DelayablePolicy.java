@@ -82,7 +82,7 @@ public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
    * configured or the computed delay is invalid.
    */
   @SuppressWarnings("unchecked")
-  Duration computeDelay(ExecutionContext context) {
+  protected Duration computeDelay(ExecutionContext context) {
     Duration computed = null;
     if (context != null && delayFn != null) {
       Object exResult = context.getLastResult();
