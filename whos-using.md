@@ -23,7 +23,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [etcd](https://etcd.io/)
 * [Heimdall](http://getheimdall.io)
 * [IBM OpenLiberty](https://openliberty.io/)
-* [Netflix Spinnaker](https://www.spinnaker.io/)
+* [Spinnaker](https://www.spinnaker.io/)
 * [ONAP](https://www.onap.org)
 * [Oracle Helidon](https://helidon.io)
 * [Presto](https://prestosql.io/)
