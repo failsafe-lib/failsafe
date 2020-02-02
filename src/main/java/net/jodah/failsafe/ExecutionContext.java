@@ -60,7 +60,8 @@ public class ExecutionContext {
   }
 
   /**
-   * Gets the number of completed execution attempts so far.
+   * Gets the number of completed execution attempts so far. Will return {@code 0} when the first attempt is in
+   * progress.
    */
   public int getAttemptCount() {
     return attempts.get();
@@ -102,6 +103,20 @@ public class ExecutionContext {
    */
   public boolean isCancelled() {
     return cancelled;
+  }
+
+  /**
+   * Returns {@code true} when {@link #getAttemptCount()} is {@code 0} meaning this is the first execution attempt.
+   */
+  public boolean isFirstAttempt() {
+    return attempts.get() == 0;
+  }
+
+  /**
+   * Returns {@code true} when {@link #getAttemptCount()} is {@code > 0} meaning the execution is being retried.
+   */
+  public boolean isRetry() {
+    return attempts.get() > 0;
   }
 
   public ExecutionContext copy() {
