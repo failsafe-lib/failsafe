@@ -20,6 +20,7 @@ import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -87,26 +88,33 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that asynchronously applies the {@code supplier} and returns a promise containing the result.
+   * Returns a Supplier that asynchronously applies the {@code supplier} on the first call, synchronously on subsequent
+   * calls, and returns a promise containing the result.
    */
   @SuppressWarnings("unchecked")
   static Supplier<CompletableFuture<ExecutionResult>> getPromiseAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    AtomicBoolean scheduled = new AtomicBoolean();
     return () -> {
-      CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      Callable<Object> callable = () -> supplier.get().whenComplete((result, error) -> {
-        if (error != null)
-          promise.completeExceptionally(error);
-        else
-          promise.complete(result);
-      });
+      if (scheduled.get()) {
+        return supplier.get();
+      } else {
+        CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+        Callable<Object> callable = () -> supplier.get().whenComplete((result, error) -> {
+          if (error != null)
+            promise.completeExceptionally(error);
+          else
+            promise.complete(result);
+        });
 
-      try {
-        future.inject((Future) scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
-      } catch (Throwable t) {
-        promise.completeExceptionally(t);
+        try {
+          scheduled.set(true);
+          future.inject((Future) scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
+        } catch (Throwable t) {
+          promise.completeExceptionally(t);
+        }
+        return promise;
       }
-      return promise;
     };
   }
 
