@@ -104,6 +104,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
       // Coordinates a result between the timeout and execution threads
+      AtomicReference<ExecutionResult> executionResult = new AtomicReference<>();
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       AtomicReference<Future<Object>> timeoutFuture = new AtomicReference<>();
 
@@ -115,11 +116,11 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
             if (!future.isDone()) {
               // Schedule timeout check
               timeoutFuture.set((Future) scheduler.schedule(() -> {
-                if (!promise.isDone() && promise.complete(ExecutionResult.failure(new TimeoutExceededException(policy)))
+                if (executionResult.compareAndSet(null, ExecutionResult.failure(new TimeoutExceededException(policy)))
                   && policy.canCancel()) {
                   boolean canInterrupt = policy.canInterrupt();
                   if (canInterrupt)
-                    execution.record(promise.get());
+                    execution.record(executionResult.get());
 
                   // Cancel and interrupt
                   future.cancelDelegates(canInterrupt, false);
@@ -138,22 +139,26 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
 
       // Propagate execution, cancel timeout future if not done, and handle result
       supplier.get().whenComplete((result, error) -> {
-        if (error != null)
-          promise.completeExceptionally(error);
-        else {
-          if (promise.complete(result)) {
-            Future<Object> maybeFuture = timeoutFuture.get();
-            if (maybeFuture != null)
-              maybeFuture.cancel(false);
-          } else {
-            try {
-              result = promise.get();
-            } catch (Exception notPossible) {
-            }
+        if (executionResult.compareAndSet(null, result)) {
+          if (error != null) {
+            promise.completeExceptionally(error);
+            return;
           }
 
-          postExecuteAsync(result, scheduler, future);
+          // Cancel timeout task
+          Future<Object> maybeFuture = timeoutFuture.get();
+          if (maybeFuture != null)
+            maybeFuture.cancel(false);
+        } else {
+          // Fetch timeout result
+          try {
+            result = executionResult.get();
+          } catch (Exception notPossible) {
+          }
         }
+
+        promise.complete(result);
+        postExecuteAsync(result, scheduler, future);
       });
 
       return promise;
