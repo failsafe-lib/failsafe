@@ -141,8 +141,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
         if (error != null)
           promise.completeExceptionally(error);
         else {
-          if (!promise.isDone()) {
-            promise.complete(result);
+          if (promise.complete(result)) {
             Future<Object> maybeFuture = timeoutFuture.get();
             if (maybeFuture != null)
               maybeFuture.cancel(false);
