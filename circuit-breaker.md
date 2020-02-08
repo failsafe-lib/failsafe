@@ -33,7 +33,7 @@ A circuit breaker can be configured to *open* when a successive number of execut
 breaker.withFailureThreshold(5);
 ```
 
-Or when, for example, the last 3 out of 5 executions have failed:
+Or when, for example, 3 out of the last 5 executions have failed:
 
 ```java
 breaker.withFailureThreshold(3, 5);
@@ -53,7 +53,7 @@ The breaker can be configured to *close* again if a number of trial executions s
 breaker.withSuccessThreshold(5);
 ```
 
-The breaker can also be configured to *close* again if, for example, the last 3 out of 5 executions succeed, else it will re-*open*:
+The breaker can also be configured to *close* again if, for example, 3 out of the last 5 executions succeed, else it will re-*open*:
 
 ```java
 breaker.withSuccessThreshold(3, 5);
@@ -84,7 +84,7 @@ circuitBreaker
 
 ## Metrics
 
-[CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state.
+[CircuitBreaker] can provide metrics regarding the number of recorded [successes][breaker-success-count] or [failures][breaker-failure-count] in the current state. It can also return the [remaining delay][remaining-delay] when in an *open* state.
 
 ## Best Practices
 
@@ -109,5 +109,13 @@ if (breaker.allowsExecution()) {
   }
 }
 ```
+
+## Performance
+
+Failsafe's internal [CircuitBreaker] implementation is space and time efficient, utilizing a single circular bitset to record execution results. Recording an execution and evaluating a threshold is an O(1) operation, regardless of the size of the bitset.
+
+[remaining-delay]: https://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getRemainingDelay--
+[breaker-success-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getSuccessCount--
+[breaker-failure-count]: http://jodah.net/failsafe/javadoc/net/jodah/failsafe/CircuitBreaker.html#getFailureCount--
 
 {% include common-links.html %}
