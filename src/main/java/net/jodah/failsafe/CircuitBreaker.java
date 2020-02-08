@@ -38,7 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * successful.
  * </p>
  * <p>
- * Note: CircuitBreaker extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
+ * Note: CircuitBreaker extends {@link DelayablePolicy}, {@link FailurePolicy}, and {@link PolicyListeners} which offer
+ * additional configuration.
  * </p>
  *
  * @param <R> result type
@@ -179,8 +180,8 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Returns timeout for executions else {@code null} if none has been configured.
    *
-   * @deprecated Use {@link Timeout} instead
    * @see #withTimeout(Duration)
+   * @deprecated Use {@link Timeout} instead
    */
   public Duration getTimeout() {
     return timeout;
@@ -385,9 +386,9 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * Sets the {@code timeout} for executions. Executions that exceed this timeout are not interrupted, but are recorded
    * as failures once they naturally complete.
    *
-   * @deprecated Use {@link Timeout} instead
    * @throws NullPointerException if {@code timeout} is null
    * @throws IllegalArgumentException if {@code timeout} <= 0
+   * @deprecated Use {@link Timeout} instead
    */
   public CircuitBreaker<R> withTimeout(Duration timeout) {
     Assert.notNull(timeout, "timeout");

@@ -14,9 +14,15 @@ import java.time.Duration;
  * The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers can be
  * used to handle a timeout being exceeded or not.
  * </p>
- * <p>Note: {@link #withCancel(boolean) Cancellation and interruption} are not supported when performing an {@link
+ * <p>Note:
+ * <ul>
+ *   <li>The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers
+ *   can be used to handle a timeout being exceeded or not.</li>
+ *   <li>{@link #withCancel(boolean) Cancellation and interruption} are not supported when performing an {@link
  * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} and will have no effect since the async thread is
- * unkown to Failsafe.</p>
+ * unkown to Failsafe.</li>
+ * </ul>
+ * </p>
  * <p>
  * This class is threadsafe.
  * </p>
