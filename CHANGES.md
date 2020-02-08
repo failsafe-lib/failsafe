@@ -1,8 +1,16 @@
 # 2.3.3
 
+### Improvements
+
+Added support for `CompletionStage` to the `Fallback` policy.
+
 ### Bug Fixes
 
 - Fixed #224 - Allow combining random delay and jitter.
+
+### API Changes
+
+- `Fallback.apply` was made package private.
 
 # 2.3.2
 

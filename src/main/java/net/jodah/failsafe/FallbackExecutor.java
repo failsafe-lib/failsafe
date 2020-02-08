@@ -17,10 +17,7 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link Fallback}.
@@ -45,14 +42,28 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
   @SuppressWarnings("unchecked")
   protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
     FailsafeFuture<Object> future) {
-    if (!policy.isAsync())
-      return CompletableFuture.completedFuture(onFailure(result));
-
     CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-    Callable<Object> callable = () -> promise.complete(onFailure(result));
+    Callable<Object> callable = () -> {
+      try {
+        CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
+          execution.copy());
+        fallback.whenComplete((innerResult, failure) -> {
+          if (failure instanceof CompletionException)
+            failure = failure.getCause();
+          ExecutionResult r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
+          promise.complete(r);
+        });
+      } catch (Exception e) {
+        promise.complete(ExecutionResult.failure(e));
+      }
+      return null;
+    };
 
     try {
-      future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
+      if (!policy.isAsync())
+        callable.call();
+      else
+        future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
     } catch (Throwable t) {
       promise.completeExceptionally(t);
     }
