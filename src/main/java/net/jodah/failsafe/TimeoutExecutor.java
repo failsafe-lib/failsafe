@@ -110,10 +110,10 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
 
       // Schedule timeout if not an async execution
       if (!execution.isAsyncExecution()) {
-        try {
-          // Guard against race with future.complete or future.cancel
-          synchronized (future) {
-            if (!future.isDone()) {
+        // Guard against race with future.complete or future.cancel
+        synchronized (future) {
+          if (!future.isDone()) {
+            try {
               // Schedule timeout check
               timeoutFuture.set((Future) scheduler.schedule(() -> {
                 if (executionResult.compareAndSet(null, ExecutionResult.failure(new TimeoutExceededException(policy)))
@@ -128,12 +128,12 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
                 return null;
               }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS));
               future.injectTimeout(timeoutFuture.get());
+            } catch (Throwable t) {
+              // Hard scheduling failure
+              promise.completeExceptionally(t);
+              return promise;
             }
           }
-        } catch (Throwable t) {
-          // Hard scheduling failure
-          promise.completeExceptionally(t);
-          return promise;
         }
       }
 
