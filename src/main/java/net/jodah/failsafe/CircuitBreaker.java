@@ -314,14 +314,14 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   }
 
   /**
-   * Sets the number of successive failures that must occur when in a closed state in order to open the circuit.
+   * Sets the number of consecutive failures that must occur when in a closed state in order to open the circuit.
    * <p>
    * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} will also
    * be used when the circuit breaker is in a half-open state to determine whether to transition back to open or
    * closed.
    * </p>
    *
-   * @throws IllegalArgumentException if {@code failureThresh} < 1
+   * @throws IllegalArgumentException if {@code failureThreshold} < 1
    */
   public CircuitBreaker<R> withFailureThreshold(int failureThreshold) {
     Assert.isTrue(failureThreshold >= 1, "failureThreshold must be greater than or equal to 1");
@@ -353,7 +353,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   }
 
   /**
-   * Sets the number of successive successful executions that must occur when in a half-open state in order to close the
+   * Sets the number of consecutive successful executions that must occur when in a half-open state in order to close the
    * circuit, else the circuit is re-opened when a failure occurs.
    *
    * @throws IllegalArgumentException if {@code successThreshold} < 1
