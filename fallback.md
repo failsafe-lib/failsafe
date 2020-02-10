@@ -27,7 +27,13 @@ Or compute an alternative result such as from a backup resource:
 Fallback<Object> fallback = Fallback.of(this::connectToBackup);
 ```
 
-For computations that block, a Fallback can be configured to run asynchronously:
+A [CompletionStage] can be supplied as a fallback:
+
+```java
+Fallback<Object> fallback = Fallback.ofStage(this::connectToBackup);
+```
+
+And for computations that block, a Fallback can be configured to run asynchronously:
 
 ```java
 Fallback<Object> fallback = Fallback.ofAsync(this::blockingCall);
