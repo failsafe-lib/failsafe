@@ -15,11 +15,11 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.DelegatingScheduler;
-
 import java.util.Arrays;
 import java.util.function.Supplier;
+
+import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.DelegatingScheduler;
 
 /**
  * Tracks executions and determines when an execution can be performed for a {@link RetryPolicy}.
@@ -127,6 +127,16 @@ public class Execution extends AbstractExecution {
       supplier = policyExecutor.supply(supplier, scheduler);
 
     ExecutionResult result = supplier.get();
+    completed = result.isComplete();
+    executor.handleComplete(result, this);
+    return result;
+  }
+  
+  <E extends Throwable> ExecutionResultWithException<E> executeSyncWithException(Supplier<ExecutionResultWithException<E>> supplier) {
+    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+      supplier = policyExecutor.supplyWithException(supplier, scheduler);
+
+    ExecutionResultWithException<E> result = supplier.get();
     completed = result.isComplete();
     executor.handleComplete(result, this);
     return result;

@@ -15,18 +15,36 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.function.*;
-import net.jodah.failsafe.internal.EventListener;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import static net.jodah.failsafe.Functions.getPromise;
+import static net.jodah.failsafe.Functions.getPromiseExecution;
+import static net.jodah.failsafe.Functions.getPromiseOfStage;
+import static net.jodah.failsafe.Functions.getPromiseOfStageExecution;
+import static net.jodah.failsafe.Functions.toAsyncSupplier;
+import static net.jodah.failsafe.Functions.toCtxSupplier;
+import static net.jodah.failsafe.Functions.toSupplier;
 
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static net.jodah.failsafe.Functions.*;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.function.AsyncRunnable;
+import net.jodah.failsafe.function.AsyncSupplier;
+import net.jodah.failsafe.function.CheckedConsumer;
+import net.jodah.failsafe.function.CheckedRunnable;
+import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.function.CheckedSupplierWithException;
+import net.jodah.failsafe.function.ContextualRunnable;
+import net.jodah.failsafe.function.ContextualSupplier;
+import net.jodah.failsafe.internal.EventListener;
+import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.util.concurrent.Scheduler;
 
 /**
  * <p>
@@ -65,6 +83,10 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
     return call(execution -> Assert.notNull(supplier, "supplier"));
+  }
+
+  public <T extends R, E extends Throwable> T getWithException(CheckedSupplierWithException<T, E> supplier) throws E {
+    return callWithException(execution -> Assert.notNull(supplier, "supplier"));
   }
 
   /**
@@ -381,6 +403,23 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
       if (failure instanceof Error)
         throw (Error) failure;
       throw new FailsafeException(failure);
+    }
+    return (T) result.getResult();
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T, E extends Throwable> T callWithException(Function<Execution, CheckedSupplierWithException<?, E>> supplierFn) throws E {
+	Execution execution = new Execution(this);
+	Supplier<ExecutionResultWithException<E>> supplier = Functions.getWithException(supplierFn.apply(execution), execution);
+
+    ExecutionResultWithException<E> result = execution.executeSyncWithException(supplier);
+    Throwable failure = result.getFailure();
+    if (failure != null) {
+      if (failure instanceof RuntimeException)
+        throw (RuntimeException) failure;
+      if (failure instanceof Error)
+        throw (Error) failure;
+      throw (E) failure;
     }
     return (T) result.getResult();
   }

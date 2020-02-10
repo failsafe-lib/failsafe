@@ -45,6 +45,10 @@ public abstract class PolicyExecutor<P extends Policy> {
     return null;
   }
 
+  protected <E extends Throwable>ExecutionResultWithException<E> preExecuteWithException() {
+    return null;
+  }
+
   /**
    * Performs an execution by calling pre-execute else calling the supplier and doing a post-execute.
    */
@@ -57,6 +61,16 @@ public abstract class PolicyExecutor<P extends Policy> {
       return postExecute(supplier.get());
     };
   }
+
+  protected <E extends Throwable> Supplier<ExecutionResultWithException<E>> supplyWithException(Supplier<ExecutionResultWithException<E>> supplier, Scheduler scheduler) {
+	    return () -> {
+	    	ExecutionResultWithException<E> result = preExecuteWithException();
+	      if (result != null)
+	        return result;
+
+	      return postExecuteWithException(supplier.get());
+	    };
+	  }
 
   /**
    * Performs synchronous post-execution handling for a {@code result}.
@@ -73,6 +87,19 @@ public abstract class PolicyExecutor<P extends Policy> {
 
     return result;
   }
+
+  protected <E extends Throwable> ExecutionResultWithException<E> postExecuteWithException(ExecutionResultWithException<E> result) {
+	    if (isFailure(result)) {
+	      result = onFailureWithException(result.with(false, false));
+	      callFailureListener(result);
+	    } else {
+	      result = result.with(true, true);
+	      onSuccess(result);
+	      callSuccessListener(result);
+	    }
+
+	    return result;
+	  }
 
   /**
    * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute.
@@ -133,6 +160,11 @@ public abstract class PolicyExecutor<P extends Policy> {
   protected ExecutionResult onFailure(ExecutionResult result) {
     return result;
   }
+
+  protected <E extends Throwable> ExecutionResultWithException<E> onFailureWithException(ExecutionResultWithException<E> result) {
+    return result;
+  }
+
 
   /**
    * Performs potentially asynchrononus post-execution handling for a failed {@code result}, possibly creating a new

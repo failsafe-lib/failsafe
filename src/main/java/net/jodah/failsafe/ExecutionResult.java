@@ -50,7 +50,7 @@ public class ExecutionResult {
     this(result, failure, false, 0, false, failure == null, failure == null);
   }
 
-  private ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean complete,
+  protected ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean complete,
     boolean success, Boolean successAll) {
     this.nonResult = nonResult;
     this.result = result;
