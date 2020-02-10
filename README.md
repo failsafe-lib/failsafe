@@ -10,7 +10,7 @@ Failsafe is a lightweight, zero-dependency library for handling failures in Java
 
 ## Usage
 
-Visit the [project website](https://jodah.net/failsafe).
+Visit the [Failsafe website](https://jodah.net/failsafe).
 
 ## Contributing
 

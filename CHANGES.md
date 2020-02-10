@@ -11,6 +11,7 @@ Added support for `CompletionStage` to the `Fallback` policy.
 ### API Changes
 
 - `Fallback.apply` was made package private.
+- `DelayablePolicy.computeDelay` was made package private.
 
 # 2.3.2
 
