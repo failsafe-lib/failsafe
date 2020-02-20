@@ -142,6 +142,7 @@ Failsafe 2.0 includes a few API changes from 1.x that were meant to consolidate 
   - Fallbacks must be wrapped in a `Fallback` instance via `Fallback.of`
 - Failsafe APIs
   - `Supplier`s are now used instead of `Callable`s.
+  - `java.util.function.Predicate` is used instead of Failsafe's internal Predicate.
   - `withFallback` is no longer supported. Instead, `Failsafe.with(fallback...)` should be used.
 - Async execution
   - Async execution is now performed with the `getAsync`, `runAsync`, `getStageAsync`, etc. methods.
