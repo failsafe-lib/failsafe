@@ -28,5 +28,6 @@
   - [Third Party Tools]({{ "/third-party-tools" | relative_url }})
   - [Comparisons]({{ "/comparisons" | relative_url }})
   - [Who's Using Failsafe]({{ "/whos-using" | relative_url }})
+  - [Talks]({{ "/talks" | relative_url }})
 
 {% include common-links.html %}
