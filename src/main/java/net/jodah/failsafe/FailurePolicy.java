@@ -170,7 +170,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * Returns a predicate that evaluates whether the {@code result} equals an execution result.
    */
   static <R> BiPredicate<R, Throwable> resultPredicateFor(R result) {
-    return (t, u) -> Objects.equals(result, t);
+    return (t, u) -> result == null ? t == null && u == null : Objects.equals(result, t);
   }
 
   /**
