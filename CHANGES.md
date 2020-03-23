@@ -1,3 +1,13 @@
+# 2.3.4
+
+### Improvements
+
+- Re-worked internal threading to only create async threads immediately prior to supplier execution. See #230.
+
+### Bug Fixes
+
+- Fixed #240 - `handleResult(null)` always triggering when an exception is thrown.
+
 # 2.3.3
 
 ### Improvements
