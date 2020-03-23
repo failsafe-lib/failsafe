@@ -11,7 +11,7 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public class Issue240Test {
-  public void test() {
+  public void testHandleResult() {
     AtomicInteger counter = new AtomicInteger();
     RetryPolicy<Object> rp = new RetryPolicy<>().handle(IllegalArgumentException.class)
       .withMaxRetries(2)
@@ -25,5 +25,21 @@ public class Issue240Test {
     });
 
     assertEquals(counter.get(), 1);
+  }
+
+  public void testAbortWhen() {
+    AtomicInteger counter = new AtomicInteger();
+    RetryPolicy<Object> rp = new RetryPolicy<>().handle(IllegalArgumentException.class)
+      .withMaxRetries(2)
+      .abortWhen(null);
+
+    Testing.ignoreExceptions(() -> {
+      Failsafe.with(rp).get(() -> {
+        counter.incrementAndGet();
+        throw new IllegalArgumentException();
+      });
+    });
+
+    assertEquals(counter.get(), 3);
   }
 }
