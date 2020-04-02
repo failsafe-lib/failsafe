@@ -100,8 +100,8 @@ public class ExecutionResult {
   }
 
   /**
-   * Returns a copy of the ExecutionResult with a non-result, and completed and success set to true. Returns
-   * {@code this} if {@link #success} and {@link #result} are unchanged.
+   * Returns a copy of the ExecutionResult with a non-result, and completed and success set to true. Returns {@code
+   * this} if {@link #success} and {@link #result} are unchanged.
    */
   ExecutionResult withNonResult() {
     return success && this.result == null && nonResult ?
@@ -134,6 +134,15 @@ public class ExecutionResult {
       this :
       new ExecutionResult(result, failure, nonResult, waitNanos, completed, success,
         successAll == null ? success : success && successAll);
+  }
+
+  /**
+   * Returns a copy of the ExecutionResult with the {@code waitNanos} value.
+   */
+  public ExecutionResult withWaitNanos(long waitNanos) {
+    return this.waitNanos == waitNanos ?
+      this :
+      new ExecutionResult(result, failure, nonResult, waitNanos, complete, success, successAll);
   }
 
   /**

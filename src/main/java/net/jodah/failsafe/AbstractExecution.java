@@ -42,7 +42,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   /* Whether the execution has been interrupted */
   volatile boolean interrupted;
   /* The wait time in nanoseconds. */
-  private volatile long waitNanos;
+  volatile long waitNanos;
   /* Whether the execution has been completed */
   volatile boolean completed;
 

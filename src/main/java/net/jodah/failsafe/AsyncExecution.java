@@ -196,7 +196,7 @@ public final class AsyncExecution extends AbstractExecution {
    */
   boolean completeOrHandle(Object result, Throwable failure) {
     synchronized (future) {
-      ExecutionResult er = new ExecutionResult(result, failure);
+      ExecutionResult er = new ExecutionResult(result, failure).withWaitNanos(waitNanos);
       if (!completeCalled)
         record(er);
       completeCalled = true;
