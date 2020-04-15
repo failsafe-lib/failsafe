@@ -501,7 +501,15 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
 
   /**
    * Sets the max duration to perform retries for, else the execution will be failed.
-   *
+   * 
+   * IMPORTANT: This will never cause running attempts to be interrupted.
+   *            For example if you set this to '10 seconds', your first attempt takes '9 seconds', the second takes
+   *            '1 minute', no 3rd attempt will be made, but the second attempt will run to completion.
+   *            
+   *            If you care about having a "hard" timeout, you can use {@link FailsafeExecutor#getAsync()}, which 
+   *            returns a {@code CompletableFuture}, which, since Java 9, has a {@code orTimeout(long, TimeUnit)}
+   *            methods that will terminate the future if not completed by the provided timeout.
+   * 
    * @throws NullPointerException if {@code maxDuration} is null
    * @throws IllegalStateException if {@code maxDuration} is <= the {@link RetryPolicy#withDelay(Duration) delay}
    */
