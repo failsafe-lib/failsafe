@@ -6,7 +6,7 @@
 [![JavaDoc](https://img.shields.io/maven-central/v/net.jodah/failsafe.svg?maxAge=60&label=javadoc)](https://jhalterman.github.com/failsafe/javadoc)
 [![Join the chat at https://gitter.im/jhalterman/failsafe](https://badges.gitter.im/jhalterman/failsafe.svg)](https://gitter.im/jhalterman/failsafe)
 
-Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It  works by wrapping executable logic with one or more resilience policies, which can be combined and composed as needed.
+Failsafe is a lightweight, zero-dependency library for handling failures in Java 8+, with a concise API for handling everyday use cases and the flexibility to handle everything else. It works by wrapping executable logic with one or more resilience policies, which can be combined and composed as needed. Current policies include [Retry](https://jodah.net/failsafe/retry/), [Timeout](https://jodah.net/failsafe/timeout/), [Fallback](https://jodah.net/failsafe/fallback/), and [CircuitBreaker](https://jodah.net/failsafe/circuit-breaker/).
 
 ## Usage
 
