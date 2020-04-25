@@ -149,43 +149,22 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   @SuppressWarnings("unchecked")
   protected ExecutionResult onFailure(ExecutionResult result) {
     failedAttempts++;
+    long waitNanos = delayNanos;
 
     // Determine the computed delay
     Duration computedDelay = policy.computeDelay(execution);
-
-    // Determine the non-computed delay
-    if (computedDelay == null) {
-      Duration delay = policy.getDelay();
-      Duration delayMin = policy.getDelayMin();
-      Duration delayMax = policy.getDelayMax();
-
-      if (delayNanos == -1 && delay != null && !delay.equals(Duration.ZERO))
-        delayNanos = delay.toNanos();
-      else if (delayMin != null && delayMax != null)
-        delayNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
-
-      // Adjust for backoff
-      if (execution.getAttemptCount() != 1 && policy.getMaxDelay() != null)
-        delayNanos = (long) Math.min(delayNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
+    if (computedDelay != null) {
+      waitNanos = computedDelay.toNanos();
+    } else {
+      // Determine the fixed or random delay
+      waitNanos = getFixedOrRandomDelayNanos(waitNanos);
+      waitNanos = adjustForBackoff(waitNanos);
+      delayNanos = waitNanos;
     }
 
-    // The wait time, which is the delay time adjusted for jitter and max duration, in nanoseconds
-    long waitNanos = computedDelay != null ? computedDelay.toNanos() : delayNanos;
-
-    // Adjust the wait time for jitter
-    if (policy.getJitter() != null)
-      waitNanos = randomDelay(waitNanos, policy.getJitter().toNanos(), Math.random());
-    else if (policy.getJitterFactor() > 0.0)
-      waitNanos = randomDelay(waitNanos, policy.getJitterFactor(), Math.random());
-
-    // Adjust the wait time for max duration
+    waitNanos = adjustForJitter(waitNanos);
     long elapsedNanos = execution.getElapsedTime().toNanos();
-    if (policy.getMaxDuration() != null) {
-      long maxRemainingWaitTime = policy.getMaxDuration().toNanos() - elapsedNanos;
-      waitNanos = Math.min(waitNanos, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
-      if (waitNanos < 0)
-        waitNanos = 0;
-    }
+    waitNanos = adjustForMaxDuration(waitNanos, elapsedNanos);
 
     // Calculate result
     boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && failedAttempts > policy.getMaxRetries();
@@ -207,5 +186,41 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
       retriesExceededListener.handle(result, execution);
 
     return result.with(waitNanos, completed, success);
+  }
+
+  private long getFixedOrRandomDelayNanos(long waitNanos) {
+    Duration delay = policy.getDelay();
+    Duration delayMin = policy.getDelayMin();
+    Duration delayMax = policy.getDelayMax();
+
+    if (waitNanos == -1 && delay != null && !delay.equals(Duration.ZERO))
+      waitNanos = delay.toNanos();
+    else if (delayMin != null && delayMax != null)
+      waitNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
+    return waitNanos;
+  }
+
+  private long adjustForBackoff(long waitNanos) {
+    if (execution.getAttemptCount() != 1 && policy.getMaxDelay() != null)
+      waitNanos = (long) Math.min(waitNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
+    return waitNanos;
+  }
+
+  private long adjustForJitter(long waitNanos) {
+    if (policy.getJitter() != null)
+      waitNanos = randomDelay(waitNanos, policy.getJitter().toNanos(), Math.random());
+    else if (policy.getJitterFactor() > 0.0)
+      waitNanos = randomDelay(waitNanos, policy.getJitterFactor(), Math.random());
+    return waitNanos;
+  }
+
+  private long adjustForMaxDuration(long waitNanos, long elapsedNanos) {
+    if (policy.getMaxDuration() != null) {
+      long maxRemainingWaitTime = policy.getMaxDuration().toNanos() - elapsedNanos;
+      waitNanos = Math.min(waitNanos, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
+      if (waitNanos < 0)
+        waitNanos = 0;
+    }
+    return waitNanos;
   }
 }
