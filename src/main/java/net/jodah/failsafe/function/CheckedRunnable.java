@@ -22,5 +22,5 @@ package net.jodah.failsafe.function;
  */
 @FunctionalInterface
 public interface CheckedRunnable {
-  void run() throws Exception;
+  void run() throws Throwable;
 }

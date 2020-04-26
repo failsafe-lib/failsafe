@@ -23,5 +23,5 @@ package net.jodah.failsafe.function;
  */
 @FunctionalInterface
 public interface CheckedSupplier<T> {
-  T get() throws Exception;
+  T get() throws Throwable;
 }

@@ -23,5 +23,5 @@ package net.jodah.failsafe.function;
  */
 @FunctionalInterface
 public interface CheckedFunction<T, R> {
-  R apply(T t) throws Exception;
+  R apply(T t) throws Throwable;
 }

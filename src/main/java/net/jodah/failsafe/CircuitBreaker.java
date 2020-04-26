@@ -434,7 +434,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
     if (transitioned && listener != null) {
       try {
         listener.run();
-      } catch (Exception ignore) {
+      } catch (Throwable ignore) {
       }
     }
   }

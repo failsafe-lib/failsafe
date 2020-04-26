@@ -214,7 +214,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   /**
    * Returns the applied fallback result.
    */
-  R apply(R result, Throwable failure, ExecutionContext context) throws Exception {
+  R apply(R result, Throwable failure, ExecutionContext context) throws Throwable {
     ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
     return fallback != null ? fallback.apply(event) : fallbackStage.apply(event).get();
   }
@@ -222,7 +222,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   /**
    * Returns a future applied fallback result.
    */
-  CompletableFuture<R> applyStage(R result, Throwable failure, ExecutionContext context) throws Exception {
+  CompletableFuture<R> applyStage(R result, Throwable failure, ExecutionContext context) throws Throwable {
     ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
     return fallback != null ? CompletableFuture.completedFuture(fallback.apply(event)) : fallbackStage.apply(event);
   }

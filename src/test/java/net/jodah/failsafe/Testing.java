@@ -50,7 +50,7 @@ public class Testing {
   public static <T> T ignoreExceptions(CheckedSupplier<T> supplier) {
     try {
       return supplier.get();
-    } catch (Exception e) {
+    } catch (Throwable t) {
       return null;
     }
   }
@@ -116,8 +116,10 @@ public class Testing {
     } catch (FailsafeException e) {
       sneakyThrow(e.getCause() == null ? e : e.getCause());
       return null;
-    } catch (Exception e) {
-      throw (RuntimeException) e;
+    } catch (RuntimeException | Error e) {
+      throw e;
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
     }
   }
 

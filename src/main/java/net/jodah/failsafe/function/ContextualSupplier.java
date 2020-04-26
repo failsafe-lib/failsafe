@@ -25,5 +25,5 @@ import net.jodah.failsafe.ExecutionContext;
  */
 @FunctionalInterface
 public interface ContextualSupplier<T> {
-  T get(ExecutionContext context) throws Exception;
+  T get(ExecutionContext context) throws Throwable;
 }

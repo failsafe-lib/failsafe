@@ -34,8 +34,8 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
       return policy == Fallback.VOID ?
         result.withNonResult() :
         result.withResult(policy.apply(result.getResult(), result.getFailure(), execution.copy()));
-    } catch (Exception e) {
-      return ExecutionResult.failure(e);
+    } catch (Throwable t) {
+      return ExecutionResult.failure(t);
     }
   }
 
@@ -53,8 +53,8 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
           ExecutionResult r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
           promise.complete(r);
         });
-      } catch (Exception e) {
-        promise.complete(ExecutionResult.failure(e));
+      } catch (Throwable t) {
+        promise.complete(ExecutionResult.failure(t));
       }
       return null;
     };
