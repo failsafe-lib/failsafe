@@ -10,9 +10,9 @@ import static org.testng.Assert.assertTrue;
 
 @Test
 public class Issue242Test {
-  public void test() throws Throwable {
+  public void shouldDelayOnExplicitRetry() throws Throwable {
     RetryPolicy<String> retryPolicy = new RetryPolicy<String>().handleResult(null)
-      .withDelay(Duration.ofMillis(100))
+      .withDelay(Duration.ofMillis(110))
       .withMaxAttempts(3);
 
     long startTime = System.currentTimeMillis();
