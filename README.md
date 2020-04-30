@@ -18,4 +18,4 @@ Check out the [contributing guidelines](https://github.com/jhalterman/failsafe/b
 
 ## License
 
-Copyright 2015-2019 Jonathan Halterman and friends. Released under the [Apache 2.0 license](https://github.com/jhalterman/failsafe/blob/master/LICENSE).
+Copyright Jonathan Halterman and friends. Released under the [Apache 2.0 license](https://github.com/jhalterman/failsafe/blob/master/LICENSE).
