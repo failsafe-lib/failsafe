@@ -41,6 +41,7 @@ public class ExecutionContext {
     this.startTime = context.startTime;
     this.attemptStartTime = context.attemptStartTime;
     this.attempts = context.attempts;
+    this.cancelled = context.cancelled;
     this.lastResult = context.lastResult;
     this.lastFailure = context.lastFailure;
   }
