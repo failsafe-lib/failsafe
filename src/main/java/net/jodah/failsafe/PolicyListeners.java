@@ -33,7 +33,9 @@ public class PolicyListeners<S, R> {
   EventListener successListener;
 
   /**
-   * Registers the {@code listener} to be called when an execution fails for a {@link Policy}.
+   * Registers the {@code listener} to be called when a {@link Policy} fails to handle an execution. This means that not
+   * only was the supplied execution considered a failure by the policy, but that the policy was unable to produce a
+   * successful result.
    */
   public S onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     failureListener = EventListener.of(Assert.notNull(listener, "listener"));
@@ -41,7 +43,8 @@ public class PolicyListeners<S, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution is successful for a {@link Policy}.
+   * Registers the {@code listener} to be called when a {@link Policy} succeeds in handling an execution. This means
+   * that the supplied execution either succeeded, or if it failed, the policy was able to produce a successful result.
    */
   public S onSuccess(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     successListener = EventListener.of(Assert.notNull(listener, "listener"));
