@@ -54,4 +54,10 @@ policy
 
 Additional listeners are available for [retry policies][retry-listeners] and [circuit breakers][circuit-breaker-listeners].
 
+## Determining Success
+
+Many event listeners are based on whether an execution result is a success or failure. Each policy makes its own determination about execution results based on the policy's [failure handling configuration][failure-handling]. 
+
+An execution is considered a success for a policy if the supplied result is a success, or if it was a failure but the policy was able to produce a successful result. An execution is considered a failure for a policy if the supplied result is a failure _and_ the policy was unable to produce a successful result through its handling.
+
 {% include common-links.html %}
