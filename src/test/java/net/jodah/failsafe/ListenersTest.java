@@ -66,8 +66,8 @@ public class ListenersTest {
     /** Per listener invocations */
     AtomicInteger invocations = new AtomicInteger();
 
-    /** Records a sync invocation of the {@code listener}. */
-    void sync() {
+    /** Records an invocation of the {@code listener}. */
+    void record() {
       invocations.incrementAndGet();
     }
 
@@ -113,30 +113,30 @@ public class ListenersTest {
         Failsafe.with(retryPolicy, circuitBreaker) :
         Failsafe.with(fallback, retryPolicy, circuitBreaker);
 
-    retryPolicy.onAbort(e -> rpAbort.sync());
-    retryPolicy.onFailedAttempt(e -> rpFailedAttempt.sync());
-    retryPolicy.onRetriesExceeded(e -> rpRetriesExceeded.sync());
-    retryPolicy.onRetry(e -> rpRetry.sync());
-    retryPolicy.onSuccess(e -> rpSuccess.sync());
-    retryPolicy.onFailure(e -> rpFailure.sync());
+    retryPolicy.onAbort(e -> rpAbort.record());
+    retryPolicy.onFailedAttempt(e -> rpFailedAttempt.record());
+    retryPolicy.onRetriesExceeded(e -> rpRetriesExceeded.record());
+    retryPolicy.onRetry(e -> rpRetry.record());
+    retryPolicy.onSuccess(e -> rpSuccess.record());
+    retryPolicy.onFailure(e -> rpFailure.record());
 
-    circuitBreaker.onOpen(() -> cbOpen.sync());
-    circuitBreaker.onHalfOpen(() -> cbHalfOpen.sync());
-    circuitBreaker.onClose(() -> cbClose.sync());
-    circuitBreaker.onSuccess(e -> cbSuccess.sync());
-    circuitBreaker.onFailure(e -> cbFailure.sync());
+    circuitBreaker.onOpen(() -> cbOpen.record());
+    circuitBreaker.onHalfOpen(() -> cbHalfOpen.record());
+    circuitBreaker.onClose(() -> cbClose.record());
+    circuitBreaker.onSuccess(e -> cbSuccess.record());
+    circuitBreaker.onFailure(e -> cbFailure.record());
 
     if (fallback != null) {
-      fallback.onSuccess(e -> fbSuccess.sync());
-      fallback.onFailure(e -> fbFailure.sync());
+      fallback.onSuccess(e -> fbSuccess.record());
+      fallback.onFailure(e -> fbFailure.record());
     }
 
     failsafe.onComplete(e -> {
-      complete.sync();
+      complete.record();
       waiter.resume();
     });
-    failsafe.onSuccess(e -> success.sync());
-    failsafe.onFailure(e -> failure.sync());
+    failsafe.onSuccess(e -> success.record());
+    failsafe.onFailure(e -> failure.record());
 
     return failsafe;
   }
@@ -416,7 +416,7 @@ public class ListenersTest {
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO)
         .handle(NullPointerException.class);
     // And failing Fallback
-    Fallback<Object> fallback = Fallback.ofAsync(() -> true);
+    Fallback<Object> fallback = Fallback.ofAsync(() -> { throw new Exception(); });
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
 
     // When

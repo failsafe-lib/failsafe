@@ -18,6 +18,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link Fallback}.
@@ -27,47 +28,68 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
     super(fallback, execution);
   }
 
+  /**
+   * Performs an execution by calling pre-execute else calling the supplier, applying a fallback if it fails, and
+   * calling post-execute.
+   */
   @Override
   @SuppressWarnings("unchecked")
-  protected ExecutionResult onFailure(ExecutionResult result) {
-    try {
-      return policy == Fallback.VOID ?
-        result.withNonResult() :
-        result.withResult(policy.apply(result.getResult(), result.getFailure(), execution.copy()));
-    } catch (Throwable t) {
-      return ExecutionResult.failure(t);
-    }
+  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
+    return () -> {
+      ExecutionResult result = supplier.get();
+      if (isFailure(result)) {
+        try {
+          result = policy == Fallback.VOID ?
+            result.withNonResult() :
+            result.withResult(policy.apply(result.getResult(), result.getFailure(), execution.copy()));
+        } catch (Throwable t) {
+          result = ExecutionResult.failure(t);
+        }
+      }
+
+      return postExecute(result);
+    };
   }
 
+  /**
+   * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute.
+   */
+  @Override
   @SuppressWarnings("unchecked")
-  protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<Object> future) {
-    CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-    Callable<Object> callable = () -> {
-      try {
-        CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
-          execution.copy());
-        fallback.whenComplete((innerResult, failure) -> {
-          if (failure instanceof CompletionException)
-            failure = failure.getCause();
-          ExecutionResult r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
-          promise.complete(r);
-        });
-      } catch (Throwable t) {
-        promise.complete(ExecutionResult.failure(t));
+  protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    return () -> supplier.get().thenCompose(result -> {
+      if (isFailure(result)) {
+        CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+        Callable<Object> callable = () -> {
+          try {
+            CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
+              execution.copy());
+            fallback.whenComplete((innerResult, failure) -> {
+              if (failure instanceof CompletionException)
+                failure = failure.getCause();
+              ExecutionResult r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
+              promise.complete(r);
+            });
+          } catch (Throwable t) {
+            promise.complete(ExecutionResult.failure(t));
+          }
+          return null;
+        };
+
+        try {
+          if (!policy.isAsync())
+            callable.call();
+          else
+            future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
+        } catch (Throwable t) {
+          promise.completeExceptionally(t);
+        }
+
+        return promise.thenCompose(ss -> postExecuteAsync(ss, scheduler, future));
       }
-      return null;
-    };
 
-    try {
-      if (!policy.isAsync())
-        callable.call();
-      else
-        future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
-    } catch (Throwable t) {
-      promise.completeExceptionally(t);
-    }
-
-    return promise;
+      return postExecuteAsync(result, scheduler, future);
+    });
   }
 }
