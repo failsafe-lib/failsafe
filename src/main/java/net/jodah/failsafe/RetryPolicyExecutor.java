@@ -188,6 +188,15 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     return result.with(waitNanos, completed, success);
   }
 
+  /**
+   * Defaults async executions to not be complete until {@link #onFailure(ExecutionResult) says they are}.
+   */
+  @Override
+  protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
+    FailsafeFuture<Object> future) {
+    return super.onFailureAsync(result.withNotComplete(), scheduler, future);
+  }
+
   private long getFixedOrRandomDelayNanos(long waitNanos) {
     Duration delay = policy.getDelay();
     Duration delayMin = policy.getDelayMin();

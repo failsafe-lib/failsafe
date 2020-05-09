@@ -63,10 +63,10 @@ public abstract class PolicyExecutor<P extends Policy> {
    */
   protected ExecutionResult postExecute(ExecutionResult result) {
     if (isFailure(result)) {
-      result = onFailure(result.with(false, false));
+      result = onFailure(result.withFailure());
       callFailureListener(result);
     } else {
-      result = result.with(true, true);
+      result = result.withSuccess();
       onSuccess(result);
       callSuccessListener(result);
     }
@@ -94,12 +94,11 @@ public abstract class PolicyExecutor<P extends Policy> {
   protected CompletableFuture<ExecutionResult> postExecuteAsync(ExecutionResult result, Scheduler scheduler,
     FailsafeFuture<Object> future) {
     if (isFailure(result)) {
-      result = result.with(false, false);
-      return onFailureAsync(result, scheduler, future).whenComplete((postResult, error) -> {
+      return onFailureAsync(result.withFailure(), scheduler, future).whenComplete((postResult, error) -> {
         callFailureListener(postResult);
       });
     } else {
-      result = result.with(true, true);
+      result = result.withSuccess();
       onSuccess(result);
       callSuccessListener(result);
       return CompletableFuture.completedFuture(result);

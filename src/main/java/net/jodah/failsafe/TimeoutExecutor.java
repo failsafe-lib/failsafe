@@ -44,7 +44,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
     // Handle async execution timeouts
     if (!(result.getFailure() instanceof TimeoutExceededException))
       result = ExecutionResult.failure(new TimeoutExceededException(policy));
-    return result.withComplete();
+    return result;
   }
 
   /**
