@@ -85,12 +85,18 @@ public class Testing {
     }
   }
 
+  /**
+   * Returns a future that is completed with the {@code result} on the {@code executor}.
+   */
   public static CompletableFuture<Object> futureResult(ScheduledExecutorService executor, Object result) {
     CompletableFuture<Object> future = new CompletableFuture<>();
     executor.schedule(() -> future.complete(result), 0, TimeUnit.MILLISECONDS);
     return future;
   }
 
+  /**
+   * Returns a future that is completed with the {@code exception} on the {@code executor}.
+   */
   public static CompletableFuture<Object> futureException(ScheduledExecutorService executor, Exception exception) {
     CompletableFuture<Object> future = new CompletableFuture<>();
     executor.schedule(() -> future.completeExceptionally(exception), 0, TimeUnit.MILLISECONDS);

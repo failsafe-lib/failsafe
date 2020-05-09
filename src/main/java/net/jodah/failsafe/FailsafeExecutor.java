@@ -34,8 +34,8 @@ import static net.jodah.failsafe.Functions.*;
  * Failsafe#with(Policy[])}.
  * <p>
  * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be configured
- * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable via the
- * returned CompletableFuture, even those run by a {@link ForkJoinPool} or {@link CompletionStage}.
+ * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable and
+ * interruptable via the returned CompletableFuture, even those run by a {@link ForkJoinPool} or {@link CompletionStage}.
  *
  * @param <R> result type
  * @author Jonathan Halterman
