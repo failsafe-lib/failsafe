@@ -229,7 +229,9 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution attempt fails.
+   * Registers the {@code listener} to be called when an execution attempt fails. You can also use {@link
+   * #onFailure(CheckedConsumer) onFailure} to determine when the execution attempt fails <i>and</i> and all retries
+   * have failed.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
   public RetryPolicy<R> onFailedAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {

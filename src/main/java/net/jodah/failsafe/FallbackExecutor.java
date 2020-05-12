@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.*;
@@ -24,8 +25,11 @@ import java.util.function.Supplier;
  * A PolicyExecutor that handles failures according to a {@link Fallback}.
  */
 class FallbackExecutor extends PolicyExecutor<Fallback> {
-  FallbackExecutor(Fallback fallback, AbstractExecution execution) {
+  private final EventListener failedAttemptListener;
+
+  FallbackExecutor(Fallback fallback, AbstractExecution execution,   EventListener failedAttemptListener) {
     super(fallback, execution);
+    this.failedAttemptListener = failedAttemptListener;
   }
 
   /**
@@ -91,5 +95,12 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
 
       return postExecuteAsync(result, scheduler, future);
     });
+  }
+
+  @Override
+  protected ExecutionResult onFailure(ExecutionResult result) {
+    if (failedAttemptListener != null)
+      failedAttemptListener.handle(result, execution);
+    return result;
   }
 }

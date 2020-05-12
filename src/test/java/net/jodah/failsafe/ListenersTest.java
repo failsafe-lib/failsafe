@@ -39,6 +39,7 @@ public class ListenersTest {
   Waiter waiter;
 
   // RetryPolicy listener counters
+  ListenerCounter rpHandle = new ListenerCounter();
   ListenerCounter rpAbort = new ListenerCounter();
   ListenerCounter rpFailedAttempt = new ListenerCounter();
   ListenerCounter rpRetriesExceeded = new ListenerCounter();
@@ -54,6 +55,7 @@ public class ListenersTest {
   ListenerCounter cbFailure = new ListenerCounter();
 
   // Fallback listener counters
+  ListenerCounter fbFailedAttempt = new ListenerCounter();
   ListenerCounter fbSuccess = new ListenerCounter();
   ListenerCounter fbFailure = new ListenerCounter();
 
@@ -99,6 +101,7 @@ public class ListenersTest {
     cbSuccess.reset();
     cbFailure.reset();
 
+    fbFailedAttempt.reset();
     fbSuccess.reset();
     fbFailure.reset();
 
@@ -127,6 +130,7 @@ public class ListenersTest {
     circuitBreaker.onFailure(e -> cbFailure.record());
 
     if (fallback != null) {
+      fallback.onFailedAttempt(e -> fbFailedAttempt.record());
       fallback.onSuccess(e -> fbSuccess.record());
       fallback.onFailure(e -> fbFailure.record());
     }
@@ -173,6 +177,7 @@ public class ListenersTest {
     cbSuccess.assertEquals(1);
     cbFailure.assertEquals(4);
 
+    fbFailedAttempt.assertEquals(0);
     fbSuccess.assertEquals(1);
     fbFailure.assertEquals(0);
 
@@ -351,6 +356,7 @@ public class ListenersTest {
     cbSuccess.assertEquals(3);
     cbFailure.assertEquals(0);
 
+    fbFailedAttempt.assertEquals(0);
     fbSuccess.assertEquals(1);
     fbFailure.assertEquals(0);
 
@@ -392,6 +398,7 @@ public class ListenersTest {
     cbSuccess.assertEquals(0);
     cbFailure.assertEquals(1);
 
+    fbFailedAttempt.assertEquals(0);
     fbSuccess.assertEquals(1);
     fbFailure.assertEquals(0);
 
@@ -433,6 +440,7 @@ public class ListenersTest {
     cbSuccess.assertEquals(1);
     cbFailure.assertEquals(0);
 
+    fbFailedAttempt.assertEquals(1);
     fbSuccess.assertEquals(0);
     fbFailure.assertEquals(1);
 

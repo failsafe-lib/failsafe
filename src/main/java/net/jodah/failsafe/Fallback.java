@@ -16,13 +16,17 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
-import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.function.CheckedConsumer;
+import net.jodah.failsafe.function.CheckedFunction;
+import net.jodah.failsafe.function.CheckedRunnable;
+import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import static net.jodah.failsafe.Functions.*;
+import static net.jodah.failsafe.Functions.toFn;
 
 /**
  * A Policy that handles failures using a fallback function or result.
@@ -42,6 +46,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   private final CheckedFunction<ExecutionAttemptedEvent, R> fallback;
   private final CheckedFunction<ExecutionAttemptedEvent, CompletableFuture<R>> fallbackStage;
   private boolean async;
+  private EventListener failedAttemptListener;
 
   private Fallback() {
     this(null, null, false);
@@ -212,6 +217,17 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
+   * Registers the {@code listener} to be called when an execution attempt fails. You can also use {@link
+   * #onFailure(CheckedConsumer) onFailure} to determine when the execution attempt fails <i>and</i> and the fallback
+   * result fails.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   */
+  public Fallback<R> onFailedAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
+    failedAttemptListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
+    return this;
+  }
+
+  /**
    * Returns the applied fallback result.
    */
   R apply(R result, Throwable failure, ExecutionContext context) throws Throwable {
@@ -229,6 +245,6 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
 
   @Override
   public PolicyExecutor toExecutor(AbstractExecution execution) {
-    return new FallbackExecutor(this, execution);
+    return new FallbackExecutor(this, execution, failedAttemptListener);
   }
 }

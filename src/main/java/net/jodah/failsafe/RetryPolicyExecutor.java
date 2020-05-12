@@ -41,10 +41,10 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private volatile long delayNanos = -1;
 
   // Listeners
-  private EventListener abortListener;
-  private EventListener failedAttemptListener;
-  private EventListener retriesExceededListener;
-  private EventListener retryListener;
+  private final EventListener abortListener;
+  private final EventListener failedAttemptListener;
+  private final EventListener retriesExceededListener;
+  private final EventListener retryListener;
 
   RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener,
     EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener) {
@@ -148,6 +148,9 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   @Override
   @SuppressWarnings("unchecked")
   protected ExecutionResult onFailure(ExecutionResult result) {
+    if (failedAttemptListener != null)
+      failedAttemptListener.handle(result, execution);
+
     failedAttempts++;
     long waitNanos = delayNanos;
 
@@ -174,10 +177,6 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     boolean shouldRetry = !result.isSuccess() && !isAbortable && !retriesExceeded && policy.allowsRetries();
     boolean completed = isAbortable || !shouldRetry;
     boolean success = completed && result.isSuccess() && !isAbortable;
-
-    // Call attempt listeners
-    if (failedAttemptListener != null && !success)
-      failedAttemptListener.handle(result, execution);
 
     // Call completion listeners
     if (abortListener != null && isAbortable)
