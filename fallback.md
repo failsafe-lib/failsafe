@@ -51,16 +51,22 @@ fallback
 
 ## Event Listeners
 
-[Fallbacks] support the standard [policy listeners][PolicyListeners] which can notify you when a fallback fails:
+[Fallbacks] support event listeners that can tell you when an execution attempt failed:
+
+```java
+fallback.onFailedAttempt(e -> log.error("Connection failed", e.getLastFailure()))
+```
+
+When the fallback attempt failed:
 
 ```java
 fallback.onFailure(e -> log.error("Failed to connect to backup", e.getFailure()));
 ```
 
-Or succeeds:
+Or when the execution or fallback attempt succeeded:
 
 ```java
-fallback.onSuccess(e -> log.info("Connected to backup"));
+fallback.onSuccess(e -> log.info("Connection established"));
 ```
 
 {% include common-links.html %}
