@@ -15,8 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import java.time.Duration;
-
 /**
  * A PolicyExecutor that handles failures according to a {@link CircuitBreaker}.
  *
@@ -34,14 +32,6 @@ class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
       return null;
     }
     return ExecutionResult.failure(new CircuitBreakerOpenException(policy));
-  }
-
-  @Override
-  protected boolean isFailure(ExecutionResult result) {
-    long elapsedNanos = execution.getElapsedAttemptTime().toNanos();
-    Duration timeout = policy.getTimeout();
-    boolean timeoutExceeded = timeout != null && elapsedNanos >= timeout.toNanos();
-    return timeoutExceeded || super.isFailure(result);
   }
 
   @Override

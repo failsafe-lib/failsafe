@@ -79,9 +79,9 @@ public class Testing {
     try {
       stateField = CircuitBreaker.class.getDeclaredField("state");
       stateField.setAccessible(true);
-      return (T) ((AtomicReference<T>) stateField.get(breaker)).get();
+      return ((AtomicReference<T>) stateField.get(breaker)).get();
     } catch (Exception e) {
-      return null;
+      throw new IllegalStateException("Could not get circuit breaker state");
     }
   }
 
@@ -127,6 +127,23 @@ public class Testing {
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
+  }
+
+  public static <T> RetryPolicy<T> withLogging(RetryPolicy<T> retryPolicy) {
+    return retryPolicy.onFailedAttempt(e -> System.out.println("Failed attempt"))
+      .onRetry(e -> System.out.println("Retrying"))
+      .onRetriesExceeded(e -> System.out.println("Retries exceeded"))
+      .onAbort(e -> System.out.println("Abort"))
+      .onSuccess(e -> System.out.println("Success"))
+      .onFailure(e -> System.out.println("Failure"));
+  }
+
+  public static <T> CircuitBreaker<T> withLogging(CircuitBreaker<T> circuitBreaker) {
+    return circuitBreaker.onOpen(() -> System.out.println("!! Opening"))
+      .onHalfOpen(() -> System.out.println("!! Half-opening"))
+      .onClose(() -> System.out.println("!! Closing"))
+      .onSuccess(e -> System.out.println("Success"))
+      .onFailure(e -> System.out.println("Failure"));
   }
 
   @SuppressWarnings("unchecked")

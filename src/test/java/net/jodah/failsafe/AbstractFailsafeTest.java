@@ -34,8 +34,7 @@ import static net.jodah.failsafe.Asserts.assertThrows;
 import static net.jodah.failsafe.Testing.failures;
 import static net.jodah.failsafe.Testing.unwrapExceptions;
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.*;
 
 @Test
 public abstract class AbstractFailsafeTest {
@@ -105,6 +104,76 @@ public abstract class AbstractFailsafeTest {
       Failsafe.with(policy).run(runnable);
     else
       Failsafe.with(policy).with(executor).runAsync(runnable);
+  }
+
+  /**
+   * Tests circuit breaker time based failure thresholding state transitions.
+   */
+  public void shouldSupportTimeBasedFailureThresholding() throws Throwable {
+    // Given
+    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().withFailureThreshold(2, 3,
+      Duration.ofMillis(200)).withDelay(Duration.ofMillis(0)).handleResult(false);
+    //circuitBreaker = Testing.withLogging(circuitBreaker);
+
+    // When / Then
+    failsafeGet(circuitBreaker, () -> false);
+    failsafeGet(circuitBreaker, () -> true);
+    // Force results to roll off
+    Thread.sleep(210);
+    failsafeGet(circuitBreaker, () -> false);
+    failsafeGet(circuitBreaker, () -> true);
+    // Force result to another bucket
+    Thread.sleep(50);
+    assertTrue(circuitBreaker.isClosed());
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isOpen());
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isHalfOpen());
+    // Half-open -> Open
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isOpen());
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isHalfOpen());
+    // Half-open -> close
+    failsafeGet(circuitBreaker, () -> true);
+    assertTrue(circuitBreaker.isClosed());
+  }
+
+  /**
+   * Tests circuit breaker time based failure rate thresholding state transitions.
+   */
+  public void shouldSupportTimeBasedFailureRateThresholding() throws Throwable {
+    // Given
+    CircuitBreaker<Boolean> circuitBreaker = Testing.withLogging(new CircuitBreaker<Boolean>())
+      .withFailureRateThreshold(50, 3, Duration.ofMillis(200))
+      .withDelay(Duration.ofMillis(0))
+      .handleResult(false);
+
+    // When / Then
+    failsafeGet(circuitBreaker, () -> false);
+    failsafeGet(circuitBreaker, () -> true);
+    // Force results to roll off
+    Thread.sleep(210);
+    failsafeGet(circuitBreaker, () -> false);
+    failsafeGet(circuitBreaker, () -> true);
+    // Force result to another bucket
+    Thread.sleep(50);
+    failsafeGet(circuitBreaker, () -> true);
+    assertTrue(circuitBreaker.isClosed());
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isOpen());
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isHalfOpen());
+    failsafeGet(circuitBreaker, () -> false);
+    // Half-open -> Open
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isOpen());
+    failsafeGet(circuitBreaker, () -> false);
+    assertTrue(circuitBreaker.isHalfOpen());
+    failsafeGet(circuitBreaker, () -> true);
+    // Half-open -> close
+    failsafeGet(circuitBreaker, () -> true);
+    assertTrue(circuitBreaker.isClosed());
   }
 
   /**
