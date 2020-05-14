@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.util.Ratio;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -93,11 +92,6 @@ public class CircuitBreakerTest {
     assertThrows(() -> new CircuitBreaker().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
-  public void shouldRequireValidTimeout() {
-    assertThrows(() -> new CircuitBreaker().withTimeout(null), NullPointerException.class);
-    assertThrows(() -> new CircuitBreaker().withTimeout(Duration.ofMillis(-1)), IllegalArgumentException.class);
-  }
-
   public void shouldRequireValidFailureThreshold() {
     assertThrows(() -> new CircuitBreaker().withFailureThreshold(0), IllegalArgumentException.class);
   }
@@ -128,7 +122,7 @@ public class CircuitBreakerTest {
 
   public void shouldGetSuccessAndFailureStats() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(5, 10).withSuccessThreshold(10, 20);
+    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(5, 10).withSuccessThreshold(15, 20);
 
     // When
     for (int i = 0; i < 7; i++)
@@ -139,9 +133,9 @@ public class CircuitBreakerTest {
 
     // Then
     assertEquals(breaker.getFailureCount(), 3);
-    assertEquals(breaker.getFailureRatio(), new Ratio(3, 7));
+    assertEquals(breaker.getFailureRate(), 43);
     assertEquals(breaker.getSuccessCount(), 4);
-    assertEquals(breaker.getSuccessRatio(), new Ratio(4, 7));
+    assertEquals(breaker.getSuccessRate(), 57);
 
     // When
     for (int i = 0; i < 15; i++)
@@ -152,9 +146,9 @@ public class CircuitBreakerTest {
 
     // Then
     assertEquals(breaker.getFailureCount(), 2);
-    assertEquals(breaker.getFailureRatio(), new Ratio(2, 10));
+    assertEquals(breaker.getFailureRate(), 20);
     assertEquals(breaker.getSuccessCount(), 8);
-    assertEquals(breaker.getSuccessRatio(), new Ratio(8, 10));
+    assertEquals(breaker.getSuccessRate(), 80);
 
     // When
     breaker.halfOpen();
@@ -166,8 +160,8 @@ public class CircuitBreakerTest {
 
     // Then
     assertEquals(breaker.getFailureCount(), 5);
-    assertEquals(breaker.getFailureRatio(), new Ratio(5, 15));
+    assertEquals(breaker.getFailureRate(), 33);
     assertEquals(breaker.getSuccessCount(), 10);
-    assertEquals(breaker.getSuccessRatio(), new Ratio(10, 15));
+    assertEquals(breaker.getSuccessRate(), 67);
   }
 }

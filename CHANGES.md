@@ -1,3 +1,28 @@
+# 2.4.0
+
+### Improvements
+
+- Added time based thresholding support to `CircuitBreaker` via:
+  - `withFailureThreshold(int failureThreshold, Duration failureThresholdingPeriod)`
+  - `withFailureThreshold(int failureThreshold, int failureExecutionThreshold, Duration failureThresholdingPeriod)`
+  - `withFailureRateThreshold(int failureRateThreshold, int failureExecutionThreshold, Duration failureThresholdingPeriod)`
+- Added getters to `CircuitBreaker` for existing count based thresholding settings:
+  - `getFailureThresholdingCapacity()`
+  - `getSuccessThresholdingCapacity()`
+- And added getters to `CircuitBreaker` for new time based thresholding settings:
+  - `getFailureRateThreshold()`
+  - `getFailureExecutionThreshold()`
+  - `getFailureThresholdingPeriod()` 
+- Added some new metrics to `CircuitBreaker`:
+  - `getSuccessRate()`
+  - `getFailureRate()`
+  - `getExecutionCount()` 
+
+### API Changes
+
+- Changed the return type of `CircuitBreaker`'s `getFailureThreshold()` and `getSuccessThreshold()` from `Ratio` to `int`.
+- Removed support for the previously deprecated `CircuitBreaker.withTimeout`. The `Timeout` policy should be used instead.
+
 # 2.3.5
 
 ### Bug Fixes
@@ -53,7 +78,7 @@ Added support for `CompletionStage` to the `Fallback` policy.
 
 # 2.3.0
 
-### API Changes
+### Behavior Changes
 
 - `FailsafeExecutor.get` and `FailsafeExecutor.run` will no longer wrap `Error` instances in `FailsafeException` before throwing.
 
