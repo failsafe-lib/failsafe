@@ -18,7 +18,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":10};
+var methods = {"i0":10,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":10,"i16":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -264,6 +264,12 @@ extends <a href="../../../net/jodah/failsafe/FailurePolicy.html" title="class in
 </td>
 </tr>
 <tr id="i15" class="rowColor">
+<td class="colFirst"><code><a href="../../../net/jodah/failsafe/Fallback.html" title="class in net.jodah.failsafe">Fallback</a>&lt;<a href="../../../net/jodah/failsafe/Fallback.html" title="type parameter in Fallback">R</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/failsafe/Fallback.html#onFailedAttempt-net.jodah.failsafe.function.CheckedConsumer-">onFailedAttempt</a></span>(<a href="../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../net/jodah/failsafe/event/ExecutionAttemptedEvent.html" title="class in net.jodah.failsafe.event">ExecutionAttemptedEvent</a>&lt;<a href="../../../net/jodah/failsafe/Fallback.html" title="type parameter in Fallback">R</a>&gt;&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called when an execution attempt fails.</div>
+</td>
+</tr>
+<tr id="i16" class="altColor">
 <td class="colFirst"><code><a href="../../../net/jodah/failsafe/PolicyExecutor.html" title="class in net.jodah.failsafe">PolicyExecutor</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../net/jodah/failsafe/Fallback.html#toExecutor-net.jodah.failsafe.AbstractExecution-">toExecutor</a></span>(<a href="../../../net/jodah/failsafe/AbstractExecution.html" title="class in net.jodah.failsafe">AbstractExecution</a>&nbsp;execution)</code>
 <div class="block">Returns an <a href="../../../net/jodah/failsafe/PolicyExecutor.html" title="class in net.jodah.failsafe"><code>PolicyExecutor</code></a> capable of performing an execution in the context of a Policy and handling
@@ -530,6 +536,18 @@ extends <a href="../../../net/jodah/failsafe/FailurePolicy.html" title="class in
 <h4>isAsync</h4>
 <pre>public&nbsp;boolean&nbsp;isAsync()</pre>
 <div class="block">Returns whether the Fallback is configured to handle execution results asynchronously, separate from execution..</div>
+</li>
+</ul>
+<a name="onFailedAttempt-net.jodah.failsafe.function.CheckedConsumer-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>onFailedAttempt</h4>
+<pre>public&nbsp;<a href="../../../net/jodah/failsafe/Fallback.html" title="class in net.jodah.failsafe">Fallback</a>&lt;<a href="../../../net/jodah/failsafe/Fallback.html" title="type parameter in Fallback">R</a>&gt;&nbsp;onFailedAttempt(<a href="../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../net/jodah/failsafe/event/ExecutionAttemptedEvent.html" title="class in net.jodah.failsafe.event">ExecutionAttemptedEvent</a>&lt;<a href="../../../net/jodah/failsafe/Fallback.html" title="type parameter in Fallback">R</a>&gt;&gt;&nbsp;listener)</pre>
+<div class="block">Registers the <code>listener</code> to be called when an execution attempt fails. You can also use <a href="../../../net/jodah/failsafe/PolicyListeners.html#onFailure-net.jodah.failsafe.function.CheckedConsumer-"><code>onFailure</code></a> to determine when the execution attempt fails <i>and</i> and the fallback
+ result fails.
+ <p>Note: Any exceptions that are thrown from within the <code>listener</code> are ignored.</p></div>
 </li>
 </ul>
 <a name="toExecutor-net.jodah.failsafe.AbstractExecution-">

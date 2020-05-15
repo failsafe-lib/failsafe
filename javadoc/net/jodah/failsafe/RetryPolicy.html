@@ -616,7 +616,8 @@ public final&nbsp;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="
 <li class="blockList">
 <h4>onFailedAttempt</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a>&lt;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&nbsp;onFailedAttempt(<a href="../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../net/jodah/failsafe/event/ExecutionAttemptedEvent.html" title="class in net.jodah.failsafe.event">ExecutionAttemptedEvent</a>&lt;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&gt;&nbsp;listener)</pre>
-<div class="block">Registers the <code>listener</code> to be called when an execution attempt fails.
+<div class="block">Registers the <code>listener</code> to be called when an execution attempt fails. You can also use <a href="../../../net/jodah/failsafe/PolicyListeners.html#onFailure-net.jodah.failsafe.function.CheckedConsumer-"><code>onFailure</code></a> to determine when the execution attempt fails <i>and</i> and all retries
+ have failed.
  <p>Note: Any exceptions that are thrown from within the <code>listener</code> are ignored.</p></div>
 </li>
 </ul>
@@ -938,7 +939,10 @@ public final&nbsp;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="
 <li class="blockList">
 <h4>withMaxDuration</h4>
 <pre>public&nbsp;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a>&lt;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&nbsp;withMaxDuration(<a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;maxDuration)</pre>
-<div class="block">Sets the max duration to perform retries for, else the execution will be failed.</div>
+<div class="block">Sets the max duration to perform retries for, else the execution will be failed.
+ <p>
+ Note: This setting will not cause long running executions to be interrupted. For that capability, use a <a href="../../../net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> policy <a href="../../../net/jodah/failsafe/Timeout.html#withCancel-boolean-"><code>withCancel</code></a> set to <code>true</code>.
+ </p></div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="http://docs.oracle.com/javase/8/docs/api/java/lang/NullPointerException.html?is-external=true" title="class or interface in java.lang">NullPointerException</a></code> - if <code>maxDuration</code> is null</dd>

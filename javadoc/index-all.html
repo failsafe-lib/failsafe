@@ -110,7 +110,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#allowsExecution--">allowsExecution()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Returns whether the circuit allows execution, possibly triggering a state transition.</div>
+<div class="block">Returns whether the circuit allows execution and triggers a state transition if a threshold has been exceeded.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/RetryPolicy.html#allowsRetries--">allowsRetries()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a></dt>
 <dd>
@@ -184,11 +184,12 @@
 </dd>
 <dt><a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe"><span class="typeNameLink">CircuitBreaker</span></a>&lt;<a href="net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt; - Class in <a href="net/jodah/failsafe/package-summary.html">net.jodah.failsafe</a></dt>
 <dd>
-<div class="block">A circuit breaker that temporarily halts execution when configurable thresholds are exceeded.</div>
+<div class="block">A circuit breaker temporarily blocks execution when a configured number of failures are exceeded.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#CircuitBreaker--">CircuitBreaker()</a></span> - Constructor for class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Creates a Circuit that opens after a single failure, closes after a single success, and has a 1 minute delay by
+<div class="block">Creates a count based circuit breaker that opens after a <a href="net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-"><code>single failure</code></a>, closes
+ after a <a href="net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-"><code>single success</code></a>, and has a 1 minute <a href="net/jodah/failsafe/CircuitBreaker.html#withDelay-java.time.Duration-"><code>delay</code></a> by
  default.</div>
 </dd>
 <dt><a href="net/jodah/failsafe/CircuitBreaker.State.html" title="enum in net.jodah.failsafe"><span class="typeNameLink">CircuitBreaker.State</span></a> - Enum in <a href="net/jodah/failsafe/package-summary.html">net.jodah.failsafe</a></dt>
@@ -295,8 +296,6 @@
 <dl>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
-<dd>&nbsp;</dd>
 <dt><a href="net/jodah/failsafe/Execution.html" title="class in net.jodah.failsafe"><span class="typeNameLink">Execution</span></a> - Class in <a href="net/jodah/failsafe/package-summary.html">net.jodah.failsafe</a></dt>
 <dd>
 <div class="block">Tracks executions and determines when an execution can be performed for a <a href="net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe"><code>RetryPolicy</code></a>.</div>
@@ -333,7 +332,8 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#ExecutionResult-java.lang.Object-java.lang.Throwable-">ExecutionResult(Object, Throwable)</a></span> - Constructor for class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>
-<div class="block">Records an initial execution result where <code>success</code> is set to true if <code>failure</code> is not null.</div>
+<div class="block">Records an initial execution result with <code>complete</code> true and <code>success</code> set to true if <code>failure</code>
+ is not null.</div>
 </dd>
 </dl>
 <a name="I:F">
@@ -366,7 +366,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#failure-java.lang.Throwable-">failure(Throwable)</a></span> - Static method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>
-<div class="block">Returns a an ExecutionResult with the <code>failure</code> set, <code>completed</code> true and <code>success</code> false.</div>
+<div class="block">Returns a an ExecutionResult with the <code>failure</code> set, <code>complete</code> true and <code>success</code> false.</div>
 </dd>
 <dt><a href="net/jodah/failsafe/FailurePolicy.html" title="class in net.jodah.failsafe"><span class="typeNameLink">FailurePolicy</span></a>&lt;<a href="net/jodah/failsafe/FailurePolicy.html" title="type parameter in FailurePolicy">S</a>,<a href="net/jodah/failsafe/FailurePolicy.html" title="type parameter in FailurePolicy">R</a>&gt; - Class in <a href="net/jodah/failsafe/package-summary.html">net.jodah.failsafe</a></dt>
 <dd>
@@ -453,8 +453,6 @@
 <dd>
 <div class="block">Returns the min delay between retries.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#getDenominator--">getDenominator()</a></span> - Method in class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionContext.html#getElapsedAttemptTime--">getElapsedAttemptTime()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionContext.html" title="class in net.jodah.failsafe">ExecutionContext</a></dt>
 <dd>
 <div class="block">Returns the elapsed time since the last execution attempt began.</div>
@@ -467,6 +465,10 @@
 <dd>
 <div class="block">Returns the elapsed time since initial execution began.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getExecutionCount--">getExecutionCount()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Returns the number of executions recorded in the current state when the state is CLOSED or HALF_OPEN.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/event/ExecutionCompletedEvent.html#getFailure--">getFailure()</a></span> - Method in class net.jodah.failsafe.event.<a href="net/jodah/failsafe/event/ExecutionCompletedEvent.html" title="class in net.jodah.failsafe.event">ExecutionCompletedEvent</a></dt>
 <dd>
 <div class="block">Returns the failure that preceeded the event, else <code>null</code> if there was none.</div>
@@ -477,14 +479,32 @@
 <dd>
 <div class="block">Returns the number of failures recorded in the current state when the state is CLOSED or HALF_OPEN.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureRatio--">getFailureRatio()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureExecutionThreshold--">getFailureExecutionThreshold()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Returns the ratio of failures to successes in the current state when the state is CLOSED or HALF_OPEN.</div>
+<div class="block">Used with time based thresholding.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureRate--">getFailureRate()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">The percentage rate of failed executions, from 0 to 100, in the current state when the state is CLOSED or
+ HALF_OPEN.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureRateThreshold--">getFailureRateThreshold()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Used with time based thresholding.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureThreshold--">getFailureThreshold()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Gets the ratio of successive failures that must occur when in a closed state in order to open the circuit else
- <code>null</code> if none has been configured.</div>
+<div class="block">Gets the number of successive failures that must occur within the <a href="net/jodah/failsafe/CircuitBreaker.html#getFailureThresholdingCapacity--"><code>failure
+ thresholding capacity</code></a> when in a CLOSED or HALF_OPEN state in order to open the circuit.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureThresholdingCapacity--">getFailureThresholdingCapacity()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Returns the rolling capacity for storing execution results when performing failure thresholding in the CLOSED or
+ HALF_OPEN states.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getFailureThresholdingPeriod--">getFailureThresholdingPeriod()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Used with time based thresholding.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/RetryPolicy.html#getJitter--">getJitter()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a></dt>
 <dd>
@@ -530,8 +550,6 @@
 <dd>
 <div class="block">Returns the max number of retries to perform when an execution attempt fails.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#getNumerator--">getNumerator()</a></span> - Method in class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getRemainingDelay--">getRemainingDelay()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
 <div class="block">When in the open state, returns the remaining delay until the circuit is half-closed and allows another execution,
@@ -574,20 +592,20 @@
 <dd>
 <div class="block">Returns the number of successes recorded in the current state when the state is CLOSED or HALF_OPEN.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getSuccessRatio--">getSuccessRatio()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getSuccessRate--">getSuccessRate()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Returns the ratio of successes to failures in the current state when the state is CLOSED or HALF_OPEN.</div>
+<div class="block">The percentage rate of successful executions, from 0 to 100, in the current state when the state is CLOSED or
+ HALF_OPEN.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getSuccessThreshold--">getSuccessThreshold()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Gets the ratio of successive successful executions that must occur when in a half-open state in order to close the
- circuit else <code>null</code> if none has been configured.</div>
+<div class="block">Gets the number of successive successes that must occur within the <a href="net/jodah/failsafe/CircuitBreaker.html#getSuccessThresholdingCapacity--"><code>success
+ thresholding capacity</code></a> when in a HALF_OPEN state in order to open the circuit.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getTimeout--">getTimeout()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#getSuccessThresholdingCapacity--">getSuccessThresholdingCapacity()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block"><span class="deprecatedLabel">Deprecated.</span>
-<div class="block"><span class="deprecationComment">Use <a href="net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> instead</span></div>
-</div>
+<div class="block">Returns the rolling capacity for storing execution results when performing success thresholding in the HALF_OPEN
+ state.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/Timeout.html#getTimeout--">getTimeout()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe">Timeout</a></dt>
 <dd>
@@ -596,10 +614,6 @@
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/TimeoutExceededException.html#getTimeout--">getTimeout()</a></span> - Method in exception net.jodah.failsafe.<a href="net/jodah/failsafe/TimeoutExceededException.html" title="class in net.jodah.failsafe">TimeoutExceededException</a></dt>
 <dd>
 <div class="block">Retruns the <a href="net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> that caused the exception.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#getValue--">getValue()</a></span> - Method in class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
-<dd>
-<div class="block">Returns the value of the ratio computed as the <code>numerator</code> / <code>denominator</code>.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#getWaitNanos--">getWaitNanos()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>&nbsp;</dd>
@@ -646,8 +660,6 @@
 <div class="block">Specifies that a failure has occurred if the <code>resultPredicate</code> matches the execution result.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#hashCode--">hashCode()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#hashCode--">hashCode()</a></span> - Method in class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <a name="I:I">
@@ -726,10 +738,6 @@
 <dt><a href="net/jodah/failsafe/function/package-summary.html">net.jodah.failsafe.function</a> - package net.jodah.failsafe.function</dt>
 <dd>
 <div class="block">Functional interface types.</div>
-</dd>
-<dt><a href="net/jodah/failsafe/util/package-summary.html">net.jodah.failsafe.util</a> - package net.jodah.failsafe.util</dt>
-<dd>
-<div class="block">Utilities.</div>
 </dd>
 <dt><a href="net/jodah/failsafe/util/concurrent/package-summary.html">net.jodah.failsafe.util.concurrent</a> - package net.jodah.failsafe.util.concurrent</dt>
 <dd>
@@ -823,6 +831,10 @@
 <div class="block">Registers the <code>listener</code> to be called when an execution is complete for all of the configured policies are
  exceeded.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/Fallback.html#onFailedAttempt-net.jodah.failsafe.function.CheckedConsumer-">onFailedAttempt(CheckedConsumer&lt;? extends ExecutionAttemptedEvent&lt;R&gt;&gt;)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/Fallback.html" title="class in net.jodah.failsafe">Fallback</a></dt>
+<dd>
+<div class="block">Registers the <code>listener</code> to be called when an execution attempt fails.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/RetryPolicy.html#onFailedAttempt-net.jodah.failsafe.function.CheckedConsumer-">onFailedAttempt(CheckedConsumer&lt;? extends ExecutionAttemptedEvent&lt;R&gt;&gt;)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a></dt>
 <dd>
 <div class="block">Registers the <code>listener</code> to be called when an execution attempt fails.</div>
@@ -837,7 +849,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/PolicyListeners.html#onFailure-net.jodah.failsafe.function.CheckedConsumer-">onFailure(CheckedConsumer&lt;? extends ExecutionCompletedEvent&lt;R&gt;&gt;)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/PolicyListeners.html" title="class in net.jodah.failsafe">PolicyListeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called when an execution fails for a <a href="net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a>.</div>
+<div class="block">Registers the <code>listener</code> to be called when a <a href="net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a> fails to handle an execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/PolicyExecutor.html#onFailureAsync-net.jodah.failsafe.ExecutionResult-net.jodah.failsafe.util.concurrent.Scheduler-net.jodah.failsafe.FailsafeFuture-">onFailureAsync(ExecutionResult, Scheduler, FailsafeFuture&lt;Object&gt;)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/PolicyExecutor.html" title="class in net.jodah.failsafe">PolicyExecutor</a></dt>
 <dd>
@@ -870,7 +882,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/PolicyListeners.html#onSuccess-net.jodah.failsafe.function.CheckedConsumer-">onSuccess(CheckedConsumer&lt;? extends ExecutionCompletedEvent&lt;R&gt;&gt;)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/PolicyListeners.html" title="class in net.jodah.failsafe">PolicyListeners</a></dt>
 <dd>
-<div class="block">Registers the <code>listener</code> to be called when an execution is successful for a <a href="net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a>.</div>
+<div class="block">Registers the <code>listener</code> to be called when a <a href="net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a> succeeds in handling an execution.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#open--">open()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
@@ -922,12 +934,6 @@
 </a>
 <h2 class="title">R</h2>
 <dl>
-<dt><a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util"><span class="typeNameLink">Ratio</span></a> - Class in <a href="net/jodah/failsafe/util/package-summary.html">net.jodah.failsafe.util</a></dt>
-<dd>
-<div class="block">A ratio.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#Ratio-int-int-">Ratio(int, int)</a></span> - Constructor for class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#recordFailure--">recordFailure()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
 <div class="block">Records an execution failure.</div>
@@ -1024,7 +1030,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#success-java.lang.Object-">success(Object)</a></span> - Static method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>
-<div class="block">Returns a an ExecutionResult with the <code>result</code> set, <code>completed</code> true and <code>success</code> true.</div>
+<div class="block">Returns a an ExecutionResult with the <code>result</code> set, <code>complete</code> true and <code>success</code> true.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/PolicyExecutor.html#supply-java.util.function.Supplier-net.jodah.failsafe.util.concurrent.Scheduler-">supply(Supplier&lt;ExecutionResult&gt;, Scheduler)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/PolicyExecutor.html" title="class in net.jodah.failsafe">PolicyExecutor</a></dt>
 <dd>
@@ -1074,8 +1080,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#toString--">toString()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/util/Ratio.html#toString--">toString()</a></span> - Method in class net.jodah.failsafe.util.<a href="net/jodah/failsafe/util/Ratio.html" title="class in net.jodah.failsafe.util">Ratio</a></dt>
-<dd>&nbsp;</dd>
 </dl>
 <a name="I:V">
 <!--   -->
@@ -1103,7 +1107,7 @@ the order they are declared.</div>
 <dl>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#with-long-boolean-boolean-">with(long, boolean, boolean)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>
-<div class="block">Returns a copy of the ExecutionResult with the <code>waitNanos</code>, <code>completed</code> and <code>success</code> values.</div>
+<div class="block">Returns a copy of the ExecutionResult with the <code>waitNanos</code>, <code>complete</code> and <code>success</code> values.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/Failsafe.html#with-P...-">with(P...)</a></span> - Static method in class net.jodah.failsafe.<a href="net/jodah/failsafe/Failsafe.html" title="class in net.jodah.failsafe">Failsafe</a></dt>
 <dd>
@@ -1139,13 +1143,9 @@ the order they are declared.</div>
 <dd>
 <div class="block">Configures the policy to cancel an execution if it times out.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#withComplete--">withComplete()</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
-<dd>
-<div class="block">Returns a copy of the ExecutionResult with the value set to true, else this if nothing has changed.</div>
-</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withDelay-java.time.Duration-">withDelay(Duration)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Sets the <code>delay</code> to wait in open state before transitioning to half-open.</div>
+<div class="block">Sets the <code>delay</code> to wait in OPEN state before transitioning to half-open.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/DelayablePolicy.html#withDelay-net.jodah.failsafe.function.DelayFunction-">withDelay(DelayFunction&lt;R, ? extends Throwable&gt;)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/DelayablePolicy.html" title="class in net.jodah.failsafe">DelayablePolicy</a></dt>
 <dd>
@@ -1167,13 +1167,29 @@ the order they are declared.</div>
 <dd>
 <div class="block">Sets the <code>delayFunction</code> that computes the next delay before allowing another execution.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withFailureRateThreshold-int-int-java.time.Duration-">withFailureRateThreshold(int, int, Duration)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Configures time based failure rate thresholding by setting the percentage rate of failures, from 1 to 100, that
+ must occur within the rolling <code>failureThresholdingPeriod</code> when in a CLOSED state in order to open the
+ circuit.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-">withFailureThreshold(int)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Sets the number of consecutive failures that must occur when in a closed state in order to open the circuit.</div>
+<div class="block">Configures count based failure thresholding by setting the number of consecutive failures that must occur when in a
+ CLOSED state in order to open the circuit.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-int-">withFailureThreshold(int, int)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Sets the ratio of successive failures that must occur when in a closed state in order to open the circuit.</div>
+<div class="block">Configures count based failure thresholding by setting the ratio of successive failures to executions that must
+ occur when in a CLOSED state in order to open the circuit.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-java.time.Duration-">withFailureThreshold(int, Duration)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Configures time based failure thresholding by setting the number of failures that must occur within the <code>failureThresholdingPeriod</code> when in a CLOSED state in order to open the circuit.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-int-java.time.Duration-">withFailureThreshold(int, int, Duration)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
+<dd>
+<div class="block">Configures time based failure thresholding by setting the number of failures that must occur within the <code>failureThresholdingPeriod</code> when in a CLOSED state in order to open the circuit.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/RetryPolicy.html#withJitter-double-">withJitter(double)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a></dt>
 <dd>
@@ -1197,23 +1213,18 @@ the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#withResult-java.lang.Object-">withResult(Object)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>
-<div class="block">Returns a copy of the ExecutionResult with the <code>result</code> value, and completed and success set to true.</div>
+<div class="block">Returns a copy of the ExecutionResult with the <code>result</code> value, and complete and success set to true.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-">withSuccessThreshold(int)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Sets the number of consecutive successful executions that must occur when in a half-open state in order to close the
- circuit, else the circuit is re-opened when a failure occurs.</div>
+<div class="block">Configures count based success thresholding by setting the number of consecutive successful executions that must
+ occur when in a HALF_OPEN state in order to close the circuit, else the circuit is re-opened when a failure
+ occurs.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-int-">withSuccessThreshold(int, int)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
 <dd>
-<div class="block">Sets the ratio of successive successful executions that must occur when in a half-open state in order to close the
- circuit.</div>
-</dd>
-<dt><span class="memberNameLink"><a href="net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-">withTimeout(Duration)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a></dt>
-<dd>
-<div class="block"><span class="deprecatedLabel">Deprecated.</span>
-<div class="block"><span class="deprecationComment">Use <a href="net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> instead</span></div>
-</div>
+<div class="block">Configures count based success thresholding by setting the ratio of successive successful executions that must
+ occur when in a HALF_OPEN state in order to close the circuit.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="net/jodah/failsafe/ExecutionResult.html#withWaitNanos-long-">withWaitNanos(long)</a></span> - Method in class net.jodah.failsafe.<a href="net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></dt>
 <dd>

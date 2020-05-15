@@ -130,45 +130,51 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/Fallback.html" title="class in net.jodah.failsafe">Fallback</a>&lt;<a href="../../../../../net/jodah/failsafe/Fallback.html" title="type parameter in Fallback">R</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">Fallback.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/Fallback.html#onFailedAttempt-net.jodah.failsafe.function.CheckedConsumer-">onFailedAttempt</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionAttemptedEvent.html" title="class in net.jodah.failsafe.event">ExecutionAttemptedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/Fallback.html" title="type parameter in Fallback">R</a>&gt;&gt;&nbsp;listener)</code>
+<div class="block">Registers the <code>listener</code> to be called when an execution attempt fails.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a>&lt;<a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/RetryPolicy.html#onFailedAttempt-net.jodah.failsafe.function.CheckedConsumer-">onFailedAttempt</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionAttemptedEvent.html" title="class in net.jodah.failsafe.event">ExecutionAttemptedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called when an execution attempt fails.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html" title="class in net.jodah.failsafe">FailsafeExecutor</a>&lt;<a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html" title="type parameter in FailsafeExecutor">R</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">FailsafeExecutor.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html#onFailure-net.jodah.failsafe.function.CheckedConsumer-">onFailure</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionCompletedEvent.html" title="class in net.jodah.failsafe.event">ExecutionCompletedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html" title="type parameter in FailsafeExecutor">R</a>&gt;&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called when an execution fails.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/PolicyListeners.html" title="type parameter in PolicyListeners">S</a></code></td>
 <td class="colLast"><span class="typeNameLabel">PolicyListeners.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/PolicyListeners.html#onFailure-net.jodah.failsafe.function.CheckedConsumer-">onFailure</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionCompletedEvent.html" title="class in net.jodah.failsafe.event">ExecutionCompletedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/PolicyListeners.html" title="type parameter in PolicyListeners">R</a>&gt;&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when an execution fails for a <a href="../../../../../net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a>.</div>
+<div class="block">Registers the <code>listener</code> to be called when a <a href="../../../../../net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a> fails to handle an execution.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a>&lt;<a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/RetryPolicy.html#onRetriesExceeded-net.jodah.failsafe.function.CheckedConsumer-">onRetriesExceeded</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionCompletedEvent.html" title="class in net.jodah.failsafe.event">ExecutionCompletedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called when an execution fails and the <a href="../../../../../net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-"><code>max retry attempts</code></a> or <a href="../../../../../net/jodah/failsafe/RetryPolicy.html#withMaxDuration-java.time.Duration-"><code>max duration</code></a> are exceeded.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a>&lt;<a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">RetryPolicy.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/RetryPolicy.html#onRetry-net.jodah.failsafe.function.CheckedConsumer-">onRetry</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionAttemptedEvent.html" title="class in net.jodah.failsafe.event">ExecutionAttemptedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called before an execution is retried.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html" title="class in net.jodah.failsafe">FailsafeExecutor</a>&lt;<a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html" title="type parameter in FailsafeExecutor">R</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">FailsafeExecutor.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html#onSuccess-net.jodah.failsafe.function.CheckedConsumer-">onSuccess</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionCompletedEvent.html" title="class in net.jodah.failsafe.event">ExecutionCompletedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/FailsafeExecutor.html" title="type parameter in FailsafeExecutor">R</a>&gt;&gt;&nbsp;listener)</code>
 <div class="block">Registers the <code>listener</code> to be called when an execution is successful.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../../net/jodah/failsafe/PolicyListeners.html" title="type parameter in PolicyListeners">S</a></code></td>
 <td class="colLast"><span class="typeNameLabel">PolicyListeners.</span><code><span class="memberNameLink"><a href="../../../../../net/jodah/failsafe/PolicyListeners.html#onSuccess-net.jodah.failsafe.function.CheckedConsumer-">onSuccess</a></span>(<a href="../../../../../net/jodah/failsafe/function/CheckedConsumer.html" title="interface in net.jodah.failsafe.function">CheckedConsumer</a>&lt;? extends <a href="../../../../../net/jodah/failsafe/event/ExecutionCompletedEvent.html" title="class in net.jodah.failsafe.event">ExecutionCompletedEvent</a>&lt;<a href="../../../../../net/jodah/failsafe/PolicyListeners.html" title="type parameter in PolicyListeners">R</a>&gt;&gt;&nbsp;listener)</code>
-<div class="block">Registers the <code>listener</code> to be called when an execution is successful for a <a href="../../../../../net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a>.</div>
+<div class="block">Registers the <code>listener</code> to be called when a <a href="../../../../../net/jodah/failsafe/Policy.html" title="interface in net.jodah.failsafe"><code>Policy</code></a> succeeds in handling an execution.</div>
 </td>
 </tr>
 </tbody>

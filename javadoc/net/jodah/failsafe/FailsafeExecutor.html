@@ -124,8 +124,8 @@ extends <a href="../../../net/jodah/failsafe/PolicyListeners.html" title="class 
  An executor that handles failures according to configured <a href="../../../net/jodah/failsafe/FailurePolicy.html" title="class in net.jodah.failsafe"><code>policies</code></a>. Can be created via <a href="../../../net/jodah/failsafe/Failsafe.html#with-P...-"><code>Failsafe.with(Policy[])</code></a>.
  <p>
  Async executions are run by default on the <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html?is-external=true#commonPool--" title="class or interface in java.util.concurrent"><code>ForkJoinPool.commonPool()</code></a>. Alternative executors can be configured
- via <a href="../../../net/jodah/failsafe/FailsafeExecutor.html#with-java.util.concurrent.ScheduledExecutorService-"><code>with(ScheduledExecutorService)</code></a> and similar methods. All async executions are cancellable via the
- returned CompletableFuture, even those run by a <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html?is-external=true" title="class or interface in java.util.concurrent"><code>ForkJoinPool</code></a> or <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html?is-external=true" title="class or interface in java.util.concurrent"><code>CompletionStage</code></a>.</div>
+ via <a href="../../../net/jodah/failsafe/FailsafeExecutor.html#with-java.util.concurrent.ScheduledExecutorService-"><code>with(ScheduledExecutorService)</code></a> and similar methods. All async executions are cancellable and
+ interruptable via the returned CompletableFuture, even those run by a <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html?is-external=true" title="class or interface in java.util.concurrent"><code>ForkJoinPool</code></a> or <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html?is-external=true" title="class or interface in java.util.concurrent"><code>CompletionStage</code></a>.</div>
 </li>
 </ul>
 </div>

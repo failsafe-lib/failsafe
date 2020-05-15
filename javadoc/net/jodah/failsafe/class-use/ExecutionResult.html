@@ -107,7 +107,7 @@
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></code></td>
 <td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#failure-java.lang.Throwable-">failure</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html?is-external=true" title="class or interface in java.lang">Throwable</a>&nbsp;failure)</code>
-<div class="block">Returns a an ExecutionResult with the <code>failure</code> set, <code>completed</code> true and <code>success</code> false.</div>
+<div class="block">Returns a an ExecutionResult with the <code>failure</code> set, <code>complete</code> true and <code>success</code> false.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -131,30 +131,24 @@
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../../net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></code></td>
 <td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#success-java.lang.Object-">success</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
-<div class="block">Returns a an ExecutionResult with the <code>result</code> set, <code>completed</code> true and <code>success</code> true.</div>
+<div class="block">Returns a an ExecutionResult with the <code>result</code> set, <code>complete</code> true and <code>success</code> true.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></code></td>
 <td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#with-long-boolean-boolean-">with</a></span>(long&nbsp;waitNanos,
-    boolean&nbsp;completed,
+    boolean&nbsp;complete,
     boolean&nbsp;success)</code>
-<div class="block">Returns a copy of the ExecutionResult with the <code>waitNanos</code>, <code>completed</code> and <code>success</code> values.</div>
+<div class="block">Returns a copy of the ExecutionResult with the <code>waitNanos</code>, <code>complete</code> and <code>success</code> values.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></code></td>
-<td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#withComplete--">withComplete</a></span>()</code>
-<div class="block">Returns a copy of the ExecutionResult with the value set to true, else this if nothing has changed.</div>
+<td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#withResult-java.lang.Object-">withResult</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
+<div class="block">Returns a copy of the ExecutionResult with the <code>result</code> value, and complete and success set to true.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></code></td>
-<td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#withResult-java.lang.Object-">withResult</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;result)</code>
-<div class="block">Returns a copy of the ExecutionResult with the <code>result</code> value, and completed and success set to true.</div>
-</td>
-</tr>
-<tr class="altColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/failsafe/ExecutionResult.html" title="class in net.jodah.failsafe">ExecutionResult</a></code></td>
 <td class="colLast"><span class="typeNameLabel">ExecutionResult.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/ExecutionResult.html#withWaitNanos-long-">withWaitNanos</a></span>(long&nbsp;waitNanos)</code>
 <div class="block">Returns a copy of the ExecutionResult with the <code>waitNanos</code> value.</div>

@@ -131,43 +131,63 @@
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withDelay-java.time.Duration-">withDelay</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;delay)</code>
-<div class="block">Sets the <code>delay</code> to wait in open state before transitioning to half-open.</div>
+<div class="block">Sets the <code>delay</code> to wait in OPEN state before transitioning to half-open.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-">withFailureThreshold</a></span>(int&nbsp;failureThreshold)</code>
-<div class="block">Sets the number of consecutive failures that must occur when in a closed state in order to open the circuit.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-int-">withFailureThreshold</a></span>(int&nbsp;failures,
-                    int&nbsp;executions)</code>
-<div class="block">Sets the ratio of successive failures that must occur when in a closed state in order to open the circuit.</div>
-</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-">withSuccessThreshold</a></span>(int&nbsp;successThreshold)</code>
-<div class="block">Sets the number of consecutive successful executions that must occur when in a half-open state in order to close the
- circuit, else the circuit is re-opened when a failure occurs.</div>
-</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-int-">withSuccessThreshold</a></span>(int&nbsp;successes,
-                    int&nbsp;executions)</code>
-<div class="block">Sets the ratio of successive successful executions that must occur when in a half-open state in order to close the
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureRateThreshold-int-int-java.time.Duration-">withFailureRateThreshold</a></span>(int&nbsp;failureRateThreshold,
+                        int&nbsp;failureExecutionThreshold,
+                        <a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;failureThresholdingPeriod)</code>
+<div class="block">Configures time based failure rate thresholding by setting the percentage rate of failures, from 1 to 100, that
+ must occur within the rolling <code>failureThresholdingPeriod</code> when in a CLOSED state in order to open the
  circuit.</div>
 </td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-">withFailureThreshold</a></span>(int&nbsp;failureThreshold)</code>
+<div class="block">Configures count based failure thresholding by setting the number of consecutive failures that must occur when in a
+ CLOSED state in order to open the circuit.</div>
+</td>
+</tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
-<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withTimeout-java.time.Duration-">withTimeout</a></span>(<a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;timeout)</code>
-<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;
-<div class="block"><span class="deprecationComment">Use <a href="../../../../net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> instead</span></div>
-</div>
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-java.time.Duration-">withFailureThreshold</a></span>(int&nbsp;failureThreshold,
+                    <a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;failureThresholdingPeriod)</code>
+<div class="block">Configures time based failure thresholding by setting the number of failures that must occur within the <code>failureThresholdingPeriod</code> when in a CLOSED state in order to open the circuit.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-int-">withFailureThreshold</a></span>(int&nbsp;failureThreshold,
+                    int&nbsp;failureThresholdingCapacity)</code>
+<div class="block">Configures count based failure thresholding by setting the ratio of successive failures to executions that must
+ occur when in a CLOSED state in order to open the circuit.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withFailureThreshold-int-int-java.time.Duration-">withFailureThreshold</a></span>(int&nbsp;failureThreshold,
+                    int&nbsp;failureExecutionThreshold,
+                    <a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;failureThresholdingPeriod)</code>
+<div class="block">Configures time based failure thresholding by setting the number of failures that must occur within the <code>failureThresholdingPeriod</code> when in a CLOSED state in order to open the circuit.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-">withSuccessThreshold</a></span>(int&nbsp;successThreshold)</code>
+<div class="block">Configures count based success thresholding by setting the number of consecutive successful executions that must
+ occur when in a HALF_OPEN state in order to close the circuit, else the circuit is re-opened when a failure
+ occurs.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="class in net.jodah.failsafe">CircuitBreaker</a>&lt;<a href="../../../../net/jodah/failsafe/CircuitBreaker.html" title="type parameter in CircuitBreaker">R</a>&gt;</code></td>
+<td class="colLast"><span class="typeNameLabel">CircuitBreaker.</span><code><span class="memberNameLink"><a href="../../../../net/jodah/failsafe/CircuitBreaker.html#withSuccessThreshold-int-int-">withSuccessThreshold</a></span>(int&nbsp;successThreshold,
+                    int&nbsp;successThresholdingCapacity)</code>
+<div class="block">Configures count based success thresholding by setting the ratio of successive successful executions that must
+ occur when in a HALF_OPEN state in order to close the circuit.</div>
 </td>
 </tr>
 </tbody>

@@ -1,5 +1,4 @@
 net.jodah.failsafe
 net.jodah.failsafe.event
 net.jodah.failsafe.function
-net.jodah.failsafe.util
 net.jodah.failsafe.util.concurrent
