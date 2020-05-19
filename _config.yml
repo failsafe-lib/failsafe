@@ -13,9 +13,9 @@ markdown: kramdown
 
 search_enabled: true
 
-aux_links:
-  "View on GitHub":
-    - "//github.com/jhalterman/failsafe"
+# aux_links:
+#   "View on GitHub":
+#     - "//github.com/jhalterman/failsafe"
 
 ga_tracking: UA-145891145-1
 

@@ -34,13 +34,14 @@ layout: table_wrappers
             <div class="js-search-results search-results-wrap"></div>
           </div>
           {% endif %}
-          {% if site.aux_links != nil %}
             <ul class="list-style-none text-medium aux-nav">
-              {% for link in site.aux_links %}
-                <li class="d-inline-block my-0{% unless forloop.last %} mr-2{% endunless %}"><a href="{{ link.last }}">{{ link.first }}</a></li>
-              {% endfor %}
+              <li class="d-inline-block my-0"><a class="github-button" href="https://github.com/jhalterman/failsafe" data-show-count="true" aria-label="View Failsafe on GitHub">View on Github</a></li>
+              {% if site.aux_links != nil %}
+                {% for link in site.aux_links %}
+                  <li class="d-inline-block my-0{% unless forloop.last %} mr-2{% endunless %}"><a href="{{ link.last }}">{{ link.first }}</a></li>
+                {% endfor %}
+              {% endif %}
             </ul>
-          {% endif %}
         </div>
         <div class="page">
           <div id="main-content" class="page-content" role="main">
