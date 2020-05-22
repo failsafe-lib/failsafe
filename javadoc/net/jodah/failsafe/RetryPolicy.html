@@ -941,7 +941,13 @@ public final&nbsp;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="
 <pre>public&nbsp;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="class in net.jodah.failsafe">RetryPolicy</a>&lt;<a href="../../../net/jodah/failsafe/RetryPolicy.html" title="type parameter in RetryPolicy">R</a>&gt;&nbsp;withMaxDuration(<a href="http://docs.oracle.com/javase/8/docs/api/java/time/Duration.html?is-external=true" title="class or interface in java.time">Duration</a>&nbsp;maxDuration)</pre>
 <div class="block">Sets the max duration to perform retries for, else the execution will be failed.
  <p>
- Note: This setting will not cause long running executions to be interrupted. For that capability, use a <a href="../../../net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> policy <a href="../../../net/jodah/failsafe/Timeout.html#withCancel-boolean-"><code>withCancel</code></a> set to <code>true</code>.
+ Notes:
+ <ul>
+   <li>This setting will not cause long running executions to be interrupted. For that capability, use a
+   <a href="../../../net/jodah/failsafe/Timeout.html" title="class in net.jodah.failsafe"><code>Timeout</code></a> policy <a href="../../../net/jodah/failsafe/Timeout.html#withCancel-boolean-"><code>withCancel</code></a> set to <code>true</code>.</li>
+   <li>This setting will not disable <a href="../../../net/jodah/failsafe/RetryPolicy.html#withMaxRetries-int-"><code>max retries</code></a>, which are still <code>2</code> by default.
+   A max retries limit can be disabled via <code>.withMaxRetries(-1)</code></li>
+ </ul>
  </p></div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
