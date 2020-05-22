@@ -504,8 +504,13 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Sets the max duration to perform retries for, else the execution will be failed.
    * <p>
-   * Note: This setting will not cause long running executions to be interrupted. For that capability, use a {@link
-   * Timeout} policy {@link Timeout#withCancel(boolean) withCancel} set to {@code true}.
+   * Notes:
+   * <ul>
+   *   <li>This setting will not cause long running executions to be interrupted. For that capability, use a
+   *   {@link Timeout} policy {@link Timeout#withCancel(boolean) withCancel} set to {@code true}.</li>
+   *   <li>This setting will not disable {@link #withMaxRetries(int) max retries}, which are still {@code 2} by default.
+   *   A max retries limit can be disabled via <code>.withMaxRetries(-1)</code></li>
+   * </ul>
    * </p>
    *
    * @throws NullPointerException if {@code maxDuration} is null
