@@ -105,7 +105,7 @@ class TimedCircuitStats implements CircuitStats {
 
   /**
    * Copies the most recent stats from the {@code oldStats} into this in order from oldest to newest and orders buckets
-   * from oldest to newest, with unitialized buckets counting as oldest.
+   * from oldest to newest, with uninitialized buckets counting as oldest.
    */
   void copyStats(CircuitStats oldStats) {
     if (oldStats instanceof TimedCircuitStats) {

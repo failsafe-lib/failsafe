@@ -431,7 +431,7 @@ public class HalfOpenStateTest {
    * Asserts that the late configuration of a success ratio is handled by resetting the state's internal tracking. Also
    * asserts that executions from prior configurations are carried over to a new configuration.
    */
-  public void shouldHandleLateSetSucessRatio() {
+  public void shouldHandleLateSetSuccessRatio() {
     // Given
     breaker.halfOpen();
     HalfOpenState state = Testing.stateFor(breaker);

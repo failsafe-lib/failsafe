@@ -29,7 +29,7 @@ public class CircuitBreakerOpenException extends FailsafeException {
     this.circuitBreaker = circuitBreaker;
   }
 
-  /** Retruns the {@link CircuitBreaker} that caused the exception. */
+  /** Returns the {@link CircuitBreaker} that caused the exception. */
   public CircuitBreaker getCircuitBreaker() {
     return circuitBreaker;
   }

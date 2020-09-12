@@ -100,7 +100,7 @@ public class ExecutionContext {
   }
 
   /**
-   * Returns whether the execution has ben cancelled. In this case the implementor shuold attempt to stop execution.
+   * Returns whether the execution has ben cancelled. In this case the implementor should attempt to stop execution.
    */
   public boolean isCancelled() {
     return cancelled;

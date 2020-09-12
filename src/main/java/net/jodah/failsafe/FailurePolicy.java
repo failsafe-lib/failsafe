@@ -184,7 +184,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   /**
    * Returns a predicate that evaluates the {@code resultPredicate} against a result, when present.
    * <p>
-   * Short-circuts to false without invoking {@code resultPredicate}, when result is not present (i.e.
+   * Short-circuits to false without invoking {@code resultPredicate}, when result is not present (i.e.
    * BiPredicate.test(null, Throwable)).
    */
   static <R> BiPredicate<R, Throwable> resultPredicateFor(Predicate<R> resultPredicate) {

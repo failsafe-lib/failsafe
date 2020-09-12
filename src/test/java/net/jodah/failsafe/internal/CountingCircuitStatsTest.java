@@ -11,7 +11,7 @@ import static org.testng.Assert.assertTrue;
 public class CountingCircuitStatsTest extends CircuitStatsTest {
   CountingCircuitStats stats;
 
-  public void shouldReturnUnitializedValues() {
+  public void shouldReturnUninitializedValues() {
     stats = new CountingCircuitStats(100, null);
     for (int i = 0; i < 100; i++) {
       assertEquals(stats.setNext(true), -1);

@@ -477,7 +477,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Configures time based failure thresholding by setting the number of failures that must occur within the {@code
    * failureThresholdingPeriod} when in a CLOSED state in order to open the circuit. The number of executions must also
-   * exceed the {@code failureExecutionThreshod} within the {@code failureThresholdingPeriod} when in the CLOSED state
+   * exceed the {@code failureExecutionThreshold} within the {@code failureThresholdingPeriod} when in the CLOSED state
    * before the circuit can be opened.
    * <p>
    * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} will also
@@ -515,7 +515,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Configures time based failure rate thresholding by setting the percentage rate of failures, from 1 to 100, that
    * must occur within the rolling {@code failureThresholdingPeriod} when in a CLOSED state in order to open the
-   * circuit. The number of executions must also exceed the {@code failureExecutionThreshod} within the {@code
+   * circuit. The number of executions must also exceed the {@code failureExecutionThreshold} within the {@code
    * failureThresholdingPeriod} before the circuit can be opened.
    * <p>
    * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureExecutionThreshold}

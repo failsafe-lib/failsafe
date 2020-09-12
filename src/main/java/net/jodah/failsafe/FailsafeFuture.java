@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
- * A CompletableFuture implementation that propogates cancellations and calls completion handlers.
+ * A CompletableFuture implementation that propagates cancellations and calls completion handlers.
  * <p>
  * Part of the Failsafe SPI.
  *

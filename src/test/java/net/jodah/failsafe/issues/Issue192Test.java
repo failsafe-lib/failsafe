@@ -40,7 +40,7 @@ public class Issue192Test {
   /**
    * Asserts the handling of multiple retry policies with an async execution.
    */
-  public void testAsnc() {
+  public void testAsync() {
     AtomicInteger exceptionA = new AtomicInteger();
     AtomicInteger exceptionB = new AtomicInteger();
     AtomicInteger exceptionC = new AtomicInteger();

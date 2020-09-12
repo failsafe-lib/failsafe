@@ -50,12 +50,12 @@ public class FailsafeFutureTest {
 
     future.cancel(true);
     waiter.await(1000, 2);
-    future.complete("unxpected2");
+    future.complete("unexpected2");
     Asserts.assertThrows(future::get, CancellationException.class);
   }
 
   /**
-   * Asserts that a completed future ignroes subsequent completion attempts.
+   * Asserts that a completed future ignores subsequent completion attempts.
    */
   public void shouldNotCancelCompletedFuture() throws Throwable {
     // Given
@@ -83,7 +83,7 @@ public class FailsafeFutureTest {
     });
 
     future.cancel(true);
-    future.complete("unxpected2");
+    future.complete("unexpected2");
     Asserts.assertThrows(future::get, CancellationException.class);
   }
 }
