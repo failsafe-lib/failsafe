@@ -345,7 +345,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    *
    * @throws NullPointerException if {@code executor} is null
    */
-  public FailsafeExecutor<R> with(ExecutorService executor) {
+  public FailsafeExecutor<R> with(Executor executor) {
     this.scheduler = Scheduler.of(executor);
     return this;
   }

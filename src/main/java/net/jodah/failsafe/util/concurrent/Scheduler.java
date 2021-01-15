@@ -53,7 +53,7 @@ public interface Scheduler {
    *
    * @throws NullPointerException if {@code executor} is null
    */
-  static Scheduler of(final ExecutorService executor) {
+  static Scheduler of(final Executor executor) {
     return new DelegatingScheduler(Assert.notNull(executor, "executor"));
   }
 }

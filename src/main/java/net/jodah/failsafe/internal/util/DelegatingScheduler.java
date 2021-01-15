@@ -37,14 +37,14 @@ public final class DelegatingScheduler implements Scheduler {
   private static volatile ForkJoinPool FORK_JOIN_POOL;
   private static volatile ScheduledThreadPoolExecutor DELAYER;
 
-  private final ExecutorService executorService;
+  private final Executor executor;
 
   private DelegatingScheduler() {
-    this.executorService = null;
+    this.executor = null;
   }
 
-  public DelegatingScheduler(ExecutorService executor) {
-    this.executorService = executor;
+  public DelegatingScheduler(Executor executor) {
+    this.executor = executor;
   }
 
   private static final class DelayerThreadFactory implements ThreadFactory {
@@ -108,9 +108,9 @@ public final class DelegatingScheduler implements Scheduler {
     return DELAYER;
   }
 
-  private ExecutorService executorService() {
-    if (executorService != null)
-      return executorService;
+  private Executor executor() {
+    if (executor != null)
+      return executor;
     if (FORK_JOIN_POOL == null) {
       synchronized (DelegatingScheduler.class) {
         if (FORK_JOIN_POOL == null) {
@@ -128,12 +128,12 @@ public final class DelegatingScheduler implements Scheduler {
   @SuppressWarnings("unchecked")
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
     ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
-    ExecutorService es = executorService();
-    boolean isForkJoinPool = es instanceof ForkJoinPool;
+    Executor e = executor();
+    boolean isForkJoinPool = e instanceof ForkJoinPool;
     Callable<?> completingCallable = () -> {
       try {
         if (isForkJoinPool) {
-          // Guard against race with promise.cancel 
+          // Guard against race with promise.cancel
           synchronized (promise) {
             promise.forkJoinPoolThread = Thread.currentThread();
           }
@@ -151,16 +151,22 @@ public final class DelegatingScheduler implements Scheduler {
     };
 
     if (delay == 0)
-      promise.delegate = es.submit(completingCallable);
+      promise.delegate = submit(e, completingCallable);
     else
       promise.delegate = delayer().schedule(() -> {
         // Guard against race with promise.cancel
         synchronized (promise) {
           if (!promise.isCancelled())
-            promise.delegate = es.submit(completingCallable);
+            promise.delegate = submit(e, completingCallable);
         }
       }, delay, unit);
 
     return promise;
+  }
+
+  private static <V> Future<V> submit(Executor executor, Callable<V> callable) {
+    FutureTask<V> future = new FutureTask<>(callable);
+    executor.execute(future);
+    return future;
   }
 }
