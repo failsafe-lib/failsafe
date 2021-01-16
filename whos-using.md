@@ -15,6 +15,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 
 {:.columns}
 * [Airlift](https://github.com/airlift/airlift)
+* [Apache Geronimo](https://geronimo.apache.org/)
 * [Apache Pulsar](https://pulsar.apache.org/)
 * [Apache Samza](http://samza.apache.org/)
 * [Distributed Data Framework](http://codice.org/ddf/)
@@ -32,6 +33,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [Presto](https://prestosql.io/)
 * [Redhat Zanata](http://zanata.org/)
 * [Testify](http://testifyproject.org)
+* [Trino](https://trino.io/)
 * [Wasabi](https://github.com/intuit/wasabi)
 
 ## Companies / Organizations
@@ -98,6 +100,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [Steamroot](https://streamroot.io)
 * [StubbornJava](https://www.stubbornjava.com/)
 * [Telstra](https://www.telstra.com.au/)
+* [TIBCO](https://www.tibco.com/)
 * [Tink](https://www.tink.com/)
 * [TouchTunes](http://touchtunes.com/)
 * [Treasure Data](https://www.treasuredata.com/)
