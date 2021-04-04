@@ -45,7 +45,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
 
   private final CheckedFunction<ExecutionAttemptedEvent, R> fallback;
   private final CheckedFunction<ExecutionAttemptedEvent, CompletableFuture<R>> fallbackStage;
-  private boolean async;
+  private final boolean async;
   private EventListener failedAttemptListener;
 
   private Fallback() {
@@ -123,7 +123,6 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   /**
    * Returns the {@code fallback} result to be returned if execution fails.
    */
-  @SuppressWarnings("rawtypes")
   public static <R> Fallback<R> of(R fallback) {
     return new Fallback<>(toFn(fallback), null, false);
   }

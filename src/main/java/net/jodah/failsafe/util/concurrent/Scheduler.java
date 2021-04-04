@@ -31,7 +31,7 @@ public interface Scheduler {
    * The default scheduler used by Failsafe if no other scheduler or {@link ScheduledExecutorService} is configured for
    * an execution.
    */
-  public static Scheduler DEFAULT = DelegatingScheduler.INSTANCE;
+  Scheduler DEFAULT = DelegatingScheduler.INSTANCE;
 
   /**
    * Schedules the {@code callable} to be called after the {@code delay} for the {@code unit}.

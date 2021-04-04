@@ -132,7 +132,6 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    *
    * @throws NullPointerException if {@code failure} is null
    */
-  @SuppressWarnings({ "rawtypes" })
   public RetryPolicy<R> abortOn(Class<? extends Throwable> failure) {
     Assert.notNull(failure, "failure");
     return abortOn(Arrays.asList(failure));
