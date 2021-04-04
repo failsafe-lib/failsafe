@@ -34,14 +34,14 @@ public class ExecutionCompletedEvent<R> extends ExecutionEvent {
   }
 
   /**
-   * Returns the failure that preceeded the event, else {@code null} if there was none.
+   * Returns the failure that preceded the event, else {@code null} if there was none.
    */
   public Throwable getFailure() {
     return failure;
   }
 
   /**
-   * Returns the result that preceeded the event, else {@code null} if there was none.
+   * Returns the result that preceded the event, else {@code null} if there was none.
    */
   public R getResult() {
     return result;

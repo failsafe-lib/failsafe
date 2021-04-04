@@ -241,7 +241,7 @@ public class ListenersTest {
   }
 
   /**
-   * Asserts that listeners aree called the expected number of times when retries are exceeded.
+   * Asserts that listeners are called the expected number of times when retries are exceeded.
    */
   private void assertForRetriesExceeded(boolean sync) throws Throwable {
     // Given - Fail 4 times and exceed retries

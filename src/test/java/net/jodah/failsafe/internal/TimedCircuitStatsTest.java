@@ -47,7 +47,7 @@ public class TimedCircuitStatsTest extends CircuitStatsTest {
     assertEquals(stats.getExecutionCount(), 0);
 
     // Record into bucket 1
-    recordExecutions(stats, 50, i -> i % 5 == 0); // currenetTime = 0
+    recordExecutions(stats, 50, i -> i % 5 == 0); // currentTime = 0
     assertEquals(stats.currentIndex, 0);
     assertEquals(stats.getCurrentBucket().startTimeMillis, 0);
     assertEquals(stats.getSuccessCount(), 10);

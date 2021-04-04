@@ -32,7 +32,7 @@ public class Issue131Test {
 
   /**
    * This predicate is invoked in failure scenarios with an arg of null,
-   * producing a {@link NullPointerException} yielding surpising results.
+   * producing a {@link NullPointerException} yielding surprising results.
    */
   private static Predicate<String> handleIfEqualsIgnoreCaseFoo = s -> {
     return s.equalsIgnoreCase("foo"); // produces NPE when invoked in failing scenarios.

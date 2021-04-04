@@ -29,7 +29,7 @@ public class TimeoutExceededException extends FailsafeException {
     this.timeout = timeout;
   }
 
-  /** Retruns the {@link Timeout} that caused the exception. */
+  /** Returns the {@link Timeout} that caused the exception. */
   public Timeout getTimeout() {
     return timeout;
   }

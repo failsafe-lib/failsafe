@@ -7,7 +7,7 @@ import net.jodah.failsafe.internal.util.Assert;
 import java.time.Duration;
 
 /**
- * A policy that fails an excecution with a {@link net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}
+ * A policy that fails an execution with a {@link net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}
  * if it exceeds a timeout. Uses a separate thread on the configured scheduler or the common pool to perform timeouts
  * checks.
  * <p>
@@ -20,11 +20,11 @@ import java.time.Duration;
  *   can be used to handle a timeout being exceeded or not.</li>
  *   <li>{@link #withCancel(boolean) Cancellation and interruption} are not supported when performing an {@link
  * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} and will have no effect since the async thread is
- * unkown to Failsafe.</li>
+ * unknown to Failsafe.</li>
  * </ul>
  * </p>
  * <p>
- * This class is threadsafe.
+ * This class is thread-safe.
  * </p>
  *
  * @param <R> result type
@@ -78,7 +78,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    *   </li>
    *   <li>
    * Cancellation and interruption are not supported when performing an {@link FailsafeExecutor#getAsyncExecution(AsyncSupplier)
-   * async execution} and will have no effect since the async thread is unkown to Failsafe.</p>
+   * async execution} and will have no effect since the async thread is unknown to Failsafe.</p>
    *   </li>
    * </ul>
    * </p>

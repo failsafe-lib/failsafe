@@ -287,7 +287,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   /**
    * Tests a scenario where three timeouts should cause all delegates to be cancelled with interrupts.
    */
-  public void shouldCancelNestedTimeoutsWithInterupt() throws Throwable {
+  public void shouldCancelNestedTimeoutsWithInterrupt() throws Throwable {
     // Given
     RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2);
     Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));

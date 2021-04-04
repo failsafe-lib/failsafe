@@ -155,7 +155,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   /**
    * Attempts to complete the parent execution, calls failure handlers, and completes the future if needed. Runs
-   * synchrnously since a concrete result is needed.
+   * synchronously since a concrete result is needed.
    *
    * @throws IllegalStateException if the execution is already complete
    */
