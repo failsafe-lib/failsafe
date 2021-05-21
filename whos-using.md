@@ -97,6 +97,7 @@ Many projects, organizations, and governments use Failsafe. If you're a happy us
 * [SAP](https://www.sap.com)
 * [SecureNative](https://www.securenative.com/)
 * [Serverless](https://serverless.com/)
+* [Skyscanner](https://skyscanner.net/)
 * [Spotify](https://www.spotify.com)
 * [Stackify](https://stackify.com/)
 * [Steamroot](https://streamroot.io)
