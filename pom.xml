@@ -72,7 +72,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
-      <version>3.5.4</version>
+      <version>3.9.8</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
