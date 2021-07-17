@@ -139,9 +139,9 @@ public class Testing {
   }
 
   public static <T> CircuitBreaker<T> withLogging(CircuitBreaker<T> circuitBreaker) {
-    return circuitBreaker.onOpen(() -> System.out.println("!! Opening"))
-      .onHalfOpen(() -> System.out.println("!! Half-opening"))
-      .onClose(() -> System.out.println("!! Closing"))
+    return circuitBreaker.onOpen(() -> System.out.println("Opening"))
+      .onHalfOpen(() -> System.out.println("Half-opening"))
+      .onClose(() -> System.out.println("Closing"))
       .onSuccess(e -> System.out.println("Success"))
       .onFailure(e -> System.out.println("Failure"));
   }
