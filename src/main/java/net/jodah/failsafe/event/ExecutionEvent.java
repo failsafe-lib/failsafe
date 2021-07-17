@@ -51,4 +51,11 @@ public class ExecutionEvent {
   public Duration getStartTime() {
     return context.getStartTime();
   }
+
+  /**
+   * Returns the elapsed time since the last execution attempt began.
+   */
+  public Duration getElapsedAttemptTime() {
+    return context.getElapsedAttemptTime();
+  }
 }

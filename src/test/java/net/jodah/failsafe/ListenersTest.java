@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Testing.failures;
 import static org.mockito.Mockito.*;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests event listener capabilities of FailsafeExecutor and Policy implementations.
@@ -455,5 +456,15 @@ public class ListenersTest {
 
   public void testFailingFallbackAsync() throws Throwable {
     assertForFailingFallback(false);
+  }
+  
+  public void shouldGetElapsedAttemptTime() {
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxAttempts(3)
+      .onRetry(e -> assertTrue(e.getElapsedAttemptTime().toMillis() >= 90))
+      .handleResult(false);
+    Failsafe.with(rp).get(() -> {
+      Thread.sleep(100);
+      return false;
+    });
   }
 }
