@@ -163,7 +163,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     // Given
     RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2);
     Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
-    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withCancel(true);
+    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
 
     // When / Then
     assertThrows(() -> Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {

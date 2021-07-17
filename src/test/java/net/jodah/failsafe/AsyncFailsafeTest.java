@@ -291,7 +291,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // Given
     RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2);
     Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
-    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withCancel(true);
+    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
     AtomicReference<FailsafeFuture<Boolean>> futureRef = new AtomicReference<>();
     CountDownLatch futureLatch = new CountDownLatch(1);
 

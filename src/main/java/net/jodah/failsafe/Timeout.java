@@ -7,24 +7,21 @@ import net.jodah.failsafe.internal.util.Assert;
 import java.time.Duration;
 
 /**
- * A policy that fails an execution with a {@link net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}
- * if it exceeds a timeout. Uses a separate thread on the configured scheduler or the common pool to perform timeouts
- * checks.
+ * A policy that cancels and fails an excecution with a {@link net.jodah.failsafe.TimeoutExceededException
+ * TimeoutExceededException} if a timeout is exceeded. Execution {@link #withInterrupt(boolean) interruption} is
+ * optionally supported. Asynchronous executions are cancelled by calling {@link java.util.concurrent.Future#cancel(boolean)
+ * cancel} on their underlying future. Executions can internally cooperate with cancellation by checking {@link
+ * ExecutionContext#isCancelled()}.
+ * <p>
+ * This policy uses a separate thread on the configured scheduler or the common pool to perform timeouts checks.
  * <p>
  * The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers can be
  * used to handle a timeout being exceeded or not.
  * </p>
- * <p>Note:
- * <ul>
- *   <li>The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers
- *   can be used to handle a timeout being exceeded or not.</li>
- *   <li>{@link #withCancel(boolean) Cancellation and interruption} are not supported when performing an {@link
- * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} and will have no effect since the async thread is
- * unknown to Failsafe.</li>
- * </ul>
- * </p>
+ * <p>Note: {@link #withInterrupt(boolean) interruption} will have no effect when performing an {@link
+ * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} since the async thread is unkown to Failsafe.</p>
  * <p>
- * This class is thread-safe.
+ * This class is threadsafe.
  * </p>
  *
  * @param <R> result type
@@ -33,7 +30,6 @@ import java.time.Duration;
  */
 public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy<R> {
   private final Duration timeout;
-  private volatile boolean cancellable;
   private volatile boolean interruptable;
 
   private Timeout(Duration timeout) {
@@ -48,12 +44,13 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   }
 
   /**
-   * Returns whether the policy can cancel an execution if the timeout is exceeded.
+   * This method is deprecated and will be removed in a future minor release.
    *
    * @see #withCancel(boolean)
+   * @deprecated Always returns {@code true}
    */
   public boolean canCancel() {
-    return cancellable;
+    return true;
   }
 
   /**
@@ -66,31 +63,34 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   }
 
   /**
-   * Configures the policy to cancel an execution if it times out. Execution cancellation can be observed from within an
-   * execution by checking {@link ExecutionContext#isCancelled()}, allowing execution to be gracefully stopped.
-   * Asynchronous executions are cancelled by calling {@link java.util.concurrent.Future#cancel(boolean) cancel} on
-   * their underlying future.
-   * <p>
-   * Notes:
-   * <ul>
-   *   <li>
-   * Executions that are cancelled or interrupted after they timeout are still completed with {@link net.jodah.failsafe.TimeoutExceededException TimeoutExceededException}.
-   *   </li>
-   *   <li>
-   * Cancellation and interruption are not supported when performing an {@link FailsafeExecutor#getAsyncExecution(AsyncSupplier)
-   * async execution} and will have no effect since the async thread is unknown to Failsafe.</p>
-   *   </li>
-   * </ul>
-   * </p>
+   * This method is deprecated and will be removed in a future minor release.
    *
-   * @param mayInterruptIfRunning Whether the policy should interrupt an execution in addition to cancelling it if the
-   * timeout is exceeded. When set to {@code true} the execution will be interrupted. For synchronous executions this is
-   * done by calling {@link Thread#interrupt()} on the execution's thread. For asynchronous executions this is done by
-   * calling {@link java.util.concurrent.Future#cancel(boolean) Future.cancel(true)}. Only set {@code
-   * mayInterruptIfRunning} to {@code true} if the code being executed is designed to be interrupted.
+   * @see #withInterrupt(boolean)
+   * @deprecated Tasks are cancelled by default when a Timeout is exceeded. Use {@link #withInterrupt(boolean)}
+   * interrupt cancelled tasks when a Timeout is exceeded.
    */
   public Timeout<R> withCancel(boolean mayInterruptIfRunning) {
-    cancellable = true;
+    interruptable = mayInterruptIfRunning;
+    return this;
+  }
+
+  /**
+   * When {@code mayInterruptIfRunning} is {@code true}, configures the policy to interrupt an execution in addition to
+   * cancelling it when the timeout is exceeded. For synchronous executions this is done by calling {@link
+   * Thread#interrupt()} on the execution's thread. For asynchronous executions this is done by calling {@link
+   * java.util.concurrent.Future#cancel(boolean) Future.cancel(true)}. Executions can internally cooperate with
+   * interruption by checking {@link Thread#isInterrupted()} or by handling {@link InterruptedException} where
+   * available.
+   * <p>
+   * Note: Only configure interrupts if the code being executed is designed to be interrupted.
+   * <p>
+   * <p>Note: {@link #withInterrupt(boolean) interruption} will have no effect when performing an {@link
+   * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} since the async thread is unkown to
+   * Failsafe.</p>
+   *
+   * @param mayInterruptIfRunning whether to enable interruption or not
+   */
+  public Timeout<R> withInterrupt(boolean mayInterruptIfRunning) {
     interruptable = mayInterruptIfRunning;
     return this;
   }

@@ -57,25 +57,23 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
     return () -> {
       // Coordinates a result between the timeout and execution threads
       AtomicReference<ExecutionResult> result = new AtomicReference<>();
-      Future<Object> timeoutFuture;
+      Future<?> timeoutFuture;
       Thread executionThread = Thread.currentThread();
 
       try {
         // Schedule timeout check
-        timeoutFuture = (Future) scheduler.schedule(() -> {
+        timeoutFuture = scheduler.schedule(() -> {
           if (result.getAndUpdate(v -> v != null ? v : ExecutionResult.failure(new TimeoutExceededException(policy)))
             == null) {
-            if (policy.canCancel()) {
-              // Cancel and interrupt
-              execution.cancelled = true;
-              if (policy.canInterrupt()) {
-                // Guard against race with the execution completing
-                synchronized (execution) {
-                  if (execution.canInterrupt) {
-                    execution.record(result.get());
-                    execution.interrupted = true;
-                    executionThread.interrupt();
-                  }
+            // Cancel and interrupt
+            execution.cancelled = true;
+            if (policy.canInterrupt()) {
+              // Guard against race with the execution completing
+              synchronized (execution) {
+                if (execution.canInterrupt) {
+                  execution.record(result.get());
+                  execution.interrupted = true;
+                  executionThread.interrupt();
                 }
               }
             }

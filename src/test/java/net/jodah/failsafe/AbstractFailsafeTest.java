@@ -362,7 +362,7 @@ public abstract class AbstractFailsafeTest {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(
       e -> waiter.assertTrue(e.getLastFailure() instanceof TimeoutExceededException)).withMaxRetries(2);
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withCancel(false);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1));
     ContextualSupplier supplier = ctx -> {
       if (ctx.getAttemptCount() != 2) {
         Thread.sleep(100);
@@ -389,7 +389,7 @@ public abstract class AbstractFailsafeTest {
   public void shouldTimeoutAndCancelAndInterrupt() throws Throwable {
     // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withCancel(true).onFailure(e -> {
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withInterrupt(true).onFailure(e -> {
       waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
     });
@@ -421,7 +421,7 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldHandleNonInterruptableExecution() throws Throwable {
     // Given
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withCancel(true);
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withInterrupt(true);
     CheckedSupplier supplier = () -> {
       try {
         Thread.sleep(1000);
