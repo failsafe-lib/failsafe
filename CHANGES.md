@@ -1,3 +1,14 @@
+# 2.4.1
+
+### Improvements
+
+- Fixed #234 - An outer `Timeout` should cancel any inner retries.
+
+### API Changes
+
+- Deprecated `Timeout.withCancel(boolean)` and `Timeout.canCancel()`. Timeouts always cancel any executions and inner retries.
+- Added `Timeout.withInterrupt(boolean)` to take the place of `withCancel`.
+
 # 2.4.0
 
 ### Improvements
