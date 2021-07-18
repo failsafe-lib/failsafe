@@ -66,6 +66,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     if (isDone())
       return false;
 
+    execution.cancelledIndex = Integer.MAX_VALUE;
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
     cancelResult = cancelDelegates(mayInterruptIfRunning, cancelResult);
     ExecutionResult result = ExecutionResult.failure(new CancellationException());
@@ -102,7 +103,6 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
    * execution as cancelled.
    */
   synchronized boolean cancelDelegates(boolean interruptDelegate, boolean result) {
-    execution.cancelled = true;
     execution.interrupted = interruptDelegate;
     if (delegate != null)
       result = delegate.cancel(interruptDelegate);
@@ -126,6 +126,9 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     }
   }
 
+  /**
+   * Injects a {@code timeoutDelegate} to be cancelled when this future is cancelled.
+   */
   synchronized void injectTimeout(Future<T> timeoutDelegate) {
     if (timeoutDelegates == null)
       timeoutDelegates = new ArrayList<>(3);

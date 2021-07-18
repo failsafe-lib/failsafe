@@ -60,7 +60,8 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     return () -> {
       while (true) {
         ExecutionResult result = supplier.get();
-        if (retriesExceeded)
+        // Returns if retries exceeded or an outer policy cancelled the execution
+        if (retriesExceeded || execution.cancelledIndex > policyIndex)
           return result;
 
         result = postExecute(result);
@@ -102,14 +103,14 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
             if (error != null)
               promise.completeExceptionally(error);
             else if (result != null) {
-              if (retriesExceeded)
+              if (retriesExceeded || execution.cancelledIndex > policyIndex)
                 promise.complete(result);
               else  {
                 postExecuteAsync(result, scheduler, future).whenComplete((postResult, postError) -> {
                   if (postError != null)
                     promise.completeExceptionally(postError);
                   else if (postResult != null) {
-                    if (retriesExceeded || postResult.isComplete())
+                    if (retriesExceeded || execution.cancelledIndex > policyIndex || postResult.isComplete())
                       promise.complete(postResult);
                     else {
                       // Guard against race with future.complete or future.cancel

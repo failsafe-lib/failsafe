@@ -54,8 +54,11 @@ public abstract class AbstractExecution extends ExecutionContext {
     this.executor = executor;
     policyExecutors = new ArrayList<>(executor.policies.size());
     ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
-    while (policyIterator.hasPrevious())
-      policyExecutors.add(policyIterator.previous().toExecutor(this));
+    for (int i = 1; policyIterator.hasPrevious(); i++) {
+      PolicyExecutor<Policy<Object>> policyExecutor = policyIterator.previous().toExecutor(this);
+      policyExecutor.policyIndex = i;
+      policyExecutors.add(policyExecutor);
+    }
   }
 
   /**
@@ -78,7 +81,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
     resultHandled = false;
-    cancelled = false;
+    cancelledIndex = 0;
     canInterrupt = true;
     interrupted = false;
   }

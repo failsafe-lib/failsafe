@@ -4,6 +4,8 @@ import net.jodah.failsafe.*;
 import net.jodah.failsafe.function.CheckedRunnable;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
@@ -24,9 +26,9 @@ public class PolicyOrderingTest {
     Fallback<Object> fb = Fallback.of("test");
 
     Object result = Testing.ignoreExceptions(
-        () -> Failsafe.with(fb, rp, cb).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).get(() -> {
-          throw new FooException();
-        }));
+      () -> Failsafe.with(fb, rp, cb).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).get(() -> {
+        throw new FooException();
+      }));
 
     assertEquals(result, "test");
     assertTrue(cb.isClosed());
@@ -37,9 +39,9 @@ public class PolicyOrderingTest {
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
     Testing.ignoreExceptions(
-        () -> Failsafe.with(cb, rp).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).run(() -> {
-          throw new Exception();
-        }));
+      () -> Failsafe.with(cb, rp).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).run(() -> {
+        throw new Exception();
+      }));
 
     assertTrue(cb.isClosed());
   }
@@ -110,5 +112,70 @@ public class PolicyOrderingTest {
     Testing.ignoreExceptions(() -> Failsafe.with(cb1, cb2).run(runnable));
     assertTrue(cb1.isOpen());
     assertTrue(cb2.isClosed());
+  }
+
+  /**
+   * Tests that an inner timeout does not prevent outer retries from being performed.
+   */
+  public void testTimeoutThenRetry() throws Throwable {
+    AtomicInteger timeoutCounter = new AtomicInteger();
+    AtomicInteger retryPolicyCounter = new AtomicInteger();
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withInterrupt(true).onFailure(e -> {
+      timeoutCounter.incrementAndGet();
+    });
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().onRetry(e -> {
+      retryPolicyCounter.incrementAndGet();
+    });
+
+    // Sync
+    Asserts.assertThrows(() -> Failsafe.with(retryPolicy, timeout).get(() -> {
+      Thread.sleep(1000);
+      throw new Exception();
+    }), TimeoutExceededException.class);
+    assertEquals(timeoutCounter.get(), 3);
+    assertEquals(retryPolicyCounter.get(), 2);
+
+    // Async
+    timeoutCounter.set(0);
+    retryPolicyCounter.set(0);
+    Asserts.assertThrows(() -> Failsafe.with(retryPolicy, timeout).getAsync(() -> {
+      Thread.sleep(1000);
+      throw new Exception();
+    }).get(), ExecutionException.class, TimeoutExceededException.class);
+    assertEquals(timeoutCounter.get(), 3);
+    assertEquals(retryPolicyCounter.get(), 2);
+  }
+
+  /**
+   * Tests that an outer timeout will cancel inner retries.
+   */
+  public void testRetryThenTimeout() {
+    AtomicInteger timeoutCounter = new AtomicInteger();
+    AtomicInteger retryPolicyCounter = new AtomicInteger();
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(150)).withInterrupt(true).onFailure(e -> {
+      timeoutCounter.incrementAndGet();
+
+    });
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().onRetry(e -> {
+      retryPolicyCounter.incrementAndGet();
+    });
+
+    // Sync
+    Asserts.assertThrows(() -> Failsafe.with(timeout, retryPolicy).get(() -> {
+      Thread.sleep(100);
+      throw new Exception();
+    }), TimeoutExceededException.class);
+    assertEquals(timeoutCounter.get(), 1);
+    assertEquals(retryPolicyCounter.get(), 1);
+
+    // Async
+    timeoutCounter.set(0);
+    retryPolicyCounter.set(0);
+    Asserts.assertThrows(() -> Failsafe.with(timeout, retryPolicy).getAsync(() -> {
+      Thread.sleep(100);
+      throw new Exception();
+    }).get(), ExecutionException.class, TimeoutExceededException.class);
+    assertEquals(timeoutCounter.get(), 1);
+    assertEquals(retryPolicyCounter.get(), 1);
   }
 }

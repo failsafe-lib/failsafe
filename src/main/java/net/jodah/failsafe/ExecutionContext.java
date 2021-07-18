@@ -30,7 +30,8 @@ public class ExecutionContext {
   AtomicInteger attempts = new AtomicInteger();
 
   // Internally mutable state
-  volatile boolean cancelled;
+  /* The index of a PolicyExecutor that cancelled the execution. 0 represents non-cancelled. */
+  volatile int cancelledIndex;
   volatile Object lastResult;
   volatile Throwable lastFailure;
 
@@ -41,7 +42,7 @@ public class ExecutionContext {
     this.startTime = context.startTime;
     this.attemptStartTime = context.attemptStartTime;
     this.attempts = context.attempts;
-    this.cancelled = context.cancelled;
+    this.cancelledIndex = context.cancelledIndex;
     this.lastResult = context.lastResult;
     this.lastFailure = context.lastFailure;
   }
@@ -103,7 +104,7 @@ public class ExecutionContext {
    * Returns whether the execution has ben cancelled. In this case the implementor should attempt to stop execution.
    */
   public boolean isCancelled() {
-    return cancelled;
+    return cancelledIndex != 0;
   }
 
   /**

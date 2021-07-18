@@ -31,6 +31,8 @@ import java.util.function.Supplier;
 public abstract class PolicyExecutor<P extends Policy> {
   protected final P policy;
   protected final AbstractExecution execution;
+  /* Index of the policy relative to other policies in a composition, inner-most first */
+  int policyIndex;
 
   protected PolicyExecutor(P policy, AbstractExecution execution) {
     this.policy = policy;
