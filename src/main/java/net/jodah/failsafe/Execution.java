@@ -44,7 +44,6 @@ public class Execution extends AbstractExecution {
   @SuppressWarnings("unchecked")
   Execution(FailsafeExecutor<?> executor) {
     super(DelegatingScheduler.INSTANCE, (FailsafeExecutor<Object>) executor);
-    preExecute();
   }
 
   /**
