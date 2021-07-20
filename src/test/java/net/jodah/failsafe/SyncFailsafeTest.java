@@ -20,6 +20,7 @@ import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
 import net.jodah.failsafe.function.ContextualRunnable;
 import net.jodah.failsafe.function.ContextualSupplier;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -203,33 +204,47 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
    * Asserts that Failsafe throws when interrupting while blocked in an execution.
    */
   public void shouldThrowWhenInterruptedDuringSynchronousExecution() {
-    Thread mainThread = Thread.currentThread();
-    new Thread(() -> {
+    Thread main = Thread.currentThread();
+    CompletableFuture.runAsync(() -> {
       try {
         Thread.sleep(100);
-        mainThread.interrupt();
-      } catch (Exception e) {
+        main.interrupt();
+      } catch (InterruptedException e) {
       }
-    }).start();
+    });
 
-    try {
-      Failsafe.with(new RetryPolicy<>().withMaxRetries(0)).run(() -> {
-        try {
-          Thread.sleep(10000);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw e;
-        }
-        fail("Expected interruption");
-      });
-    } catch (Exception e) {
-      assertTrue(e instanceof FailsafeException);
-      assertTrue(e.getCause() instanceof InterruptedException);
-      // Clear interrupt flag
-      assertTrue(Thread.interrupted());
-      return;
-    }
-    fail("Exception expected");
+    Asserts.assertThrows(() -> Failsafe.with(new RetryPolicy<>().withMaxRetries(0)).run(() -> {
+      try {
+        Thread.sleep(10000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw e;
+      }
+      fail("Expected interruption");
+    }), FailsafeException.class, InterruptedException.class);
+    // Clear interrupt flag
+    assertTrue(Thread.interrupted());
+  }
+
+  /**
+   * Asserts that the thread's interrupt flag is set after interrupting a sync RetryPolicy delay.
+   */
+  public void shouldThrowWhenInterruptedDuringRetryPolicyDelay() {
+    RetryPolicy<Object> rp = new RetryPolicy<>().withDelay(Duration.ofMillis(500));
+    Thread main = Thread.currentThread();
+    CompletableFuture.runAsync(() -> {
+      try {
+        Thread.sleep(100);
+        main.interrupt();
+      } catch (InterruptedException e) {
+      }
+    });
+
+    Asserts.assertThrows(() -> Failsafe.with(rp).run(() -> {
+      throw new Exception();
+    }), FailsafeException.class, InterruptedException.class);
+    // Clear interrupt flag
+    Assert.assertTrue(Thread.interrupted());
   }
 
   /**
