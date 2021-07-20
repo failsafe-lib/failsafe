@@ -50,6 +50,6 @@ public interface EventListener {
   }
 
   default void handle(ExecutionResult result, ExecutionContext context) {
-    handle(result.getResult(), result.getFailure(), context);
+    handle(result.getResult(), result.getFailure(), context.copy());
   }
 }

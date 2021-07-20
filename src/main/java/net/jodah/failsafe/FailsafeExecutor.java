@@ -312,11 +312,11 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
 
   void handleComplete(ExecutionResult result, ExecutionContext context) {
     if (successListener != null && result.getSuccessAll())
-      successListener.handle(result, context.copy());
+      successListener.handle(result, context);
     else if (failureListener != null && !result.getSuccessAll())
-      failureListener.handle(result, context.copy());
+      failureListener.handle(result, context);
     if (completeListener != null)
-      completeListener.handle(result, context.copy());
+      completeListener.handle(result, context);
   }
 
   /**
