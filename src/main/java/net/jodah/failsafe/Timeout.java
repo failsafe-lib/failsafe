@@ -56,7 +56,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   /**
    * Returns whether the policy can interrupt an execution if the timeout is exceeded.
    *
-   * @see #withCancel(boolean)
+   * @see #withInterrupt(boolean)
    */
   public boolean canInterrupt() {
     return interruptable;
