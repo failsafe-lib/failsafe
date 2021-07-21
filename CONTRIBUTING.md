@@ -18,5 +18,5 @@ If your feature idea sounds good, you can then submit a PR, else we'll schedule 
 
 ### Contributing Documentation or Website Fixes
 
-Fixes to the Failsafe documentation or website are welcome. Just checkout the [gh-pages branch](https://github.com/jhalterman/failsafe/tree/gh-pages) and feel free to submit a pull request.
+Fixes to the Failsafe documentation or website are welcome. Just checkout the [gh-pages branch](https://github.com/failsafe-lib/failsafe/tree/gh-pages) and feel free to submit a pull request.
 

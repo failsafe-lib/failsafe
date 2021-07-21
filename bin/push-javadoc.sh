@@ -1,13 +1,14 @@
 #!/bin/sh
 # run from top level dir
 
+ORG=failsafe-lib
 PROJECT=failsafe
 
 build () {
   echo "Building javadocs"
   mvn javadoc:javadoc -Djv=$apiVersion
   rm -rf target/docs
-  git clone git@github.com:jhalterman/$PROJECT.git target/docs -b gh-pages
+  git clone git@github.com:$ORG/$PROJECT.git target/docs -b gh-pages
   cd target/docs
   git rm -rf javadoc
   mkdir -p javadoc

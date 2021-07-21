@@ -12,7 +12,7 @@
   <artifactId>failsafe</artifactId>
   <version>2.4.2-SNAPSHOT</version>
   <name>Failsafe</name>
-  <url>http://github.com/jhalterman/failsafe/</url>
+  <url>https://failsafe-lib.github.io</url>
 
   <licenses>
     <license>
@@ -30,9 +30,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:jhalterman/failsafe.git</connection>
-    <developerConnection>scm:git:git@github.com:jhalterman/failsafe.git</developerConnection>
-    <url>http://github.com/jhalterman/failsafe/</url>
+    <connection>scm:git:git@github.com:failsafe-lib/failsafe.git</connection>
+    <developerConnection>scm:git:git@github.com:failsafe-lib/failsafe.git</developerConnection>
+    <url>https://github.com/failsafe-lib/failsafe</url>
   </scm>
 
   <dependencies>
