@@ -8,6 +8,7 @@
 
 - Deprecated `Timeout.withCancel(boolean)` and `Timeout.canCancel()`. Timeouts always cancel any executions and inner retries.
 - Added `Timeout.withInterrupt(boolean)` to take the place of `withCancel`.
+- Added `ExecutionEvent.getElapsedAttemptTime()`.
 
 # 2.4.0
 
