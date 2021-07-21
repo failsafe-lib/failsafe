@@ -417,7 +417,7 @@ public abstract class AbstractFailsafeTest {
   }
 
   /**
-   * Ensures that an interrupted execution should always have the interrupt flag cleared afterwards.
+   * Ensures that an internally interrupted execution should always have the interrupt flag cleared afterwards.
    */
   public void shouldHandleNonInterruptableExecution() throws Throwable {
     // Given

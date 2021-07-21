@@ -25,6 +25,9 @@ import java.util.function.Supplier;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link Timeout}.
+ * <p>
+ * Timeouts are scheduled to occur in a separate thread. When cancelled, the Timeout has no bearing on the execution
+ * result, which will be set by a separate Supplier.
  */
 class TimeoutExecutor extends PolicyExecutor<Timeout> {
   TimeoutExecutor(Timeout timeout, AbstractExecution execution) {
@@ -52,7 +55,6 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
    * exceeded.
    */
   @Override
-  @SuppressWarnings("unchecked")
   protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
     return () -> {
       // Coordinates a result between the timeout and execution threads
@@ -63,8 +65,8 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
       try {
         // Schedule timeout check
         timeoutFuture = scheduler.schedule(() -> {
-          if (result.getAndUpdate(v -> v != null ? v : ExecutionResult.failure(new TimeoutExceededException(policy)))
-            == null) {
+          // Guard against race with execution completion
+          if (result.compareAndSet(null, ExecutionResult.failure(new TimeoutExceededException(policy)))) {
             // Cancel and interrupt
             execution.cancelledIndex = policyIndex;
             if (policy.canInterrupt()) {
@@ -97,14 +99,13 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
    * timeout is exceeded.
    */
   @Override
-  @SuppressWarnings("unchecked")
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
       // Coordinates a result between the timeout and execution threads
       AtomicReference<ExecutionResult> executionResult = new AtomicReference<>();
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      AtomicReference<Future<Object>> timeoutFuture = new AtomicReference<>();
+      AtomicReference<Future<?>> timeoutFuture = new AtomicReference<>();
 
       // Schedule timeout if not an async execution
       if (!execution.isAsyncExecution()) {
@@ -113,15 +114,18 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           if (!future.isDone()) {
             try {
               // Schedule timeout check
-              timeoutFuture.set((Future) scheduler.schedule(() -> {
-                if (executionResult.compareAndSet(null, ExecutionResult.failure(new TimeoutExceededException(policy)))) {
+              timeoutFuture.set(scheduler.schedule(() -> {
+                // Guard against race with execution completion
+                if (executionResult.compareAndSet(null,
+                  ExecutionResult.failure(new TimeoutExceededException(policy)))) {
+
                   boolean canInterrupt = policy.canInterrupt();
                   if (canInterrupt)
                     execution.record(executionResult.get());
 
                   // Cancel and interrupt
                   execution.cancelledIndex = policyIndex;
-                  future.cancelDelegates(canInterrupt, false);
+                  future.cancelDependencies(canInterrupt, false);
                 }
                 return null;
               }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS));
@@ -144,7 +148,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           }
 
           // Cancel timeout task
-          Future<Object> maybeFuture = timeoutFuture.get();
+          Future<?> maybeFuture = timeoutFuture.get();
           if (maybeFuture != null)
             maybeFuture.cancel(false);
         } else {
@@ -155,8 +159,8 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           }
         }
 
-        promise.complete(result);
         postExecuteAsync(result, scheduler, future);
+        promise.complete(result);
       });
 
       return promise;

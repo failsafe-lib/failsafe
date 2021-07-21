@@ -34,8 +34,9 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   private AbstractExecution execution;
 
   // Mutable state, guarded by "this"
-  private Future<T> delegate;
-  private List<Future<T>> timeoutDelegates;
+  private Future<T> dependency;
+  private Runnable cancelFn;
+  private List<Future<T>> timeoutDependencies;
 
   FailsafeFuture(FailsafeExecutor<T> executor) {
     this.executor = executor;
@@ -68,7 +69,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
 
     execution.cancelledIndex = Integer.MAX_VALUE;
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
-    cancelResult = cancelDelegates(mayInterruptIfRunning, cancelResult);
+    cancelResult = cancelDependencies(mayInterruptIfRunning, cancelResult);
     ExecutionResult result = ExecutionResult.failure(new CancellationException());
     super.completeExceptionally(result.getFailure());
     executor.handleComplete(result, execution);
@@ -94,48 +95,58 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     return completed;
   }
 
-  synchronized Future<T> getDelegate() {
-    return delegate;
+  synchronized Future<T> getDependency() {
+    return dependency;
+  }
+
+  synchronized List<Future<T>> getTimeoutDelegates() {
+    return timeoutDependencies;
   }
 
   /**
-   * Cancels the delegate passing in the {@code interruptDelegate} flag, cancels all timeout delegates, and marks the
-   * execution as cancelled.
+   * Cancels the dependency passing in the {@code interruptDelegate} flag, applies the retry cancel fn, and cancels all
+   * timeout dependencies.
    */
-  synchronized boolean cancelDelegates(boolean interruptDelegate, boolean result) {
+  synchronized boolean cancelDependencies(boolean interruptDelegate, boolean result) {
     execution.interrupted = interruptDelegate;
-    if (delegate != null)
-      result = delegate.cancel(interruptDelegate);
-    if (timeoutDelegates != null) {
-      for (Future<T> timeoutDelegate : timeoutDelegates)
+    if (dependency != null)
+      result = dependency.cancel(interruptDelegate);
+    if (cancelFn != null)
+      cancelFn.run();
+    if (timeoutDependencies != null) {
+      for (Future<T> timeoutDelegate : timeoutDependencies)
         timeoutDelegate.cancel(false);
-      timeoutDelegates.clear();
+      timeoutDependencies.clear();
     }
     return result;
   }
 
-  synchronized List<Future<T>> getTimeoutDelegates() {
-    return timeoutDelegates;
-  }
-
-  synchronized void inject(Future<T> delegate) {
-    this.delegate = delegate;
-    if (timeoutDelegates != null) {
-      // Timeout delegates should already be cancelled
-      timeoutDelegates.clear();
-    }
+  void inject(AbstractExecution execution) {
+    this.execution = execution;
   }
 
   /**
-   * Injects a {@code timeoutDelegate} to be cancelled when this future is cancelled.
+   * Injects a {@code dependency} to be cancelled when this future is cancelled.
    */
-  synchronized void injectTimeout(Future<T> timeoutDelegate) {
-    if (timeoutDelegates == null)
-      timeoutDelegates = new ArrayList<>(3);
-    timeoutDelegates.add(timeoutDelegate);
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  synchronized void inject(Future<?> dependency) {
+    this.dependency = (Future) dependency;
   }
 
-  void inject(AbstractExecution execution) {
-    this.execution = execution;
+  /**
+   * Injects a {@code cancelFn} to be called when this future is cancelled.
+   */
+  synchronized void injectCancelFn(Runnable cancelFn) {
+    this.cancelFn = cancelFn;
+  }
+
+  /**
+   * Injects a {@code timeoutDependency} to be cancelled when this future is cancelled.
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  synchronized void injectTimeout(Future<?> timeoutDependency) {
+    if (timeoutDependencies == null)
+      timeoutDependencies = new ArrayList<>(3);
+    timeoutDependencies.add((Future) timeoutDependency);
   }
 }

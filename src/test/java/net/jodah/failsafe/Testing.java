@@ -113,6 +113,16 @@ public class Testing {
   /**
    * Unwraps and throws ExecutionException and FailsafeException causes.
    */
+  public static void unwrapRunnableExceptions(CheckedRunnable runnable) {
+    unwrapExceptions(() -> {
+      runnable.run();
+      return null;
+    });
+  }
+
+  /**
+   * Unwraps and throws ExecutionException and FailsafeException causes.
+   */
   public static <T> T unwrapExceptions(CheckedSupplier<T> supplier) {
     try {
       return supplier.get();

@@ -19,6 +19,7 @@ import net.jodah.failsafe.function.CheckedRunnable;
 import org.testng.Assert;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static org.testng.Assert.assertEquals;
@@ -35,13 +36,12 @@ public class Asserts {
     return true;
   }
 
-  @SafeVarargs
-  public static void assertMatches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
+  public static void assertMatches(Throwable actual, List<Class<? extends Throwable>> throwableHierarchy) {
     Throwable current = actual;
     for (Class<? extends Throwable> expected : throwableHierarchy) {
       if (!expected.equals(current.getClass()))
         Assert.fail(
-            String.format("Bad exception type. Expected %s but was %s", Arrays.toString(throwableHierarchy), actual));
+            String.format("Bad exception type. Expected %s but was %s", Arrays.toString(throwableHierarchy.toArray()), actual));
       current = current.getCause();
     }
   }
@@ -58,12 +58,16 @@ public class Asserts {
   @SafeVarargs
   public static void assertThrows(CheckedRunnable runnable, Class<? extends Throwable>... throwableHierarchy) {
     assertThrows(runnable, t -> {
+    } , Arrays.asList(throwableHierarchy));
+  }
+
+  public static void assertThrows(CheckedRunnable runnable, List<Class<? extends Throwable>> throwableHierarchy) {
+    assertThrows(runnable, t -> {
     } , throwableHierarchy);
   }
 
-  @SafeVarargs
   public static void assertThrows(CheckedRunnable runnable, Consumer<Throwable> exceptionConsumer,
-      Class<? extends Throwable>... throwableHierarchy) {
+    List<Class<? extends Throwable>> throwableHierarchy) {
     boolean fail = false;
     try {
       runnable.run();

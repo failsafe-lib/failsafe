@@ -57,7 +57,7 @@ final class Functions {
             // Clear interrupt flag if interruption was intended
             Thread.interrupted();
           else if (throwable instanceof InterruptedException)
-            // Set interrupt flag if interrupt occurred but was not intentional
+            // Set interrupt flag if interrupt occurred but was not intended
             Thread.currentThread().interrupt();
         }
       }
@@ -91,7 +91,6 @@ final class Functions {
    * Returns a Supplier that asynchronously applies the {@code supplier} on the first call, synchronously on subsequent
    * calls, and returns a promise containing the result.
    */
-  @SuppressWarnings("unchecked")
   static Supplier<CompletableFuture<ExecutionResult>> getPromiseAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     AtomicBoolean scheduled = new AtomicBoolean();
@@ -109,7 +108,7 @@ final class Functions {
 
         try {
           scheduled.set(true);
-          future.inject((Future) scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
+          future.inject(scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
         } catch (Throwable t) {
           promise.completeExceptionally(t);
         }

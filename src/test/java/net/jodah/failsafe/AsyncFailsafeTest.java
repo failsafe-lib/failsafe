@@ -306,7 +306,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
       Consumer<Boolean> asserts = (expected) -> {
         waiter.assertEquals(expected, ctx.isCancelled());
-        waiter.assertEquals(expected, futureRef.get().getDelegate().isCancelled());
+        waiter.assertEquals(expected, futureRef.get().getDependency().isCancelled());
         if (!futureRef.get().getTimeoutDelegates().isEmpty())
           waiter.assertEquals(expected, futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
       };
@@ -352,7 +352,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // Then
     assertTrue(future.isCancelled());
-    assertTrue(future.getDelegate().isCancelled());
+    assertTrue(future.getDependency().isCancelled());
     assertTrue(
       future.getTimeoutDelegates() == null || future.getTimeoutDelegates().stream().allMatch(Future::isCancelled));
     assertTrue(future.isDone());

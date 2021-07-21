@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 class FallbackExecutor extends PolicyExecutor<Fallback> {
   private final EventListener failedAttemptListener;
 
-  FallbackExecutor(Fallback fallback, AbstractExecution execution,   EventListener failedAttemptListener) {
+  FallbackExecutor(Fallback fallback, AbstractExecution execution, EventListener failedAttemptListener) {
     super(fallback, execution);
     this.failedAttemptListener = failedAttemptListener;
   }
@@ -41,6 +41,9 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
   protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
     return () -> {
       ExecutionResult result = supplier.get();
+      if (executionCancelled())
+        return result;
+
       if (isFailure(result)) {
         try {
           result = policy == Fallback.VOID ?
@@ -63,8 +66,13 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> supplier.get().thenCompose(result -> {
+      CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+      if (executionCancelled()) {
+        promise.complete(result);
+        return promise;
+      }
+
       if (isFailure(result)) {
-        CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
         Callable<Object> callable = () -> {
           try {
             CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
@@ -85,7 +93,7 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
           if (!policy.isAsync())
             callable.call();
           else
-            future.inject((Future) scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
+            future.inject(scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
         } catch (Throwable t) {
           promise.completeExceptionally(t);
         }

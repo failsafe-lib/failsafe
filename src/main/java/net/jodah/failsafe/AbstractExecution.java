@@ -35,11 +35,13 @@ public abstract class AbstractExecution extends ExecutionContext {
   final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
   // Internally mutable state
+  /* Whether the execution attempt has been recorded */
+  volatile boolean attemptRecorded;
   /* Whether a result has been post-executed */
   volatile boolean resultHandled;
   /* Whether the execution can be interrupted */
   volatile boolean canInterrupt;
-  /* Whether the execution has been interrupted */
+  /* Whether the execution has been internally interrupted */
   volatile boolean interrupted;
   /* The wait time in nanoseconds. */
   volatile long waitNanos;
@@ -63,14 +65,18 @@ public abstract class AbstractExecution extends ExecutionContext {
 
   /**
    * Records an execution attempt so long as the execution has not already been completed or interrupted. In the case of
-   * interruption, an execution will be recorded by the interrupting thread.
+   * interruption, an execution may have already been recorded, but the result will be re-recorded by the interrupting
+   * thread.
    *
    * @throws IllegalStateException if the execution is already complete
    */
   void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
     if (!interrupted) {
-      attempts.incrementAndGet();
+      if (!attemptRecorded) {
+        attempts.incrementAndGet();
+        attemptRecorded = true;
+      }
       lastResult = result.getResult();
       lastFailure = result.getFailure();
     }
@@ -80,6 +86,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     attemptStartTime = Duration.ofNanos(System.nanoTime());
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
+    attemptRecorded = false;
     resultHandled = false;
     cancelledIndex = 0;
     canInterrupt = true;

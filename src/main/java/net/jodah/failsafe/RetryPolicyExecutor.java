@@ -21,7 +21,6 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -61,20 +60,28 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
       while (true) {
         ExecutionResult result = supplier.get();
         // Returns if retries exceeded or an outer policy cancelled the execution
-        if (retriesExceeded || execution.cancelledIndex > policyIndex)
+        if (retriesExceeded || executionCancelled())
           return result;
 
         result = postExecute(result);
-        if (result.isComplete())
+        if (result.isComplete() || executionCancelled())
           return result;
 
         try {
+          // Guard against race with Timeout so that sleep can either be skipped or interrupted
+          execution.canInterrupt = true;
           Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getWaitNanos()));
         } catch (InterruptedException e) {
+          // Set interrupt flag if interrupt was not intended
           if (!execution.interrupted)
             Thread.currentThread().interrupt();
           return ExecutionResult.failure(new FailsafeException(e));
+        } finally {
+          execution.canInterrupt = false;
         }
+        
+        if (executionCancelled())
+          return result;
 
         // Call retry listener
         if (retryListener != null)
@@ -84,7 +91,6 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
@@ -103,23 +109,27 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
             if (error != null)
               promise.completeExceptionally(error);
             else if (result != null) {
-              if (retriesExceeded || execution.cancelledIndex > policyIndex)
+              if (retriesExceeded || executionCancelled()) {
                 promise.complete(result);
-              else  {
+              } else {
                 postExecuteAsync(result, scheduler, future).whenComplete((postResult, postError) -> {
                   if (postError != null)
                     promise.completeExceptionally(postError);
                   else if (postResult != null) {
-                    if (retriesExceeded || execution.cancelledIndex > policyIndex || postResult.isComplete())
+                    if (postResult.isComplete() || executionCancelled()) {
                       promise.complete(postResult);
-                    else {
+                    } else {
                       // Guard against race with future.complete or future.cancel
                       synchronized (future) {
                         if (!future.isDone()) {
                           try {
                             previousResult = postResult;
-                            future.inject(
-                              (Future) scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
+                            future.inject(scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
+                            future.injectCancelFn(() -> {
+                              // Ensure that the promise completes if a scheduled retry is cancelled
+                              if (executionCancelled())
+                                promise.complete(null);
+                            });
                           } catch (Throwable t) {
                             // Hard scheduling failure
                             promise.completeExceptionally(t);

@@ -21,7 +21,6 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -179,12 +178,11 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @param asyncExecution whether this is a detached, async execution that must be manually completed
    */
-  @SuppressWarnings("unchecked")
   void executeAsync(boolean asyncExecution) {
     if (!asyncExecution)
       outerExecutionSupplier.get().whenComplete(this::complete);
     else
-      future.inject((Future) scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
+      future.inject(scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
   }
 
   /**

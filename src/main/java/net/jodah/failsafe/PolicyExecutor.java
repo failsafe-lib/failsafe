@@ -144,6 +144,13 @@ public abstract class PolicyExecutor<P extends Policy> {
     return CompletableFuture.completedFuture(execution.resultHandled ? result : onFailure(result));
   }
 
+  /**
+   * Returns whether execution has been cancelled for this policy by an outer policy.
+   */
+  boolean executionCancelled() {
+    return execution.cancelledIndex > policyIndex;
+  }
+
   private void callSuccessListener(ExecutionResult result) {
     if (result.isComplete() && policy instanceof PolicyListeners) {
       PolicyListeners policyListeners = (PolicyListeners) policy;
