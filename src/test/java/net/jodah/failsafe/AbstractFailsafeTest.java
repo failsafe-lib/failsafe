@@ -18,6 +18,7 @@ package net.jodah.failsafe;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Testing.ConnectException;
 import net.jodah.failsafe.Testing.Service;
+import net.jodah.failsafe.Testing.Stats;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
@@ -144,7 +145,8 @@ public abstract class AbstractFailsafeTest {
    */
   public void shouldSupportTimeBasedFailureRateThresholding() throws Throwable {
     // Given
-    CircuitBreaker<Boolean> circuitBreaker = Testing.withLogging(new CircuitBreaker<Boolean>())
+    Stats cbStats = new Stats();
+    CircuitBreaker<Boolean> circuitBreaker = Testing.withStats(new CircuitBreaker<Boolean>(), cbStats, true)
       .withFailureRateThreshold(50, 3, Duration.ofMillis(200))
       .withDelay(Duration.ofMillis(0))
       .handleResult(false);

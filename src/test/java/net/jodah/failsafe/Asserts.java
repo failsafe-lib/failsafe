@@ -24,6 +24,9 @@ import java.util.function.Consumer;
 
 import static org.testng.Assert.assertEquals;
 
+/**
+ * Utilities to assist with performing assertions.
+ */
 public class Asserts {
   @SafeVarargs
   public static boolean matches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
@@ -41,7 +44,8 @@ public class Asserts {
     for (Class<? extends Throwable> expected : throwableHierarchy) {
       if (!expected.equals(current.getClass()))
         Assert.fail(
-            String.format("Bad exception type. Expected %s but was %s", Arrays.toString(throwableHierarchy.toArray()), actual));
+          String.format("Bad exception type. Expected %s but was %s", Arrays.toString(throwableHierarchy.toArray()),
+            actual));
       current = current.getCause();
     }
   }
@@ -51,19 +55,19 @@ public class Asserts {
       runnable.run();
       Assert.fail("No exception was thrown");
     } catch (Throwable t) {
-      assertEquals(t, throwable,"The expected exception was not thrown");
+      assertEquals(t, throwable, "The expected exception was not thrown");
     }
   }
 
   @SafeVarargs
   public static void assertThrows(CheckedRunnable runnable, Class<? extends Throwable>... throwableHierarchy) {
     assertThrows(runnable, t -> {
-    } , Arrays.asList(throwableHierarchy));
+    }, Arrays.asList(throwableHierarchy));
   }
 
   public static void assertThrows(CheckedRunnable runnable, List<Class<? extends Throwable>> throwableHierarchy) {
     assertThrows(runnable, t -> {
-    } , throwableHierarchy);
+    }, throwableHierarchy);
   }
 
   public static void assertThrows(CheckedRunnable runnable, Consumer<Throwable> exceptionConsumer,

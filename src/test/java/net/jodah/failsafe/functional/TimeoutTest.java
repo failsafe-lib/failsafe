@@ -1,21 +1,27 @@
+/*
+ * Copyright 2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License
+ */
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
-import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.function.CheckedRunnable;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
+import static net.jodah.failsafe.Testing.testSyncAndAsync;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -334,44 +340,5 @@ public class TimeoutTest {
     // Test with interrupt
     timeout.withInterrupt(true);
     test.run();
-  }
-
-  /**
-   * Does a .run and .runAsync against the failsafe, performing pre-test setup and post-test assertion checks. {@code
-   * expectedExceptions} are verified against thrown exceptions _and_ the ExecutionCompletedEvent's failure.
-   */
-  @SafeVarargs
-  private final void testSyncAndAsync(FailsafeExecutor<?> failsafe, Runnable preTestSetup, CheckedRunnable test,
-    Consumer<ExecutionCompletedEvent<?>> postTestAssertions, Class<? extends Throwable>... expectedExceptions) {
-    AtomicReference<ExecutionCompletedEvent<?>> completedEventRef = new AtomicReference<>();
-    CheckedConsumer<ExecutionCompletedEvent<?>> setCompletedEventFn = completedEventRef::set;
-    List<Class<? extends Throwable>> expected = new LinkedList<>();
-    Collections.addAll(expected, expectedExceptions);
-
-    Runnable postTestFn = () -> {
-      if (expectedExceptions.length > 0)
-        Asserts.assertMatches(completedEventRef.get().getFailure(), Arrays.asList(expectedExceptions));
-      postTestAssertions.accept(completedEventRef.get());
-    };
-
-    // Sync test
-    System.out.println("\nRunning sync test");
-    preTestSetup.run();
-    if (expectedExceptions.length == 0)
-      Testing.unwrapRunnableExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).run(test));
-    else
-      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).run(test), expectedExceptions);
-    postTestFn.run();
-
-    // Async test
-    System.out.println("\nRunning async test");
-    preTestSetup.run();
-    if (expectedExceptions.length == 0) {
-      Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).runAsync(test).get());
-    } else {
-      expected.add(0, ExecutionException.class);
-      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).runAsync(test).get(), expected);
-    }
-    postTestFn.run();
   }
 }
