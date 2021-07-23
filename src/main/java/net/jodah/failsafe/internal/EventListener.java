@@ -15,24 +15,26 @@
  */
 package net.jodah.failsafe.internal;
 
+import net.jodah.failsafe.AbstractExecution;
 import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.ExecutionResult;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.event.ExecutionScheduledEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
 
 /**
  * Handles an execution event.
  */
 public interface EventListener {
-  void handle(Object result, Throwable failure, ExecutionContext context);
+  void handle(Object result, Throwable failure, AbstractExecution execution, ExecutionContext context);
 
   @SuppressWarnings("unchecked")
   static <R> EventListener of(CheckedConsumer<? extends ExecutionCompletedEvent<R>> handler) {
-    return (Object result, Throwable failure, ExecutionContext context) -> {
+    return (Object result, Throwable failure, AbstractExecution execution, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionCompletedEvent<R>>) handler).accept(
-            new ExecutionCompletedEvent<>((R) result, failure, context));
+          new ExecutionCompletedEvent<>((R) result, failure, context));
       } catch (Throwable ignore) {
       }
     };
@@ -40,16 +42,27 @@ public interface EventListener {
 
   @SuppressWarnings("unchecked")
   static <R> EventListener ofAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> handler) {
-    return (Object result, Throwable failure, ExecutionContext context) -> {
+    return (Object result, Throwable failure, AbstractExecution execution, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionAttemptedEvent<R>>) handler).accept(
-            new ExecutionAttemptedEvent<>((R) result, failure, context));
+          new ExecutionAttemptedEvent<>((R) result, failure, context));
       } catch (Throwable ignore) {
       }
     };
   }
 
-  default void handle(ExecutionResult result, ExecutionContext context) {
-    handle(result.getResult(), result.getFailure(), context.copy());
+  @SuppressWarnings("unchecked")
+  static <R> EventListener ofScheduled(CheckedConsumer<? extends ExecutionScheduledEvent<R>> handler) {
+    return (Object result, Throwable failure, AbstractExecution execution, ExecutionContext context) -> {
+      try {
+        ((CheckedConsumer<ExecutionScheduledEvent<R>>) handler).accept(
+          new ExecutionScheduledEvent<>((R) result, failure, execution, context));
+      } catch (Throwable ignore) {
+      }
+    };
+  }
+
+  default void handle(ExecutionResult result, AbstractExecution execution) {
+    handle(result.getResult(), result.getFailure(), execution, execution.copy());
   }
 }

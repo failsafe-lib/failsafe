@@ -40,10 +40,10 @@ public class ListenersTest {
   Waiter waiter;
 
   // RetryPolicy listener counters
-  ListenerCounter rpHandle = new ListenerCounter();
   ListenerCounter rpAbort = new ListenerCounter();
   ListenerCounter rpFailedAttempt = new ListenerCounter();
   ListenerCounter rpRetriesExceeded = new ListenerCounter();
+  ListenerCounter rpScheduled = new ListenerCounter();
   ListenerCounter rpRetry = new ListenerCounter();
   ListenerCounter rpSuccess = new ListenerCounter();
   ListenerCounter rpFailure = new ListenerCounter();
@@ -92,6 +92,8 @@ public class ListenersTest {
     rpAbort.reset();
     rpFailedAttempt.reset();
     rpRetriesExceeded.reset();
+    rpSuccess.reset();
+    rpScheduled.reset();
     rpRetry.reset();
     rpSuccess.reset();
     rpFailure.reset();
@@ -120,6 +122,7 @@ public class ListenersTest {
     retryPolicy.onAbort(e -> rpAbort.record());
     retryPolicy.onFailedAttempt(e -> rpFailedAttempt.record());
     retryPolicy.onRetriesExceeded(e -> rpRetriesExceeded.record());
+    retryPolicy.onRetryScheduled(e -> rpScheduled.record());
     retryPolicy.onRetry(e -> rpRetry.record());
     retryPolicy.onSuccess(e -> rpSuccess.record());
     retryPolicy.onFailure(e -> rpFailure.record());
@@ -168,6 +171,7 @@ public class ListenersTest {
     rpAbort.assertEquals(0);
     rpFailedAttempt.assertEquals(4);
     rpRetriesExceeded.assertEquals(0);
+    rpScheduled.assertEquals(4);
     rpRetry.assertEquals(4);
     rpSuccess.assertEquals(1);
     rpFailure.assertEquals(0);
@@ -218,6 +222,7 @@ public class ListenersTest {
     rpAbort.assertEquals(0);
     rpFailedAttempt.assertEquals(2);
     rpRetriesExceeded.assertEquals(0);
+    rpScheduled.assertEquals(2);
     rpRetry.assertEquals(2);
     rpSuccess.assertEquals(1);
     rpFailure.assertEquals(0);
@@ -263,6 +268,7 @@ public class ListenersTest {
     rpAbort.assertEquals(0);
     rpFailedAttempt.assertEquals(4);
     rpRetriesExceeded.assertEquals(1);
+    rpScheduled.assertEquals(3);
     rpRetry.assertEquals(3);
     rpSuccess.assertEquals(0);
     rpFailure.assertEquals(1);
@@ -309,6 +315,7 @@ public class ListenersTest {
     rpAbort.assertEquals(1);
     rpFailedAttempt.assertEquals(4);
     rpRetriesExceeded.assertEquals(0);
+    rpScheduled.assertEquals(3);
     rpRetry.assertEquals(3);
     rpSuccess.assertEquals(0);
     rpFailure.assertEquals(1);

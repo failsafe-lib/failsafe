@@ -44,14 +44,17 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private final EventListener failedAttemptListener;
   private final EventListener retriesExceededListener;
   private final EventListener retryListener;
+  private final EventListener retryScheduledListener;
 
   RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener,
-    EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener) {
+    EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener,
+    EventListener retryScheduledListener) {
     super(retryPolicy, execution);
     this.abortListener = abortListener;
     this.failedAttemptListener = failedAttemptListener;
     this.retriesExceededListener = retriesExceededListener;
     this.retryListener = retryListener;
+    this.retryScheduledListener = retryScheduledListener;
   }
 
   @Override
@@ -68,6 +71,9 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
           return result;
 
         try {
+          if (retryScheduledListener != null)
+            retryScheduledListener.handle(result, execution);
+
           // Guard against race with Timeout so that sleep can either be skipped or interrupted
           execution.canInterrupt = true;
           Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getWaitNanos()));
@@ -79,7 +85,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
         } finally {
           execution.canInterrupt = false;
         }
-        
+
         if (executionCancelled())
           return result;
 
@@ -123,6 +129,9 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                       synchronized (future) {
                         if (!future.isDone()) {
                           try {
+                            if (retryScheduledListener != null)
+                              retryScheduledListener.handle(result, execution);
+
                             previousResult = postResult;
                             future.inject(scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
                             future.injectCancelFn(() -> {

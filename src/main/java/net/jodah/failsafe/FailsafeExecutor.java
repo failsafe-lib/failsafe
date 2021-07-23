@@ -310,13 +310,13 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     return super.onSuccess(listener);
   }
 
-  void handleComplete(ExecutionResult result, ExecutionContext context) {
+  void handleComplete(ExecutionResult result, AbstractExecution execution) {
     if (successListener != null && result.getSuccessAll())
-      successListener.handle(result, context);
+      successListener.handle(result, execution);
     else if (failureListener != null && !result.getSuccessAll())
-      failureListener.handle(result, context);
+      failureListener.handle(result, execution);
     if (completeListener != null)
-      completeListener.handle(result, context);
+      completeListener.handle(result, execution);
   }
 
   /**

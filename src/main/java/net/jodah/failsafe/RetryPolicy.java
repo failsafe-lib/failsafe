@@ -17,6 +17,7 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.event.ExecutionScheduledEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
@@ -65,6 +66,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   private EventListener failedAttemptListener;
   private EventListener retriesExceededListener;
   private EventListener retryListener;
+  private EventListener retryScheduledListener;
 
   /**
    * Creates a retry policy that allows 3 execution attempts max with no delay.
@@ -98,6 +100,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
     this.failedAttemptListener = rp.failedAttemptListener;
     this.retriesExceededListener = rp.retriesExceededListener;
     this.retryListener = rp.retryListener;
+    this.retryScheduledListener = rp.retryScheduledListener;
     this.failureListener = rp.failureListener;
     this.successListener = rp.successListener;
   }
@@ -249,11 +252,21 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called before an execution is retried.
+   * Registers the {@code listener} to be called when a retry is about to be attempted.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
   public RetryPolicy<R> onRetry(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
     retryListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
+    return this;
+  }
+
+  /**
+   * Registers the {@code listener} to be called when a retry is about to be scheduled. A retry will actually be
+   * performed after any scheduled delay.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   */
+  public RetryPolicy<R> onRetryScheduled(CheckedConsumer<? extends ExecutionScheduledEvent<R>> listener) {
+    retryScheduledListener = EventListener.ofScheduled(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -539,6 +552,6 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   @Override
   public PolicyExecutor toExecutor(AbstractExecution execution) {
     return new RetryPolicyExecutor(this, execution, abortListener, failedAttemptListener, retriesExceededListener,
-      retryListener);
+      retryListener, retryScheduledListener);
   }
 }
