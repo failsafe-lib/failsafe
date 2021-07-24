@@ -63,6 +63,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When / Then
     Future<?> future = runAsync(Failsafe.with(retryAlways).with(executor).onComplete(e -> {
       waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
+      waiter.assertEquals(expectedExecutions.get(), e.getExecutionCount());
       waiter.assertNull(e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -79,6 +80,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When
     Future<?> future2 = runAsync(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
       waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
+      waiter.assertEquals(expectedExecutions.get(), e.getExecutionCount());
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof ConnectException);
       waiter.resume();
@@ -96,7 +98,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldRunAsyncContextual() throws Throwable {
     assertRunAsync((ContextualRunnable) context -> {
-      assertEquals(context.getAttemptCount(), counter.getAndIncrement());
+      assertEquals(context.getAttemptCount(), counter.get());
+      assertEquals(context.getExecutionCount(), counter.get());
+      counter.incrementAndGet();
       service.connect();
     });
   }
@@ -125,6 +129,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When / Then
     Future<Boolean> future = getAsync(Failsafe.with(retryPolicy).with(executor).onComplete(e -> {
       waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
+      waiter.assertEquals(expectedExecutions.get(), e.getExecutionCount());
       waiter.assertTrue(e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -143,6 +148,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // When / Then
     Future<Boolean> future2 = getAsync(Failsafe.with(retryTwice).with(executor).onComplete(e -> {
       waiter.assertEquals(expectedExecutions.get(), e.getAttemptCount());
+      waiter.assertEquals(expectedExecutions.get(), e.getExecutionCount());
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof ConnectException);
       waiter.resume();
@@ -158,7 +164,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldGetAsyncContextual() throws Throwable {
     assertGetAsync((ContextualSupplier<Boolean>) context -> {
-      assertEquals(context.getAttemptCount(), counter.getAndIncrement());
+      waiter.assertEquals(context.getAttemptCount(), counter.get());
+      waiter.assertEquals(context.getExecutionCount(), counter.get());
+      counter.incrementAndGet();
       return service.connect();
     });
   }

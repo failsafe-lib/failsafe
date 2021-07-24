@@ -24,7 +24,7 @@ import java.time.Duration;
  *
  * @author Jonathan Halterman
  */
-public class ExecutionEvent {
+public abstract class ExecutionEvent {
   private final ExecutionContext context;
 
   ExecutionEvent(ExecutionContext context) {
@@ -39,10 +39,21 @@ public class ExecutionEvent {
   }
 
   /**
-   * Gets the number of completed execution attempts so far.
+   * Gets the number of execution attempts so far, including attempts that are blocked before being executed, such as
+   * when a {@link net.jodah.failsafe.CircuitBreaker CircuitBreaker} is open. Will return {@code 0} when the first
+   * attempt is in progress or has yet to begin.
    */
   public int getAttemptCount() {
     return context.getAttemptCount();
+  }
+
+  /**
+   * Gets the number of completed executions so far. Executions that are blocked, such as when a {@link
+   * net.jodah.failsafe.CircuitBreaker CircuitBreaker} is open, are not counted. Will return {@code 0} when the first
+   * attempt is in progress or has yet to begin.
+   */
+  public int getExecutionCount() {
+    return context.getExecutionCount();
   }
 
   /**

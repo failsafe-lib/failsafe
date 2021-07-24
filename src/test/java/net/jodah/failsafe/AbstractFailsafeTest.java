@@ -349,6 +349,7 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onSuccess(e -> {
       waiter.assertEquals(e.getAttemptCount(), 3);
+      waiter.assertEquals(e.getExecutionCount(), 3);
       waiter.assertEquals("foo2", e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -377,6 +378,7 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onSuccess(e -> {
       waiter.assertEquals(e.getAttemptCount(), 3);
+      waiter.assertEquals(e.getExecutionCount(), 3);
       waiter.assertEquals("foo2", e.getResult());
       waiter.assertNull(e.getFailure());
       waiter.resume();
@@ -410,6 +412,7 @@ public abstract class AbstractFailsafeTest {
     // When / Then
     FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onFailure(e -> {
       waiter.assertEquals(e.getAttemptCount(), 3);
+      waiter.assertEquals(e.getExecutionCount(), 3);
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();

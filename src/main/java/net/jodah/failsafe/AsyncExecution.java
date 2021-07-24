@@ -153,8 +153,8 @@ public final class AsyncExecution extends AbstractExecution {
   }
 
   /**
-   * Attempts to complete the parent execution, calls failure handlers, and completes the future if needed. Runs
-   * synchronously since a concrete result is needed.
+   * Externally called. Records an execution and performs post-execution handling for the {@code result} against all
+   * configured policy executors. Attempts to complete the execution and returns the policy post execution result.
    *
    * @throws IllegalStateException if the execution is already complete
    */

@@ -26,11 +26,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ExecutionContext {
   volatile Duration startTime = Duration.ZERO;
   volatile Duration attemptStartTime = Duration.ZERO;
-  /** Number of execution attempts */
+  // Number of execution attempts
   AtomicInteger attempts = new AtomicInteger();
+  // Number of completed executions
+  AtomicInteger executions = new AtomicInteger();
 
   // Internally mutable state
-  /* The index of a PolicyExecutor that cancelled the execution. 0 represents non-cancelled. */
+  // The index of a PolicyExecutor that cancelled the execution. 0 represents non-cancelled.
   volatile int cancelledIndex;
   volatile Object lastResult;
   volatile Throwable lastFailure;
@@ -42,6 +44,7 @@ public class ExecutionContext {
     this.startTime = context.startTime;
     this.attemptStartTime = context.attemptStartTime;
     this.attempts = context.attempts;
+    this.executions = context.executions;
     this.cancelledIndex = context.cancelledIndex;
     this.lastResult = context.lastResult;
     this.lastFailure = context.lastFailure;
@@ -62,11 +65,21 @@ public class ExecutionContext {
   }
 
   /**
-   * Gets the number of completed execution attempts so far. Will return {@code 0} when the first attempt is in
-   * progress.
+   * Gets the number of execution attempts so far, including attempts that are blocked before being executed, such as
+   * when a {@link net.jodah.failsafe.CircuitBreaker CircuitBreaker} is open. Will return {@code 0} when the first
+   * attempt is in progress or has yet to begin.
    */
   public int getAttemptCount() {
     return attempts.get();
+  }
+
+  /**
+   * Gets the number of completed executions so far. Executions that are blocked, such as when a {@link
+   * net.jodah.failsafe.CircuitBreaker CircuitBreaker} is open, are not counted. Will return {@code 0} when the first
+   * attempt is in progress or has yet to begin.
+   */
+  public int getExecutionCount() {
+    return executions.get();
   }
 
   /**
@@ -139,7 +152,7 @@ public class ExecutionContext {
 
   @Override
   public String toString() {
-    return "ExecutionContext[" + "attempts=" + attempts + ", lastResult=" + lastResult + ", lastFailure=" + lastFailure
-      + ']';
+    return "ExecutionContext[" + "attempts=" + attempts + ", executions=" + executions + ", lastResult=" + lastResult
+      + ", lastFailure=" + lastFailure + ']';
   }
 }

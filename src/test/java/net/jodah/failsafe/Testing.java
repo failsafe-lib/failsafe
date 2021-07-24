@@ -199,6 +199,18 @@ public class Testing {
     System.out.println(entry);
   }
 
+  public static <T> RetryPolicy<T> withLogs(RetryPolicy<T> retryPolicy) {
+    return withStats(retryPolicy, new Stats(), true);
+  }
+
+  public static <T> CircuitBreaker<T> withLogs(CircuitBreaker<T> circuitBreaker) {
+    return withStats(circuitBreaker, new Stats(), true);
+  }
+
+  public static <T extends FailurePolicy<T, R>, R> T withLogs(T policy) {
+    return withStats(policy, new Stats(), true);
+  }
+
   public static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats, boolean withLogging) {
     retryPolicy.onFailedAttempt(e -> {
       stats.failedAttemptCount++;
@@ -222,7 +234,7 @@ public class Testing {
       if (withLogging)
         System.out.println("RetryPolicy abort");
     });
-    withStatsInternal(retryPolicy, stats, withLogging);
+    withStats((FailurePolicy) retryPolicy, stats, withLogging);
     return retryPolicy;
   }
 
@@ -240,11 +252,11 @@ public class Testing {
       if (withLogging)
         System.out.println("CircuitBreaker closing");
     });
-    withStatsInternal(circuitBreaker, stats, withLogging);
+    withStats((FailurePolicy) circuitBreaker, stats, withLogging);
     return circuitBreaker;
   }
 
-  public static <T extends FailurePolicy<T, R>, R> T withStatsInternal(T policy, Stats stats, boolean withLogging) {
+  public static <T extends FailurePolicy<T, R>, R> T withStats(T policy, Stats stats, boolean withLogging) {
     return policy.onSuccess(e -> {
       stats.successCount++;
       if (withLogging)

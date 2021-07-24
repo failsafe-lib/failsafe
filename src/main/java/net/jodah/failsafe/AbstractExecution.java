@@ -37,6 +37,8 @@ public abstract class AbstractExecution extends ExecutionContext {
   // Internally mutable state
   /* Whether the execution attempt has been recorded */
   volatile boolean attemptRecorded;
+  /* Whether the execution result has been recorded */
+  volatile boolean executionRecorded;
   /* Whether a result has been post-executed */
   volatile boolean resultHandled;
   /* Whether the execution can be interrupted */
@@ -73,12 +75,24 @@ public abstract class AbstractExecution extends ExecutionContext {
   void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
     if (!interrupted) {
-      if (!attemptRecorded) {
-        attempts.incrementAndGet();
-        attemptRecorded = true;
+      recordAttempt();
+      if (!executionRecorded) {
+        executions.incrementAndGet();
+        executionRecorded = true;
       }
       lastResult = result.getResult();
       lastFailure = result.getFailure();
+    }
+  }
+
+  /**
+   * Records an execution attempt which may correspond with an execution result. Async executions will have results
+   * recorded separately.
+   */
+  void recordAttempt() {
+    if (!attemptRecorded) {
+      attempts.incrementAndGet();
+      attemptRecorded = true;
     }
   }
 
@@ -87,6 +101,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
     attemptRecorded = false;
+    executionRecorded = false;
     resultHandled = false;
     cancelledIndex = 0;
     canInterrupt = true;
@@ -98,8 +113,8 @@ public abstract class AbstractExecution extends ExecutionContext {
   }
 
   /**
-   * Performs post-execution handling of the {@code result}, completes the execution if all policies are complete for
-   * the {@code result}, and returns the result from the policies.
+   * Externally called. Records an execution and performs post-execution handling for the {@code result} against all
+   * configured policy executors. Returns whether the result is complete for all policies.
    *
    * @throws IllegalStateException if the execution is already complete
    */
