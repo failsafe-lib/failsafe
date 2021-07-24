@@ -118,9 +118,9 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, attempts to complete the
-   * {@code execution} if a failure occurs, and returns a promise containing the result. Locks to ensure the resulting
-   * supplier cannot be applied multiple times concurrently.
+   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, and attempts to complete
+   * the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied multiple times
+   * concurrently.
    */
   static <T> Supplier<CompletableFuture<ExecutionResult>> getPromiseExecution(AsyncSupplier<T> supplier,
     AsyncExecution execution) {
@@ -134,6 +134,8 @@ final class Functions {
         } catch (Throwable e) {
           execution.completeOrHandle(null, e);
         }
+
+        // Result will be provided later via AsyncExecution.complete
         return NULL_FUTURE;
       }
     };
@@ -167,9 +169,9 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, attempts to complete the
-   * {@code execution} if a failure occurs, and returns a promise containing the result. Locks to ensure the resulting
-   * supplier cannot be applied multiple times concurrently.
+   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, and attempts to complete
+   * the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied multiple times
+   * concurrently.
    */
   static <T> Supplier<CompletableFuture<ExecutionResult>> getPromiseOfStageExecution(
     AsyncSupplier<? extends CompletionStage<? extends T>> supplier, AsyncExecution execution) {

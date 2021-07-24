@@ -21,7 +21,11 @@ import net.jodah.failsafe.ExecutionContext;
 import java.time.Duration;
 
 /**
- * Indicates an execution was scheduled.
+ * Indicates an execution was scheduled. A scheduled execution will be executed after the {@link #getDelay() delay}
+ * unless it is cancelled, either explicitly or via {@link java.util.concurrent.Future#cancel(boolean)
+ * Future.cancel(boolean)}, a {@link net.jodah.failsafe.Timeout Timeout}, or if the underlying {@link
+ * net.jodah.failsafe.util.concurrent.Scheduler Scheduler} or {@link java.util.concurrent.ExecutorService
+ * ExecutorService} is shutdown.
  *
  * @param <R> result type
  * @author Jonathan Halterman
@@ -61,6 +65,6 @@ public class ExecutionScheduledEvent<R> extends ExecutionEvent {
 
   @Override
   public String toString() {
-    return "ExecutionScheduledEvent[" + "result=" + result + ", failure=" + failure + ']';
+    return "ExecutionScheduledEvent[" + "result=" + result + ", failure=" + failure + ", delay=" + getDelay() + ']';
   }
 }

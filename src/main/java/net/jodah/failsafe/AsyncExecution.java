@@ -189,6 +189,9 @@ public final class AsyncExecution extends AbstractExecution {
    * Attempts to complete the execution else handle according to the configured policies. Returns {@code true} if the
    * execution was completed, else false which indicates the result was handled asynchronously and may have triggered a
    * retry.
+   * <p>
+   * Async executions begin by calling the user-provided Supplier. When this method is called, the result is set in the
+   * inner-most supplier. Then the outer-most supplier is called to trigger policy execution.
    *
    * @throws IllegalStateException if the execution is already complete
    */
