@@ -130,7 +130,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                         if (!future.isDone()) {
                           try {
                             if (retryScheduledListener != null)
-                              retryScheduledListener.handle(result, execution);
+                              retryScheduledListener.handle(postResult, execution);
 
                             previousResult = postResult;
                             future.inject(scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));

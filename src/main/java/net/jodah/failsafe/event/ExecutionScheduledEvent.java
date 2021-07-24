@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe.event;
 
-import net.jodah.failsafe.AbstractExecution;
 import net.jodah.failsafe.ExecutionContext;
 
 import java.time.Duration;
@@ -33,13 +32,13 @@ import java.time.Duration;
 public class ExecutionScheduledEvent<R> extends ExecutionEvent {
   private final R result;
   private final Throwable failure;
-  private final AbstractExecution execution;
+  private final Duration delay;
 
-  public ExecutionScheduledEvent(R result, Throwable failure, AbstractExecution execution, ExecutionContext context) {
+  public ExecutionScheduledEvent(R result, Throwable failure, Duration delay, ExecutionContext context) {
     super(context);
     this.result = result;
     this.failure = failure;
-    this.execution = execution;
+    this.delay = delay;
   }
 
   /**
@@ -60,11 +59,11 @@ public class ExecutionScheduledEvent<R> extends ExecutionEvent {
    * Returns the delay before the next execution attempt.
    */
   public Duration getDelay() {
-    return execution.getWaitTime();
+    return delay;
   }
 
   @Override
   public String toString() {
-    return "ExecutionScheduledEvent[" + "result=" + result + ", failure=" + failure + ", delay=" + getDelay() + ']';
+    return "ExecutionScheduledEvent[" + "result=" + result + ", failure=" + failure + ", delay=" + delay + ']';
   }
 }

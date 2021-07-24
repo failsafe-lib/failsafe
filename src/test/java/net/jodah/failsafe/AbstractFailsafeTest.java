@@ -32,8 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.failures;
-import static net.jodah.failsafe.Testing.unwrapExceptions;
+import static net.jodah.failsafe.Testing.*;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
@@ -478,6 +477,22 @@ public abstract class AbstractFailsafeTest {
       throw new InternalError();
     }), InternalError.class);
     waiter.await(4);
+  }
+
+  public void shouldGetRetryScheduledDelay() throws Throwable {
+    // Given
+    Duration delay = Duration.ofMillis(10);
+    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().withDelay(delay)
+      .withMaxRetries(1)
+      .onRetryScheduled(e -> {
+        waiter.assertEquals(delay, e.getDelay());
+        waiter.resume();
+      })
+      .handleResultIf(r -> true);
+
+    // When / Then
+    failsafeGet(retryPolicy, () -> true);
+    waiter.await(1000);
   }
 
   /**
