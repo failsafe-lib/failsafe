@@ -27,11 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RxJavaExample {
   public static void main(String... args) {
     AtomicInteger failures = new AtomicInteger();
-    RetryPolicy retryPolicy = new RetryPolicy().withDelay(Duration.ofSeconds(1));
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofSeconds(1));
 
     Observable.create((Subscriber<? super String> s) -> {
-      // Fail 3 times then succeed
-      if (failures.getAndIncrement() < 3)
+      // Fail 2 times then succeed
+      if (failures.getAndIncrement() < 2)
         s.onError(new RuntimeException());
       else
         System.out.println("Subscriber completed successfully");

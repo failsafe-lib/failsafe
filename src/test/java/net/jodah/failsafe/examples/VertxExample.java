@@ -30,9 +30,9 @@ public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
-      .handleIf((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
-          || ReplyFailure.TIMEOUT.equals(failure.failureType()));
+  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleIf(
+    (ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
+      || ReplyFailure.TIMEOUT.equals(failure.failureType()));
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
   static Scheduler scheduler = (callable, delay, unit) -> {
@@ -63,10 +63,10 @@ public class VertxExample {
    * A Vert.x sender and retryable receiver example.
    */
   public static void main(String... args) throws Throwable {
-    // Receiver that fails 3 times then succeeds
+    // Receiver that fails 2 times then succeeds
     AtomicInteger failures = new AtomicInteger();
     vertx.eventBus().consumer("ping-address", message -> {
-      if (failures.getAndIncrement() < 3)
+      if (failures.getAndIncrement() < 2)
         message.fail(1, "Failed");
       else {
         message.reply("pong!");
@@ -75,14 +75,17 @@ public class VertxExample {
 
     // Retryable sender
     Failsafe.with(retryPolicy.copy().withDelay(Duration.ofSeconds(1)))
-        .with(scheduler)
-        .runAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
-          if (reply.succeeded())
-            System.out.println("Received reply " + reply.result().body());
-          else if (!execution.retryOn(reply.cause()))
-            System.out.println("Execution and retries failed");
-        }));
+      .with(scheduler)
+      .runAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
+        if (reply.succeeded())
+          System.out.println("Received reply " + reply.result().body());
+        else if (execution.retryOn(reply.cause()))
+          System.out.println("Received failed reply. Retrying.");
+        else
+          System.out.println("Execution and retries failed");
+      }));
 
     Thread.sleep(5000);
+    System.exit(0);
   }
 }

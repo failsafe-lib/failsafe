@@ -32,11 +32,11 @@ public class AsyncExample {
   public static class Service {
     AtomicInteger failures = new AtomicInteger();
 
-    // Fail 3 times then succeed
+    // Fail 2 times then succeed
     CompletableFuture<Boolean> connect() {
       CompletableFuture<Boolean> future = new CompletableFuture<>();
       executor.submit(() -> {
-        if (failures.getAndIncrement() < 3)
+        if (failures.getAndIncrement() < 2)
           future.completeExceptionally(new RuntimeException());
         else
           future.complete(true);
@@ -51,10 +51,13 @@ public class AsyncExample {
         .getAsyncExecution(execution -> service.connect().whenComplete((result, failure) -> {
           if (execution.complete(result, failure))
             System.out.println("Success");
-          else if (!execution.retry())
+          else if (execution.retry())
+            System.out.println("Connection attempt failed. Retrying.");
+          else
             System.out.println("Connection attempts failed");
         }));
 
     Thread.sleep(3000);
+    System.exit(0);
   }
 }

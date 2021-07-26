@@ -35,7 +35,7 @@ public class RetryLoopExample {
   }
 
   public static void main(String... args) throws Throwable {
-    RetryPolicy retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withBackoff(10, 40,
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withBackoff(10, 40,
         ChronoUnit.MILLIS);
     Execution execution = new Execution(retryPolicy);
 
