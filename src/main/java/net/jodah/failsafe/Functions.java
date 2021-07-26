@@ -198,6 +198,7 @@ final class Functions {
         }
       }
 
+      // Result will be provided later via AsyncExecution.complete
       return NULL_FUTURE;
     };
   }
