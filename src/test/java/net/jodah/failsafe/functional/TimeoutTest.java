@@ -53,6 +53,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 3);
+      assertEquals(e.getExecutionCount(), 3);
       assertEquals(timeoutCounter.get(), 3);
       assertEquals(retryPolicyCounter.get(), 2);
     }, TimeoutExceededException.class);
@@ -92,6 +93,7 @@ public class TimeoutTest {
       throw new IllegalStateException();
     }, e -> {
       assertEquals(e.getAttemptCount(), 3);
+      assertEquals(e.getExecutionCount(), 3);
       assertEquals(executionCounter.get(), 3);
       assertEquals(timeoutSuccessCounter.get(), 3);
       assertEquals(timeoutFailureCounter.get(), 0);
@@ -133,6 +135,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
       assertEquals(executionCounter.get(), 1);
       assertEquals(timeoutCounter.get(), 1);
     }, TimeoutExceededException.class);
@@ -177,6 +180,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
       assertEquals(executionCounter.get(), 1);
       assertEquals(timeoutCounter.get(), 1);
       assertEquals(failedAttemptCounter.get(), 1);
@@ -216,6 +220,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutCounter.get(), 1);
       assertEquals(fallbackCounter.get(), 1);
     }, IllegalStateException.class);
@@ -253,6 +258,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutCounter.get(), 0);
       assertEquals(fallbackCounter.get(), 1);
     }, IllegalStateException.class);
@@ -291,6 +297,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutCounter.get(), 1);
       assertEquals(fallbackCounter.get(), 0);
     }, TimeoutExceededException.class);
@@ -329,6 +336,7 @@ public class TimeoutTest {
       throw new Exception();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutCounter.get(), 1);
       assertEquals(fallbackCounter.get(), 1);
     }, TimeoutExceededException.class);
