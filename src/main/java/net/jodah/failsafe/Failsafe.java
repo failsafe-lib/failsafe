@@ -17,7 +17,8 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,13 +48,15 @@ public class Failsafe {
    *
    * @param <R> result type
    * @param <P> policy type
-   * @throws NullPointerException if {@code policies} is null
-   * @throws IllegalArgumentException if {@code policies} is empty
+   * @throws NullPointerException if {@code outermostPolicy} is null
    */
   @SafeVarargs
-  public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P... policies) {
-    Assert.notNull(policies, "policies");
-    return new FailsafeExecutor<>(Arrays.asList(policies));
+  public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P outermostPolicy, P... policies) {
+    Assert.notNull(outermostPolicy, "outermostPolicy");
+    List<Policy<R>> policyList = new ArrayList<>(policies.length + 1);
+    policyList.add(outermostPolicy);
+    Collections.addAll(policyList, policies);
+    return new FailsafeExecutor<>(policyList);
   }
 
   /**
