@@ -39,7 +39,7 @@ public class AsyncExecutionTest {
     Timeout<Object> timeout = Timeout.of(Duration.ofMinutes(1));
     AtomicInteger counter = new AtomicInteger();
 
-    Consumer<FailsafeExecutor<Object>> test = failsafe -> testAsyncExecution(failsafe, ex -> {
+    Consumer<FailsafeExecutor<Object>> test = failsafe -> testAsyncExecutionSuccess(failsafe, ex -> {
       runAsync(() -> {
         System.out.println("Executing");
         if (counter.getAndIncrement() < 3)

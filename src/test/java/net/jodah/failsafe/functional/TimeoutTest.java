@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.jodah.failsafe.Testing.testSyncAndAsync;
+import static net.jodah.failsafe.Testing.testSyncAndAsyncFailure;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -45,7 +45,7 @@ public class TimeoutTest {
       System.out.println("Retrying");
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(retryPolicy, timeout), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(retryPolicy, timeout), () -> {
       timeoutCounter.set(0);
       retryPolicyCounter.set(0);
     }, () -> {
@@ -85,7 +85,7 @@ public class TimeoutTest {
       System.out.println("Retrying");
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(retryPolicy, timeout), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(retryPolicy, timeout), () -> {
       executionCounter.set(0);
       timeoutSuccessCounter.set(0);
     }, () -> {
@@ -125,7 +125,7 @@ public class TimeoutTest {
       System.out.println("Retrying");
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(timeout, retryPolicy), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(timeout, retryPolicy), () -> {
       executionCounter.set(0);
       timeoutCounter.set(0);
     }, () -> {
@@ -170,7 +170,7 @@ public class TimeoutTest {
       System.out.println("Retrying");
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(timeout, retryPolicy), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(timeout, retryPolicy), () -> {
       executionCounter.set(0);
       timeoutCounter.set(0);
       failedAttemptCounter.set(0);
@@ -211,7 +211,7 @@ public class TimeoutTest {
       throw new IllegalStateException();
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(fallback, timeout), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(fallback, timeout), () -> {
       timeoutCounter.set(0);
       fallbackCounter.set(0);
     }, () -> {
@@ -251,7 +251,7 @@ public class TimeoutTest {
       throw new IllegalStateException();
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(fallback, timeout), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(fallback, timeout), () -> {
       fallbackCounter.set(0);
     }, () -> {
       System.out.println("Executing");
@@ -288,7 +288,7 @@ public class TimeoutTest {
       throw new IllegalStateException();
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(timeout, fallback), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(timeout, fallback), () -> {
       timeoutCounter.set(0);
       fallbackCounter.set(0);
     }, () -> {
@@ -328,7 +328,7 @@ public class TimeoutTest {
       throw new IllegalStateException();
     });
 
-    Runnable test = () -> testSyncAndAsync(Failsafe.with(timeout, fallback), () -> {
+    Runnable test = () -> testSyncAndAsyncFailure(Failsafe.with(timeout, fallback), () -> {
       timeoutCounter.set(0);
       fallbackCounter.set(0);
     }, () -> {

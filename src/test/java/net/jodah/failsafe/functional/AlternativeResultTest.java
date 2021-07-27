@@ -34,7 +34,7 @@ public class AlternativeResultTest {
     RetryPolicy<Object> rp = withStats(new RetryPolicy<>().withMaxAttempts(7), rpStats, true);
     CircuitBreaker<Object> cb = withStats(new CircuitBreaker<>().withFailureThreshold(3), cbStats, true);
 
-    testSyncAndAsync(Failsafe.with(rp, cb), () -> {
+    testSyncAndAsyncFailure(Failsafe.with(rp, cb), () -> {
       rpStats.reset();
       cbStats.reset();
       cb.close();
@@ -58,7 +58,7 @@ public class AlternativeResultTest {
     CircuitBreaker<Object> cb = withStats(new CircuitBreaker<>().withFailureThreshold(3), cbStats, true);
 
     // Test with retryOn()
-    testAsyncExecution(Failsafe.with(rp, cb), ex -> {
+    testAsyncExecutionFailure(Failsafe.with(rp, cb), ex -> {
       runAsync(() -> {
         System.out.println("Executing");
         ex.retryOn(new IllegalStateException());
@@ -84,7 +84,7 @@ public class AlternativeResultTest {
     rpStats.reset();
     cbStats.reset();
     cb.close();
-    testAsyncExecution(Failsafe.with(rp, cb), ex -> {
+    testAsyncExecutionFailure(Failsafe.with(rp, cb), ex -> {
       runAsync(() -> {
         System.out.println("Executing");
         if (!ex.complete(null, new IllegalStateException())) {

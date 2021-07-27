@@ -285,6 +285,36 @@ public class Testing {
     }
   }
 
+  public static <T> void testSyncAndAsyncSuccess(FailsafeExecutor<T> failsafe, Runnable given, CheckedRunnable when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
+    CheckedSupplier<T> supplier = () -> {
+      when.run();
+      return null;
+    };
+    testSyncAndAsyncInternal(failsafe, given, supplier, then, expectedResult);
+  }
+
+  public static <T> void testSyncAndAsyncSuccess(FailsafeExecutor<T> failsafe, Runnable given, CheckedSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
+    testSyncAndAsyncInternal(failsafe, given, when, then, expectedResult);
+  }
+
+  @SafeVarargs
+  public static <T> void testSyncAndAsyncFailure(FailsafeExecutor<T> failsafe, Runnable given, CheckedRunnable when,
+    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
+    CheckedSupplier<T> supplier = () -> {
+      when.run();
+      return null;
+    };
+    testSyncAndAsyncInternal(failsafe, given, supplier, then, null, expectedExceptions);
+  }
+
+  @SafeVarargs
+  public static <T> void testSyncAndAsyncFailure(FailsafeExecutor<T> failsafe, Runnable given, CheckedSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
+    testSyncAndAsyncInternal(failsafe, given, when, then, null, expectedExceptions);
+  }
+
   /**
    * Does a .run and .runAsync against the failsafe, performing pre-test setup and post-test assertion checks. {@code
    * expectedExceptions} are verified against thrown exceptions _and_ the ExecutionCompletedEvent's failure.
@@ -292,75 +322,84 @@ public class Testing {
    * This method helps ensure behavior is identical between sync and async executions.
    */
   @SafeVarargs
-  public static void testSyncAndAsync(FailsafeExecutor<?> failsafe, Runnable given, CheckedRunnable when,
-    Consumer<ExecutionCompletedEvent<?>> then, Class<? extends Throwable>... expectedExceptions) {
-    AtomicReference<ExecutionCompletedEvent<?>> completedEventRef = new AtomicReference<>();
-    CheckedConsumer<ExecutionCompletedEvent<?>> setCompletedEventFn = completedEventRef::set;
+  private static <T> void testSyncAndAsyncInternal(FailsafeExecutor<T> failsafe, Runnable given,
+    CheckedSupplier<T> when, Consumer<ExecutionCompletedEvent<T>> then, T expectedResult,
+    Class<? extends Throwable>... expectedExceptions) {
+    AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
+    CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = completedEventRef::set;
     List<Class<? extends Throwable>> expected = new LinkedList<>();
     Collections.addAll(expected, expectedExceptions);
 
     Runnable postTestFn = () -> {
+      ExecutionCompletedEvent<T> completedEvent = completedEventRef.get();
       if (expectedExceptions.length > 0)
-        Asserts.assertMatches(completedEventRef.get().getFailure(), Arrays.asList(expectedExceptions));
+        Asserts.assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExceptions));
+      else
+        assertEquals(completedEvent.getResult(), expectedResult);
       then.accept(completedEventRef.get());
     };
 
     // Sync test
     System.out.println("\nRunning sync test");
     given.run();
-    if (expectedExceptions.length == 0)
-      Testing.unwrapRunnableExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).run(when));
-    else
-      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).run(when), expectedExceptions);
+    if (expectedExceptions.length == 0) {
+      T result = Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).get(when));
+      assertEquals(result, expectedResult);
+    } else
+      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).get(when), expectedExceptions);
     postTestFn.run();
 
     // Async test
     System.out.println("\nRunning async test");
     given.run();
     if (expectedExceptions.length == 0) {
-      Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).runAsync(when).get());
+      T result = Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).getAsync(when).get());
+      assertEquals(result, expectedResult);
     } else {
       expected.add(0, ExecutionException.class);
-      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).runAsync(when).get(), expected);
+      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).getAsync(when).get(), expected);
     }
     postTestFn.run();
   }
 
-  @SafeVarargs
-  public static void testAsyncExecution(FailsafeExecutor<?> failsafe, AsyncRunnable when,
-    Consumer<ExecutionCompletedEvent<?>> then, Class<? extends Throwable>... expectedExceptions) {
+  public static <T> void testAsyncExecutionSuccess(FailsafeExecutor<T> failsafe, AsyncRunnable when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
     AsyncSupplier supplier = ex -> {
       when.run(ex);
       return null;
     };
-    testAsyncExecution(failsafe, supplier, then, null, expectedExceptions);
+    testAsyncExecutionInternal(failsafe, supplier, then, expectedResult);
+  }
+
+  public static <T> void testAsyncExecutionSuccess(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
+    testAsyncExecutionInternal(failsafe, when, then, expectedResult);
   }
 
   @SafeVarargs
-  public static void testAsyncExecution(FailsafeExecutor<?> failsafe, AsyncRunnable when,
-    Consumer<ExecutionCompletedEvent<?>> then, Object expectedResult,
-    Class<? extends Throwable>... expectedExceptions) {
+  public static <T> void testAsyncExecutionFailure(FailsafeExecutor<T> failsafe, AsyncRunnable when,
+    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
     AsyncSupplier supplier = ex -> {
       when.run(ex);
       return null;
     };
-    testAsyncExecution(failsafe, supplier, then, expectedResult, expectedExceptions);
+    testAsyncExecutionInternal(failsafe, supplier, then, null, expectedExceptions);
   }
 
   @SafeVarargs
-  public static <T> void testAsyncExecution(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
-    Consumer<ExecutionCompletedEvent<?>> then, Class<? extends Throwable>... expectedExceptions) {
-    testAsyncExecution(failsafe, when, then, null, expectedExceptions);
+  public static <T> void testAsyncExecutionFailure(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
+    testAsyncExecutionInternal(failsafe, when, then, null, expectedExceptions);
   }
 
   @SafeVarargs
-  public static <T> void testAsyncExecution(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
-    Consumer<ExecutionCompletedEvent<?>> then, Object expectedResult,
-    Class<? extends Throwable>... expectedExceptions) {
-    AtomicReference<ExecutionCompletedEvent<?>> completedEventRef = new AtomicReference<>();
-    CheckedConsumer<ExecutionCompletedEvent<?>> setCompletedEventFn = completedEventRef::set;
+  private static <T> void testAsyncExecutionInternal(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult, Class<? extends Throwable>... expectedExceptions) {
+
+    AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
+    CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = completedEventRef::set;
     Runnable postTestFn = () -> {
-      ExecutionCompletedEvent<?> completedEvent = completedEventRef.get();
+      ExecutionCompletedEvent<T> completedEvent = completedEventRef.get();
       if (expectedExceptions.length > 0)
         Asserts.assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExceptions));
       else
@@ -371,7 +410,7 @@ public class Testing {
     // Async test
     System.out.println("\nRunning async execution test");
     if (expectedExceptions.length == 0) {
-      Object result = Testing.unwrapExceptions(
+      T result = Testing.unwrapExceptions(
         () -> failsafe.onComplete(setCompletedEventFn::accept).getAsyncExecution(when).get());
       assertEquals(result, expectedResult);
     } else {
