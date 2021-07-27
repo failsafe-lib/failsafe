@@ -31,8 +31,7 @@ import java.util.function.Supplier;
 public abstract class PolicyExecutor<P extends Policy> {
   protected final P policy;
   protected final AbstractExecution execution;
-  /* Index of the policy relative to other policies in a composition, inner-most first */
-  int policyIndex;
+  /* Index of the policy relative to other policies in a composition, inner-most first */ int policyIndex;
 
   protected PolicyExecutor(P policy, AbstractExecution execution) {
     this.policy = policy;
@@ -53,8 +52,11 @@ public abstract class PolicyExecutor<P extends Policy> {
   protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
     return () -> {
       ExecutionResult result = preExecute();
-      if (result != null)
+      if (result != null) {
+        // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
+        execution.preExecute();
         return result;
+      }
 
       return postExecute(supplier.get());
     };
@@ -64,6 +66,7 @@ public abstract class PolicyExecutor<P extends Policy> {
    * Performs synchronous post-execution handling for a {@code result}.
    */
   protected ExecutionResult postExecute(ExecutionResult result) {
+    execution.recordAttempt();
     if (isFailure(result)) {
       result = onFailure(result.withFailure());
       callFailureListener(result);
@@ -77,16 +80,23 @@ public abstract class PolicyExecutor<P extends Policy> {
   }
 
   /**
-   * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute.
+   * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute. Implementors
+   * must handle a null result from a supplier, which indicates that an async execution has occurred, a result will come
+   * later, and postExecute handling should not be performed.
    */
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> {
       ExecutionResult result = preExecute();
-      if (result != null)
+      if (result != null) {
+        // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
+        execution.preExecute();
         return CompletableFuture.completedFuture(result);
+      }
 
-      return supplier.get().thenCompose(s -> postExecuteAsync(s, scheduler, future));
+      return supplier.get().thenCompose(r -> {
+        return r == null ? ExecutionResult.NULL_FUTURE : postExecuteAsync(r, scheduler, future);
+      });
     };
   }
 

@@ -29,8 +29,6 @@ import java.util.function.Supplier;
  * @author Jonathan Halterman
  */
 final class Functions {
-  private static final CompletableFuture<ExecutionResult> NULL_FUTURE = CompletableFuture.completedFuture(null);
-
   interface SettableSupplier<T> extends Supplier<T> {
     void set(T value);
   }
@@ -136,7 +134,7 @@ final class Functions {
         }
 
         // Result will be provided later via AsyncExecution.complete
-        return NULL_FUTURE;
+        return ExecutionResult.NULL_FUTURE;
       }
     };
   }
@@ -199,7 +197,7 @@ final class Functions {
       }
 
       // Result will be provided later via AsyncExecution.complete
-      return NULL_FUTURE;
+      return ExecutionResult.NULL_FUTURE;
     };
   }
 

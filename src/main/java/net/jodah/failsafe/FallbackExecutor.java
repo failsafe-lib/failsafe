@@ -66,6 +66,9 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> supplier.get().thenCompose(result -> {
+      if (result == null)
+        return ExecutionResult.NULL_FUTURE;
+
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       if (executionCancelled()) {
         promise.complete(result);

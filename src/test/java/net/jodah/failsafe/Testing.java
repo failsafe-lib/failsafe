@@ -16,10 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.function.AsyncRunnable;
-import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.CircuitBreakerInternals;
 import net.jodah.failsafe.internal.CircuitState;
 
@@ -34,6 +31,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * Utilities to to assist with testing.
@@ -185,6 +184,7 @@ public class Testing {
       sneakyThrow(e.getCause() == null ? e : e.getCause());
       return null;
     } catch (RuntimeException | Error e) {
+      e.printStackTrace();
       throw e;
     } catch (Throwable t) {
       throw new RuntimeException(t);
@@ -329,23 +329,56 @@ public class Testing {
   @SafeVarargs
   public static void testAsyncExecution(FailsafeExecutor<?> failsafe, AsyncRunnable when,
     Consumer<ExecutionCompletedEvent<?>> then, Class<? extends Throwable>... expectedExceptions) {
+    AsyncSupplier supplier = ex -> {
+      when.run(ex);
+      return null;
+    };
+    testAsyncExecution(failsafe, supplier, then, null, expectedExceptions);
+  }
+
+  @SafeVarargs
+  public static void testAsyncExecution(FailsafeExecutor<?> failsafe, AsyncRunnable when,
+    Consumer<ExecutionCompletedEvent<?>> then, Object expectedResult,
+    Class<? extends Throwable>... expectedExceptions) {
+    AsyncSupplier supplier = ex -> {
+      when.run(ex);
+      return null;
+    };
+    testAsyncExecution(failsafe, supplier, then, expectedResult, expectedExceptions);
+  }
+
+  @SafeVarargs
+  public static <T> void testAsyncExecution(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<?>> then, Class<? extends Throwable>... expectedExceptions) {
+    testAsyncExecution(failsafe, when, then, null, expectedExceptions);
+  }
+
+  @SafeVarargs
+  public static <T> void testAsyncExecution(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+    Consumer<ExecutionCompletedEvent<?>> then, Object expectedResult,
+    Class<? extends Throwable>... expectedExceptions) {
     AtomicReference<ExecutionCompletedEvent<?>> completedEventRef = new AtomicReference<>();
     CheckedConsumer<ExecutionCompletedEvent<?>> setCompletedEventFn = completedEventRef::set;
     Runnable postTestFn = () -> {
+      ExecutionCompletedEvent<?> completedEvent = completedEventRef.get();
       if (expectedExceptions.length > 0)
-        Asserts.assertMatches(completedEventRef.get().getFailure(), Arrays.asList(expectedExceptions));
+        Asserts.assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExceptions));
+      else
+        assertEquals(completedEvent.getResult(), expectedResult);
       then.accept(completedEventRef.get());
     };
 
     // Async test
     System.out.println("\nRunning async execution test");
     if (expectedExceptions.length == 0) {
-      Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn::accept).runAsyncExecution(when).get());
+      Object result = Testing.unwrapExceptions(
+        () -> failsafe.onComplete(setCompletedEventFn::accept).getAsyncExecution(when).get());
+      assertEquals(result, expectedResult);
     } else {
       List<Class<? extends Throwable>> expected = new LinkedList<>();
       Collections.addAll(expected, expectedExceptions);
       expected.add(0, ExecutionException.class);
-      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).runAsyncExecution(when).get(),
+      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn::accept).getAsyncExecution(when).get(),
         expected);
     }
     postTestFn.run();

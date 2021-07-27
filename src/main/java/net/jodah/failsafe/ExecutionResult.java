@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The result of an execution. Immutable.
@@ -25,6 +26,8 @@ import java.util.Objects;
  * @author Jonathan Halterman
  */
 public class ExecutionResult {
+  static final CompletableFuture<ExecutionResult> NULL_FUTURE = CompletableFuture.completedFuture(null);
+
   /** An execution that was completed with a non-result */
   static final ExecutionResult NONE = new ExecutionResult(null, null, true, 0, true, true, true);
 
