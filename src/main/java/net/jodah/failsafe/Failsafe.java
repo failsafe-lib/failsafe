@@ -28,9 +28,9 @@ import java.util.List;
  */
 public class Failsafe {
   /**
-   * Creates and returns a new {@link FailsafeExecutor} instance that will handle failures according to the given {@code
-   * policies}. The {@code policies} are composed around an execution and will handle execution results in reverse, with
-   * the last policy being applied first. For example, consider:
+   * Creates and returns a new {@link FailsafeExecutor} instance that will handle failures according to the given
+   * policies. The policies are composed around an execution and will handle execution results in reverse, with the last
+   * policy being applied first. For example, consider:
    * <p>
    * <pre>
    *   Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
@@ -48,13 +48,13 @@ public class Failsafe {
    *
    * @param <R> result type
    * @param <P> policy type
-   * @throws NullPointerException if {@code outermostPolicy} is null
+   * @throws NullPointerException if {@code outerPolicy} is null
    */
   @SafeVarargs
-  public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P outermostPolicy, P... policies) {
-    Assert.notNull(outermostPolicy, "outermostPolicy");
+  public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P outerPolicy, P... policies) {
+    Assert.notNull(outerPolicy, "outerPolicy");
     List<Policy<R>> policyList = new ArrayList<>(policies.length + 1);
-    policyList.add(outermostPolicy);
+    policyList.add(outerPolicy);
     Collections.addAll(policyList, policies);
     return new FailsafeExecutor<>(policyList);
   }
