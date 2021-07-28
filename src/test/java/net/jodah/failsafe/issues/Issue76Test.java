@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -29,12 +30,13 @@ public class Issue76Test {
   public void shouldAbortOnAsyncError() throws Exception {
     final AssertionError error = new AssertionError();
     Waiter waiter = new Waiter();
+    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     Future<?> future = Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)
       .onAbort(e -> {
         waiter.assertEquals(e.getFailure(), error);
         waiter.resume();
       }))
-      .with(Executors.newSingleThreadScheduledExecutor())
+      .with(executor)
       .runAsync(() -> {
         throw error;
       });
@@ -45,6 +47,8 @@ public class Issue76Test {
       fail();
     } catch (ExecutionException e) {
       assertEquals(e.getCause(), error);
+    } finally {
+      executor.shutdownNow();
     }
   }
 }

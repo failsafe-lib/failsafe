@@ -27,12 +27,13 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.*;
+import static net.jodah.failsafe.Testing.failures;
+import static net.jodah.failsafe.Testing.unwrapExceptions;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
@@ -48,7 +49,7 @@ public abstract class AbstractFailsafeTest {
   public interface FastService extends Service {
   }
 
-  abstract ScheduledExecutorService getExecutor();
+  abstract ExecutorService getExecutor();
 
   @BeforeMethod
   void beforeMethod(Method method) {
@@ -89,7 +90,7 @@ public abstract class AbstractFailsafeTest {
    */
   <T> T failsafeGetWithFallback(Policy<T> policy, CheckedFunction<ExecutionAttemptedEvent<? extends T>, T> fallback,
     CheckedSupplier<T> supplier) {
-    ScheduledExecutorService executor = getExecutor();
+    ExecutorService executor = getExecutor();
     return unwrapExceptions(() -> executor == null ?
       Failsafe.with(Fallback.of(fallback), policy).get(supplier) :
       Failsafe.with(Fallback.ofAsync(fallback), policy).with(executor).getAsync(supplier).get());
@@ -99,7 +100,7 @@ public abstract class AbstractFailsafeTest {
    * Does a failsafe run with an optional executor.
    */
   void failsafeRun(Policy<?> policy, CheckedRunnable runnable) {
-    ScheduledExecutorService executor = getExecutor();
+    ExecutorService executor = getExecutor();
     if (executor == null)
       Failsafe.with(policy).run(runnable);
     else

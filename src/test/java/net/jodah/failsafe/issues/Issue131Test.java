@@ -25,11 +25,11 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Predicate;
 
 @Test
 public class Issue131Test {
-
   /**
    * This predicate is invoked in failure scenarios with an arg of null,
    * producing a {@link NullPointerException} yielding surprising results.
@@ -60,7 +60,8 @@ public class Issue131Test {
    */
   public void asyncShouldCompleteTheFuture() throws Throwable {
     CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>().handleResultIf(handleIfEqualsIgnoreCaseFoo);
-    FailsafeExecutor<String> failsafe = Failsafe.with(circuitBreaker).with(Executors.newSingleThreadScheduledExecutor());
+    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    FailsafeExecutor<String> failsafe = Failsafe.with(circuitBreaker).with(executor);
 
     Waiter waiter = new Waiter();
 
@@ -73,5 +74,6 @@ public class Issue131Test {
       .whenComplete((s, t) -> waiter.resume()); // Never invoked!
 
     waiter.await(1000);
+    executor.shutdownNow();
   }
 }

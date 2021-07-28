@@ -18,6 +18,8 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.Testing.ConnectException;
 import net.jodah.failsafe.Testing.Service;
 import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.util.concurrent.Scheduler;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -38,7 +40,7 @@ import static org.testng.Assert.*;
 
 @Test
 public class AsyncFailsafeTest extends AbstractFailsafeTest {
-  private ScheduledExecutorService executor = Executors.newScheduledThreadPool(5);
+  private ExecutorService executor = Executors.newFixedThreadPool(5);
 
   // Results from a getAsync against a future that wraps an asynchronous Failsafe call
   private @SuppressWarnings("unchecked") Class<? extends Throwable>[] futureAsyncThrowables = new Class[] {
@@ -50,8 +52,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     counter = new AtomicInteger();
   }
 
+  @AfterClass
+  protected void afterClass() {
+    executor.shutdownNow();
+  }
+
   @Override
-  ScheduledExecutorService getExecutor() {
+  ExecutorService getExecutor() {
     return executor;
   }
 
@@ -476,13 +483,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
    * Asserts that asynchronous completion via an execution is supported.
    */
   public void shouldCompleteAsync() throws Throwable {
-    Failsafe.with(retryAlways).runAsyncExecution(exec -> executor.schedule(() -> {
+    Failsafe.with(retryAlways).runAsyncExecution(exec -> Scheduler.DEFAULT.schedule(() -> {
       try {
         exec.complete();
         waiter.resume();
       } catch (Exception e) {
         waiter.fail(e);
       }
+      return null;
     }, 100, TimeUnit.MILLISECONDS));
 
     waiter.await(5000);
@@ -573,12 +581,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldInterruptExecutionOnCancelWithScheduledExecutorService() throws Throwable {
-    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways).with(executor));
+    ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways).with(executorService));
+    executorService.shutdownNow();
   }
 
   public void shouldInterruptExecutionOnCancelWithExecutorService() throws Throwable {
-    ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways).with(executorService));
+    assertInterruptedExceptionOnCancel(Failsafe.with(retryAlways).with(executor));
   }
 
   @SuppressWarnings("unused")

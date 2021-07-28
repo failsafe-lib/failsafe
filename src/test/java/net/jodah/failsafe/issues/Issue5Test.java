@@ -43,5 +43,6 @@ public class Issue5Test {
     }).getAsync(() -> null);
 
     waiter.await(1000);
+    executor.shutdownNow();
   }
 }

@@ -45,5 +45,6 @@ public class Issue55Test {
 
     Thread.sleep(100);
     assertEquals(counter.get(), 1);
+    executor.shutdownNow();
   }
 }

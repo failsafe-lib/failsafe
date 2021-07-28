@@ -16,15 +16,24 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.testng.Assert.*;
 
 @Test
 public class FailsafeFutureTest {
-  ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+  ExecutorService executor = Executors.newFixedThreadPool(2);
+
+  @AfterClass
+  protected void afterClass() {
+    executor.shutdownNow();
+  }
 
   /**
    * Asserts that retries are stopped and completion handlers are called on cancel.
@@ -77,13 +86,13 @@ public class FailsafeFutureTest {
    * Asserts that a cancelled future ignores subsequent completion attempts.
    */
   public void shouldNotCompleteCancelledFuture() {
-    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).getAsync(() -> {
+    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<>()).with(executor).getAsync(() -> {
       Thread.sleep(1000);
       throw new IllegalStateException();
     });
 
     future.cancel(true);
-    future.complete("unexpected2");
+    future.complete("unexpected");
     Asserts.assertThrows(future::get, CancellationException.class);
   }
 }

@@ -18,6 +18,7 @@ package net.jodah.failsafe.issues;
 import net.jodah.failsafe.Asserts;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -29,9 +30,15 @@ import static org.testng.Assert.assertTrue;
 
 @Test
 public class Issue52Test {
+  ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+
+  @AfterClass
+  protected void afterClass() {
+    scheduler.shutdownNow();
+  }
+
   @Test(expectedExceptions = CancellationException.class)
   public void shouldCancelExecutionViaFuture() throws Throwable {
-    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     Future<Object> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
         .with(scheduler)
         .getAsync(exec -> {
@@ -43,7 +50,6 @@ public class Issue52Test {
   }
 
   public void shouldCancelExecutionViaCompletableFuture() throws Throwable {
-    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     AtomicInteger counter = new AtomicInteger();
     CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
         .with(scheduler)

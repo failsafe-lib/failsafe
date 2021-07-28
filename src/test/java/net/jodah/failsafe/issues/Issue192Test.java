@@ -5,8 +5,8 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.Testing;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -27,13 +27,13 @@ public class Issue192Test {
   static class ExceptionC extends Exception {
   }
 
-  @BeforeTest
-  protected void beforeTest() {
+  @BeforeClass
+  protected void beforeClass() {
     executor = Executors.newSingleThreadScheduledExecutor();
   }
 
-  @AfterTest
-  protected void afterTest() {
+  @AfterClass
+  protected void afterClass() {
     executor.shutdownNow();
   }
 

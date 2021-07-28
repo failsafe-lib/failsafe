@@ -30,7 +30,7 @@ public class ShutdownExecutorTest {
    */
   public void shouldHandleInitialSchedulingFailure() {
     // Given
-    ScheduledExecutorService executor = Executors.newScheduledThreadPool(0);
+    ExecutorService executor = Executors.newFixedThreadPool(1);
     executor.shutdownNow();
 
     // When
@@ -46,7 +46,7 @@ public class ShutdownExecutorTest {
    */
   public void shouldHandleShutdown() throws Throwable {
     // Given
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     AtomicInteger counter = new AtomicInteger();
 
     // When
@@ -70,7 +70,7 @@ public class ShutdownExecutorTest {
    */
   public void shouldHandleShutdownNow() throws Throwable {
     // Given
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     AtomicInteger counter = new AtomicInteger();
 
     // When
@@ -91,7 +91,7 @@ public class ShutdownExecutorTest {
    */
   public void testShutdownDoesNotPreventTimeoutSync() throws Throwable {
     // Given
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(200)).withInterrupt(true);
     AtomicInteger counter = new AtomicInteger();
 
@@ -113,7 +113,7 @@ public class ShutdownExecutorTest {
    */
   public void testShutdownDoesNotPreventTimeoutAsync() throws Throwable {
     // Given
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(200)).withInterrupt(true);
     AtomicInteger counter = new AtomicInteger();
 

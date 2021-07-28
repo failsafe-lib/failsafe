@@ -61,5 +61,6 @@ public class Issue9Test {
     assertTrue(future.get());
     assertEquals(retryCounter.get(), 2);
     assertEquals(successCounter.get(), 1);
+    executor.shutdownNow();
   }
 }

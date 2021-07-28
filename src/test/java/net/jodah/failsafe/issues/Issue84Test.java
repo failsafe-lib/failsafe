@@ -37,5 +37,7 @@ public class Issue84Test {
     Future<Boolean> future4 = Failsafe.with(Fallback.of(false), circuitBreaker)
         .getStageAsync(() -> CompletableFuture.completedFuture(false));
     assertFalse(future4.get());
+
+    executor.shutdownNow();
   }
 }
