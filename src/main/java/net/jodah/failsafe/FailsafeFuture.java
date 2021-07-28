@@ -38,6 +38,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   private Future<?> dependentStageFuture;
   private Runnable cancelFn;
   private List<Future<T>> timeoutFutures;
+  private boolean cancelWithInterrupt;
 
   FailsafeFuture(FailsafeExecutor<T> executor) {
     this.executor = executor;
@@ -68,6 +69,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     if (isDone())
       return false;
 
+    this.cancelWithInterrupt = mayInterruptIfRunning;
     execution.cancelledIndex = Integer.MAX_VALUE;
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
     cancelResult = cancelDependencies(mayInterruptIfRunning, cancelResult);
@@ -140,7 +142,11 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
    * Injects a {@code dependentStageFuture} to be cancelled when this future is cancelled.
    */
   synchronized void injectStage(Future<?> dependentStageFuture) {
-    this.dependentStageFuture = dependentStageFuture;
+    // If outer future has already been cancelled, propagate the cancellation
+    if (isCancelled())
+      dependentStageFuture.cancel(cancelWithInterrupt);
+    else
+      this.dependentStageFuture = dependentStageFuture;
   }
 
   /**

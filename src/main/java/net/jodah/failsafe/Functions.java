@@ -153,7 +153,7 @@ final class Functions {
         execution.preExecute();
         CompletionStage<? extends T> stage = supplier.get(execution);
         if (stage instanceof Future)
-          execution.future.injectPolicy((Future) stage);
+          execution.future.injectStage((Future) stage);
         stage.whenComplete((result, failure) -> {
           if (failure instanceof CompletionException)
             failure = failure.getCause();
