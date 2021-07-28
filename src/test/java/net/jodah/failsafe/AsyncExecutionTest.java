@@ -15,6 +15,8 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.Testing.Stats;
+import net.jodah.failsafe.Testing.SyncExecutor;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -24,6 +26,8 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import static net.jodah.failsafe.Testing.testAsyncFailure;
+import static net.jodah.failsafe.Testing.withStats;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
@@ -185,7 +189,7 @@ public class AsyncExecutionTest {
     // Given rpRetry on IllegalArgumentException
     exec = new AsyncExecution(scheduler, future,
       executorFor(new RetryPolicy<>().handle(IllegalArgumentException.class)));
-    exec.inject(Functions.getPromise(ctx-> null, exec), true);
+    exec.inject(Functions.getPromise(ctx -> null, exec), true);
 
     // When / Then
     assertTrue(exec.retryOn(new IllegalArgumentException()));
@@ -248,6 +252,20 @@ public class AsyncExecutionTest {
     assertNull(exec.getLastFailure());
     verifyScheduler(1);
     verify(future).completeResult(ExecutionResult.NONE);
+  }
+
+  public void testExecutor() {
+    Stats rpStats = new Stats();
+    RetryPolicy<Object> rp = withStats(new RetryPolicy<>(), rpStats, false);
+
+    testAsyncFailure(Failsafe.with(rp).with(new SyncExecutor()), () -> {
+      throw new IllegalStateException();
+    }, e -> {
+      assertEquals(e.getAttemptCount(), 3);
+      assertEquals(e.getExecutionCount(), 3);
+      assertEquals(rpStats.failedAttemptCount, 3);
+      assertEquals(rpStats.retryCount, 2);
+    }, IllegalStateException.class);
   }
 
   @SuppressWarnings("unchecked")
