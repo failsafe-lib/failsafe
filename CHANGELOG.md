@@ -5,6 +5,7 @@
 - Added `RetryPolicy.onRetryScheduled` event handler.
 - Added `ExecutionEvent.getExecutionCount()` and `ExecutionContext.getExecutionCount()`, which distinguishes between attempts which may have been rejected and completed executions.
 - Improved support for outer Timeouts with retries.
+- Fixed #221 - Added support for `FailsafeExecutor.with(Executor)`.
 - Fixed #277 - Changed `Timeout` to use Failsafe's internal scheduler, so that user provided `ExecutorService` shutdowns do not interfere with timeouts.
 - Fixed #266 - Propagate `Future` cancellation to supplied `CompletionStage` when using `getStageAsync`.
 
