@@ -539,45 +539,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertThrows(future::get, ExecutionException.class, CircuitBreakerOpenException.class);
   }
 
-  /**
-   * Asserts that Failsafe handles an initial scheduling failure.
-   */
-  public void shouldHandleInitialSchedulingFailure() {
-    // Given
-    ScheduledExecutorService executor = Executors.newScheduledThreadPool(0);
-    executor.shutdownNow();
-
-    // When
-    Future future = Failsafe.with(Fallback.of(false), new RetryPolicy<>(), new CircuitBreaker<>())
-      .with(executor)
-      .runAsync(() -> waiter.fail("Should not execute supplier since executor has been shutdown"));
-
-    assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
-  }
-
-  /**
-   * Asserts that Failsafe handles a rpRetry scheduling failure.
-   */
-  public void shouldHandleRejectedRetryExecution() throws Throwable {
-    // Given
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    AtomicInteger counter = new AtomicInteger();
-
-    // When
-    Future future = Failsafe.with(new RetryPolicy<>().handleResult(null).handle(Exception.class))
-      .with(executor)
-      .getAsync(() -> {
-        counter.incrementAndGet();
-        Thread.sleep(200);
-        return null;
-      });
-
-    Thread.sleep(150);
-    executor.shutdownNow();
-    assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
-    assertEquals(counter.get(), 1, "Supplier should have been executed before executor was shutdown");
-  }
-
   private void assertInterruptedExceptionOnCancel(FailsafeExecutor<Boolean> failsafe) throws Throwable {
     CompletableFuture<Void> future = failsafe.runAsync(() -> {
       try {

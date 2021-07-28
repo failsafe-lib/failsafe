@@ -64,7 +64,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
 
       try {
         // Schedule timeout check
-        timeoutFuture = scheduler.schedule(() -> {
+        timeoutFuture = Scheduler.DEFAULT.schedule(() -> {
           // Guard against race with execution completion
           if (result.compareAndSet(null, ExecutionResult.failure(new TimeoutExceededException(policy)))) {
             // Cancel and interrupt
@@ -114,7 +114,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           if (!future.isDone()) {
             try {
               // Schedule timeout check
-              timeoutFuture.set(scheduler.schedule(() -> {
+              timeoutFuture.set(Scheduler.DEFAULT.schedule(() -> {
                 // Guard against race with execution completion
                 if (executionResult.compareAndSet(null,
                   ExecutionResult.failure(new TimeoutExceededException(policy)))) {
