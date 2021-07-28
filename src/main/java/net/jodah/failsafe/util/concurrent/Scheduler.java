@@ -16,6 +16,7 @@
 package net.jodah.failsafe.util.concurrent;
 
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.internal.util.DelegatingExecutorService;
 import net.jodah.failsafe.internal.util.DelegatingScheduler;
 
 import java.util.concurrent.*;
@@ -53,7 +54,11 @@ public interface Scheduler {
    *
    * @throws NullPointerException if {@code executor} is null
    */
-  static Scheduler of(final ExecutorService executor) {
-    return new DelegatingScheduler(Assert.notNull(executor, "executor"));
+  static Scheduler of(final Executor executor) {
+    Assert.notNull(executor, "executor");
+    ExecutorService executorService = executor instanceof ExecutorService ?
+      (ExecutorService) executor :
+      new DelegatingExecutorService(executor);
+    return new DelegatingScheduler(executorService);
   }
 }
