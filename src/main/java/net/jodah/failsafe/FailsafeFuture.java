@@ -34,9 +34,10 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   private AbstractExecution execution;
 
   // Mutable state, guarded by "this"
-  private Future<T> dependency;
+  private Future<T> policyExecFuture;
+  private Future<?> dependentStageFuture;
   private Runnable cancelFn;
-  private List<Future<T>> timeoutDependencies;
+  private List<Future<T>> timeoutFutures;
 
   FailsafeFuture(FailsafeExecutor<T> executor) {
     this.executor = executor;
@@ -96,11 +97,11 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   }
 
   synchronized Future<T> getDependency() {
-    return dependency;
+    return policyExecFuture;
   }
 
   synchronized List<Future<T>> getTimeoutDelegates() {
-    return timeoutDependencies;
+    return timeoutFutures;
   }
 
   /**
@@ -109,14 +110,16 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
    */
   synchronized boolean cancelDependencies(boolean interruptDelegate, boolean result) {
     execution.interrupted = interruptDelegate;
-    if (dependency != null)
-      result = dependency.cancel(interruptDelegate);
+    if (policyExecFuture != null)
+      result = policyExecFuture.cancel(interruptDelegate);
+    if (dependentStageFuture != null)
+      dependentStageFuture.cancel(interruptDelegate);
     if (cancelFn != null)
       cancelFn.run();
-    if (timeoutDependencies != null) {
-      for (Future<T> timeoutDelegate : timeoutDependencies)
+    if (timeoutFutures != null) {
+      for (Future<T> timeoutDelegate : timeoutFutures)
         timeoutDelegate.cancel(false);
-      timeoutDependencies.clear();
+      timeoutFutures.clear();
     }
     return result;
   }
@@ -126,11 +129,18 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   }
 
   /**
-   * Injects a {@code dependency} to be cancelled when this future is cancelled.
+   * Injects a {@code policyExecFuture} to be cancelled when this future is cancelled.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  synchronized void inject(Future<?> dependency) {
-    this.dependency = (Future) dependency;
+  synchronized void injectPolicy(Future<?> policyExecFuture) {
+    this.policyExecFuture = (Future) policyExecFuture;
+  }
+
+  /**
+   * Injects a {@code dependentStageFuture} to be cancelled when this future is cancelled.
+   */
+  synchronized void injectStage(Future<?> dependentStageFuture) {
+    this.dependentStageFuture = dependentStageFuture;
   }
 
   /**
@@ -141,12 +151,12 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   }
 
   /**
-   * Injects a {@code timeoutDependency} to be cancelled when this future is cancelled.
+   * Injects a {@code scheduledTimeoutExec} to be cancelled when this future is cancelled.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  synchronized void injectTimeout(Future<?> timeoutDependency) {
-    if (timeoutDependencies == null)
-      timeoutDependencies = new ArrayList<>(3);
-    timeoutDependencies.add((Future) timeoutDependency);
+  synchronized void injectTimeout(Future<?> timeoutFuture) {
+    if (timeoutFutures == null)
+      timeoutFutures = new ArrayList<>(3);
+    timeoutFutures.add((Future) timeoutFuture);
   }
 }

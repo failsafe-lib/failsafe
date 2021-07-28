@@ -133,7 +133,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                               retryScheduledListener.handle(postResult, execution);
 
                             previousResult = postResult;
-                            future.inject(scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
+                            future.injectPolicy(scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
                             future.injectCancelFn(() -> {
                               // Ensure that the promise completes if a scheduled retry is cancelled
                               if (executionCancelled())

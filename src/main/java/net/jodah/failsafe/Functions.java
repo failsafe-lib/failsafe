@@ -106,7 +106,7 @@ final class Functions {
 
         try {
           scheduled.set(true);
-          future.inject(scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
+          future.injectPolicy(scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
         } catch (Throwable t) {
           promise.completeExceptionally(t);
         }
@@ -143,14 +143,18 @@ final class Functions {
    * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, records the result and
    * returns a promise containing the result.
    */
+  @SuppressWarnings("rawtypes")
   static <T> Supplier<CompletableFuture<ExecutionResult>> getPromiseOfStage(
-    ContextualSupplier<? extends CompletionStage<? extends T>> supplier, AbstractExecution execution) {
+    ContextualSupplier<? extends CompletionStage<? extends T>> supplier, AsyncExecution execution) {
     Assert.notNull(supplier, "supplier");
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       try {
         execution.preExecute();
-        supplier.get(execution).whenComplete((result, failure) -> {
+        CompletionStage<? extends T> stage = supplier.get(execution);
+        if (stage instanceof Future)
+          execution.future.injectPolicy((Future) stage);
+        stage.whenComplete((result, failure) -> {
           if (failure instanceof CompletionException)
             failure = failure.getCause();
           ExecutionResult r = failure == null ? ExecutionResult.success(result) : ExecutionResult.failure(failure);

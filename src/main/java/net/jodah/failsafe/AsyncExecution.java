@@ -182,7 +182,7 @@ public final class AsyncExecution extends AbstractExecution {
     if (!asyncExecution)
       outerExecutionSupplier.get().whenComplete(this::complete);
     else
-      future.inject(scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
+      future.injectPolicy(scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
   }
 
   /**

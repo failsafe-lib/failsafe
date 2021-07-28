@@ -96,7 +96,7 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
           if (!policy.isAsync())
             callable.call();
           else
-            future.inject(scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
+            future.injectPolicy(scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
         } catch (Throwable t) {
           promise.completeExceptionally(t);
         }
