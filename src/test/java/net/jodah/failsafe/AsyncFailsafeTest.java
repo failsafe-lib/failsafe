@@ -539,6 +539,20 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertThrows(future::get, ExecutionException.class, CircuitBreakerOpenException.class);
   }
 
+  public void testRetryPolicyScheduledDelayIsZero() throws Throwable {
+    RetryPolicy<Object> rp = new RetryPolicy<>().onRetryScheduled(e -> {
+      assertEquals(e.getDelay().toMillis(), 0);
+      System.out.println(e.getDelay().toMillis());
+      waiter.resume();
+    });
+
+    Failsafe.with(rp).runAsync(() -> {
+      throw new IllegalStateException();
+    });
+
+    waiter.await(1000);
+  }
+
   private void assertInterruptedExceptionOnCancel(FailsafeExecutor<Boolean> failsafe) throws Throwable {
     CompletableFuture<Void> future = failsafe.runAsync(() -> {
       try {

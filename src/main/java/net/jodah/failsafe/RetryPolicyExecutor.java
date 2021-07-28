@@ -37,7 +37,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
   /** The fixed, backoff, random or computed delay time in nanoseconds. */
-  private volatile long delayNanos = -1;
+  private volatile long delayNanos;
 
   // Listeners
   private final EventListener abortListener;
@@ -221,7 +221,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     Duration delayMin = policy.getDelayMin();
     Duration delayMax = policy.getDelayMax();
 
-    if (waitNanos == -1 && delay != null && !delay.equals(Duration.ZERO))
+    if (waitNanos == 0 && delay != null && !delay.equals(Duration.ZERO))
       waitNanos = delay.toNanos();
     else if (delayMin != null && delayMax != null)
       waitNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
