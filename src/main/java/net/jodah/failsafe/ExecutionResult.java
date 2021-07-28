@@ -118,11 +118,13 @@ public class ExecutionResult {
    * {@code this} if {@link #success} and {@link #result} are unchanged.
    */
   public ExecutionResult withResult(Object result) {
-    return success && ((this.result == null && result == null) || (this.result != null && this.result.equals(result))) ?
+    boolean unchangedNull = this.result == null && result == null && failure == null;
+    boolean unchangedNotNull = this.result != null && this.result.equals(result);
+    return success && (unchangedNull || unchangedNotNull) ?
       this :
       new ExecutionResult(result, null, nonResult, waitNanos, true, true, successAll);
   }
-  
+
   /**
    * Returns a copy of the ExecutionResult with {@code complete} set to false, else this if nothing has changed.
    */
