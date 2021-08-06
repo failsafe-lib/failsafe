@@ -35,7 +35,8 @@ import static net.jodah.failsafe.Functions.*;
  * <p>
  * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be configured
  * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable and
- * interruptable via the returned CompletableFuture, even those run by a {@link ForkJoinPool} or {@link CompletionStage}.
+ * interruptable via the returned CompletableFuture, even those run by a {@link ForkJoinPool} or {@link
+ * CompletionStage}.
  *
  * @param <R> result type
  * @author Jonathan Halterman
@@ -292,7 +293,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Registers the {@code listener} to be called when an execution fails. If multiple policies, are configured, this
    * handler is called when execution is complete and <i>any</i> policy fails.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
    */
   @Override
   public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {

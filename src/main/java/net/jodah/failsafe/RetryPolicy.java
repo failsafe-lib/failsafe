@@ -223,7 +223,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
 
   /**
    * Registers the {@code listener} to be called when an execution is aborted.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
    */
   public RetryPolicy<R> onAbort(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     abortListener = EventListener.of(Assert.notNull(listener, "listener"));
@@ -234,7 +235,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * Registers the {@code listener} to be called when an execution attempt fails. You can also use {@link
    * #onFailure(CheckedConsumer) onFailure} to determine when the execution attempt fails <i>and</i> and all retries
    * have failed.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
    */
   public RetryPolicy<R> onFailedAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
     failedAttemptListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
@@ -244,7 +246,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Registers the {@code listener} to be called when an execution fails and the {@link RetryPolicy#withMaxRetries(int)
    * max retry attempts} or {@link RetryPolicy#withMaxDuration(Duration) max duration} are exceeded.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
    */
   public RetryPolicy<R> onRetriesExceeded(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
     retriesExceededListener = EventListener.of(Assert.notNull(listener, "listener"));
@@ -253,7 +256,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
 
   /**
    * Registers the {@code listener} to be called when a retry is about to be attempted.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
    */
   public RetryPolicy<R> onRetry(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
     retryListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
@@ -263,7 +267,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Registers the {@code listener} to be called when a retry is about to be scheduled. A retry will actually be
    * performed after any scheduled delay.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
    */
   public RetryPolicy<R> onRetryScheduled(CheckedConsumer<? extends ExecutionScheduledEvent<R>> listener) {
     retryScheduledListener = EventListener.ofScheduled(Assert.notNull(listener, "listener"));
