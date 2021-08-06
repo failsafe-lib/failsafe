@@ -84,6 +84,20 @@ public class Failsafe {
    */
   @SuppressWarnings("unchecked")
   public static <R> FailsafeExecutor<R> with(List<? extends Policy<R>> policies) {
-    return new FailsafeExecutor<>((List<Policy<R>>) Assert.notNull(policies, "policies"));
+    Assert.notNull(policies, "policies");
+    Assert.isTrue(!policies.isEmpty(), "At least one policy must be supplied");
+    return new FailsafeExecutor<>((List<Policy<R>>) policies);
+  }
+
+  /**
+   * Creates and returns a noop {@link FailsafeExecutor} instance that treats any exception as a failure for the
+   * purposes of calling event listeners, and provides no additional failure handling.
+   *
+   * @param <R> result type
+   * @throws NullPointerException if {@code policies} is null
+   * @throws IllegalArgumentException if {@code policies} is empty
+   */
+  public static <R> FailsafeExecutor<R> none() {
+    return new FailsafeExecutor<>(Collections.emptyList());
   }
 }

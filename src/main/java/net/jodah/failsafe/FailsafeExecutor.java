@@ -51,7 +51,6 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws IllegalArgumentException if {@code policies} is empty
    */
   FailsafeExecutor(List<Policy<R>> policies) {
-    Assert.isTrue(!policies.isEmpty(), "At least one policy must be supplied");
     this.policies = policies;
   }
 
