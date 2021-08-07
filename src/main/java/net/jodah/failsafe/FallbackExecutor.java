@@ -66,45 +66,50 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
     Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
     return () -> supplier.get().thenCompose(result -> {
-      if (result == null)
+      if (result == null || future.isDone())
         return ExecutionResult.NULL_FUTURE;
+      if (executionCancelled())
+        return CompletableFuture.completedFuture(result);
+      if (!isFailure(result))
+        return postExecuteAsync(result, scheduler, future);
 
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      if (executionCancelled()) {
-        promise.complete(result);
-        return promise;
-      }
-
-      if (isFailure(result)) {
-        Callable<Object> callable = () -> {
-          try {
-            CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
-              execution.copy());
-            fallback.whenComplete((innerResult, failure) -> {
-              if (failure instanceof CompletionException)
-                failure = failure.getCause();
-              ExecutionResult r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
-              promise.complete(r);
-            });
-          } catch (Throwable t) {
-            promise.complete(ExecutionResult.failure(t));
-          }
-          return null;
-        };
-
+      Callable<Object> callable = () -> {
         try {
-          if (!policy.isAsync())
-            callable.call();
-          else
-            future.injectPolicy(scheduler.schedule(callable, result.getWaitNanos(), TimeUnit.NANOSECONDS));
+          CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
+            execution.copy());
+          fallback.whenComplete((innerResult, failure) -> {
+            if (failure instanceof CompletionException)
+              failure = failure.getCause();
+            ExecutionResult r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
+            promise.complete(r);
+          });
         } catch (Throwable t) {
-          promise.completeExceptionally(t);
+          promise.complete(ExecutionResult.failure(t));
         }
+        return null;
+      };
 
-        return promise.thenCompose(ss -> postExecuteAsync(ss, scheduler, future));
+      try {
+        if (!policy.isAsync())
+          callable.call();
+        else {
+          Future<?> scheduledFallback = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
+
+          // Propagate cancellation to the scheduled retry and promise
+          future.injectCancelFn(() -> {
+            System.out.println("cancelling scheduled fallback isdone: " + scheduledFallback.isDone());
+            scheduledFallback.cancel(false);
+            if (executionCancelled())
+              promise.complete(null);
+          });
+        }
+      } catch (Throwable t) {
+        // Hard scheduling failure
+        promise.completeExceptionally(t);
       }
 
-      return postExecuteAsync(result, scheduler, future);
+      return promise.thenCompose(ss -> postExecuteAsync(ss, scheduler, future));
     });
   }
 
