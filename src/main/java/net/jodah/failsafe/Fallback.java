@@ -89,7 +89,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> of(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
     return new Fallback<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), null, false);
   }
@@ -100,7 +100,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> of(CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends R> fallback) {
     return new Fallback<>(Assert.notNull((CheckedFunction) fallback, "fallback"), null, false);
   }
@@ -111,7 +111,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofException(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends Exception> fallback) {
     Assert.notNull((CheckedFunction) fallback, "fallback");
@@ -121,10 +121,10 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Returns the {@code fallback} result to be returned if execution fails.
+   * Returns the {@code fallbackResult} to be provided if execution fails.
    */
-  public static <R> Fallback<R> of(R fallback) {
-    return new Fallback<>(toFn(fallback), null, false);
+  public static <R> Fallback<R> of(R fallbackResult) {
+    return new Fallback<>(toFn(fallbackResult), null, false);
   }
 
   /**
@@ -152,7 +152,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofAsync(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
     return new Fallback<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), null, true);
   }
@@ -163,7 +163,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofAsync(CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends R> fallback) {
     return new Fallback<>(Assert.notNull((CheckedFunction) fallback, "fallback"), null, true);
   }
@@ -173,6 +173,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofStage(CheckedSupplier<? extends CompletionStage<R>> fallback) {
     return new Fallback<>(null, (CheckedFunction) toFn(Assert.notNull(fallback, "fallback")), false);
   }
@@ -183,6 +184,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofStage(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends CompletionStage<R>> fallback) {
     return new Fallback<>(null, Assert.notNull((CheckedFunction) fallback, "fallback"), false);
@@ -193,6 +195,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofStageAsync(CheckedSupplier<? extends CompletionStage<R>> fallback) {
     return new Fallback<>(null, (CheckedFunction) toFn(Assert.notNull(fallback, "fallback")), true);
   }
@@ -203,6 +206,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofStageAsync(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends CompletionStage<R>> fallback) {
     return new Fallback<>(null, Assert.notNull((CheckedFunction) fallback, "fallback"), true);
@@ -243,6 +247,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   @Override
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public PolicyExecutor toExecutor(AbstractExecution execution) {
     return new FallbackExecutor(this, execution, failedAttemptListener);
   }
