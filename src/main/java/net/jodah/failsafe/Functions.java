@@ -90,7 +90,8 @@ final class Functions {
    * calls, and returns a promise containing the result.
    */
   static Supplier<CompletableFuture<ExecutionResult>> getPromiseAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, AsyncExecution execution) {
+
     AtomicBoolean scheduled = new AtomicBoolean();
     return () -> {
       if (scheduled.get()) {
@@ -106,7 +107,16 @@ final class Functions {
 
         try {
           scheduled.set(true);
-          future.injectPolicy(scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS));
+          Future<?> scheduledSupply = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
+
+          // Propagate cancellation to the scheduled supplier and its promise
+          execution.future.injectCancelFn((mayInterrupt, cancelResult) -> {
+            scheduledSupply.cancel(mayInterrupt);
+
+            // Cancel a pending promise if the execution is not yet running
+            if (!execution.inProgress)
+              promise.complete(cancelResult);
+          });
         } catch (Throwable t) {
           promise.completeExceptionally(t);
         }

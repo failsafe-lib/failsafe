@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 @Test
@@ -35,8 +36,8 @@ public class Issue260Test {
     Future<?> f1 = Failsafe.with(rp, timeout).with(executor).runAsync(task.apply(1));
     Future<?> f2 = Failsafe.with(rp, timeout).with(executor).runAsync(task.apply(2));
     Future<?> f3 = Failsafe.with(rp, timeout).with(executor).runAsync(task.apply(3));
-    f1.get();
-    f2.get();
-    f3.get();
+    f1.get(1, TimeUnit.SECONDS);
+    f2.get(1, TimeUnit.SECONDS);
+    f3.get(1, TimeUnit.SECONDS);
   }
 }

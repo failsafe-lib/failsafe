@@ -21,6 +21,7 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -46,7 +47,7 @@ public final class AsyncExecution extends AbstractExecution {
 
   void inject(Supplier<CompletableFuture<ExecutionResult>> syncSupplier, boolean asyncExecution) {
     if (!asyncExecution) {
-      outerExecutionSupplier = Functions.getPromiseAsync(syncSupplier, scheduler, future);
+      outerExecutionSupplier = Functions.getPromiseAsync(syncSupplier, scheduler, this);
     } else {
       outerExecutionSupplier = innerExecutionSupplier = Functions.toSettableSupplier(syncSupplier);
     }
@@ -181,8 +182,10 @@ public final class AsyncExecution extends AbstractExecution {
   void executeAsync(boolean asyncExecution) {
     if (!asyncExecution)
       outerExecutionSupplier.get().whenComplete(this::complete);
-    else
-      future.injectPolicy(scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS));
+    else {
+      Future<?> scheduledSupply = scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS);
+      future.injectCancelFn((mayInterrupt, result) -> scheduledSupply.cancel(mayInterrupt));
+    }
   }
 
   /**

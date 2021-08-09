@@ -96,12 +96,11 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
         else {
           Future<?> scheduledFallback = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
-          // Propagate cancellation to the scheduled retry and promise
-          future.injectCancelFn(() -> {
-            System.out.println("cancelling scheduled fallback isdone: " + scheduledFallback.isDone());
-            scheduledFallback.cancel(false);
+          // Propagate cancellation to the scheduled fallback and its promise
+          future.injectCancelFn((mayInterrupt, promiseResult) -> {
+            scheduledFallback.cancel(mayInterrupt);
             if (executionCancelled())
-              promise.complete(null);
+              promise.complete(promiseResult);
           });
         }
       } catch (Throwable t) {

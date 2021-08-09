@@ -38,6 +38,13 @@ public class Testing {
   public static class ConnectException extends RuntimeException {
   }
 
+
+  public interface Service {
+    boolean connect();
+
+    boolean disconnect();
+  }
+
   public static class SyncExecutor implements Executor {
     @Override
     public void execute(Runnable command) {
@@ -74,12 +81,6 @@ public class Testing {
       halfOpenCount = 0;
       closedCount = 0;
     }
-  }
-
-  public interface Service {
-    boolean connect();
-
-    boolean disconnect();
   }
 
   public static Throwable getThrowable(CheckedRunnable runnable) {
@@ -277,6 +278,16 @@ public class Testing {
   @SuppressWarnings("unchecked")
   public static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
     throw (E) e;
+  }
+
+  public static Runnable uncheck(CheckedRunnable runnable) {
+    return () -> {
+      try {
+        runnable.run();
+      } catch (Throwable e) {
+        throw new RuntimeException(e);
+      }
+    };
   }
 
   public static CircuitBreakerInternals getInternals(CircuitBreaker circuitBreaker) {

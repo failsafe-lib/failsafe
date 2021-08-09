@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
 
 /**
  * A CompletableFuture implementation that propagates cancellations and calls completion handlers.
@@ -34,9 +35,8 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   private AbstractExecution execution;
 
   // Mutable state, guarded by "this"
-  private Future<T> policyExecFuture;
   private Future<?> dependentStageFuture;
-  private Runnable cancelFn;
+  private BiConsumer<Boolean, ExecutionResult> cancelFn;
   private List<Future<T>> timeoutFutures;
   private boolean cancelWithInterrupt;
 
@@ -72,7 +72,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     this.cancelWithInterrupt = mayInterruptIfRunning;
     execution.cancelledIndex = Integer.MAX_VALUE;
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
-    cancelResult = cancelDependencies(mayInterruptIfRunning, cancelResult);
+    cancelDependencies(mayInterruptIfRunning, null);
     ExecutionResult result = ExecutionResult.failure(new CancellationException());
     super.completeExceptionally(result.getFailure());
     executor.handleComplete(result, execution);
@@ -98,44 +98,29 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     return completed;
   }
 
-  synchronized Future<T> getDependency() {
-    return policyExecFuture;
-  }
-
   synchronized List<Future<T>> getTimeoutDelegates() {
     return timeoutFutures;
   }
 
   /**
-   * Cancels the dependency passing in the {@code interruptDelegate} flag, applies the retry cancel fn, and cancels all
+   * Cancels the dependency passing in the {@code mayInterrupt} flag, applies the retry cancel fn, and cancels all
    * timeout dependencies.
    */
-  synchronized boolean cancelDependencies(boolean interruptDelegate, boolean result) {
-    execution.interrupted = interruptDelegate;
-    if (policyExecFuture != null)
-      result = policyExecFuture.cancel(interruptDelegate);
+  synchronized void cancelDependencies(boolean mayInterrupt, ExecutionResult cancelResult) {
+    execution.interrupted = mayInterrupt;
     if (dependentStageFuture != null)
-      dependentStageFuture.cancel(interruptDelegate);
-    if (cancelFn != null)
-      cancelFn.run();
+      dependentStageFuture.cancel(mayInterrupt);
     if (timeoutFutures != null) {
       for (Future<T> timeoutDelegate : timeoutFutures)
         timeoutDelegate.cancel(false);
       timeoutFutures.clear();
     }
-    return result;
+    if (cancelFn != null)
+      cancelFn.accept(mayInterrupt, cancelResult);
   }
 
   void inject(AbstractExecution execution) {
     this.execution = execution;
-  }
-
-  /**
-   * Injects a {@code policyExecFuture} to be cancelled when this future is cancelled.
-   */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  synchronized void injectPolicy(Future<?> policyExecFuture) {
-    this.policyExecFuture = (Future) policyExecFuture;
   }
 
   /**
@@ -152,7 +137,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   /**
    * Injects a {@code cancelFn} to be called when this future is cancelled.
    */
-  synchronized void injectCancelFn(Runnable cancelFn) {
+  synchronized void injectCancelFn(BiConsumer<Boolean, ExecutionResult> cancelFn) {
     this.cancelFn = cancelFn;
   }
 

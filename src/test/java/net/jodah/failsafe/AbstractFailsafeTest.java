@@ -347,7 +347,7 @@ public abstract class AbstractFailsafeTest {
     };
 
     // When / Then
-    FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onSuccess(e -> {
+    FailsafeExecutor<Object> failsafe = Failsafe.with(rp, timeout).onComplete(e -> {
       waiter.assertEquals(e.getAttemptCount(), 3);
       waiter.assertEquals(e.getExecutionCount(), 3);
       waiter.assertEquals("foo2", e.getResult());

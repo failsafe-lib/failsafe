@@ -21,6 +21,7 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -114,14 +115,18 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
           supplier.get().whenComplete((result, error) -> {
             if (error != null)
               promise.completeExceptionally(error);
-            else if (result != null) {
+            else if (result == null)
+              promise.complete(null);
+            else {
               if (retriesExceeded || executionCancelled()) {
                 promise.complete(result);
               } else {
                 postExecuteAsync(result, scheduler, future).whenComplete((postResult, postError) -> {
                   if (postError != null)
                     promise.completeExceptionally(postError);
-                  else if (postResult != null) {
+                  else if (postResult == null)
+                    promise.complete(null);
+                  else {
                     if (postResult.isComplete() || executionCancelled()) {
                       promise.complete(postResult);
                     } else {
@@ -133,11 +138,14 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                               retryScheduledListener.handle(postResult, execution);
 
                             previousResult = postResult;
-                            future.injectPolicy(scheduler.schedule(this, postResult.getWaitNanos(), TimeUnit.NANOSECONDS));
-                            future.injectCancelFn(() -> {
-                              // Ensure that the promise completes if a scheduled retry is cancelled
+                            Future<?> scheduledRetry = scheduler.schedule(this, postResult.getWaitNanos(),
+                              TimeUnit.NANOSECONDS);
+
+                            // Propagate cancellation to the scheduled retry and its promise
+                            future.injectCancelFn((mayInterrupt, cancelResult) -> {
+                              scheduledRetry.cancel(mayInterrupt);
                               if (executionCancelled())
-                                promise.complete(null);
+                                promise.complete(cancelResult);
                             });
                           } catch (Throwable t) {
                             // Hard scheduling failure

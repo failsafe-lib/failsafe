@@ -35,10 +35,10 @@ public abstract class AbstractExecution extends ExecutionContext {
   final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
   // Internally mutable state
+  /* Whether the supplier is in progress */
+  volatile boolean inProgress;
   /* Whether the execution attempt has been recorded */
   volatile boolean attemptRecorded;
-  /* Whether the execution result has been recorded */
-  volatile boolean executionRecorded;
   /* Whether a result has been post-executed */
   volatile boolean resultHandled;
   /* Whether the execution can be interrupted */
@@ -73,15 +73,20 @@ public abstract class AbstractExecution extends ExecutionContext {
    * @throws IllegalStateException if the execution is already complete
    */
   void record(ExecutionResult result) {
+    record(result, false);
+  }
+
+  void record(ExecutionResult result, boolean timeout) {
     Assert.state(!completed, "Execution has already been completed");
     if (!interrupted) {
       recordAttempt();
-      if (!executionRecorded) {
+      if (inProgress) {
+        lastResult = result.getResult();
+        lastFailure = result.getFailure();
         executions.incrementAndGet();
-        executionRecorded = true;
+        if (!timeout)
+          inProgress = false;
       }
-      lastResult = result.getResult();
-      lastFailure = result.getFailure();
     }
   }
 
@@ -96,12 +101,12 @@ public abstract class AbstractExecution extends ExecutionContext {
     }
   }
 
-  void preExecute() {
+  synchronized void preExecute() {
     attemptStartTime = Duration.ofNanos(System.nanoTime());
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
+    inProgress = true;
     attemptRecorded = false;
-    executionRecorded = false;
     resultHandled = false;
     cancelledIndex = 0;
     canInterrupt = true;

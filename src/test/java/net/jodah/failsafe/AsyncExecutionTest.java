@@ -52,6 +52,7 @@ public class AsyncExecutionTest {
     exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>()));
 
     // When
+    exec.preExecute();
     exec.complete();
 
     // Then
@@ -68,6 +69,7 @@ public class AsyncExecutionTest {
     exec = new AsyncExecution(scheduler, future, executorFor(new RetryPolicy<>().handleResult(null)));
 
     // When / Then
+    exec.preExecute();
     assertFalse(exec.complete(null));
     exec.preExecute();
     assertTrue(exec.complete(true));
@@ -87,6 +89,7 @@ public class AsyncExecutionTest {
     exec.inject(Functions.getPromise(ctx -> null, exec), true);
 
     // When
+    exec.preExecute();
     exec.retryOn(e);
     exec.preExecute();
     exec.retryOn(e);
@@ -102,6 +105,7 @@ public class AsyncExecutionTest {
     exec.inject(Functions.getPromise(ctx -> null, exec), true);
 
     // When / Then
+    exec.preExecute();
     assertFalse(exec.complete(null));
     exec.preExecute();
     assertTrue(exec.retryFor(null));
@@ -123,6 +127,7 @@ public class AsyncExecutionTest {
 
     // When / Then
     resetMocks();
+    exec.preExecute();
     assertFalse(exec.complete(null));
     exec.preExecute();
     assertTrue(exec.retryFor(null));
@@ -146,6 +151,7 @@ public class AsyncExecutionTest {
     exec.inject(Functions.getPromise(ctx -> null, exec), true);
 
     // When / Then
+    exec.preExecute();
     assertFalse(exec.complete(null));
     exec.preExecute();
     assertTrue(exec.retryFor(null, null));
@@ -169,6 +175,7 @@ public class AsyncExecutionTest {
 
     // When / Then
     resetMocks();
+    exec.preExecute();
     assertFalse(exec.complete(null));
     exec.preExecute();
     assertTrue(exec.retryFor(null, e));
@@ -192,6 +199,7 @@ public class AsyncExecutionTest {
     exec.inject(Functions.getPromise(ctx -> null, exec), true);
 
     // When / Then
+    exec.preExecute();
     assertTrue(exec.retryOn(new IllegalArgumentException()));
     exec.preExecute();
     assertFalse(exec.retryOn(e));
@@ -211,6 +219,7 @@ public class AsyncExecutionTest {
 
     // When / Then
     resetMocks();
+    exec.preExecute();
     assertTrue(exec.retryOn(e));
     exec.preExecute();
     assertFalse(exec.retryOn(e));
@@ -239,6 +248,7 @@ public class AsyncExecutionTest {
     exec.inject(Functions.getPromise(ctx -> null, exec), true);
 
     // When / Then
+    exec.preExecute();
     exec.completeOrHandle(null, e);
     assertFalse(exec.isComplete());
     exec.preExecute();

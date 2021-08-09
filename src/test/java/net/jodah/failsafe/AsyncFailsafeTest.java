@@ -28,7 +28,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
@@ -304,7 +303,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
    */
   public void shouldCancelNestedTimeoutsWithInterrupt() throws Throwable {
     // Given
-    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2);
+    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().onRetry(e -> System.out.println("Retrying"));
     Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
     Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
     AtomicReference<FailsafeFuture<Boolean>> futureRef = new AtomicReference<>();
@@ -319,20 +318,16 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       // Wait for futureRef to be set
       futureLatch.await();
       waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
-      Consumer<Boolean> asserts = (expected) -> {
-        waiter.assertEquals(expected, ctx.isCancelled());
-        waiter.assertEquals(expected, futureRef.get().getDependency().isCancelled());
-        if (!futureRef.get().getTimeoutDelegates().isEmpty())
-          waiter.assertEquals(expected, futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
-      };
 
       try {
         // Assert not cancelled
-        asserts.accept(false);
+        waiter.assertFalse(ctx.isCancelled());
+        if (!futureRef.get().getTimeoutDelegates().isEmpty())
+          waiter.assertFalse(futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
         Thread.sleep(1000);
       } catch (InterruptedException e) {
         // Assert cancelled
-        asserts.accept(true);
+        waiter.assertTrue(ctx.isCancelled());
         waiter.resume();
         throw e;
       }
@@ -367,7 +362,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // Then
     assertTrue(future.isCancelled());
-    assertTrue(future.getDependency().isCancelled());
     assertTrue(
       future.getTimeoutDelegates() == null || future.getTimeoutDelegates().stream().allMatch(Future::isCancelled));
     assertTrue(future.isDone());

@@ -31,7 +31,8 @@ import static net.jodah.failsafe.Functions.*;
 /**
  * <p>
  * An executor that handles failures according to configured {@link FailurePolicy policies}. Can be created via {@link
- * Failsafe#with(Policy[])}.
+ * Failsafe#with(Policy, Policy[])} to support policy based execution failure handling, or {@link Failsafe#none()} to
+ * support execution with no failure handling.
  * <p>
  * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be configured
  * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable and
@@ -402,7 +403,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplierFn} is null
    * @throws RejectedExecutionException if the {@code supplierFn} cannot be scheduled for execution
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> CompletableFuture<T> callAsync(
     Function<AsyncExecution, Supplier<CompletableFuture<ExecutionResult>>> supplierFn, boolean asyncExecution) {
     FailsafeFuture<T> future = new FailsafeFuture(this);
