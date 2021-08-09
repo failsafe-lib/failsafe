@@ -111,11 +111,12 @@ final class Functions {
           Future<?> scheduledSupply = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
           // Propagate cancellation to the scheduled supplier and its promise
-          execution.future.injectCancelFn((mayInterrupt, cancelResult) -> {
+          execution.future.injectCancelFn((mayInterrupt, mayAbandon, cancelResult) -> {
             scheduledSupply.cancel(mayInterrupt);
 
-            // Cancel a pending promise if the execution is not yet running
-            if (Status.NOT_RUNNING.equals(execution.status))
+            // Cancel a pending promise if the execution is not yet running, or if it has timed out and can be abandoned
+            if (Status.NOT_RUNNING.equals(execution.status) || (Status.TIMED_OUT.equals(execution.status)
+              && mayAbandon))
               promise.complete(cancelResult);
           });
         } catch (Throwable t) {

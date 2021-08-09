@@ -184,7 +184,7 @@ public final class AsyncExecution extends AbstractExecution {
       outerExecutionSupplier.get().whenComplete(this::complete);
     else {
       Future<?> scheduledSupply = scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS);
-      future.injectCancelFn((mayInterrupt, result) -> scheduledSupply.cancel(mayInterrupt));
+      future.injectCancelFn((mayInterrupt, mayAbandon, result) -> scheduledSupply.cancel(mayInterrupt));
     }
   }
 

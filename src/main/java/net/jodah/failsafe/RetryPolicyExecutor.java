@@ -142,7 +142,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
                               TimeUnit.NANOSECONDS);
 
                             // Propagate cancellation to the scheduled retry and its promise
-                            future.injectCancelFn((mayInterrupt, cancelResult) -> {
+                            future.injectCancelFn((mayInterrupt, mayAbandon, cancelResult) -> {
                               scheduledRetry.cancel(mayInterrupt);
                               if (executionCancelled())
                                 promise.complete(cancelResult);

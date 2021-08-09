@@ -73,7 +73,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
               // Guard against race with the execution completing
               synchronized (execution) {
                 if (execution.canInterrupt) {
-                  execution.record(result.get(), true);
+                  execution.record(result.get());
                   execution.interrupted = true;
                   executionThread.interrupt();
                 }
@@ -125,7 +125,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
 
                   // Cancel and interrupt
                   execution.cancelledIndex = policyIndex;
-                  future.cancelDependencies(canInterrupt, cancelResult);
+                  future.cancelDependencies(canInterrupt, policy.canAbandon(), cancelResult);
                 }
                 return null;
               }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS));

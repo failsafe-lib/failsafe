@@ -31,6 +31,7 @@ import java.time.Duration;
 public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy<R> {
   private final Duration timeout;
   private volatile boolean interruptable;
+  private volatile boolean abandon;
 
   private Timeout(Duration timeout) {
     this.timeout = timeout;
@@ -41,6 +42,15 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    */
   public Duration getTimeout() {
     return timeout;
+  }
+
+  /**
+   * Returns whether the policy can abandon an execution if the timeout is exceeded.
+   *
+   * @see #withAbandon(boolean)
+   */
+  public boolean canAbandon() {
+    return abandon;
   }
 
   /**
@@ -92,6 +102,22 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    */
   public Timeout<R> withInterrupt(boolean mayInterruptIfRunning) {
     interruptable = mayInterruptIfRunning;
+    return this;
+  }
+
+  /**
+   * When {@code abandon} is {@code true}, an async execution that times out is cancelled and then abandoned. This
+   * allows for failure handling to proceed even if the execution is still running or for a Failsafe Future to be
+   * completed even if the execution did not complete yet.
+   * <p>
+   * Note: This feature should be used with caution since, when combined with retries, it could cause numerous abandoned
+   * executions to pile up.
+   * </p>
+   *
+   * @param abandon whether to abandon executions when a timeout occurs
+   */
+  public Timeout<R> withAbandon(boolean abandon) {
+    this.abandon = abandon;
     return this;
   }
 

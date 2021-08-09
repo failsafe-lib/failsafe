@@ -97,7 +97,7 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
           Future<?> scheduledFallback = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
           // Propagate cancellation to the scheduled fallback and its promise
-          future.injectCancelFn((mayInterrupt, promiseResult) -> {
+          future.injectCancelFn((mayInterrupt, mayAbandon, promiseResult) -> {
             scheduledFallback.cancel(mayInterrupt);
             if (executionCancelled())
               promise.complete(promiseResult);
