@@ -34,9 +34,13 @@ public abstract class AbstractExecution extends ExecutionContext {
   final FailsafeExecutor<Object> executor;
   final List<PolicyExecutor<Policy<Object>>> policyExecutors;
 
+  enum Status {
+    NOT_RUNNING, RUNNING, TIMED_OUT
+  }
+
   // Internally mutable state
-  /* Whether the supplier is in progress */
-  volatile boolean inProgress;
+  /* The status of an execution */
+  volatile Status status = Status.NOT_RUNNING;
   /* Whether the execution attempt has been recorded */
   volatile boolean attemptRecorded;
   /* Whether a result has been post-executed */
@@ -80,12 +84,11 @@ public abstract class AbstractExecution extends ExecutionContext {
     Assert.state(!completed, "Execution has already been completed");
     if (!interrupted) {
       recordAttempt();
-      if (inProgress) {
+      if (Status.RUNNING.equals(status)) {
         lastResult = result.getResult();
         lastFailure = result.getFailure();
         executions.incrementAndGet();
-        if (!timeout)
-          inProgress = false;
+        status = timeout ? Status.TIMED_OUT : Status.NOT_RUNNING;
       }
     }
   }
@@ -105,7 +108,7 @@ public abstract class AbstractExecution extends ExecutionContext {
     attemptStartTime = Duration.ofNanos(System.nanoTime());
     if (startTime == Duration.ZERO)
       startTime = attemptStartTime;
-    inProgress = true;
+    status = Status.RUNNING;
     attemptRecorded = false;
     resultHandled = false;
     cancelledIndex = 0;

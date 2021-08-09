@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.AbstractExecution.Status;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
@@ -114,7 +115,7 @@ final class Functions {
             scheduledSupply.cancel(mayInterrupt);
 
             // Cancel a pending promise if the execution is not yet running
-            if (!execution.inProgress)
+            if (Status.NOT_RUNNING.equals(execution.status))
               promise.complete(cancelResult);
           });
         } catch (Throwable t) {
