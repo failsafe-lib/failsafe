@@ -317,14 +317,14 @@ public class TimeoutTest {
   public void testFallbackThenTimeoutWithBlockedFallback() {
     AtomicInteger timeoutCounter = new AtomicInteger();
     AtomicInteger fallbackCounter = new AtomicInteger();
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).onFailure(e -> {
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).onFailure(e -> {
       System.out.println("Timed out");
       timeoutCounter.incrementAndGet();
     });
     Fallback<Object> fallback = Fallback.of(() -> {
       System.out.println("Falling back");
       fallbackCounter.incrementAndGet();
-      Thread.sleep(100);
+      Thread.sleep(200);
       throw new IllegalStateException();
     });
 
