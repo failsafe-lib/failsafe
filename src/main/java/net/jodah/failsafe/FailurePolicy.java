@@ -27,7 +27,8 @@ import java.util.function.Predicate;
 /**
  * A Policy that captures conditions to determine whether an execution is a failure.
  * <p>
- * If no handlers are configured, the execution is considered a failure if an Exception was thrown.
+ * By default, if no handlers are configured, the execution is considered a failure if an Exception was thrown. If
+ * multuple handlers are configured, they are logically OR'ed.
  * </p>
  *
  * @param <S> self type
