@@ -36,7 +36,8 @@ public class Failsafe {
    *   Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
    * </pre>
    * </p>
-   * This results in the following internal composition when executing the {@code supplier} and handling its result:
+   * This results in the following internal composition when executing a {@code runnable} or {@code supplier} and
+   * handling its result:
    * <p>
    * <pre>
    *   Fallback(RetryPolicy(CircuitBreaker(Supplier)))
@@ -65,10 +66,11 @@ public class Failsafe {
    * the last policy being applied first. For example, consider:
    * <p>
    * <pre>
-   *   Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
+   *   Failsafe.with(Arrays.asList(fallback, retryPolicy, circuitBreaker)).get(supplier);
    * </pre>
    * </p>
-   * This results in the following internal composition when executing the {@code supplier} and handling its result:
+   * This results in the following internal composition when executing a {@code runnable} or {@code supplier} and
+   * handling its result:
    * <p>
    * <pre>
    *   Fallback(RetryPolicy(CircuitBreaker(Supplier)))
