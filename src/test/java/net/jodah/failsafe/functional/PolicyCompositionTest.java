@@ -39,7 +39,7 @@ public class PolicyCompositionTest {
     Fallback<Object> fb = Fallback.of("test");
 
     Object result = Testing.ignoreExceptions(
-      () -> Failsafe.with(fb, rp, cb).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).get(() -> {
+      () -> Failsafe.with(fb).compose(rp).compose(cb).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).get(() -> {
         throw new FooException();
       }));
 
@@ -52,7 +52,7 @@ public class PolicyCompositionTest {
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
     Testing.ignoreExceptions(
-      () -> Failsafe.with(cb, rp).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).run(() -> {
+      () -> Failsafe.with(cb).compose(rp).onComplete(e -> assertEquals(e.getAttemptCount(), 3)).run(() -> {
         throw new Exception();
       }));
 
@@ -90,7 +90,7 @@ public class PolicyCompositionTest {
     Fallback<Object> fb = Fallback.of("test");
     AtomicInteger executions = new AtomicInteger();
 
-    assertEquals(Failsafe.with(fb, rp).onComplete(e -> executions.set(e.getAttemptCount())).get(() -> {
+    assertEquals(Failsafe.with(fb).compose(rp).onComplete(e -> executions.set(e.getAttemptCount())).get(() -> {
       throw new IllegalStateException();
     }), "test");
     assertEquals(executions.get(), 3);
@@ -101,7 +101,7 @@ public class PolicyCompositionTest {
     Fallback<Object> fb = Fallback.of("test");
     AtomicInteger executions = new AtomicInteger();
 
-    assertEquals(Failsafe.with(rp, fb).onComplete(e -> executions.set(e.getAttemptCount())).get(() -> {
+    assertEquals(Failsafe.with(rp).compose(fb).onComplete(e -> executions.set(e.getAttemptCount())).get(() -> {
       throw new IllegalStateException();
     }), "test");
     assertEquals(executions.get(), 1);
@@ -117,12 +117,12 @@ public class PolicyCompositionTest {
     CheckedRunnable runnable = () -> {
       throw new IllegalArgumentException();
     };
-    Testing.ignoreExceptions(() -> Failsafe.with(cb2, cb1).run(runnable));
+    Testing.ignoreExceptions(() -> Failsafe.with(cb2).compose(cb1).run(runnable));
     assertTrue(cb1.isOpen());
     assertTrue(cb2.isClosed());
 
     cb1.close();
-    Testing.ignoreExceptions(() -> Failsafe.with(cb1, cb2).run(runnable));
+    Testing.ignoreExceptions(() -> Failsafe.with(cb1).compose(cb2).run(runnable));
     assertTrue(cb1.isOpen());
     assertTrue(cb2.isClosed());
   }

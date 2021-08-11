@@ -21,6 +21,7 @@ import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -53,6 +54,44 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   FailsafeExecutor(List<Policy<R>> policies) {
     this.policies = policies;
+  }
+
+  /**
+   * Returns the currently configured policies.
+   *
+   * @see #compose(Policy)
+   */
+  public List<Policy<R>> getPolicies() {
+    return policies;
+  }
+
+  /**
+   * Returns a new {@code FailsafeExecutor} that composes the currently configured policies around the given {@code
+   * innerPolicy}. For example, consider:
+   * <p>
+   * <pre>
+   *   Failsafe.with(fallback).compose(retryPolicy).compose(circuitBreaker);
+   * </pre>
+   * </p>
+   * This results in the following internal composition when executing a {@code runnable} or {@code supplier} and
+   * handling its result:
+   * <p>
+   * <pre>
+   *   Fallback(RetryPolicy(CircuitBreaker(Supplier)))
+   * </pre>
+   * </p>
+   * This means the {@code CircuitBreaker} is first to evaluate the {@code Supplier}'s result, then the {@code
+   * RetryPolicy}, then the {@code Fallback}. Each policy makes its own determination as to whether the result
+   * represents a failure. This allows different policies to be used for handling different types of failures.
+   *
+   * @throws NullPointerException if {@code innerPolicy} is null
+   * @see #getPolicies()
+   */
+  public <P extends Policy<R>> FailsafeExecutor<R> compose(P innerPolicy) {
+    Assert.notNull(innerPolicy, "innerPolicy");
+    List<Policy<R>> composed = new ArrayList<>(policies);
+    composed.add(innerPolicy);
+    return new FailsafeExecutor<>(composed);
   }
 
   /**

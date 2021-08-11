@@ -310,30 +310,34 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     CountDownLatch futureLatch = new CountDownLatch(1);
 
     // When
-    FailsafeFuture<Boolean> future = (FailsafeFuture<Boolean>) Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {
-      waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
-      waiter.resume();
-    }).getAsync(ctx -> {
-      // Wait for futureRef to be set
-      futureLatch.await();
-      waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
-
-      try {
-        // Assert not cancelled
-        waiter.assertFalse(ctx.isCancelled());
-        if (!futureRef.get().getTimeoutDelegates().isEmpty())
-          waiter.assertFalse(futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        // Assert cancelled
-        waiter.assertTrue(ctx.isCancelled());
+    FailsafeFuture<Boolean> future = (FailsafeFuture<Boolean>) Failsafe.with(rp)
+      .compose(timeout2)
+      .compose(timeout1)
+      .onComplete(e -> {
+        waiter.assertNull(e.getResult());
+        waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
         waiter.resume();
-        throw e;
-      }
-      waiter.fail("Expected interruption");
-      return false;
-    });
+      })
+      .getAsync(ctx -> {
+        // Wait for futureRef to be set
+        futureLatch.await();
+        waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
+
+        try {
+          // Assert not cancelled
+          waiter.assertFalse(ctx.isCancelled());
+          if (!futureRef.get().getTimeoutDelegates().isEmpty())
+            waiter.assertFalse(futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          // Assert cancelled
+          waiter.assertTrue(ctx.isCancelled());
+          waiter.resume();
+          throw e;
+        }
+        waiter.fail("Expected interruption");
+        return false;
+      });
     futureRef.set(future);
     futureLatch.countDown();
 
