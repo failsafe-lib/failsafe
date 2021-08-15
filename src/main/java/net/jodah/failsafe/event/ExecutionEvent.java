@@ -25,9 +25,9 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public abstract class ExecutionEvent {
-  private final ExecutionContext context;
+  private final ExecutionContext<?> context;
 
-  ExecutionEvent(ExecutionContext context) {
+  ExecutionEvent(ExecutionContext<?> context) {
     this.context = context;
   }
 

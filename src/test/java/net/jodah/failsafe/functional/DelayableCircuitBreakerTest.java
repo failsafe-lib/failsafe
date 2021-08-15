@@ -35,7 +35,7 @@ public class DelayableCircuitBreakerTest {
     });
 
     assertFalse(breaker.isOpen());
-    Failsafe.with(breaker).run((ExecutionContext context) -> {
+    Failsafe.with(breaker).run((ExecutionContext<Void> context) -> {
       throw new RuntimeException("try again");
     });
     assertTrue(breaker.isOpen());

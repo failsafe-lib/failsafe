@@ -23,11 +23,13 @@ import java.util.function.Supplier;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link Fallback}.
+ *
+ * @param <R> result type
  */
-class FallbackExecutor extends PolicyExecutor<Fallback> {
+class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
   private final EventListener failedAttemptListener;
 
-  FallbackExecutor(Fallback fallback, AbstractExecution execution, EventListener failedAttemptListener) {
+  FallbackExecutor(Fallback<R> fallback, AbstractExecution<R> execution, EventListener failedAttemptListener) {
     super(fallback, execution);
     this.failedAttemptListener = failedAttemptListener;
   }
@@ -48,7 +50,7 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
         try {
           result = policy == Fallback.VOID ?
             result.withNonResult() :
-            result.withResult(policy.apply(result.getResult(), result.getFailure(), execution.copy()));
+            result.withResult(policy.apply((R) result.getResult(), result.getFailure(), execution.copy()));
         } catch (Throwable t) {
           result = ExecutionResult.failure(t);
         }
@@ -64,7 +66,7 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
   @Override
   @SuppressWarnings("unchecked")
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
     return () -> supplier.get().thenCompose(result -> {
       if (result == null || future.isDone())
         return ExecutionResult.NULL_FUTURE;
@@ -74,9 +76,9 @@ class FallbackExecutor extends PolicyExecutor<Fallback> {
         return postExecuteAsync(result, scheduler, future);
 
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      Callable<Object> callable = () -> {
+      Callable<R> callable = () -> {
         try {
-          CompletableFuture<Object> fallback = policy.applyStage(result.getResult(), result.getFailure(),
+          CompletableFuture<R> fallback = policy.applyStage((R) result.getResult(), result.getFailure(),
             execution.copy());
           fallback.whenComplete((innerResult, failure) -> {
             if (failure instanceof CompletionException)

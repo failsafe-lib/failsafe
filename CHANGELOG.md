@@ -1,9 +1,17 @@
+# Next Minor Release
+
+### API Changes
+
+- Added a generic result type `R` to `ExecutionContext`, `Execution` and `AsyncExecution`. This ensures that result types are unified across the API. It does mean that there are a few minor breaking changes to the API:
+  - `ContextualSupplier` and `AsyncSupplier` now have an additional result type parameter `R`. Normally these types are used as lambda parameters where the type is inferred, so most users should not be impacted. But any explicit generic declaration of these types will not compile until the new parameter is added.
+  - `PolicyExecutor`, which is part of the SPI, now accepts an additional result type parameter `R`. This is only relevant for SPI users who are implementing their own Policies.
+
 # 2.4.3
 
 ### Bug Fixes
 
 - Fixed #289 - Binary imcompatibility with code that was compiled against previous Failsafe versions.
-
+  
 # 2.4.2
 
 ### Improvements

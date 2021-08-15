@@ -183,7 +183,7 @@ public class FailsafePolicyOrderingTest {
       waiter.assertEquals(5, e.getAttemptCount());
       waiter.resume();
     });
-    ContextualSupplier<Object> supplier = ctx -> {
+    ContextualSupplier<Object, Object> supplier = ctx -> {
       throw ctx.getAttemptCount() % 2 == 0 ? new IllegalStateException() : new IllegalArgumentException();
     };
 
@@ -294,11 +294,11 @@ public class FailsafePolicyOrderingTest {
     if (sync)
       return Testing.ignoreExceptions(() -> supplier instanceof CheckedSupplier ?
         failsafe.get((CheckedSupplier<T>) supplier) :
-        failsafe.get((ContextualSupplier<T>) supplier));
+        failsafe.get((ContextualSupplier<T, T>) supplier));
     else
       return Testing.ignoreExceptions(() -> (supplier instanceof CheckedSupplier ?
         failsafe.getAsync((CheckedSupplier<T>) supplier) :
-        failsafe.getAsync((ContextualSupplier<T>) supplier)).get());
+        failsafe.getAsync((ContextualSupplier<T, T>) supplier)).get());
   }
 
   private <T> void assertFailsafeFailure(FailsafeExecutor<T> failsafe, CheckedSupplier<T> supplier, boolean sync,

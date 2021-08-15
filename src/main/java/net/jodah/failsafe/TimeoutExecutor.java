@@ -28,9 +28,11 @@ import java.util.function.Supplier;
  * <p>
  * Timeouts are scheduled to occur in a separate thread. When cancelled, the Timeout has no bearing on the execution
  * result, which will be set by a separate Supplier.
+ *
+ * @param <R> result type
  */
-class TimeoutExecutor extends PolicyExecutor<Timeout> {
-  TimeoutExecutor(Timeout timeout, AbstractExecution execution) {
+class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
+  TimeoutExecutor(Timeout<R> timeout, AbstractExecution<R> execution) {
     super(timeout, execution);
   }
 
@@ -99,13 +101,14 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
    * timeout is exceeded.
    */
   @Override
+  @SuppressWarnings("unchecked")
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
     return () -> {
       // Coordinates a result between the timeout and execution threads
       AtomicReference<ExecutionResult> executionResult = new AtomicReference<>();
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      AtomicReference<Future<?>> timeoutFuture = new AtomicReference<>();
+      AtomicReference<Future<R>> timeoutFuture = new AtomicReference<>();
 
       // Schedule timeout if not an async execution
       if (!execution.isAsyncExecution()) {
@@ -114,7 +117,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           if (!future.isDone()) {
             try {
               // Schedule timeout check
-              timeoutFuture.set(Scheduler.DEFAULT.schedule(() -> {
+              timeoutFuture.set((Future<R>) Scheduler.DEFAULT.schedule(() -> {
                 ExecutionResult cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
 
                 // Guard against race with execution completion
@@ -148,7 +151,7 @@ class TimeoutExecutor extends PolicyExecutor<Timeout> {
           }
 
           // Cancel timeout task
-          Future<?> maybeFuture = timeoutFuture.get();
+          Future<R> maybeFuture = timeoutFuture.get();
           if (maybeFuture != null)
             maybeFuture.cancel(false);
         } else {

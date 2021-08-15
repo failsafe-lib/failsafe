@@ -1,5 +1,6 @@
 package net.jodah.failsafe.issues;
 
+import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.Timeout;
@@ -22,7 +23,7 @@ public class Issue267Test {
     assertNull(result);
   }
 
-  private Integer connect() throws ConnectException {
+  private Integer connect(ExecutionContext<Integer> context) throws ConnectException {
     throw new ConnectException();
   }
 

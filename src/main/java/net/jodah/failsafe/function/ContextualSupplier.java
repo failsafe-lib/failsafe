@@ -19,11 +19,12 @@ import net.jodah.failsafe.ExecutionContext;
 
 /**
  * A Supplier that provides execution context.
- * 
+ *
+ * @param <R> result type
+ * @param <T> supplied type
  * @author Jonathan Halterman
- * @param <T> result type
  */
 @FunctionalInterface
-public interface ContextualSupplier<T> {
-  T get(ExecutionContext context) throws Throwable;
+public interface ContextualSupplier<R, T> {
+  T get(ExecutionContext<R> context) throws Throwable;
 }

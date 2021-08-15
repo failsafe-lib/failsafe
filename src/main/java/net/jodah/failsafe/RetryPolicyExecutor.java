@@ -31,9 +31,10 @@ import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
 /**
  * A PolicyExecutor that handles failures according to a {@link RetryPolicy}.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
+class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   // Mutable state
   private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
@@ -47,7 +48,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
   private final EventListener retryListener;
   private final EventListener retryScheduledListener;
 
-  RetryPolicyExecutor(RetryPolicy retryPolicy, AbstractExecution execution, EventListener abortListener,
+  RetryPolicyExecutor(RetryPolicy<R> retryPolicy, AbstractExecution<R> execution, EventListener abortListener,
     EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener,
     EventListener retryScheduledListener) {
     super(retryPolicy, execution);
@@ -99,7 +100,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
 
   @Override
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
     return () -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       Callable<Object> callable = new Callable<Object>() {
@@ -201,7 +202,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
     boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && failedAttempts > policy.getMaxRetries();
     boolean maxDurationExceeded = policy.getMaxDuration() != null && elapsedNanos > policy.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean isAbortable = policy.isAbortable(result.getResult(), result.getFailure());
+    boolean isAbortable = policy.isAbortable((R) result.getResult(), result.getFailure());
     boolean shouldRetry = !result.isSuccess() && !isAbortable && !retriesExceeded && policy.allowsRetries();
     boolean completed = isAbortable || !shouldRetry;
     boolean success = completed && result.isSuccess() && !isAbortable;
@@ -220,7 +221,7 @@ class RetryPolicyExecutor extends PolicyExecutor<RetryPolicy> {
    */
   @Override
   protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<Object> future) {
+    FailsafeFuture<R> future) {
     return super.onFailureAsync(result.withNotComplete(), scheduler, future);
   }
 

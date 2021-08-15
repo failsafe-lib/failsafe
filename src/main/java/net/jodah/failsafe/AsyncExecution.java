@@ -29,20 +29,19 @@ import java.util.function.Supplier;
  * Tracks asynchronous executions and allows retries to be scheduled according to a {@link RetryPolicy}. May be
  * explicitly completed or made to retry.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-@SuppressWarnings("WeakerAccess")
-public final class AsyncExecution extends AbstractExecution {
+public final class AsyncExecution<R> extends AbstractExecution<R> {
   private SettableSupplier<CompletableFuture<ExecutionResult>> innerExecutionSupplier;
   private Supplier<CompletableFuture<ExecutionResult>> outerExecutionSupplier;
-  final FailsafeFuture<Object> future;
+  final FailsafeFuture<R> future;
   private volatile boolean completeCalled;
   private volatile boolean retryCalled;
 
-  @SuppressWarnings("unchecked")
-  <T> AsyncExecution(Scheduler scheduler, FailsafeFuture<T> future, FailsafeExecutor<?> executor) {
-    super(scheduler, (FailsafeExecutor<Object>) executor);
-    this.future = (FailsafeFuture<Object>) future;
+  AsyncExecution(Scheduler scheduler, FailsafeFuture<R> future, FailsafeExecutor<R> executor) {
+    super(scheduler, executor);
+    this.future = future;
   }
 
   void inject(Supplier<CompletableFuture<ExecutionResult>> syncSupplier, boolean asyncExecution) {
@@ -52,7 +51,7 @@ public final class AsyncExecution extends AbstractExecution {
       outerExecutionSupplier = innerExecutionSupplier = Functions.toSettableSupplier(syncSupplier);
     }
 
-    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+    for (PolicyExecutor<R, Policy<R>> policyExecutor : policyExecutors)
       outerExecutionSupplier = policyExecutor.supplyAsync(outerExecutionSupplier, scheduler, this.future);
   }
 
@@ -71,7 +70,7 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  public boolean complete(Object result) {
+  public boolean complete(R result) {
     postExecute(new ExecutionResult(result, null));
     return completed;
   }
@@ -86,7 +85,7 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  public boolean complete(Object result, Throwable failure) {
+  public boolean complete(R result, Throwable failure) {
     postExecute(new ExecutionResult(result, failure));
     return completed;
   }
@@ -98,8 +97,9 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
+  @SuppressWarnings("unchecked")
   public boolean retry() {
-    return retryFor(lastResult, lastFailure);
+    return retryFor((R) lastResult, lastFailure);
   }
 
   /**
@@ -109,7 +109,7 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
-  public boolean retryFor(Object result) {
+  public boolean retryFor(R result) {
     return retryFor(result, null);
   }
 
@@ -120,7 +120,7 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
    */
-  public boolean retryFor(Object result, Throwable failure) {
+  public boolean retryFor(R result, Throwable failure) {
     Assert.state(!retryCalled, "Retry has already been called");
     retryCalled = true;
     return !completeOrHandle(result, failure);
@@ -198,7 +198,7 @@ public final class AsyncExecution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  boolean completeOrHandle(Object result, Throwable failure) {
+  boolean completeOrHandle(R result, Throwable failure) {
     synchronized (future) {
       ExecutionResult er = new ExecutionResult(result, failure).withWaitNanos(waitNanos);
       if (!completeCalled)

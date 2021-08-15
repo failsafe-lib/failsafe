@@ -34,7 +34,7 @@ public class ExecutionScheduledEvent<R> extends ExecutionEvent {
   private final Throwable failure;
   private final Duration delay;
 
-  public ExecutionScheduledEvent(R result, Throwable failure, Duration delay, ExecutionContext context) {
+  public ExecutionScheduledEvent(R result, Throwable failure, Duration delay, ExecutionContext<R> context) {
     super(context);
     this.result = result;
     this.failure = failure;

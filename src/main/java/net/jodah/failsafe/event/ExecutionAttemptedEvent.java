@@ -27,7 +27,7 @@ public class ExecutionAttemptedEvent<R> extends ExecutionEvent {
   private final R result;
   private final Throwable failure;
 
-  public ExecutionAttemptedEvent(R result, Throwable failure, ExecutionContext context) {
+  public ExecutionAttemptedEvent(R result, Throwable failure, ExecutionContext<R> context) {
     super(context);
     this.result = result;
     this.failure = failure;

@@ -18,10 +18,11 @@ package net.jodah.failsafe;
 /**
  * A PolicyExecutor that handles failures according to a {@link CircuitBreaker}.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-class CircuitBreakerExecutor extends PolicyExecutor<CircuitBreaker> {
-  CircuitBreakerExecutor(CircuitBreaker circuitBreaker, AbstractExecution execution) {
+class CircuitBreakerExecutor<R> extends PolicyExecutor<R, CircuitBreaker<R>> {
+  CircuitBreakerExecutor(CircuitBreaker<R> circuitBreaker, AbstractExecution<R> execution) {
     super(circuitBreaker, execution);
   }
 

@@ -16,7 +16,6 @@
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
-import net.jodah.failsafe.Testing.Stats;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -45,14 +44,14 @@ public class AsyncExecutionTest {
         if (counter.getAndIncrement() < 3)
           ex.retryOn(new IllegalStateException());
         else
-          ex.complete("done");
+          ex.complete();
       });
     }, e -> {
       assertEquals(e.getAttemptCount(), 4);
       assertEquals(e.getExecutionCount(), 4);
       assertEquals(rpStats.failedAttemptCount, 3);
       assertEquals(rpStats.retryCount, 3);
-    }, "done");
+    }, null);
 
     // Test RetryPolicy, Fallback
     test.accept(Failsafe.with(rp, fb));

@@ -19,7 +19,7 @@ package net.jodah.failsafe.function;
  * A Consumer that throws checked exceptions.
  *
  * @author Jonathan Halterman
- * @param <T> result type
+ * @param <T> input type
  */
 @FunctionalInterface
 public interface CheckedConsumer<T> {

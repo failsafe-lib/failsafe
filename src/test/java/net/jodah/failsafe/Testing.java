@@ -38,7 +38,6 @@ public class Testing {
   public static class ConnectException extends RuntimeException {
   }
 
-
   public interface Service {
     boolean connect();
 
@@ -420,7 +419,7 @@ public class Testing {
     testAsyncExecutionInternal(failsafe, supplier, then, expectedResult);
   }
 
-  public static <T> void testAsyncExecutionSuccess(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+  public static <T> void testAsyncExecutionSuccess(FailsafeExecutor<T> failsafe, AsyncSupplier<T, T> when,
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
     testAsyncExecutionInternal(failsafe, when, then, expectedResult);
   }
@@ -436,13 +435,13 @@ public class Testing {
   }
 
   @SafeVarargs
-  public static <T> void testAsyncExecutionFailure(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+  public static <T> void testAsyncExecutionFailure(FailsafeExecutor<T> failsafe, AsyncSupplier<T, T> when,
     Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
     testAsyncExecutionInternal(failsafe, when, then, null, expectedExceptions);
   }
 
   @SafeVarargs
-  private static <T> void testAsyncExecutionInternal(FailsafeExecutor<T> failsafe, AsyncSupplier<T> when,
+  private static <T> void testAsyncExecutionInternal(FailsafeExecutor<T> failsafe, AsyncSupplier<T, T> when,
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult, Class<? extends Throwable>... expectedExceptions) {
 
     AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();

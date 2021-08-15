@@ -18,8 +18,8 @@ package net.jodah.failsafe.function;
 /**
  * A Supplier that throws checked exceptions.
  *
+ * @param <T> supplied type
  * @author Jonathan Halterman
- * @param <T> result type
  */
 @FunctionalInterface
 public interface CheckedSupplier<T> {

@@ -77,7 +77,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
-  public <T extends R> T get(ContextualSupplier<T> supplier) {
+  public <T extends R> T get(ContextualSupplier<T, T> supplier) {
     return call(execution -> toSupplier(supplier, execution));
   }
 
@@ -115,7 +115,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> getAsync(ContextualSupplier<T> supplier) {
+  public <T extends R> CompletableFuture<T> getAsync(ContextualSupplier<T, T> supplier) {
     return callAsync(execution -> getPromise(supplier, execution), false);
   }
 
@@ -135,7 +135,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncSupplier<T> supplier) {
+  public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncSupplier<T, T> supplier) {
     return callAsync(execution -> getPromiseExecution(supplier, execution), true);
   }
 
@@ -173,7 +173,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> getStageAsync(ContextualSupplier<? extends CompletionStage<T>> supplier) {
+  public <T extends R> CompletableFuture<T> getStageAsync(
+    ContextualSupplier<T, ? extends CompletionStage<T>> supplier) {
     return callAsync(execution -> getPromiseOfStage(supplier, execution), false);
   }
 
@@ -194,7 +195,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
-    AsyncSupplier<? extends CompletionStage<T>> supplier) {
+    AsyncSupplier<T, ? extends CompletionStage<T>> supplier) {
     return callAsync(execution -> getPromiseOfStageExecution(supplier, execution), true);
   }
 
@@ -208,7 +209,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(CheckedRunnable runnable) {
-    call(execution -> toSupplier(runnable));
+    this.<Void>call(execution -> toSupplier(runnable));
   }
 
   /**
@@ -221,7 +222,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
   public void run(ContextualRunnable runnable) {
-    call(execution -> toSupplier(runnable, execution));
+    this.<Void>call(execution -> toSupplier(runnable, execution));
   }
 
   /**
@@ -312,7 +313,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     return super.onSuccess(listener);
   }
 
-  void handleComplete(ExecutionResult result, AbstractExecution execution) {
+  void handleComplete(ExecutionResult result, AbstractExecution<R> execution) {
     if (successListener != null && result.getSuccessAll())
       successListener.handle(result, execution);
     else if (failureListener != null && !result.getSuccessAll())
@@ -370,9 +371,9 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
    */
-  @SuppressWarnings("unchecked")
-  private <T> T call(Function<Execution, CheckedSupplier<?>> supplierFn) {
-    Execution execution = new Execution(this);
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private <T> T call(Function<Execution<T>, CheckedSupplier<T>> supplierFn) {
+    Execution<T> execution = new Execution(this);
     Supplier<ExecutionResult> supplier = Functions.get(supplierFn.apply(execution), execution);
 
     ExecutionResult result = execution.executeSync(supplier);
@@ -405,9 +406,9 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> CompletableFuture<T> callAsync(
-    Function<AsyncExecution, Supplier<CompletableFuture<ExecutionResult>>> supplierFn, boolean asyncExecution) {
+    Function<AsyncExecution<T>, Supplier<CompletableFuture<ExecutionResult>>> supplierFn, boolean asyncExecution) {
     FailsafeFuture<T> future = new FailsafeFuture(this);
-    AsyncExecution execution = new AsyncExecution(scheduler, future, this);
+    AsyncExecution<T> execution = new AsyncExecution(scheduler, future, this);
     future.inject(execution);
     execution.inject(supplierFn.apply(execution), asyncExecution);
     execution.executeAsync(asyncExecution);

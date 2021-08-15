@@ -40,7 +40,7 @@ public class DelayableRetryPolicyTest {
       throw new UncheckedExpectedException();
     });
 
-    Failsafe.with(retryPolicy).run((ExecutionContext context) -> {
+    Failsafe.with(retryPolicy).run((ExecutionContext<Void> context) -> {
       throw new RuntimeException("try again");
     });
   }

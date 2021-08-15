@@ -74,14 +74,14 @@ public abstract class AbstractFailsafeTest {
   /**
    * Does a contextual failsafe get with an optional executor.
    */
-  <T> T failsafeGet(Policy<T> policy, ContextualSupplier<T> supplier) {
+  <T> T failsafeGet(Policy<T> policy, ContextualSupplier<T, T> supplier) {
     return get(Failsafe.with(policy), supplier);
   }
 
   /**
    * Does a contextual failsafe get with an optional executor.
    */
-  <T> T get(FailsafeExecutor<T> failsafe, ContextualSupplier<T> supplier) {
+  <T> T get(FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> supplier) {
     return unwrapExceptions(() -> getExecutor() == null ? failsafe.get(supplier) : failsafe.getAsync(supplier).get());
   }
 

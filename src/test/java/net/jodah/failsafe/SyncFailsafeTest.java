@@ -113,7 +113,7 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldGetContextual() {
-    assertGet((ContextualSupplier<Boolean>) context -> {
+    assertGet((ContextualSupplier<Boolean, Boolean>) context -> {
       assertEquals(context.getAttemptCount(), counter.get());
       assertEquals(context.getExecutionCount(), counter.get());
       counter.incrementAndGet();
@@ -418,6 +418,6 @@ public class SyncFailsafeTest extends AbstractFailsafeTest {
     if (supplier instanceof CheckedSupplier)
       return failsafe.get((CheckedSupplier<T>) supplier);
     else
-      return failsafe.get((ContextualSupplier<T>) supplier);
+      return failsafe.get((ContextualSupplier<T, T>) supplier);
   }
 }

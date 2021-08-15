@@ -24,5 +24,5 @@ import net.jodah.failsafe.ExecutionContext;
  */
 @FunctionalInterface
 public interface ContextualRunnable {
-  void run(ExecutionContext context) throws Throwable;
+  void run(ExecutionContext<Void> context) throws Throwable;
 }

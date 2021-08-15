@@ -24,10 +24,11 @@ import java.util.function.Supplier;
 /**
  * Tracks executions and determines when an execution can be performed for a {@link RetryPolicy}.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
 @SuppressWarnings("WeakerAccess")
-public class Execution extends AbstractExecution {
+public class Execution<R> extends AbstractExecution<R> {
   /**
    * Creates a new {@link Execution} that will use the {@code policies} to handle failures. Policies are applied in
    * reverse order, with the last policy being applied first.
@@ -35,15 +36,14 @@ public class Execution extends AbstractExecution {
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
    */
-  @SuppressWarnings("unchecked")
-  public Execution(Policy... policies) {
+  @SafeVarargs
+  public Execution(Policy<R>... policies) {
     super(DelegatingScheduler.INSTANCE, new FailsafeExecutor<>(Arrays.asList(Assert.notNull(policies, "policies"))));
     preExecute();
   }
 
-  @SuppressWarnings("unchecked")
-  Execution(FailsafeExecutor<?> executor) {
-    super(DelegatingScheduler.INSTANCE, (FailsafeExecutor<Object>) executor);
+  Execution(FailsafeExecutor<R> executor) {
+    super(DelegatingScheduler.INSTANCE, executor);
   }
 
   /**
@@ -52,7 +52,7 @@ public class Execution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  public boolean canRetryFor(Object result) {
+  public boolean canRetryFor(R result) {
     preExecute();
     postExecute(new ExecutionResult(result, null));
     return !completed;
@@ -64,7 +64,7 @@ public class Execution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  public boolean canRetryFor(Object result, Throwable failure) {
+  public boolean canRetryFor(R result, Throwable failure) {
     preExecute();
     postExecute(new ExecutionResult(result, failure));
     return !completed;
@@ -99,7 +99,7 @@ public class Execution extends AbstractExecution {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  public boolean complete(Object result) {
+  public boolean complete(R result) {
     preExecute();
     postExecute(new ExecutionResult(result, null));
     return completed;
@@ -122,7 +122,7 @@ public class Execution extends AbstractExecution {
    * Performs a synchronous execution.
    */
   ExecutionResult executeSync(Supplier<ExecutionResult> supplier) {
-    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors)
+    for (PolicyExecutor<R, Policy<R>> policyExecutor : policyExecutors)
       supplier = policyExecutor.supply(supplier, scheduler);
 
     ExecutionResult result = supplier.get();

@@ -26,15 +26,16 @@ import java.util.function.Supplier;
  * <p>
  * Part of the Failsafe SPI.
  *
+ * @param <R> result type
  * @param <P> policy type
  */
-public abstract class PolicyExecutor<P extends Policy> {
+public abstract class PolicyExecutor<R, P extends Policy<R>> {
   protected final P policy;
-  protected final AbstractExecution execution;
+  protected final AbstractExecution<R> execution;
   // Index of the policy relative to other policies in a composition, inner-most first
   int policyIndex;
 
-  protected PolicyExecutor(P policy, AbstractExecution execution) {
+  protected PolicyExecutor(P policy, AbstractExecution<R> execution) {
     this.policy = policy;
     this.execution = execution;
   }
@@ -86,7 +87,7 @@ public abstract class PolicyExecutor<P extends Policy> {
    * later, and postExecute handling should not be performed.
    */
   protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<Object> future) {
+    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
     return () -> {
       ExecutionResult result = preExecute();
       if (result != null) {
@@ -105,7 +106,7 @@ public abstract class PolicyExecutor<P extends Policy> {
    * Performs potentially asynchronous post-execution handling for a {@code result}.
    */
   protected CompletableFuture<ExecutionResult> postExecuteAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<Object> future) {
+    FailsafeFuture<R> future) {
     execution.recordAttempt();
     if (isFailure(result)) {
       return onFailureAsync(result.withFailure(), scheduler, future).whenComplete((postResult, error) -> {
@@ -152,7 +153,7 @@ public abstract class PolicyExecutor<P extends Policy> {
    * result, else returning the original {@code result}.
    */
   protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<Object> future) {
+    FailsafeFuture<R> future) {
     return CompletableFuture.completedFuture(execution.resultHandled ? result : onFailure(result));
   }
 

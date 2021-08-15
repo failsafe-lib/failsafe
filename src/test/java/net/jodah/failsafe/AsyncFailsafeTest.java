@@ -169,7 +169,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldGetAsyncContextual() throws Throwable {
-    assertGetAsync((ContextualSupplier<Boolean>) context -> {
+    assertGetAsync((ContextualSupplier<Boolean, Boolean>) context -> {
       waiter.assertEquals(context.getAttemptCount(), counter.get());
       waiter.assertEquals(context.getExecutionCount(), counter.get());
       counter.incrementAndGet();
@@ -178,7 +178,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldGetAsyncExecution() throws Throwable {
-    assertGetAsync((AsyncSupplier<?>) exec -> {
+    assertGetAsync((AsyncSupplier<?, ?>) exec -> {
       try {
         boolean result = service.connect();
         if (!exec.complete(result))
@@ -236,11 +236,11 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldGetStageAsyncContextual() throws Throwable {
-    assertGetStage((ContextualSupplier<?>) context -> CompletableFuture.supplyAsync(service::connect));
+    assertGetStage((ContextualSupplier<?, ?>) context -> CompletableFuture.supplyAsync(service::connect));
   }
 
   public void shouldGetStageAsyncExecution() throws Throwable {
-    assertGetStage((AsyncSupplier<?>) exec -> CompletableFuture.supplyAsync(() -> {
+    assertGetStage((AsyncSupplier<?, ?>) exec -> CompletableFuture.supplyAsync(() -> {
       try {
         boolean result = service.connect();
         if (!exec.complete(result))
@@ -369,7 +369,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnGetAsync() throws Throwable {
-    assertCancel(executor -> getAsync(executor, (ContextualSupplier<?>) ctx -> {
+    assertCancel(executor -> getAsync(executor, (ContextualSupplier<?, ?>) ctx -> {
       try {
         waiter.assertFalse(ctx.isCancelled());
         Thread.sleep(1000);
@@ -389,7 +389,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnGetAsyncExecution() throws Throwable {
-    assertCancel(executor -> getAsync(executor, (AsyncSupplier<?>) (e) -> {
+    assertCancel(executor -> getAsync(executor, (AsyncSupplier<?, ?>) (e) -> {
       Thread.sleep(1000);
       e.complete();
       return null;
@@ -417,7 +417,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnGetStageAsyncExecution() throws Throwable {
-    assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?>) (e) -> {
+    assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?, ?>) (e) -> {
       Thread.sleep(1000);
       CompletableFuture<?> result = CompletableFuture.completedFuture("test");
       e.complete(result);
@@ -492,18 +492,19 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldTimeoutAndRetry() throws Throwable {
     // Given
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2).handleResult(false);
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1));
+    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2).handleResult(false);
+    Timeout<Boolean> timeout = Timeout.of(Duration.ofMillis(1));
 
     // When / Then
     Failsafe.with(rp, timeout).onComplete(e -> {
       assertNull(e.getResult());
       assertTrue(e.getFailure() instanceof TimeoutExceededException);
       waiter.resume();
-    }).runAsyncExecution(exec -> {
+    }).getAsyncExecution(exec -> {
       Thread.sleep(100);
       if (!exec.complete(false))
         exec.retry();
+      return null;
     });
 
     waiter.await(1000);
@@ -606,18 +607,18 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     if (supplier instanceof CheckedSupplier)
       return failsafe.getAsync((CheckedSupplier<T>) supplier);
     else if (supplier instanceof ContextualSupplier)
-      return failsafe.getAsync((ContextualSupplier<T>) supplier);
+      return failsafe.getAsync((ContextualSupplier<T, T>) supplier);
     else
-      return failsafe.getAsyncExecution((AsyncSupplier<T>) supplier);
+      return failsafe.getAsyncExecution((AsyncSupplier<T, T>) supplier);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> CompletableFuture<T> getStageAsync(FailsafeExecutor<T> failsafe, Object supplier) {
     if (supplier instanceof CheckedSupplier)
-      return failsafe.getStageAsync((CheckedSupplier<CompletableFuture<T>>) supplier);
+      return failsafe.getStageAsync((CheckedSupplier) supplier);
     else if (supplier instanceof ContextualSupplier)
-      return failsafe.getStageAsync((ContextualSupplier<CompletableFuture<T>>) supplier);
+      return failsafe.getStageAsync((ContextualSupplier) supplier);
     else
-      return failsafe.getStageAsyncExecution((AsyncSupplier<CompletableFuture<T>>) supplier);
+      return failsafe.getStageAsyncExecution((AsyncSupplier) supplier);
   }
 }

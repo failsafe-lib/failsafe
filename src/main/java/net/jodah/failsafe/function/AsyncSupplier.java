@@ -19,11 +19,12 @@ import net.jodah.failsafe.AsyncExecution;
 
 /**
  * A Supplier that manually triggers asynchronous retries or completion via an asynchronous execution.
- * 
+ *
+ * @param <R> result type
+ * @param <T> supplied type
  * @author Jonathan Halterman
- * @param <T> result type
  */
 @FunctionalInterface
-public interface AsyncSupplier<T> {
-  T get(AsyncExecution execution) throws Exception;
+public interface AsyncSupplier<R, T> {
+  T get(AsyncExecution<R> execution) throws Exception;
 }

@@ -21,9 +21,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Contextual execution information.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public class ExecutionContext {
+public class ExecutionContext<R> {
   volatile Duration startTime = Duration.ZERO;
   volatile Duration attemptStartTime = Duration.ZERO;
   // Number of execution attempts
@@ -34,13 +35,13 @@ public class ExecutionContext {
   // Internally mutable state
   // The index of a PolicyExecutor that cancelled the execution. 0 represents non-cancelled.
   volatile int cancelledIndex;
-  volatile Object lastResult;
+  volatile R lastResult;
   volatile Throwable lastFailure;
 
   ExecutionContext() {
   }
 
-  private ExecutionContext(ExecutionContext context) {
+  private ExecutionContext(ExecutionContext<R> context) {
     this.startTime = context.startTime;
     this.attemptStartTime = context.attemptStartTime;
     this.attempts = context.attempts;
@@ -93,17 +94,15 @@ public class ExecutionContext {
   /**
    * Returns the last result that was recorded else {@code null}.
    */
-  @SuppressWarnings("unchecked")
-  public <T> T getLastResult() {
-    return (T) lastResult;
+  public R getLastResult() {
+    return lastResult;
   }
 
   /**
    * Returns the last result that was recorded else the {@code defaultValue}.
    */
-  @SuppressWarnings("unchecked")
-  public <T> T getLastResult(T defaultValue) {
-    return lastResult != null ? (T) lastResult : defaultValue;
+  public R getLastResult(R defaultValue) {
+    return lastResult != null ? lastResult : defaultValue;
   }
 
   /**
@@ -114,7 +113,7 @@ public class ExecutionContext {
   }
 
   /**
-   * Returns whether the execution has ben cancelled. In this case the implementor should attempt to stop execution.
+   * Returns whether the execution has been cancelled. In this case the implementor should attempt to stop execution.
    */
   public boolean isCancelled() {
     return cancelledIndex != 0;
@@ -134,18 +133,18 @@ public class ExecutionContext {
     return attempts.get() > 0;
   }
 
-  public ExecutionContext copy() {
-    return new ExecutionContext(this);
+  public ExecutionContext<R> copy() {
+    return new ExecutionContext<>(this);
   }
 
-  static ExecutionContext ofResult(Object result) {
-    ExecutionContext context = new ExecutionContext();
+  static <R> ExecutionContext<R> ofResult(R result) {
+    ExecutionContext<R> context = new ExecutionContext<>();
     context.lastResult = result;
     return context;
   }
 
-  static ExecutionContext ofFailure(Throwable failure) {
-    ExecutionContext context = new ExecutionContext();
+  static <R> ExecutionContext<R> ofFailure(Throwable failure) {
+    ExecutionContext<R> context = new ExecutionContext<>();
     context.lastFailure = failure;
     return context;
   }

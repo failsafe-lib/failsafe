@@ -24,5 +24,5 @@ import net.jodah.failsafe.AsyncExecution;
  */
 @FunctionalInterface
 public interface AsyncRunnable {
-  void run(AsyncExecution execution) throws Exception;
+  void run(AsyncExecution<Void> execution) throws Exception;
 }

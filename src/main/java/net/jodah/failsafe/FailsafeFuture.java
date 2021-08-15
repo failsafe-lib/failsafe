@@ -27,20 +27,20 @@ import java.util.function.BiConsumer;
  * <p>
  * Part of the Failsafe SPI.
  *
- * @param <T> result type
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public class FailsafeFuture<T> extends CompletableFuture<T> {
-  private final FailsafeExecutor<T> executor;
-  private AbstractExecution execution;
+public class FailsafeFuture<R> extends CompletableFuture<R> {
+  private final FailsafeExecutor<R> executor;
+  private AbstractExecution<R> execution;
 
   // Mutable state, guarded by "this"
-  private Future<?> dependentStageFuture;
+  private Future<R> dependentStageFuture;
   private BiConsumer<Boolean, ExecutionResult> cancelFn;
-  private List<Future<T>> timeoutFutures;
+  private List<Future<R>> timeoutFutures;
   private boolean cancelWithInterrupt;
 
-  FailsafeFuture(FailsafeExecutor<T> executor) {
+  FailsafeFuture(FailsafeExecutor<R> executor) {
     this.executor = executor;
   }
 
@@ -48,7 +48,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
    * If not already completed, completes  the future with the {@code value}, calling the complete and success handlers.
    */
   @Override
-  public synchronized boolean complete(T value) {
+  public synchronized boolean complete(R value) {
     return completeResult(ExecutionResult.success(value));
   }
 
@@ -90,7 +90,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     Throwable failure = result.getFailure();
     boolean completed;
     if (failure == null)
-      completed = super.complete((T) result.getResult());
+      completed = super.complete((R) result.getResult());
     else
       completed = super.completeExceptionally(failure);
     if (completed)
@@ -98,7 +98,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     return completed;
   }
 
-  synchronized List<Future<T>> getTimeoutDelegates() {
+  synchronized List<Future<R>> getTimeoutDelegates() {
     return timeoutFutures;
   }
 
@@ -111,7 +111,7 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
     if (dependentStageFuture != null)
       dependentStageFuture.cancel(mayInterrupt);
     if (timeoutFutures != null) {
-      for (Future<T> timeoutDelegate : timeoutFutures)
+      for (Future<R> timeoutDelegate : timeoutFutures)
         timeoutDelegate.cancel(false);
       timeoutFutures.clear();
     }
@@ -119,14 +119,14 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
       cancelFn.accept(mayInterrupt, cancelResult);
   }
 
-  void inject(AbstractExecution execution) {
+  void inject(AbstractExecution<R> execution) {
     this.execution = execution;
   }
 
   /**
    * Injects a {@code dependentStageFuture} to be cancelled when this future is cancelled.
    */
-  synchronized void injectStage(Future<?> dependentStageFuture) {
+  synchronized void injectStage(Future<R> dependentStageFuture) {
     // If outer future has already been cancelled, propagate the cancellation
     if (isCancelled())
       dependentStageFuture.cancel(cancelWithInterrupt);
@@ -144,10 +144,9 @@ public class FailsafeFuture<T> extends CompletableFuture<T> {
   /**
    * Injects a {@code scheduledTimeoutExec} to be cancelled when this future is cancelled.
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  synchronized void injectTimeout(Future<?> timeoutFuture) {
+  synchronized void injectTimeout(Future<R> timeoutFuture) {
     if (timeoutFutures == null)
       timeoutFutures = new ArrayList<>(3);
-    timeoutFutures.add((Future) timeoutFuture);
+    timeoutFutures.add(timeoutFuture);
   }
 }

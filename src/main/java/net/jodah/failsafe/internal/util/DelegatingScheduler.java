@@ -125,7 +125,7 @@ public final class DelegatingScheduler implements Scheduler {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
     ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
     ExecutorService es = executorService();

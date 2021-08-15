@@ -27,7 +27,7 @@ public class ExecutionCompletedEvent<R> extends ExecutionEvent {
   private final R result;
   private final Throwable failure;
 
-  public ExecutionCompletedEvent(R result, Throwable failure, ExecutionContext context) {
+  public ExecutionCompletedEvent(R result, Throwable failure, ExecutionContext<R> context) {
     super(context);
     this.result = result;
     this.failure = failure;

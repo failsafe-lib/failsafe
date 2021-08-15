@@ -26,13 +26,13 @@ import java.util.ListIterator;
 /**
  * Common execution information.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-@SuppressWarnings("WeakerAccess")
-public abstract class AbstractExecution extends ExecutionContext {
+public abstract class AbstractExecution<R> extends ExecutionContext<R> {
   final Scheduler scheduler;
-  final FailsafeExecutor<Object> executor;
-  final List<PolicyExecutor<Policy<Object>>> policyExecutors;
+  final FailsafeExecutor<R> executor;
+  final List<PolicyExecutor<R, Policy<R>>> policyExecutors;
 
   // Internally mutable state
   /* Whether the supplier is in progress */
@@ -53,13 +53,13 @@ public abstract class AbstractExecution extends ExecutionContext {
   /**
    * Creates a new AbstractExecution for the {@code executor}.
    */
-  AbstractExecution(Scheduler scheduler, FailsafeExecutor<Object> executor) {
+  AbstractExecution(Scheduler scheduler, FailsafeExecutor<R> executor) {
     this.scheduler = scheduler;
     this.executor = executor;
     policyExecutors = new ArrayList<>(executor.policies.size());
-    ListIterator<Policy<Object>> policyIterator = executor.policies.listIterator(executor.policies.size());
+    ListIterator<Policy<R>> policyIterator = executor.policies.listIterator(executor.policies.size());
     for (int i = 1; policyIterator.hasPrevious(); i++) {
-      PolicyExecutor<Policy<Object>> policyExecutor = policyIterator.previous().toExecutor(this);
+      PolicyExecutor<R, Policy<R>> policyExecutor = policyIterator.previous().toExecutor(this);
       policyExecutor.policyIndex = i;
       policyExecutors.add(policyExecutor);
     }
@@ -76,12 +76,13 @@ public abstract class AbstractExecution extends ExecutionContext {
     record(result, false);
   }
 
+  @SuppressWarnings("unchecked")
   void record(ExecutionResult result, boolean timeout) {
     Assert.state(!completed, "Execution has already been completed");
     if (!interrupted) {
       recordAttempt();
       if (inProgress) {
-        lastResult = result.getResult();
+        lastResult = (R) result.getResult();
         lastFailure = result.getFailure();
         executions.incrementAndGet();
         if (!timeout)
@@ -126,7 +127,7 @@ public abstract class AbstractExecution extends ExecutionContext {
   synchronized ExecutionResult postExecute(ExecutionResult result) {
     record(result);
     boolean allComplete = true;
-    for (PolicyExecutor<Policy<Object>> policyExecutor : policyExecutors) {
+    for (PolicyExecutor<R, Policy<R>> policyExecutor : policyExecutors) {
       result = policyExecutor.postExecute(result);
       allComplete = allComplete && result.isComplete();
     }
