@@ -132,21 +132,21 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, and attempts to complete
-   * the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied multiple times
+   * Returns a Supplier that pre-executes the {@code execution}, runs the {@code runnable}, and attempts to complete the
+   * {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied multiple times
    * concurrently.
    *
    * @param <R> result type
    */
-  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromiseExecution(AsyncSupplier<R, R> supplier,
+  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromiseExecution(AsyncRunnable<R> runnable,
     AsyncExecution<R> execution) {
-    Assert.notNull(supplier, "supplier");
+    Assert.notNull(runnable, "runnable");
     return new Supplier<CompletableFuture<ExecutionResult>>() {
       @Override
       public synchronized CompletableFuture<ExecutionResult> get() {
         try {
           execution.preExecute();
-          supplier.get(execution);
+          runnable.run(execution);
         } catch (Throwable e) {
           execution.completeOrHandle(null, e);
         }
@@ -226,14 +226,6 @@ final class Functions {
 
       // Result will be provided later via AsyncExecution.complete
       return ExecutionResult.NULL_FUTURE;
-    };
-  }
-
-  static AsyncSupplier<Void, Void> toAsyncSupplier(AsyncRunnable runnable) {
-    Assert.notNull(runnable, "runnable");
-    return execution -> {
-      runnable.run(execution);
-      return null;
     };
   }
 

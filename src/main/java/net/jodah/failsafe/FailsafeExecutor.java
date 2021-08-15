@@ -135,8 +135,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
-  public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncSupplier<T, T> supplier) {
-    return callAsync(execution -> getPromiseExecution(supplier, execution), true);
+  public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncRunnable<T> runnable) {
+    return callAsync(execution -> getPromiseExecution(runnable, execution), true);
   }
 
   /**
@@ -277,8 +277,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
-  public CompletableFuture<Void> runAsyncExecution(AsyncRunnable runnable) {
-    return callAsync(execution -> getPromiseExecution(toAsyncSupplier(runnable), execution), true);
+  public CompletableFuture<Void> runAsyncExecution(AsyncRunnable<Void> runnable) {
+    return callAsync(execution -> getPromiseExecution(runnable, execution), true);
   }
 
   /**

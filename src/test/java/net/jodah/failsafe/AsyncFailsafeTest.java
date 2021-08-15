@@ -178,19 +178,17 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldGetAsyncExecution() throws Throwable {
-    assertGetAsync((AsyncSupplier<?, ?>) exec -> {
+    assertGetAsync((AsyncRunnable<?>) exec -> {
       try {
         boolean result = service.connect();
         if (!exec.complete(result))
           exec.retry();
-        return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
         if (exec.getAttemptCount() % 2 == 0)
           throw failure;
         if (!exec.retryOn(failure))
           throw failure;
-        return null;
       }
     });
   }
@@ -389,10 +387,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnGetAsyncExecution() throws Throwable {
-    assertCancel(executor -> getAsync(executor, (AsyncSupplier<?, ?>) (e) -> {
+    assertCancel(executor -> getAsync(executor, (AsyncRunnable<?>) (e) -> {
       Thread.sleep(1000);
       e.complete();
-      return null;
     }), retryAlways);
   }
 
@@ -435,7 +432,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         exec.retryOn(new ConnectException());
       else
         exec.complete(true);
-      return true;
     });
     waiter.await(3000);
   }
@@ -504,7 +500,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       Thread.sleep(100);
       if (!exec.complete(false))
         exec.retry();
-      return null;
     });
 
     waiter.await(1000);
@@ -593,13 +588,14 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       .getAsync(() -> fastService);
   }
 
+  @SuppressWarnings("unchecked")
   private Future<?> runAsync(FailsafeExecutor<?> failsafe, Object runnable) {
     if (runnable instanceof CheckedRunnable)
       return failsafe.runAsync((CheckedRunnable) runnable);
     else if (runnable instanceof ContextualRunnable)
       return failsafe.runAsync((ContextualRunnable) runnable);
     else
-      return failsafe.runAsyncExecution((AsyncRunnable) runnable);
+      return failsafe.runAsyncExecution((AsyncRunnable<Void>) runnable);
   }
 
   @SuppressWarnings("unchecked")
@@ -609,7 +605,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     else if (supplier instanceof ContextualSupplier)
       return failsafe.getAsync((ContextualSupplier<T, T>) supplier);
     else
-      return failsafe.getAsyncExecution((AsyncSupplier<T, T>) supplier);
+      return failsafe.getAsyncExecution((AsyncRunnable<T>) supplier);
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })

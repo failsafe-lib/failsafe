@@ -2,9 +2,10 @@
 
 ### API Changes
 
-- Added a generic result type `R` to `ExecutionContext`, `Execution` and `AsyncExecution`. This ensures that result types are unified across the API. It does mean that there are a few minor breaking changes to the API:
-  - `ContextualSupplier` and `AsyncSupplier` now have an additional result type parameter `R`. Normally these types are used as lambda parameters where the type is inferred, so most users should not be impacted. But any explicit generic declaration of these types will not compile until the new parameter is added.
+- Added a generic result type `R` to `ExecutionContext`, `Execution`, `AsyncExecution`, and `AsyncRunnable`. This ensures that result types are unified across the API. It does mean that there are a few minor breaking changes to the API:
+  - `ContextualSupplier` now has an additional result type parameter `R`. Normally this type is used as lambda parameters where the type is inferred, so most users should not be impacted. But any explicit generic declaration of this type will not compile until the new parameter is added.
   - `PolicyExecutor`, which is part of the SPI, now accepts an additional result type parameter `R`. This is only relevant for SPI users who are implementing their own Policies.
+- Changed `FailsafeExecutor.getAsyncExecution` to accept `AsyncRunnable` instead of `AsyncSupplier`. This is a breaking change for any `getAsyncExecution` calls, but the fix is to simply remove any `return` statement. The reason for this change is that the provided object does not need to return a result since the result will already be passed asynchronously to one of the `AsyncExecution` `complete` or `retry` methods.
 
 # 2.4.3
 

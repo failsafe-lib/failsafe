@@ -19,10 +19,11 @@ import net.jodah.failsafe.AsyncExecution;
 
 /**
  * A Runnable that manually triggers asynchronous retries or completion via an asynchronous execution.
- * 
+ *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
 @FunctionalInterface
-public interface AsyncRunnable {
-  void run(AsyncExecution<Void> execution) throws Exception;
+public interface AsyncRunnable<R> {
+  void run(AsyncExecution<R> execution) throws Exception;
 }
