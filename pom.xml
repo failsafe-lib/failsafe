@@ -12,7 +12,7 @@
   <artifactId>failsafe</artifactId>
   <version>2.4.4-SNAPSHOT</version>
   <name>Failsafe</name>
-  <url>https://failsafe-lib.github.io</url>
+  <url>https://failsafe.dev</url>
 
   <licenses>
     <license>
