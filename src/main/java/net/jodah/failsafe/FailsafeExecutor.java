@@ -120,9 +120,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
-   * exceeded. This method is intended for integration with asynchronous code. Retries must be manually scheduled via
-   * one of the {@code AsyncExecution.retry} methods.
+   * This method is intended for integration with asynchronous code.
+   * <p>
+   * Executes the {@code runnable} asynchronously until a successful result is recorded or the configured policies are
+   * exceeded. Executions must be recorded via one of the {@code AsyncExecution.record} methods which will trigger
+   * failure handling, if needed, by the configured policies, else the resulting {@link CompletableFuture} will be
+   * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@code
+   * AsyncExecution.recordFailure}.
+   * </p>
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
    * TimeoutExceededException}.
@@ -179,9 +184,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
-   * policies are exceeded. This method is intended for integration with asynchronous code. Retries must be manually
-   * scheduled via one of the {@code AsyncExecution.retry} methods.
+   * This method is intended for integration with asynchronous code.
+   * <p>
+   * Executes the {@code supplier} asynchronously until a successful result is recorded or the configured policies are
+   * exceeded. Executions must be recorded via one of the {@code AsyncExecution.record} methods which will trigger
+   * failure handling, if needed, by the configured policies, else the resulting {@link CompletableFuture} will be
+   * completed. Any exception that is thrown from the {@code supplier} will automatically be recorded via {@code
+   * AsyncExecution.recordFailure}.
+   * </p>
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
    * TimeoutExceededException}.
@@ -262,9 +272,14 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded. This
-   * method is intended for integration with asynchronous code. Retries must be manually scheduled via one of the {@code
-   * AsyncExecution.retry} methods.
+   * This method is intended for integration with asynchronous code.
+   * <p>
+   * Executes the {@code runnable} asynchronously until a successful result is recorded or the configured policies are
+   * exceeded. Executions must be recorded via one of the {@code AsyncExecution.record} methods which will trigger
+   * failure handling, if needed, by the configured policies, else the resulting {@link CompletableFuture} will be
+   * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@code
+   * AsyncExecution.recordFailure}.
+   * </p>
    * <p>
    * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
    * TimeoutExceededException}.

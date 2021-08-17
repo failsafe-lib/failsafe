@@ -534,7 +534,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    *   <li>This setting will not cause long running executions to be interrupted. For that capability, use a
    *   {@link Timeout} policy {@link Timeout#withInterrupt(boolean) withInterrupt} set to {@code true}.</li>
    *   <li>This setting will not disable {@link #withMaxRetries(int) max retries}, which are still {@code 2} by default.
-   *   A max retries limit can be disabled via <code>.withMaxRetries(-1)</code></li>
+   *   A max retries limit can be disabled via <code>withMaxRetries(-1)</code></li>
    * </ul>
    * </p>
    *

@@ -35,13 +35,13 @@ public class RetryLoopExample {
   }
 
   public static void main(String... args) throws Throwable {
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class).withBackoff(10, 40,
-        ChronoUnit.MILLIS);
-    Execution execution = new Execution(retryPolicy);
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class)
+      .withBackoff(10, 40, ChronoUnit.MILLIS);
+    Execution<Object> execution = new Execution<>(retryPolicy);
 
     while (!execution.isComplete()) {
       try {
-        execution.complete(list.size());
+        execution.recordResult(list.size());
       } catch (IllegalStateException e) {
         execution.recordFailure(e);
 
@@ -50,7 +50,7 @@ public class RetryLoopExample {
       }
     }
 
-    assertEquals(execution.getLastResult(), Integer.valueOf(5));
+    assertEquals(execution.getLastResult(), 5);
     assertEquals(execution.getAttemptCount(), 3);
   }
 }

@@ -51,6 +51,7 @@ public class Execution<R> extends AbstractExecution<R> {
    * marks the execution as complete.
    *
    * @throws IllegalStateException if the execution is already complete
+   * @deprecated Use {@link #recordResult(Object)} instead
    */
   public boolean canRetryFor(R result) {
     preExecute();
@@ -63,6 +64,7 @@ public class Execution<R> extends AbstractExecution<R> {
    * returns false and marks the execution as complete.
    *
    * @throws IllegalStateException if the execution is already complete
+   * @deprecated Use {@link #record(Object, Throwable)} instead
    */
   public boolean canRetryFor(R result, Throwable failure) {
     preExecute();
@@ -76,6 +78,7 @@ public class Execution<R> extends AbstractExecution<R> {
    *
    * @throws NullPointerException if {@code failure} is null
    * @throws IllegalStateException if the execution is already complete
+   * @deprecated Use {@link #recordFailure(Throwable)} instead
    */
   public boolean canRetryOn(Throwable failure) {
     Assert.notNull(failure, "failure");
@@ -98,6 +101,7 @@ public class Execution<R> extends AbstractExecution<R> {
    * completion failed and execution should be retried.
    *
    * @throws IllegalStateException if the execution is already complete
+   * @deprecated Use {@link #recordResult(Object)} instead
    */
   public boolean complete(R result) {
     preExecute();
@@ -106,16 +110,36 @@ public class Execution<R> extends AbstractExecution<R> {
   }
 
   /**
-   * Records a failed execution and returns true if a retry can be performed for the {@code failure}, else returns false
-   * and completes the execution.
-   * <p>
-   * Alias of {@link #canRetryOn(Throwable)}
+   * Records an execution {@code result} or {@code failure} which triggers failure handling, if needed, by the
+   * configured policies. If policy handling is not possible or completed, the execution is completed.
    *
-   * @throws NullPointerException if {@code failure} is null
    * @throws IllegalStateException if the execution is already complete
    */
-  public boolean recordFailure(Throwable failure) {
-    return canRetryOn(failure);
+  public void record(R result, Throwable failure) {
+    preExecute();
+    postExecute(new ExecutionResult(result, failure));
+  }
+
+  /**
+   * Records an execution {@code result} which triggers failure handling, if needed, by the configured policies. If
+   * policy handling is not possible or completed, the execution is completed.
+   *
+   * @throws IllegalStateException if the execution is already complete
+   */
+  public void recordResult(R result) {
+    preExecute();
+    postExecute(new ExecutionResult(result, null));
+  }
+
+  /**
+   * Records an execution {@code failure} which triggers failure handling, if needed, by the configured policies. If
+   * policy handling is not possible or completed, the execution is completed.
+   *
+   * @throws IllegalStateException if the execution is already complete
+   */
+  public void recordFailure(Throwable failure) {
+    preExecute();
+    postExecute(new ExecutionResult(null, failure));
   }
 
   /**

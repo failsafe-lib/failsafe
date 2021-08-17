@@ -124,6 +124,7 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
    * Returns whether the {@code result} is a success according to the policy. If the {code result} has no result, it is
    * not a failure.
    */
+  @SuppressWarnings("rawtypes")
   protected boolean isFailure(ExecutionResult result) {
     if (result.isNonResult())
       return false;
