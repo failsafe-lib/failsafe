@@ -112,7 +112,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldRunAsyncExecution() throws Throwable {
-    assertRunAsync((AsyncRunnable) exec -> {
+    assertRunAsync((AsyncRunnable<Object>) exec -> {
       try {
         service.connect();
         exec.complete();
@@ -120,8 +120,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
         // Alternate between automatic and manual retries
         if (exec.getAttemptCount() % 2 == 0)
           throw failure;
-        if (!exec.retryOn(failure))
-          throw failure;
+        exec.recordFailure(failure);
       }
     });
   }
@@ -181,14 +180,12 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertGetAsync((AsyncRunnable<?>) exec -> {
       try {
         boolean result = service.connect();
-        if (!exec.complete(result))
-          exec.retry();
+        exec.recordResult(result);
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
         if (exec.getAttemptCount() % 2 == 0)
           throw failure;
-        if (!exec.retryOn(failure))
-          throw failure;
+        exec.recordFailure(failure);
       }
     });
   }
@@ -241,15 +238,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     assertGetStage((AsyncSupplier<?, ?>) exec -> CompletableFuture.supplyAsync(() -> {
       try {
         boolean result = service.connect();
-        if (!exec.complete(result))
-          exec.retryFor(result);
+        exec.recordResult(result);
         return result;
       } catch (Exception failure) {
         // Alternate between automatic and manual retries
         if (exec.getAttemptCount() % 2 == 0)
           throw failure;
-        if (!exec.retryOn(failure))
-          throw failure;
+        exec.recordFailure(failure);
         return null;
       }
     }));
@@ -414,10 +409,10 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnGetStageAsyncExecution() throws Throwable {
-    assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?, ?>) (e) -> {
+    assertCancel(executor -> getStageAsync(executor, (AsyncSupplier<?, ?>) exec -> {
       Thread.sleep(1000);
       CompletableFuture<?> result = CompletableFuture.completedFuture("test");
-      e.complete(result);
+      exec.recordResult(result);
       return result;
     }), retryAlways);
   }
@@ -429,9 +424,9 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       waiter.resume();
     }).getAsyncExecution(exec -> {
       if (exec.getAttemptCount() < 2)
-        exec.retryOn(new ConnectException());
+        exec.recordFailure(new ConnectException());
       else
-        exec.complete(true);
+        exec.recordResult(true);
     });
     waiter.await(3000);
   }
@@ -488,7 +483,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldTimeoutAndRetry() throws Throwable {
     // Given
-    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(2).handleResult(false);
+    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().handleResult(false);
     Timeout<Boolean> timeout = Timeout.of(Duration.ofMillis(1));
 
     // When / Then

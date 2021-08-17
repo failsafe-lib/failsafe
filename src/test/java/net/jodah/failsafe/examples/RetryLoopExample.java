@@ -41,7 +41,7 @@ public class RetryLoopExample {
 
     while (!execution.isComplete()) {
       try {
-        execution.complete(list.size());
+        execution.recordResult(list.size());
       } catch (IllegalStateException e) {
         execution.recordFailure(e);
 

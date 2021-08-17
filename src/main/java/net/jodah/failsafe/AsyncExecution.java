@@ -69,6 +69,7 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    * true on success, else false if completion failed and the execution should be retried via {@link #retry()}.
    *
    * @throws IllegalStateException if the execution is already complete
+   * @deprecated Use {@link #recordResult(Object)} instead
    */
   public boolean complete(R result) {
     postExecute(new ExecutionResult(result, null));
@@ -84,10 +85,44 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    * RetryPolicy does not allow retries for the {@code failure}.
    *
    * @throws IllegalStateException if the execution is already complete
+   * @deprecated Use {@link #record(Object, Throwable)} instead
    */
   public boolean complete(R result, Throwable failure) {
     postExecute(new ExecutionResult(result, failure));
     return completed;
+  }
+
+  /**
+   * Records an execution {@code result} or {@code failure} which triggers failure handling, if needed, by the
+   * configured policies. If policy handling is not possible or completed, the resulting {@link CompletableFuture} is
+   * completed.
+   *
+   * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
+   */
+  public void record(R result, Throwable failure) {
+    Assert.state(!retryCalled, "The most recent execution has already been recorded");
+    retryCalled = true;
+    completeOrHandle(result, failure);
+  }
+
+  /**
+   * Records an execution {@code result} which triggers failure handling, if needed, by the configured policies. If
+   * policy handling is not possible or completed, the resulting {@link CompletableFuture} is completed.
+   *
+   * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
+   */
+  public void recordResult(R result) {
+    record(result, null);
+  }
+
+  /**
+   * Records an execution {@code failure} which triggers failure handling, if needed, by the configured policies. If
+   * policy handling is not possible or completed, the resulting {@link CompletableFuture} is completed.
+   *
+   * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
+   */
+  public void recordFailure(Throwable failure) {
+    record(null, failure);
   }
 
   /**
@@ -96,10 +131,10 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    * {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
+   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded
    */
-  @SuppressWarnings("unchecked")
   public boolean retry() {
-    return retryFor((R) lastResult, lastFailure);
+    return retryFor(lastResult, lastFailure);
   }
 
   /**
@@ -108,6 +143,8 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    * execution and associated {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
+   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded. Use {@link
+   * #recordResult(Object)} instead
    */
   public boolean retryFor(R result) {
     return retryFor(result, null);
@@ -119,6 +156,8 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    * and completes the execution and associated {@code CompletableFuture}.
    *
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
+   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded. Use {@link
+   * #record(Object, Throwable)} instead
    */
   public boolean retryFor(R result, Throwable failure) {
     Assert.state(!retryCalled, "Retry has already been called");
@@ -132,6 +171,8 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    *
    * @throws NullPointerException if {@code failure} is null
    * @throws IllegalStateException if a retry method has already been called or the execution is already complete
+   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded. Use {@link
+   * #recordFailure(Throwable)} instead
    */
   public boolean retryOn(Throwable failure) {
     Assert.notNull(failure, "failure");

@@ -66,14 +66,14 @@ public class ExecutionResult {
   }
 
   /**
-   * Returns a an ExecutionResult with the {@code result} set, {@code complete} true and {@code success} true.
+   * Returns an ExecutionResult with the {@code result} set, {@code complete} true and {@code success} true.
    */
   public static ExecutionResult success(Object result) {
     return new ExecutionResult(result, null, false, 0, true, true, true);
   }
 
   /**
-   * Returns a an ExecutionResult with the {@code failure} set, {@code complete} true and {@code success} false.
+   * Returns an ExecutionResult with the {@code failure} set, {@code complete} true and {@code success} false.
    */
   public static ExecutionResult failure(Throwable failure) {
     return new ExecutionResult(null, failure, false, 0, true, false, false);

@@ -68,8 +68,8 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, records the result and
-   * returns a promise containing the result.
+   * Returns a Supplier that synchronously pre-executes the {@code execution}, applies the {@code supplier}, records the
+   * result and returns a promise containing the result.
    *
    * @param <R> result type
    */
@@ -132,9 +132,9 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, runs the {@code runnable}, and attempts to complete the
-   * {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied multiple times
-   * concurrently.
+   * Returns a Supplier that synchronously pre-executes the {@code execution}, runs the {@code runnable}, and attempts
+   * to complete the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied
+   * multiple times concurrently.
    *
    * @param <R> result type
    */
@@ -151,15 +151,15 @@ final class Functions {
           execution.completeOrHandle(null, e);
         }
 
-        // Result will be provided later via AsyncExecution.complete
+        // Result will be provided later via AsyncExecution.record
         return ExecutionResult.NULL_FUTURE;
       }
     };
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, records the result and
-   * returns a promise containing the result.
+   * Returns a Supplier that synchronously pre-executes the {@code execution}, applies the {@code supplier}, records the
+   * result and returns a promise containing the result.
    *
    * @param <R> result type
    */
@@ -191,9 +191,9 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, and attempts to complete
-   * the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied multiple times
-   * concurrently.
+   * Returns a Supplier that synchronously pre-executes the {@code execution}, applies the {@code supplier}, and
+   * attempts to complete the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be
+   * applied multiple times concurrently.
    *
    * @param <R> result type
    */
@@ -224,13 +224,14 @@ final class Functions {
         }
       }
 
-      // Result will be provided later via AsyncExecution.complete
+      // Result will be provided later via AsyncExecution.record
       return ExecutionResult.NULL_FUTURE;
     };
   }
 
   /**
-   * Returns a SettableSupplier that supplies the set value once then uses the {@code supplier} for subsequent calls.
+   * Returns a SettableSupplier for async execution calls that supplies the set value once then uses the {@code
+   * supplier} for subsequent calls.
    *
    * @param <R> result type
    */

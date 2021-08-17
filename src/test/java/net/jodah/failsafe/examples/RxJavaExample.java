@@ -39,7 +39,8 @@ public class RxJavaExample {
       Execution<Object> execution = new Execution<>(retryPolicy);
       return attempts.flatMap(failure -> {
         System.out.println("Failure detected");
-        if (execution.canRetryOn(failure))
+        execution.recordFailure(failure);
+        if (!execution.isComplete())
           return Observable.timer(execution.getWaitTime().toNanos(), TimeUnit.NANOSECONDS);
         else
           return Observable.error(failure);
