@@ -1,3 +1,9 @@
+# 2.4.3
+
+### Bug Fixes
+
+- Fixed #289 - Binary imcompatibility with code that was compiled against previous Failsafe versions.
+
 # 2.4.2
 
 ### Improvements
