@@ -2,13 +2,13 @@
 # run from top level dir
 
 ORG=failsafe-lib
-PROJECT=failsafe
+REPO=failsafe.dev
 
 build () {
   echo "Building javadocs"
   mvn javadoc:javadoc -Djv=$apiVersion
   rm -rf target/docs
-  git clone git@github.com:$ORG/$PROJECT.git target/docs -b gh-pages
+  git clone git@github.com:$ORG/$REPO.git target/docs
   cd target/docs
   git rm -rf javadoc
   mkdir -p javadoc
@@ -42,7 +42,7 @@ commit() {
   echo "Committing javadocs"
   git add -A -f javadoc
   git commit -m "Updated JavaDocs"
-  git push -fq origin gh-pages > /dev/null
+  git push -fq > /dev/null
 }
 
 build
