@@ -139,13 +139,14 @@ public final class DelegatingScheduler implements Scheduler {
           }
         }
         promise.complete(callable.call());
+      } catch (Throwable t) {
+        promise.completeExceptionally(t);
+      } finally {
         if (isForkJoinPool) {
           synchronized (promise) {
             promise.forkJoinPoolThread = null;
           }
         }
-      } catch (Throwable t) {
-        promise.completeExceptionally(t);
       }
       return null;
     };
