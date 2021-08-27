@@ -26,10 +26,15 @@ import java.util.function.Predicate;
 
 /**
  * A Policy that captures conditions to determine whether an execution is a failure.
- * <p>
- * By default, if no handlers are configured, the execution is considered a failure if an Exception was thrown. If
- * multuple handlers are configured, they are logically OR'ed.
- * </p>
+ * <ul>
+ *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
+ *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
+ *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
+ *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
+ *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
+ *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
+ *   will trigger policy handling.</li>
+ * </ul>
  *
  * @param <S> self type
  * @param <R> result type

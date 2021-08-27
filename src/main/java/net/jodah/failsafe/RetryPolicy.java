@@ -32,12 +32,20 @@ import java.util.function.Predicate;
 
 /**
  * A policy that defines when retries should be performed.
- *
- * <p>
- * The {@code handle} methods describe when a retry should be performed for a particular failure. The {@code
- * handleResult} methods describe when a retry should be performed for a particular result. If multiple {@code handle}
- * or {@code handleResult} conditions are specified, any matching condition can allow a retry. The {@code abortOn},
- * {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.
+ * <ul>
+ *   <li>By default, a RetryPolicy will retry up to {@code 2} times when any {@code Exception} is thrown, with no delay
+ *   between retry attempts.</li>
+ *   <li>You can change the default number of retry attempts and delay between retries by using the {@code with}
+ *   configuration methods.</li>
+ *   <li>You can change the default {@code Exception} handling behavior by specifying
+ *   your own {@code handle} conditions. The default exception handling condition will only be overridden by
+ *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
+ *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
+ *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
+ *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
+ *   can cause a retry.</li>
+ *   <li>The {@code abortOn}, {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.</li>
+ * </ul>
  * <p>
  * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
  * </p>
