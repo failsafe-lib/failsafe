@@ -20,9 +20,10 @@ import net.jodah.failsafe.ExecutionContext;
 /**
  * Internal CircuitBreaker APIs.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public interface CircuitBreakerInternals {
+public interface CircuitBreakerInternals<R> {
   /**
    * Returns the current number of executions occurring on the circuit breaker. Executions are started when a {@code
    * Failsafe} call begins and ended when a result is recorded.
@@ -33,5 +34,5 @@ public interface CircuitBreakerInternals {
    * Opens the circuit breaker and considers the {@code context} when computing the delay before the
    * circuit breaker will transition to half open.
    */
-  void open(ExecutionContext context);
+  void open(ExecutionContext<R> context);
 }

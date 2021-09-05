@@ -1,6 +1,6 @@
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.AsyncSupplier;
+import net.jodah.failsafe.function.AsyncRunnable;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.util.Assert;
 
@@ -19,7 +19,7 @@ import java.time.Duration;
  * used to handle a timeout being exceeded or not.
  * </p>
  * <p>Note: {@link #withInterrupt(boolean) interruption} will have no effect when performing an {@link
- * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} since the async thread is unkown to Failsafe.</p>
+ * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unkown to Failsafe.</p>
  * <p>
  * This class is threadsafe.
  * </p>
@@ -85,7 +85,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    * Note: Only configure interrupts if the code being executed is designed to be interrupted.
    * <p>
    * <p>Note: {@link #withInterrupt(boolean) interruption} will have no effect when performing an {@link
-   * FailsafeExecutor#getAsyncExecution(AsyncSupplier) async execution} since the async thread is unkown to
+   * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unkown to
    * Failsafe.</p>
    *
    * @param mayInterruptIfRunning whether to enable interruption or not
@@ -111,7 +111,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   }
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution execution) {
-    return new TimeoutExecutor(this, execution);
+  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
+    return new TimeoutExecutor<>(this, execution);
   }
 }

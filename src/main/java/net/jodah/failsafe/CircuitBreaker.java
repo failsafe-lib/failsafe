@@ -609,7 +609,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
-  private void transitionTo(State newState, CheckedRunnable listener, ExecutionContext context) {
+  private void transitionTo(State newState, CheckedRunnable listener, ExecutionContext<R> context) {
     boolean transitioned = false;
     synchronized (this) {
       if (!getState().equals(newState)) {
@@ -640,7 +640,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /**
    * Records an execution failure.
    */
-  void recordExecutionFailure(ExecutionContext context) {
+  void recordExecutionFailure(ExecutionContext<R> context) {
     try {
       state.get().recordFailure(context);
     } finally {
@@ -649,20 +649,20 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   }
 
   // Internal delegate implementation
-  final CircuitBreakerInternals internals = new CircuitBreakerInternals() {
+  final CircuitBreakerInternals<R> internals = new CircuitBreakerInternals<R>() {
     @Override
     public int getCurrentExecutions() {
       return currentExecutions.get();
     }
 
     @Override
-    public void open(ExecutionContext context) {
+    public void open(ExecutionContext<R> context) {
       transitionTo(State.OPEN, onOpen, context);
     }
   };
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution execution) {
-    return new CircuitBreakerExecutor(this, execution);
+  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
+    return new CircuitBreakerExecutor<>(this, execution);
   }
 }

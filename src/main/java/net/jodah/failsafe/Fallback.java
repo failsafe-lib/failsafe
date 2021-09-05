@@ -43,8 +43,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    */
   public static final Fallback<Void> VOID = new Fallback<>();
 
-  private final CheckedFunction<ExecutionAttemptedEvent, R> fallback;
-  private final CheckedFunction<ExecutionAttemptedEvent, CompletableFuture<R>> fallbackStage;
+  private final CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback;
+  private final CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage;
   private final boolean async;
   private EventListener failedAttemptListener;
 
@@ -57,8 +57,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  private Fallback(CheckedFunction<ExecutionAttemptedEvent, R> fallback,
-    CheckedFunction<ExecutionAttemptedEvent, CompletableFuture<R>> fallbackStage, boolean async) {
+  private Fallback(CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback,
+    CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage, boolean async) {
     this.fallback = fallback;
     this.fallbackStage = fallbackStage;
     this.async = async;
@@ -213,7 +213,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   /**
-   * Returns whether the Fallback is configured to handle execution results asynchronously, separate from execution..
+   * Returns whether the Fallback is configured to handle execution results asynchronously, separate from execution.
    */
   public boolean isAsync() {
     return async;
@@ -232,7 +232,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   /**
    * Returns the applied fallback result.
    */
-  R apply(R result, Throwable failure, ExecutionContext context) throws Throwable {
+  R apply(R result, Throwable failure, ExecutionContext<R> context) throws Throwable {
     ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
     return fallback != null ? fallback.apply(event) : fallbackStage.apply(event).get();
   }
@@ -240,14 +240,13 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   /**
    * Returns a future applied fallback result.
    */
-  CompletableFuture<R> applyStage(R result, Throwable failure, ExecutionContext context) throws Throwable {
+  CompletableFuture<R> applyStage(R result, Throwable failure, ExecutionContext<R> context) throws Throwable {
     ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
     return fallback != null ? CompletableFuture.completedFuture(fallback.apply(event)) : fallbackStage.apply(event);
   }
 
   @Override
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public PolicyExecutor toExecutor(AbstractExecution execution) {
-    return new FallbackExecutor(this, execution, failedAttemptListener);
+  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
+    return new FallbackExecutor<>(this, execution, failedAttemptListener);
   }
 }
