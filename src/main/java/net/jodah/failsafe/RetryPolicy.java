@@ -563,8 +563,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   }
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution execution) {
-    return new RetryPolicyExecutor(this, execution, abortListener, failedAttemptListener, retriesExceededListener,
+  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
+    return new RetryPolicyExecutor<>(this, execution, abortListener, failedAttemptListener, retriesExceededListener,
       retryListener, retryScheduledListener);
   }
 }

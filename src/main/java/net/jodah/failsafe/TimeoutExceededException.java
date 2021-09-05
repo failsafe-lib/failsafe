@@ -23,14 +23,14 @@ package net.jodah.failsafe;
 public class TimeoutExceededException extends FailsafeException {
   private static final long serialVersionUID = 1L;
 
-  private final Timeout timeout;
+  private final Timeout<?> timeout;
 
-  public TimeoutExceededException(Timeout timeout) {
+  public TimeoutExceededException(Timeout<?> timeout) {
     this.timeout = timeout;
   }
 
   /** Returns the {@link Timeout} that caused the exception. */
-  public Timeout getTimeout() {
+  public Timeout<?> getTimeout() {
     return timeout;
   }
 }

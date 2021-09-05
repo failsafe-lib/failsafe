@@ -19,10 +19,11 @@ import net.jodah.failsafe.ExecutionContext;
 
 /**
  * A Runnable that provides execution context.
- * 
+ *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
 @FunctionalInterface
-public interface ContextualRunnable {
-  void run(ExecutionContext<Void> context) throws Throwable;
+public interface ContextualRunnable<R> {
+  void run(ExecutionContext<R> context) throws Throwable;
 }
