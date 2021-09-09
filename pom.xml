@@ -128,6 +128,7 @@
             <Implementation-Version>${project.version}</Implementation-Version>
             <Bundle-Name>Failsafe</Bundle-Name>
             <Bundle-SymbolicName>net.jodah.failsafe</Bundle-SymbolicName>
+            <Automatic-Module-Name>net.jodah.failsafe</Automatic-Module-Name>
             <Export-Package>net.jodah.failsafe*;version=1.0</Export-Package>
             <Import-Package>*</Import-Package>
           </instructions>
