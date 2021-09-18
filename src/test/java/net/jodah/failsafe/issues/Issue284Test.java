@@ -44,7 +44,7 @@ public class Issue284Test {
     String result = Failsafe.with(fallback).get(() -> null);
 
     assertEquals(result, "hello");
-    assertEquals(failedAttempt.get(), 0);
+    assertEquals(failedAttempt.get(), 1);
     assertTrue(success.get(), "Fallback should have been successful");
   }
 

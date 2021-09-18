@@ -1,4 +1,8 @@
-# Next Minor Release
+# 2.4.4
+
+### Bug Fixes
+
+- Fixed #298 - `Fallback.onFailedAttempt` not being called correctly
 
 ### API Changes
 

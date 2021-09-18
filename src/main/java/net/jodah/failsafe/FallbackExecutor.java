@@ -47,6 +47,9 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
         return result;
 
       if (isFailure(result)) {
+        if (failedAttemptListener != null)
+          failedAttemptListener.handle(result, execution);
+
         try {
           result = policy == Fallback.VOID ?
             result.withNonResult() :
@@ -74,6 +77,9 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
         return CompletableFuture.completedFuture(result);
       if (!isFailure(result))
         return postExecuteAsync(result, scheduler, future);
+
+      if (failedAttemptListener != null)
+        failedAttemptListener.handle(result, execution);
 
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       Callable<R> callable = () -> {
@@ -112,12 +118,5 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
 
       return promise.thenCompose(ss -> postExecuteAsync(ss, scheduler, future));
     });
-  }
-
-  @Override
-  protected ExecutionResult onFailure(ExecutionResult result) {
-    if (failedAttemptListener != null)
-      failedAttemptListener.handle(result, execution);
-    return result;
   }
 }
