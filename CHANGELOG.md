@@ -4,6 +4,10 @@
 
 - Fixed #298 - `Fallback.onFailedAttempt` not being called correctly
 
+### Improvements
+
+- Fixed #296 - Add Automatic-Module-Name entry to the generated manifest file
+
 ### API Changes
 
 - Added a generic result type `R` to `ExecutionContext`, `Execution`, `AsyncExecution`, and `AsyncRunnable`. This ensures that result types are unified across the API. It does mean that there are a few minor breaking changes to the API:
