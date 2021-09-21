@@ -57,10 +57,8 @@ public class Issue192Test {
     Asserts.assertThrows(() -> Failsafe.with(policyA, policyB, policyC)
       .getAsyncExecution(
         execution -> Testing.futureException(executor, new ExceptionB()).whenComplete((result, failure) -> {
-          if (execution.complete(result, failure))
-            ;//System.out.println("Result = " + result + "; failure = " + failure);
-          else if (!execution.retry())
-            ;//System.out.println("Connection attempts failed " + failure);
+          //System.out.println("Result = " + result + "; failure = " + failure);
+          execution.record(result, failure);
         }))
       .get(), ExecutionException.class, ExceptionB.class);
 

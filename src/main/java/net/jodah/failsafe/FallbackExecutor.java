@@ -19,7 +19,7 @@ import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.*;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link Fallback}.
@@ -29,8 +29,8 @@ import java.util.function.Supplier;
 class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
   private final EventListener failedAttemptListener;
 
-  FallbackExecutor(Fallback<R> fallback, AbstractExecution<R> execution, EventListener failedAttemptListener) {
-    super(fallback, execution);
+  FallbackExecutor(Fallback<R> fallback, int policyIndex, EventListener failedAttemptListener) {
+    super(fallback, policyIndex);
     this.failedAttemptListener = failedAttemptListener;
   }
 
@@ -40,10 +40,11 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
    */
   @Override
   @SuppressWarnings("unchecked")
-  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
-    return () -> {
-      ExecutionResult result = supplier.get();
-      if (executionCancelled())
+  protected Function<Execution<R>, ExecutionResult> apply(Function<Execution<R>, ExecutionResult> innerFn,
+    Scheduler scheduler) {
+    return execution -> {
+      ExecutionResult result = innerFn.apply(execution);
+      if (execution.isCancelled(this))
         return result;
 
       if (isFailure(result)) {
@@ -53,13 +54,13 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
         try {
           result = policy == Fallback.VOID ?
             result.withNonResult() :
-            result.withResult(policy.apply((R) result.getResult(), result.getFailure(), execution.copy()));
+            result.withResult(policy.apply((R) result.getResult(), result.getFailure(), execution));
         } catch (Throwable t) {
           result = ExecutionResult.failure(t);
         }
       }
 
-      return postExecute(result);
+      return postExecute(execution, result);
     };
   }
 
@@ -68,15 +69,17 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
    */
   @Override
   @SuppressWarnings("unchecked")
-  protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
-    return () -> supplier.get().thenCompose(result -> {
+  protected Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> applyAsync(
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler,
+    FailsafeFuture<R> future) {
+
+    return execution -> innerFn.apply(execution).thenCompose(result -> {
       if (result == null || future.isDone())
         return ExecutionResult.NULL_FUTURE;
-      if (executionCancelled())
+      if (execution.isCancelled(this))
         return CompletableFuture.completedFuture(result);
       if (!isFailure(result))
-        return postExecuteAsync(result, scheduler, future);
+        return postExecuteAsync(execution, result, scheduler, future);
 
       if (failedAttemptListener != null)
         failedAttemptListener.handle(result, execution);
@@ -84,8 +87,7 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       Callable<R> callable = () -> {
         try {
-          CompletableFuture<R> fallback = policy.applyStage((R) result.getResult(), result.getFailure(),
-            execution.copy());
+          CompletableFuture<R> fallback = policy.applyStage((R) result.getResult(), result.getFailure(), execution);
           fallback.whenComplete((innerResult, failure) -> {
             if (failure instanceof CompletionException)
               failure = failure.getCause();
@@ -104,11 +106,10 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
         else {
           Future<?> scheduledFallback = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
-          // Propagate cancellation to the scheduled fallback and its promise
-          future.injectCancelFn((mayInterrupt, promiseResult) -> {
+          // Propagate outer cancellations to the Fallback future and its promise
+          future.injectCancelFn(policyIndex, (mayInterrupt, cancelResult) -> {
             scheduledFallback.cancel(mayInterrupt);
-            if (executionCancelled())
-              promise.complete(promiseResult);
+            promise.complete(cancelResult);
           });
         }
       } catch (Throwable t) {
@@ -116,7 +117,7 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
         promise.completeExceptionally(t);
       }
 
-      return promise.thenCompose(ss -> postExecuteAsync(ss, scheduler, future));
+      return promise.thenCompose(ss -> postExecuteAsync(execution, ss, scheduler, future));
     });
   }
 }

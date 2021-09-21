@@ -15,44 +15,57 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.Functions.SettableSupplier;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
- * Tracks asynchronous executions and allows retries to be scheduled according to a {@link RetryPolicy}. May be
- * explicitly completed or made to retry.
+ * Tracks asynchronous executions and handles failures according to one or more {@link Policy policies}. Execution
+ * results must be explicitly recorded via one of the {@code record} methods.
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
 public final class AsyncExecution<R> extends AbstractExecution<R> {
-  private SettableSupplier<CompletableFuture<ExecutionResult>> innerExecutionSupplier;
-  private Supplier<CompletableFuture<ExecutionResult>> outerExecutionSupplier;
+  // Cross-attempt state --
+  // The outer-most function that executions begin with
+  private Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> outerFn;
+  private final boolean asyncExecution;
+  // Whether a policy executor completed post execution
+  private final boolean[] policyPostExecuted;
   final FailsafeFuture<R> future;
-  private volatile boolean completeCalled;
-  private volatile boolean retryCalled;
 
-  AsyncExecution(Scheduler scheduler, FailsafeFuture<R> future, FailsafeExecutor<R> executor) {
-    super(scheduler, executor);
+  // Per-attempt state --
+  // Whether a result has been explicitly recorded
+  volatile boolean recordCalled;
+  // The future for the thread that the innerFn is running in
+  volatile Future<?> innerFuture;
+
+  AsyncExecution(List<Policy<R>> policies, Scheduler scheduler, FailsafeFuture<R> future, boolean asyncExecution,
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn) {
+    super(policies, scheduler);
     this.future = future;
+    this.asyncExecution = asyncExecution;
+    this.policyPostExecuted = new boolean[policyExecutors.size()];
+
+    outerFn = asyncExecution ? Functions.toExecutionAware(innerFn) : innerFn;
+    outerFn = Functions.toAsync(outerFn, scheduler);
+
+    for (PolicyExecutor<R, ? extends Policy<R>> policyExecutor : policyExecutors)
+      outerFn = policyExecutor.applyAsync(outerFn, scheduler, this.future);
   }
 
-  void inject(Supplier<CompletableFuture<ExecutionResult>> syncSupplier, boolean asyncExecution) {
-    if (!asyncExecution) {
-      outerExecutionSupplier = Functions.getPromiseAsync(syncSupplier, scheduler, this);
-    } else {
-      outerExecutionSupplier = innerExecutionSupplier = Functions.toSettableSupplier(syncSupplier);
-    }
-
-    for (PolicyExecutor<R, Policy<R>> policyExecutor : policyExecutors)
-      outerExecutionSupplier = policyExecutor.supplyAsync(outerExecutionSupplier, scheduler, this.future);
+  private AsyncExecution(AsyncExecution<R> execution) {
+    super(execution);
+    outerFn = execution.outerFn;
+    future = execution.future;
+    asyncExecution = execution.asyncExecution;
+    policyPostExecuted = new boolean[policyExecutors.size()];
   }
 
   /**
@@ -61,53 +74,42 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
    * @throws IllegalStateException if the execution is already complete
    */
   public void complete() {
-    postExecute(ExecutionResult.NONE);
-  }
+    Assert.state(!recordCalled, "The most recent execution has already been recorded");
+    recordCalled = true;
 
-  /**
-   * Attempts to complete the execution and the associated {@code CompletableFuture} with the {@code result}. Returns
-   * true on success, else false if completion failed and the execution should be retried via {@link #retry()}.
-   *
-   * @throws IllegalStateException if the execution is already complete
-   * @deprecated Use {@link #recordResult(Object)} instead
-   */
-  public boolean complete(R result) {
-    postExecute(new ExecutionResult(result, null));
-    return completed;
-  }
-
-  /**
-   * Attempts to complete the execution and the associated {@code CompletableFuture} with the {@code result} and {@code
-   * failure}. Returns true on success, else false if completion failed and the execution should be retried via {@link
-   * #retry()}.
-   * <p>
-   * Note: the execution may be completed even when the {@code failure} is not {@code null}, such as when the
-   * RetryPolicy does not allow retries for the {@code failure}.
-   *
-   * @throws IllegalStateException if the execution is already complete
-   * @deprecated Use {@link #record(Object, Throwable)} instead
-   */
-  public boolean complete(R result, Throwable failure) {
-    postExecute(new ExecutionResult(result, failure));
-    return completed;
+    // Guard against race with a timeout expiring
+    synchronized (future) {
+      ExecutionResult result = this.result != null ? this.result : ExecutionResult.NONE;
+      complete(postExecute(result), null);
+    }
   }
 
   /**
    * Records an execution {@code result} or {@code failure} which triggers failure handling, if needed, by the
-   * configured policies. If policy handling is not possible or completed, the resulting {@link CompletableFuture} is
-   * completed.
+   * configured policies. If policy handling is not possible or already complete, the resulting {@link
+   * CompletableFuture} is completed.
    *
    * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
    */
   public void record(R result, Throwable failure) {
-    Assert.state(!retryCalled, "The most recent execution has already been recorded");
-    retryCalled = true;
-    completeOrHandle(result, failure);
+    Assert.state(!recordCalled, "The most recent execution has already been recorded");
+    recordCalled = true;
+
+    // Guard against race with a timeout expiring
+    synchronized (future) {
+      if (!attemptRecorded) {
+        ExecutionResult er = new ExecutionResult(result, failure).withWaitNanos(waitNanos);
+        record(er);
+      }
+
+      // Proceed with handling the recorded result
+      executeAsync();
+    }
   }
 
   /**
    * Records an execution {@code result} which triggers failure handling, if needed, by the configured policies. If
-   * policy handling is not possible or completed, the resulting {@link CompletableFuture} is completed.
+   * policy handling is not possible or already complete, the resulting {@link CompletableFuture} is completed.
    *
    * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
    */
@@ -117,7 +119,7 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
 
   /**
    * Records an execution {@code failure} which triggers failure handling, if needed, by the configured policies. If
-   * policy handling is not possible or completed, the resulting {@link CompletableFuture} is completed.
+   * policy handling is not possible or already complete, the resulting {@link CompletableFuture} is completed.
    *
    * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
    */
@@ -126,129 +128,10 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
   }
 
   /**
-   * Records an execution if one has not been recorded yet, attempts to schedule a retry if necessary, and returns
-   * {@code true} if a retry has been scheduled else returns {@code false} and completes the execution and associated
-   * {@code CompletableFuture}.
-   *
-   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
-   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded
-   */
-  public boolean retry() {
-    return retryFor(lastResult, lastFailure);
-  }
-
-  /**
-   * Records an execution if one has not been recorded yet for the {@code result}, attempts to schedule a retry if
-   * necessary, and returns {@code true} if a retry has been scheduled else returns {@code false} and completes the
-   * execution and associated {@code CompletableFuture}.
-   *
-   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
-   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded. Use {@link
-   * #recordResult(Object)} instead
-   */
-  public boolean retryFor(R result) {
-    return retryFor(result, null);
-  }
-
-  /**
-   * Records an execution if one has not been recorded yet for the {@code result} or {@code failure}, attempts to
-   * schedule a retry if necessary, and returns {@code true} if a retry has been scheduled else returns {@code false}
-   * and completes the execution and associated {@code CompletableFuture}.
-   *
-   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
-   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded. Use {@link
-   * #record(Object, Throwable)} instead
-   */
-  public boolean retryFor(R result, Throwable failure) {
-    Assert.state(!retryCalled, "Retry has already been called");
-    retryCalled = true;
-    return !completeOrHandle(result, failure);
-  }
-
-  /**
-   * Records an execution and returns true if a retry has been scheduled for the {@code failure}, else returns false and
-   * marks the execution and associated {@code CompletableFuture} as complete.
-   *
-   * @throws NullPointerException if {@code failure} is null
-   * @throws IllegalStateException if a retry method has already been called or the execution is already complete
-   * @deprecated Retries will be performed automatically, if possible, when a result or failure is recorded. Use {@link
-   * #recordFailure(Throwable)} instead
-   */
-  public boolean retryOn(Throwable failure) {
-    Assert.notNull(failure, "failure");
-    return retryFor(null, failure);
-  }
-
-  /**
-   * Prepares for an execution by resetting internal flags.
-   */
-  @Override
-  void preExecute() {
-    super.preExecute();
-    completeCalled = false;
-    retryCalled = false;
-  }
-
-  @Override
-  boolean isAsyncExecution() {
-    return innerExecutionSupplier != null;
-  }
-
-  /**
-   * Externally called. Records an execution and performs post-execution handling for the {@code result} against all
-   * configured policy executors. Attempts to complete the execution and returns the policy post execution result.
-   *
-   * @throws IllegalStateException if the execution is already complete
-   */
-  @Override
-  ExecutionResult postExecute(ExecutionResult result) {
-    synchronized (future) {
-      if (!completeCalled) {
-        result = super.postExecute(result);
-        if (completed)
-          complete(result, null);
-        completeCalled = true;
-        resultHandled = true;
-      }
-
-      return result;
-    }
-  }
-
-  /**
    * Performs an asynchronous execution.
-   *
-   * @param asyncExecution whether this is a detached, async execution that must be manually completed
    */
-  void executeAsync(boolean asyncExecution) {
-    if (!asyncExecution)
-      outerExecutionSupplier.get().whenComplete(this::complete);
-    else {
-      Future<?> scheduledSupply = scheduler.schedule(innerExecutionSupplier::get, 0, TimeUnit.NANOSECONDS);
-      future.injectCancelFn((mayInterrupt, result) -> scheduledSupply.cancel(mayInterrupt));
-    }
-  }
-
-  /**
-   * Attempts to complete the execution else handle according to the configured policies. Returns {@code true} if the
-   * execution was completed, else false which indicates the result was handled asynchronously and may have triggered a
-   * retry.
-   * <p>
-   * Async executions begin by calling the user-provided Supplier. When this method is called, the result is set in the
-   * inner-most supplier. Then the outer-most supplier is called to trigger policy execution.
-   *
-   * @throws IllegalStateException if the execution is already complete
-   */
-  boolean completeOrHandle(R result, Throwable failure) {
-    synchronized (future) {
-      ExecutionResult er = new ExecutionResult(result, failure).withWaitNanos(waitNanos);
-      if (!completeCalled)
-        record(er);
-      completeCalled = true;
-      innerExecutionSupplier.set(CompletableFuture.completedFuture(er));
-      outerExecutionSupplier.get().whenComplete(this::complete);
-      return completed;
-    }
+  void executeAsync() {
+    outerFn.apply(this).whenComplete(this::complete);
   }
 
   private void complete(ExecutionResult result, Throwable error) {
@@ -265,5 +148,21 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
         future.completeResult(ExecutionResult.failure(error));
       }
     }
+  }
+
+  synchronized void setPostExecuted(int policyIndex) {
+    policyPostExecuted[policyIndex] = true;
+  }
+
+  synchronized boolean isPostExecuted(int policyIndex) {
+    return policyPostExecuted[policyIndex];
+  }
+
+  boolean isAsyncExecution() {
+    return asyncExecution;
+  }
+
+  AsyncExecution<R> copy() {
+    return new AsyncExecution<>(this);
   }
 }

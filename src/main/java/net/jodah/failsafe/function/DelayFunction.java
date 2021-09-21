@@ -33,5 +33,5 @@ public interface DelayFunction<R, F extends Throwable> {
    * @return a non-negative duration to be used as the delay before next execution attempt, otherwise (null or negative
    * duration) means fall back to the otherwise configured delay
    */
-  Duration computeDelay(R result, F failure, ExecutionContext context);
+  Duration computeDelay(R result, F failure, ExecutionContext<R> context);
 }

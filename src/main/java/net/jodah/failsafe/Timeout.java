@@ -111,7 +111,7 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   }
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
-    return new TimeoutExecutor<>(this, execution);
+  public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
+    return new TimeoutExecutor<>(this, policyIndex);
   }
 }

@@ -40,4 +40,9 @@ class DefaultCircuitStats implements CircuitStats {
   public void recordSuccess() {
     result = 1;
   }
+
+  @Override
+  public void reset() {
+    result = -1;
+  }
 }

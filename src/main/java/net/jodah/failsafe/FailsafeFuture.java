@@ -15,8 +15,10 @@
  */
 package net.jodah.failsafe;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -32,12 +34,13 @@ import java.util.function.BiConsumer;
  */
 public class FailsafeFuture<R> extends CompletableFuture<R> {
   private final FailsafeExecutor<R> executor;
-  private AbstractExecution<R> execution;
 
-  // Mutable state, guarded by "this"
+  // Mutable state guarded by "this" --
+
+  private AbstractExecution<R> newestExecution;
   private Future<R> dependentStageFuture;
-  private BiConsumer<Boolean, ExecutionResult> cancelFn;
-  private List<Future<R>> timeoutFutures;
+  Map<Integer, BiConsumer<Boolean, ExecutionResult>> cancelFunctions;
+  // Whether a cancel with interrupt has already occurred
   private boolean cancelWithInterrupt;
 
   FailsafeFuture(FailsafeExecutor<R> executor) {
@@ -62,7 +65,7 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   }
 
   /**
-   * Cancels this and the internal delegate.
+   * Cancels the future along with any dependencies.
    */
   @Override
   public synchronized boolean cancel(boolean mayInterruptIfRunning) {
@@ -70,12 +73,12 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
       return false;
 
     this.cancelWithInterrupt = mayInterruptIfRunning;
-    execution.cancelledIndex = Integer.MAX_VALUE;
+    newestExecution.cancelledIndex = Integer.MAX_VALUE;
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
-    cancelDependencies(mayInterruptIfRunning, null);
+    cancelDependencies(Integer.MAX_VALUE, mayInterruptIfRunning, null);
     ExecutionResult result = ExecutionResult.failure(new CancellationException());
     super.completeExceptionally(result.getFailure());
-    executor.handleComplete(result, execution);
+    executor.handleComplete(result, newestExecution);
     return cancelResult;
   }
 
@@ -94,33 +97,37 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     else
       completed = super.completeExceptionally(failure);
     if (completed)
-      executor.handleComplete(result, execution);
+      executor.handleComplete(result, newestExecution);
     return completed;
   }
 
-  synchronized List<Future<R>> getTimeoutDelegates() {
-    return timeoutFutures;
-  }
-
   /**
-   * Cancels the dependency passing in the {@code mayInterrupt} flag, applies the retry cancel fn, and cancels all
-   * timeout dependencies.
+   * Cancels any {@link #injectStage(Future) dependent stage future} and any {@link #injectCancelFn(int, BiConsumer)
+   * cancel functions} whose policy index is <= the given {@code cancellingPolicyIndex}.
+   *
+   * @param cancellingPolicyIndex the policyIndex of the PolicyExecutor that the cancellation request is originating
+   * from
    */
-  synchronized void cancelDependencies(boolean mayInterrupt, ExecutionResult cancelResult) {
-    execution.interrupted = mayInterrupt;
+  synchronized void cancelDependencies(int cancellingPolicyIndex, boolean mayInterrupt, ExecutionResult cancelResult) {
     if (dependentStageFuture != null)
       dependentStageFuture.cancel(mayInterrupt);
-    if (timeoutFutures != null) {
-      for (Future<R> timeoutDelegate : timeoutFutures)
-        timeoutDelegate.cancel(false);
-      timeoutFutures.clear();
+    if (cancelFunctions != null) {
+      Iterator<Entry<Integer, BiConsumer<Boolean, ExecutionResult>>> it = cancelFunctions.entrySet().iterator();
+      while (it.hasNext()) {
+        Map.Entry<Integer, BiConsumer<Boolean, ExecutionResult>> entry = it.next();
+        if (cancellingPolicyIndex >= entry.getKey()) {
+          try {
+            entry.getValue().accept(mayInterrupt, cancelResult);
+          } catch (Exception ignore) {
+          }
+          it.remove();
+        }
+      }
     }
-    if (cancelFn != null)
-      cancelFn.accept(mayInterrupt, cancelResult);
   }
 
-  void inject(AbstractExecution<R> execution) {
-    this.execution = execution;
+  synchronized void inject(AbstractExecution<R> execution) {
+    this.newestExecution = execution;
   }
 
   /**
@@ -135,18 +142,12 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   }
 
   /**
-   * Injects a {@code cancelFn} to be called when this future is cancelled.
+   * Injects a {@code cancelFn} to be called when this future is cancelled with a policyIndex that is >= the given
+   * {@code policyIndex}.
    */
-  synchronized void injectCancelFn(BiConsumer<Boolean, ExecutionResult> cancelFn) {
-    this.cancelFn = cancelFn;
-  }
-
-  /**
-   * Injects a {@code scheduledTimeoutExec} to be cancelled when this future is cancelled.
-   */
-  synchronized void injectTimeout(Future<R> timeoutFuture) {
-    if (timeoutFutures == null)
-      timeoutFutures = new ArrayList<>(3);
-    timeoutFutures.add(timeoutFuture);
+  synchronized void injectCancelFn(int policyIndex, BiConsumer<Boolean, ExecutionResult> cancelFn) {
+    if (cancelFunctions == null)
+      cancelFunctions = new HashMap<>();
+    cancelFunctions.put(policyIndex, cancelFn);
   }
 }

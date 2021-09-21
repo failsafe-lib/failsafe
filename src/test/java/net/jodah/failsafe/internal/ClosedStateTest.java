@@ -26,11 +26,11 @@ import static org.testng.Assert.assertTrue;
 @Test
 public class ClosedStateTest {
   /**
-   * Asserts that the the circuit is opened after a single failure.
+   * Asserts that the circuit is opened after a single failure.
    */
   public void testFailureWithDefaultConfig() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker();
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     breaker.close();
     ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertFalse(breaker.isOpen());
@@ -43,11 +43,11 @@ public class ClosedStateTest {
   }
 
   /**
-   * Asserts that the the circuit is opened after the failure ratio is met.
+   * Asserts that the circuit is opened after the failure ratio is met.
    */
   public void testFailureWithFailureRatio() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(2, 3);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2, 3);
     breaker.close();
     ClosedState state = new ClosedState(breaker, getInternals(breaker));
 
@@ -62,11 +62,11 @@ public class ClosedStateTest {
   }
 
   /**
-   * Asserts that the the circuit is opened after the failure threshold is met.
+   * Asserts that the circuit is opened after the failure threshold is met.
    */
   public void testFailureWithFailureThreshold() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(3);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(3);
     breaker.close();
     ClosedState state = new ClosedState(breaker, getInternals(breaker));
 
@@ -83,11 +83,11 @@ public class ClosedStateTest {
   }
 
   /**
-   * Asserts that the the circuit is still closed after a single success.
+   * Asserts that the circuit is still closed after a single success.
    */
   public void testSuccessWithDefaultConfig() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker();
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     breaker.close();
     ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertTrue(breaker.isClosed());
@@ -100,11 +100,11 @@ public class ClosedStateTest {
   }
 
   /**
-   * Asserts that the the circuit stays closed after the failure ratio fails to be met.
+   * Asserts that the circuit stays closed after the failure ratio fails to be met.
    */
   public void testSuccessWithFailureRatio() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(3, 4);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(3, 4);
     breaker.close();
     ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertTrue(breaker.isClosed());
@@ -118,11 +118,11 @@ public class ClosedStateTest {
   }
 
   /**
-   * Asserts that the the circuit stays closed after the failure ratio fails to be met.
+   * Asserts that the circuit stays closed after the failure ratio fails to be met.
    */
   public void testSuccessWithFailureThreshold() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(2);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2);
     breaker.close();
     ClosedState state = new ClosedState(breaker, getInternals(breaker));
     assertTrue(breaker.isClosed());
@@ -141,7 +141,7 @@ public class ClosedStateTest {
    */
   public void shouldHandleLateSetFailureRatio() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker();
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     ClosedState state = Testing.stateFor(breaker);
 
     // When
@@ -156,7 +156,7 @@ public class ClosedStateTest {
     assertTrue(breaker.isOpen());
 
     // Given
-    breaker = new CircuitBreaker();
+    breaker = new CircuitBreaker<>();
     state = Testing.stateFor(breaker);
 
     // When

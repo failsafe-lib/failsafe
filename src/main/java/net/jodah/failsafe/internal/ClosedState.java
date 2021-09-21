@@ -22,7 +22,7 @@ import net.jodah.failsafe.ExecutionContext;
 public class ClosedState extends CircuitState {
   private final CircuitBreakerInternals internals;
 
-  public ClosedState(CircuitBreaker breaker, CircuitBreakerInternals internals) {
+  public ClosedState(CircuitBreaker<?> breaker, CircuitBreakerInternals internals) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), true, null));
     this.internals = internals;
   }
@@ -43,10 +43,10 @@ public class ClosedState extends CircuitState {
   }
 
   /**
-   * Checks to see if the the executions and failure thresholds have been exceeded, opening the circuit if so.
+   * Checks to see if the executions and failure thresholds have been exceeded, opening the circuit if so.
    */
   @Override
-  synchronized void checkThreshold(ExecutionContext context) {
+  synchronized void checkThreshold(ExecutionContext<?> context) {
     // Execution threshold will only be set for time based thresholding
     if (stats.getExecutionCount() >= breaker.getFailureExecutionThreshold()) {
       double failureRateThreshold = breaker.getFailureRateThreshold();

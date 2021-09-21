@@ -16,9 +16,6 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.Testing.ConnectException;
-import net.jodah.failsafe.Testing.Service;
-import net.jodah.failsafe.Testing.Stats;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
@@ -32,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.failures;
-import static net.jodah.failsafe.Testing.unwrapExceptions;
+import static net.jodah.failsafe.Testing.*;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
@@ -114,7 +111,6 @@ public abstract class AbstractFailsafeTest {
     // Given
     CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().withFailureThreshold(2, 3,
       Duration.ofMillis(200)).withDelay(Duration.ofMillis(0)).handleResult(false);
-    //circuitBreaker = Testing.withLogging(circuitBreaker);
 
     // When / Then
     failsafeGet(circuitBreaker, () -> false);
@@ -146,8 +142,8 @@ public abstract class AbstractFailsafeTest {
   public void shouldSupportTimeBasedFailureRateThresholding() throws Throwable {
     // Given
     Stats cbStats = new Stats();
-    CircuitBreaker<Boolean> circuitBreaker = Testing.withStats(new CircuitBreaker<Boolean>(), cbStats, true)
-      .withFailureRateThreshold(50, 3, Duration.ofMillis(200))
+    CircuitBreaker<Boolean> circuitBreaker = withStatsAndLogs(new CircuitBreaker<Boolean>(),
+      cbStats).withFailureRateThreshold(50, 3, Duration.ofMillis(200))
       .withDelay(Duration.ofMillis(0))
       .handleResult(false);
 

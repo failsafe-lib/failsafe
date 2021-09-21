@@ -170,6 +170,17 @@ class TimedCircuitStats implements CircuitStats {
     return (int) Math.round(executions == 0 ? 0 : (double) summary.successes / (double) executions * 100.0);
   }
 
+  @Override
+  public synchronized void reset() {
+    long startTimeMillis = clock.currentTimeMillis();
+    for (Bucket bucket : buckets) {
+      bucket.reset(startTimeMillis);
+      startTimeMillis += bucketSizeMillis;
+    }
+    summary.reset();
+    currentIndex = 0;
+  }
+
   /**
    * Returns the current bucket based on the current time, moving the internal storage to the current bucket if
    * necessary, resetting bucket stats along the way.
@@ -195,13 +206,7 @@ class TimedCircuitStats implements CircuitStats {
         } while (bucketsToMove > 0);
       } else {
         // Reset all buckets
-        long startTimeMillis = currentTime;
-        for (Bucket bucket : buckets) {
-          bucket.reset(startTimeMillis);
-          startTimeMillis += bucketSizeMillis;
-        }
-        summary.reset();
-        currentIndex = 0;
+        reset();
       }
     }
 

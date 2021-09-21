@@ -32,20 +32,24 @@ public class NettyExample {
   public static void main(String... args) throws Throwable {
     EventLoopGroup group = new NioEventLoopGroup();
     Bootstrap bootstrap = createBootstrap(group);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofSeconds(1));
+    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofSeconds(1))
+      .onSuccess(e -> System.out.println("Success!"))
+      .onFailure(e -> System.out.println("Connection attempts failed"));
 
-    Failsafe.with(retryPolicy).with(group).runAsyncExecution(
+    Failsafe.with(retryPolicy)
+      .with(group)
+      .runAsyncExecution(
         execution -> bootstrap.connect(HOST, PORT).addListener((ChannelFutureListener) channelFuture -> {
           if (channelFuture.isSuccess()) {
-            System.out.println("Connected!");
+            execution.complete();
             try {
               channelFuture.sync();
               channelFuture.channel().closeFuture().sync();
             } catch (Exception ignore) {
               group.shutdownGracefully();
             }
-          } else if (!execution.retryOn(channelFuture.cause()))
-            System.out.println("Connection attempts failed");
+          } else
+            execution.recordFailure(channelFuture.cause());
         }));
 
     Thread.sleep(5000);
@@ -53,29 +57,29 @@ public class NettyExample {
 
   static Bootstrap createBootstrap(EventLoopGroup group) {
     return new Bootstrap().group(group)
-        .channel(NioSocketChannel.class)
-        .handler(new ChannelInitializer<SocketChannel>() {
-          @Override
-          public void initChannel(SocketChannel ch) throws Exception {
-            ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-              @Override
-              public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                ctx.write(msg);
-              }
+      .channel(NioSocketChannel.class)
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        public void initChannel(SocketChannel ch) throws Exception {
+          ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelRead(ChannelHandlerContext ctx, Object msg) {
+              ctx.write(msg);
+            }
 
-              @Override
-              public void channelReadComplete(ChannelHandlerContext ctx) {
-                ctx.flush();
-              }
+            @Override
+            public void channelReadComplete(ChannelHandlerContext ctx) {
+              ctx.flush();
+            }
 
-              @Override
-              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                // Close the connection when an exception is raised.
-                cause.printStackTrace();
-                ctx.close();
-              }
-            });
-          }
-        });
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+              // Close the connection when an exception is raised.
+              cause.printStackTrace();
+              ctx.close();
+            }
+          });
+        }
+      });
   }
 }

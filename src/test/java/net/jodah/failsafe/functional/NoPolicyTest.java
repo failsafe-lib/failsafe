@@ -2,30 +2,29 @@ package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.FailsafeExecutor;
+import net.jodah.failsafe.Testing;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.jodah.failsafe.Testing.testSyncAndAsyncFailure;
-import static net.jodah.failsafe.Testing.testSyncAndAsyncSuccess;
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class NoPolicyTest {
+public class NoPolicyTest extends Testing {
   public void testWithNoPolicy() {
     AtomicInteger successCounter = new AtomicInteger();
     AtomicInteger failureCounter = new AtomicInteger();
-    FailsafeExecutor<Object> executor = Failsafe.none().onFailure(e -> {
+    FailsafeExecutor<Object> failsafe = Failsafe.none().onFailure(e -> {
       failureCounter.incrementAndGet();
     }).onSuccess(e -> {
       successCounter.incrementAndGet();
     });
 
     // Test success
-    testSyncAndAsyncSuccess(executor, () -> {
+    testGetSuccess(() -> {
       successCounter.set(0);
       failureCounter.set(0);
-    }, () -> "success", e -> {
+    }, failsafe, ctx -> "success", e -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(successCounter.get(), 1);
@@ -33,10 +32,10 @@ public class NoPolicyTest {
     }, "success");
 
     // Test failure
-    testSyncAndAsyncFailure(executor, () -> {
+    testRunFailure(() -> {
       successCounter.set(0);
       failureCounter.set(0);
-    }, () -> {
+    }, failsafe, ctx -> {
       throw new IllegalStateException();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);

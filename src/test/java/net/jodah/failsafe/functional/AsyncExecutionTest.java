@@ -22,17 +22,16 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static net.jodah.failsafe.Testing.*;
 import static org.testng.Assert.assertEquals;
 
 /**
  * Tests AsyncExecution scenarios.
  */
 @Test
-public class AsyncExecutionTest {
+public class AsyncExecutionTest extends Testing {
   public void testAsyncExecWithPassthroughPolicies() {
     Stats rpStats = new Stats();
-    RetryPolicy<Object> rp = withStats(new RetryPolicy<>().withMaxRetries(3), rpStats, true);
+    RetryPolicy<Object> rp = withStatsAndLogs(new RetryPolicy<>().withMaxRetries(3), rpStats);
     // Passthrough policy that should allow async execution results through
     Fallback<Object> fb = Fallback.<Object>of("test").handleIf((r, f) -> false);
     Timeout<Object> timeout = Timeout.of(Duration.ofMinutes(1));
@@ -42,7 +41,7 @@ public class AsyncExecutionTest {
       runAsync(() -> {
         System.out.println("Executing");
         if (counter.getAndIncrement() < 3)
-          ex.retryOn(new IllegalStateException());
+          ex.recordFailure(new IllegalStateException());
         else
           ex.complete();
       });

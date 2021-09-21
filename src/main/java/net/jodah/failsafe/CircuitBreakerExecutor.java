@@ -22,8 +22,8 @@ package net.jodah.failsafe;
  * @author Jonathan Halterman
  */
 class CircuitBreakerExecutor<R> extends PolicyExecutor<R, CircuitBreaker<R>> {
-  CircuitBreakerExecutor(CircuitBreaker<R> circuitBreaker, AbstractExecution<R> execution) {
-    super(circuitBreaker, execution);
+  CircuitBreakerExecutor(CircuitBreaker<R> circuitBreaker, int policyIndex) {
+    super(circuitBreaker, policyIndex);
   }
 
   @Override
@@ -41,7 +41,7 @@ class CircuitBreakerExecutor<R> extends PolicyExecutor<R, CircuitBreaker<R>> {
   }
 
   @Override
-  protected ExecutionResult onFailure(ExecutionResult result) {
+  protected ExecutionResult onFailure(AbstractExecution<R> execution, ExecutionResult result) {
     policy.recordExecutionFailure(execution);
     return result;
   }

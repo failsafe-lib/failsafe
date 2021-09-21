@@ -16,6 +16,7 @@
 package net.jodah.failsafe.examples;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
 import net.jodah.failsafe.Failsafe;
@@ -30,9 +31,12 @@ public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleIf(
-    (ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
-      || ReplyFailure.TIMEOUT.equals(failure.failureType()));
+  static RetryPolicy<Message<?>> retryPolicy = new RetryPolicy<Message<?>>().handleIf(
+      (ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
+        || ReplyFailure.TIMEOUT.equals(failure.failureType()))
+    .onRetry(e -> System.out.println("Received failed reply. Retrying."))
+    .onSuccess(e -> System.out.println("Received reply " + e.getResult().body()))
+    .onFailure(e -> System.out.println("Execution and retries failed"));
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
   static Scheduler scheduler = (callable, delay, unit) -> {
@@ -76,13 +80,11 @@ public class VertxExample {
     // Retryable sender
     Failsafe.with(retryPolicy.copy().withDelay(Duration.ofSeconds(1)))
       .with(scheduler)
-      .runAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
+      .getAsyncExecution(execution -> vertx.eventBus().send("ping-address", "ping!", reply -> {
         if (reply.succeeded())
-          System.out.println("Received reply " + reply.result().body());
-        else if (execution.retryOn(reply.cause()))
-          System.out.println("Received failed reply. Retrying.");
+          execution.recordResult(reply.result());
         else
-          System.out.println("Execution and retries failed");
+          execution.recordFailure(reply.cause());
       }));
 
     Thread.sleep(5000);

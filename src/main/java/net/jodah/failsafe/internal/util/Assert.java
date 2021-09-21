@@ -16,6 +16,8 @@
 package net.jodah.failsafe.internal.util;
 
 /**
+ * Assertion utilities.
+ *
  * @author Jonathan Halterman
  */
 public final class Assert {

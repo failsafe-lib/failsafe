@@ -662,7 +662,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   };
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
-    return new CircuitBreakerExecutor<>(this, execution);
+  public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
+    return new CircuitBreakerExecutor<>(this, policyIndex);
   }
 }

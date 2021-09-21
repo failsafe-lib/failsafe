@@ -18,7 +18,7 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * Handles execution and execution results according to a policy. May contain pre and post execution behaviors. Each
@@ -31,18 +31,16 @@ import java.util.function.Supplier;
  */
 public abstract class PolicyExecutor<R, P extends Policy<R>> {
   protected final P policy;
-  protected final AbstractExecution<R> execution;
   // Index of the policy relative to other policies in a composition, inner-most first
-  int policyIndex;
+  final int policyIndex;
 
-  protected PolicyExecutor(P policy, AbstractExecution<R> execution) {
+  protected PolicyExecutor(P policy, int policyIndex) {
     this.policy = policy;
-    this.execution = execution;
+    this.policyIndex = policyIndex;
   }
 
   /**
    * Called before execution to return an alternative result or failure such as if execution is not allowed or needed.
-   * Should return the provided {@code result} else some alternative.
    */
   protected ExecutionResult preExecute() {
     return null;
@@ -51,8 +49,9 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
   /**
    * Performs an execution by calling pre-execute else calling the supplier and doing a post-execute.
    */
-  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
-    return () -> {
+  protected Function<Execution<R>, ExecutionResult> apply(Function<Execution<R>, ExecutionResult> innerFn,
+    Scheduler scheduler) {
+    return execution -> {
       ExecutionResult result = preExecute();
       if (result != null) {
         // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
@@ -60,22 +59,22 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
         return result;
       }
 
-      return postExecute(supplier.get());
+      return postExecute(execution, innerFn.apply(execution));
     };
   }
 
   /**
    * Performs synchronous post-execution handling for a {@code result}.
    */
-  protected ExecutionResult postExecute(ExecutionResult result) {
+  protected ExecutionResult postExecute(AbstractExecution<R> execution, ExecutionResult result) {
     execution.recordAttempt();
     if (isFailure(result)) {
-      result = onFailure(result.withFailure());
-      callFailureListener(result);
+      result = onFailure(execution, result.withFailure());
+      callFailureListener(execution, result);
     } else {
       result = result.withSuccess();
       onSuccess(result);
-      callSuccessListener(result);
+      callSuccessListener(execution, result);
     }
 
     return result;
@@ -83,12 +82,14 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
 
   /**
    * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute. Implementors
-   * must handle a null result from a supplier, which indicates that an async execution has occurred, a result will come
-   * later, and postExecute handling should not be performed.
+   * must handle a null result from a supplier, which indicates that an async execution has occurred, that a result will
+   * be recorded separately, and that postExecute handling should not be performed.
    */
-  protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
-    return () -> {
+  protected Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> applyAsync(
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler,
+    FailsafeFuture<R> future) {
+
+    return execution -> {
       ExecutionResult result = preExecute();
       if (result != null) {
         // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
@@ -96,8 +97,8 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
         return CompletableFuture.completedFuture(result);
       }
 
-      return supplier.get().thenCompose(r -> {
-        return r == null ? ExecutionResult.NULL_FUTURE : postExecuteAsync(r, scheduler, future);
+      return innerFn.apply(execution).thenCompose(r -> {
+        return r == null ? ExecutionResult.NULL_FUTURE : postExecuteAsync(execution, r, scheduler, future);
       });
     };
   }
@@ -105,19 +106,29 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
   /**
    * Performs potentially asynchronous post-execution handling for a {@code result}.
    */
-  protected CompletableFuture<ExecutionResult> postExecuteAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<R> future) {
-    execution.recordAttempt();
-    if (isFailure(result)) {
-      return onFailureAsync(result.withFailure(), scheduler, future).whenComplete((postResult, error) -> {
-        callFailureListener(postResult);
-      });
-    } else {
-      result = result.withSuccess();
-      onSuccess(result);
-      callSuccessListener(result);
-      return CompletableFuture.completedFuture(result);
+  protected synchronized CompletableFuture<ExecutionResult> postExecuteAsync(AsyncExecution<R> execution,
+    ExecutionResult result, Scheduler scheduler, FailsafeFuture<R> future) {
+
+    // Guard against post executing twice for the same execution. This will happen if one async execution result
+    // is recorded by a timeout and another asynchronously.
+
+    CompletableFuture<ExecutionResult> postFuture = null;
+    if (!execution.isAsyncExecution() || !execution.isPostExecuted(policyIndex)) {
+      execution.recordAttempt();
+      if (isFailure(result)) {
+        postFuture = onFailureAsync(execution, result.withFailure(), scheduler, future).whenComplete(
+          (postResult, error) -> callFailureListener(execution, postResult));
+      } else {
+        result = result.withSuccess();
+        onSuccess(result);
+        callSuccessListener(execution, result);
+        postFuture = CompletableFuture.completedFuture(result);
+      }
+
+      if (execution.isAsyncExecution())
+        execution.setPostExecuted(policyIndex);
     }
+    return postFuture;
   }
 
   /**
@@ -145,7 +156,7 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
    * Performs post-execution handling for a {@code result} that is considered a failure according to {@link
    * #isFailure(ExecutionResult)}, possibly creating a new result, else returning the original {@code result}.
    */
-  protected ExecutionResult onFailure(ExecutionResult result) {
+  protected ExecutionResult onFailure(AbstractExecution<R> execution, ExecutionResult result) {
     return result;
   }
 
@@ -153,19 +164,13 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
    * Performs potentially asynchrononus post-execution handling for a failed {@code result}, possibly creating a new
    * result, else returning the original {@code result}.
    */
-  protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<R> future) {
-    return CompletableFuture.completedFuture(execution.resultHandled ? result : onFailure(result));
+  protected CompletableFuture<ExecutionResult> onFailureAsync(AbstractExecution<R> execution, ExecutionResult result,
+    Scheduler scheduler, FailsafeFuture<R> future) {
+    return CompletableFuture.completedFuture(onFailure(execution, result));
   }
 
-  /**
-   * Returns whether execution has been cancelled for this policy by an outer policy.
-   */
-  boolean executionCancelled() {
-    return execution.cancelledIndex > policyIndex;
-  }
-
-  private void callSuccessListener(ExecutionResult result) {
+  @SuppressWarnings("rawtypes")
+  private void callSuccessListener(AbstractExecution<R> execution, ExecutionResult result) {
     if (result.isComplete() && policy instanceof PolicyListeners) {
       PolicyListeners policyListeners = (PolicyListeners) policy;
       if (policyListeners.successListener != null)
@@ -173,7 +178,8 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
     }
   }
 
-  private void callFailureListener(ExecutionResult result) {
+  @SuppressWarnings("rawtypes")
+  private void callFailureListener(AbstractExecution<R> execution, ExecutionResult result) {
     if (result.isComplete() && policy instanceof PolicyListeners) {
       PolicyListeners policyListeners = (PolicyListeners) policy;
       if (policyListeners.failureListener != null)
