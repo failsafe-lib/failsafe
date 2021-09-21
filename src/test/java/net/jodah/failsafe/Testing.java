@@ -533,8 +533,13 @@ public class Testing extends Asserts {
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult, Class<? extends Throwable>... expectedExceptions) {
 
     AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
-    CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = completedEventRef::set;
+    CountDownLatch completedEventLatch = new CountDownLatch(1);
+    CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = e -> {
+      completedEventRef.set(e);
+      completedEventLatch.countDown();
+    };
     Runnable postTestFn = () -> {
+      ignoreExceptions(() -> completedEventLatch.await(1, TimeUnit.SECONDS));
       ExecutionCompletedEvent<T> completedEvent = completedEventRef.get();
       if (expectedExceptions.length > 0)
         Asserts.assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExceptions));
