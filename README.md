@@ -1,6 +1,6 @@
 # Failsafe
 
-[![Build Status](https://travis-ci.org/jhalterman/failsafe.svg)](https://travis-ci.org/jhalterman/failsafe)
+[![Build Status](https://github.com/failsafe-lib/failsafe/workflows/build/badge.svg)](https://github.com/failsafe-lib/failsafe/actions)
 [![Maven Central](https://img.shields.io/maven-central/v/net.jodah/failsafe.svg?maxAge=60&colorB=53C92E)](https://maven-badges.herokuapp.com/maven-central/net.jodah/failsafe)
 [![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![JavaDoc](https://img.shields.io/maven-central/v/net.jodah/failsafe.svg?maxAge=60&label=javadoc)](https://failsafe.dev/javadoc/)
