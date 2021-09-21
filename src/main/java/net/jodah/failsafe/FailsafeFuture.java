@@ -115,7 +115,7 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
       Iterator<Entry<Integer, BiConsumer<Boolean, ExecutionResult>>> it = cancelFunctions.entrySet().iterator();
       while (it.hasNext()) {
         Map.Entry<Integer, BiConsumer<Boolean, ExecutionResult>> entry = it.next();
-        if (cancellingPolicyIndex >= entry.getKey()) {
+        if (cancellingPolicyIndex > entry.getKey()) {
           try {
             entry.getValue().accept(mayInterrupt, cancelResult);
           } catch (Exception ignore) {

@@ -108,7 +108,7 @@ public abstract class AbstractExecution<R> extends ExecutionContext<R> {
    * Returns whether the {@code policyExecutor} has been cancelled for the execution.
    */
   boolean isCancelled(PolicyExecutor<?, ?> policyExecutor) {
-    return cancelledIndex >= policyExecutor.policyIndex;
+    return cancelledIndex > policyExecutor.policyIndex;
   }
 
   /**
