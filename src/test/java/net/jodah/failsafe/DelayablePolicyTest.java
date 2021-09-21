@@ -15,7 +15,7 @@ public class DelayablePolicyTest {
 
   static class FooPolicy<R> extends DelayablePolicy<FooPolicy<R>, R> {
     @Override
-    public PolicyExecutor<R, Policy<R>> toExecutor(AbstractExecution<R> execution) {
+    public PolicyExecutor<R, Policy<R>> toExecutor(int policyIndex) {
       return null;
     }
   }

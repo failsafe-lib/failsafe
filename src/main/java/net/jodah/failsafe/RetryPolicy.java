@@ -266,6 +266,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * Registers the {@code listener} to be called when a retry is about to be attempted.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @see #onRetryScheduled(CheckedConsumer)
    */
   public RetryPolicy<R> onRetry(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
     retryListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
@@ -277,6 +279,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * performed after any scheduled delay.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @see #onRetry(CheckedConsumer)
    */
   public RetryPolicy<R> onRetryScheduled(CheckedConsumer<? extends ExecutionScheduledEvent<R>> listener) {
     retryScheduledListener = EventListener.ofScheduled(Assert.notNull(listener, "listener"));
@@ -563,8 +567,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   }
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
-    return new RetryPolicyExecutor<>(this, execution, abortListener, failedAttemptListener, retriesExceededListener,
+  public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
+    return new RetryPolicyExecutor<>(this, policyIndex, abortListener, failedAttemptListener, retriesExceededListener,
       retryListener, retryScheduledListener);
   }
 }

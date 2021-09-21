@@ -28,9 +28,10 @@ import static org.testng.Assert.*;
 public class OpenStateTest {
   public void testAllowsExecution() throws Throwable {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withDelay(Duration.ofMillis(100));
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofMillis(100));
     breaker.open();
-    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)), breaker.getDelay());
+    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)),
+      breaker.getDelay());
     assertTrue(breaker.isOpen());
     assertFalse(state.allowsExecution());
 
@@ -44,8 +45,9 @@ public class OpenStateTest {
 
   public void testRemainingDelay() throws Throwable {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withDelay(Duration.ofSeconds(1));
-    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)), breaker.getDelay());
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofSeconds(1));
+    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)),
+      breaker.getDelay());
 
     // When / Then
     long remainingDelayMillis = state.getRemainingDelay().toMillis();
@@ -60,11 +62,12 @@ public class OpenStateTest {
 
   public void testNoRemainingDelay() throws Throwable {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withDelay(Duration.ofMillis(10));
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofMillis(10));
     assertEquals(breaker.getRemainingDelay(), Duration.ZERO);
 
     // When
-    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)), breaker.getDelay());
+    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)),
+      breaker.getDelay());
     Thread.sleep(50);
 
     // Then

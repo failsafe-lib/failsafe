@@ -21,62 +21,60 @@ import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
- * Utilities for creating and applying functions.
+ * Utilities for creating and applying Failsafe executable functions.
  *
  * @author Jonathan Halterman
  */
 final class Functions {
-  interface SettableSupplier<T> extends Supplier<T> {
-    void set(T value);
-  }
-
   /**
-   * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, records the result and
-   * returns the result. This implementation also handles Thread interrupts.
+   * Returns a Supplier that for synchronous executions, that pre-executes the {@code execution}, applies the {@code
+   * supplier}, records the result and returns the result. This implementation also handles Thread interrupts.
    *
    * @param <R> result type
    */
-  static <R> Supplier<ExecutionResult> get(CheckedSupplier<R> supplier, AbstractExecution<R> execution) {
-    return () -> {
+  static <R> Function<Execution<R>, ExecutionResult> get(ContextualSupplier<R, R> supplier) {
+    return execution -> {
       ExecutionResult result;
       Throwable throwable = null;
       try {
         execution.preExecute();
-        result = ExecutionResult.success(supplier.get());
+        result = ExecutionResult.success(supplier.get(execution));
       } catch (Throwable t) {
         throwable = t;
         result = ExecutionResult.failure(t);
-      } finally {
-        // Guard against race with Timeout interruption
-        synchronized (execution) {
-          execution.canInterrupt = false;
-          if (execution.interrupted)
-            // Clear interrupt flag if interruption was intended
-            Thread.interrupted();
-          else if (throwable instanceof InterruptedException)
-            // Set interrupt flag if interrupt occurred but was not intended
-            Thread.currentThread().interrupt();
-        }
+      }
+      execution.record(result);
+
+      // Guard against race with Timeout interruption
+      synchronized (execution.interruptState) {
+        execution.interruptState.canInterrupt = false;
+        if (execution.interruptState.interrupted) {
+          // Clear interrupt flag if interruption was intended
+          Thread.interrupted();
+          return execution.result;
+        } else if (throwable instanceof InterruptedException)
+          // Set interrupt flag if interrupt occurred but was not intended
+          Thread.currentThread().interrupt();
       }
 
-      execution.record(result);
       return result;
     };
   }
 
   /**
-   * Returns a Supplier that synchronously pre-executes the {@code execution}, applies the {@code supplier}, records the
-   * result and returns a promise containing the result.
+   * Returns a Function for asynchronous executions that pre-executes the {@code execution}, applies the {@code
+   * supplier}, records the result and returns a promise containing the result.
    *
    * @param <R> result type
    */
-  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromise(ContextualSupplier<R, R> supplier,
-    AbstractExecution<R> execution) {
+  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromise(
+    ContextualSupplier<R, R> supplier) {
+
     Assert.notNull(supplier, "supplier");
-    return () -> {
+    return execution -> {
       ExecutionResult result;
       try {
         execution.preExecute();
@@ -90,65 +88,24 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that asynchronously applies the {@code supplier} on the first call, synchronously on subsequent
-   * calls, and returns a promise containing the result.
+   * Returns a Function for asynchronous executions, that pre-executes the {@code execution}, runs the {@code runnable},
+   * and attempts to complete the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot
+   * be applied multiple times concurrently.
    *
    * @param <R> result type
    */
-  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromiseAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, AsyncExecution<R> execution) {
+  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseExecution(
+    AsyncRunnable<R> runnable) {
 
-    AtomicBoolean scheduled = new AtomicBoolean();
-    return () -> {
-      if (scheduled.get()) {
-        return supplier.get();
-      } else {
-        CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-        Callable<Object> callable = () -> supplier.get().whenComplete((result, error) -> {
-          if (error != null)
-            promise.completeExceptionally(error);
-          else
-            promise.complete(result);
-        });
-
-        try {
-          scheduled.set(true);
-          Future<?> scheduledSupply = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
-
-          // Propagate cancellation to the scheduled supplier and its promise
-          execution.future.injectCancelFn((mayInterrupt, cancelResult) -> {
-            scheduledSupply.cancel(mayInterrupt);
-
-            // Cancel a pending promise if the execution is not yet running
-            if (!execution.inProgress)
-              promise.complete(cancelResult);
-          });
-        } catch (Throwable t) {
-          promise.completeExceptionally(t);
-        }
-        return promise;
-      }
-    };
-  }
-
-  /**
-   * Returns a Supplier that synchronously pre-executes the {@code execution}, runs the {@code runnable}, and attempts
-   * to complete the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be applied
-   * multiple times concurrently.
-   *
-   * @param <R> result type
-   */
-  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromiseExecution(AsyncRunnable<R> runnable,
-    AsyncExecution<R> execution) {
     Assert.notNull(runnable, "runnable");
-    return new Supplier<CompletableFuture<ExecutionResult>>() {
+    return new Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>>() {
       @Override
-      public synchronized CompletableFuture<ExecutionResult> get() {
+      public synchronized CompletableFuture<ExecutionResult> apply(AsyncExecution<R> execution) {
         try {
           execution.preExecute();
           runnable.run(execution);
         } catch (Throwable e) {
-          execution.completeOrHandle(null, e);
+          execution.record(null, e);
         }
 
         // Result will be provided later via AsyncExecution.record
@@ -158,16 +115,17 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that synchronously pre-executes the {@code execution}, applies the {@code supplier}, records the
-   * result and returns a promise containing the result.
+   * Returns a Function that for asynchronous executions, that pre-executes the {@code execution}, applies the {@code
+   * supplier}, records the result and returns a promise containing the result.
    *
    * @param <R> result type
    */
   @SuppressWarnings("unchecked")
-  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromiseOfStage(
-    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, AsyncExecution<R> execution) {
+  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseOfStage(
+    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier) {
+
     Assert.notNull(supplier, "supplier");
-    return () -> {
+    return execution -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
       try {
         execution.preExecute();
@@ -191,18 +149,18 @@ final class Functions {
   }
 
   /**
-   * Returns a Supplier that synchronously pre-executes the {@code execution}, applies the {@code supplier}, and
-   * attempts to complete the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot be
-   * applied multiple times concurrently.
+   * Returns a Function for asynchronous executions, that pre-executes the {@code execution}, applies the {@code
+   * supplier}, and attempts to complete the {@code execution} if a failure occurs. Locks to ensure the resulting
+   * supplier cannot be applied multiple times concurrently.
    *
    * @param <R> result type
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  static <R> Supplier<CompletableFuture<ExecutionResult>> getPromiseOfStageExecution(
-    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, AsyncExecution execution) {
+  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseOfStageExecution(
+    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier) {
+
     Assert.notNull(supplier, "supplier");
     Semaphore asyncFutureLock = new Semaphore(1);
-    return () -> {
+    return execution -> {
       try {
         execution.preExecute();
         asyncFutureLock.acquire();
@@ -210,15 +168,14 @@ final class Functions {
         stage.whenComplete((innerResult, failure) -> {
           try {
             if (failure != null)
-              execution.completeOrHandle(innerResult,
-                failure instanceof CompletionException ? failure.getCause() : failure);
+              execution.record(innerResult, failure instanceof CompletionException ? failure.getCause() : failure);
           } finally {
             asyncFutureLock.release();
           }
         });
       } catch (Throwable e) {
         try {
-          execution.completeOrHandle(null, e);
+          execution.record(null, e);
         } finally {
           asyncFutureLock.release();
         }
@@ -230,52 +187,81 @@ final class Functions {
   }
 
   /**
-   * Returns a SettableSupplier for async execution calls that supplies the set value once then uses the {@code
-   * supplier} for subsequent calls.
+   * Returns a Function that returns an execution result if one was previously recorded, else applies the {@code
+   * innerFn}.
    *
    * @param <R> result type
    */
-  static <R> SettableSupplier<CompletableFuture<R>> toSettableSupplier(Supplier<CompletableFuture<R>> supplier) {
-    return new SettableSupplier<CompletableFuture<R>>() {
-      volatile boolean called;
-      volatile CompletableFuture<R> value;
-
-      @Override
-      public CompletableFuture<R> get() {
-        if (!called && value != null) {
-          called = true;
-          return value;
-        } else
-          return supplier.get();
-      }
-
-      @Override
-      public void set(CompletableFuture<R> value) {
-        called = false;
-        this.value = value;
+  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> toExecutionAware(
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn) {
+    return execution -> {
+      if (execution.result == null) {
+        Assert.log(Functions.class, "toExecutionAware applying exec=%s", execution.hashCode());
+        return innerFn.apply(execution);
+      } else {
+        Assert.log(Functions.class, "toExecutionAware return result=%s exec=%s", execution.result.toSummary(),
+          execution.hashCode());
+        return CompletableFuture.completedFuture(execution.result);
       }
     };
   }
 
-  static CheckedSupplier<Void> toSupplier(CheckedRunnable runnable) {
-    Assert.notNull(runnable, "runnable");
-    return () -> {
-      runnable.run();
-      return null;
-    };
-  }
+  /**
+   * Returns a Function that asynchronously applies the {@code innerFn} on the first call, synchronously on subsequent
+   * calls, and returns a promise containing the result.
+   *
+   * @param <R> result type
+   */
+  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> toAsync(
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler) {
 
-  static CheckedSupplier<Void> toSupplier(ContextualRunnable runnable, ExecutionContext<Void> context) {
-    Assert.notNull(runnable, "runnable");
-    return () -> {
-      runnable.run(context);
-      return null;
-    };
-  }
+    AtomicBoolean scheduled = new AtomicBoolean();
+    return execution -> {
+      if (scheduled.get()) {
+        // Propagate outer cancellations to the thread that the innerFn is running with
+        execution.future.injectCancelFn(-1, (mayInterrupt, cancelResult) -> {
+          Assert.log(Functions.class, "Cancelling second fn execution=%s, future=%s", execution.hashCode(),
+            execution.innerFuture == null ? null : execution.innerFuture.hashCode());
+          if (execution.innerFuture != null)
+            execution.innerFuture.cancel(mayInterrupt);
+        });
 
-  static <R> CheckedSupplier<R> toSupplier(ContextualSupplier<R, R> supplier, ExecutionContext<R> context) {
-    Assert.notNull(supplier, "supplier");
-    return () -> supplier.get(context);
+        return innerFn.apply(execution);
+      } else {
+        CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+        Callable<Object> callable = () -> {
+          return innerFn.apply(execution).whenComplete((result, error) -> {
+            Assert.log(Functions.class, "Async inner fn completed with result=%s, error=%s, promise=%s", result, error,
+              promise.hashCode());
+            if (error != null)
+              promise.completeExceptionally(error);
+            else
+              promise.complete(result);
+          });
+        };
+
+        try {
+          scheduled.set(true);
+          Future<?> future = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
+          Assert.log(Functions.class, "Scheduled async function future=%s, promise=%s", future.hashCode(),
+            promise.hashCode());
+
+          // Propagate outer cancellations to the scheduled innerFn and its promise
+          execution.future.injectCancelFn(-1, (mayInterrupt, cancelResult) -> {
+            Assert.log(Functions.class, "Cancelling first fn future=%s, promise=%s, mayInterrupt=%s", future.hashCode(),
+              promise.hashCode(), mayInterrupt);
+            future.cancel(mayInterrupt);
+
+            // Cancel a pending promise if the execution attempt has not started
+            if (!execution.attemptStarted)
+              promise.complete(cancelResult);
+          });
+        } catch (Throwable t) {
+          promise.completeExceptionally(t);
+        }
+        return promise;
+      }
+    };
   }
 
   static ContextualSupplier<Void, Void> toCtxSupplier(CheckedRunnable runnable) {
@@ -286,7 +272,7 @@ final class Functions {
     };
   }
 
-  static ContextualSupplier<Void, Void> toCtxSupplier(ContextualRunnable runnable) {
+  static ContextualSupplier<Void, Void> toCtxSupplier(ContextualRunnable<Void> runnable) {
     Assert.notNull(runnable, "runnable");
     return ctx -> {
       runnable.run(ctx);

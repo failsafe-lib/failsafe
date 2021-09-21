@@ -24,7 +24,7 @@ public class OpenState extends CircuitState {
   private final long startTime = System.nanoTime();
   private final long delayNanos;
 
-  public OpenState(CircuitBreaker breaker, CircuitState previousState, Duration delay) {
+  public OpenState(CircuitBreaker<?> breaker, CircuitState previousState, Duration delay) {
     super(breaker, previousState.stats);
     this.delayNanos = delay.toNanos();
   }

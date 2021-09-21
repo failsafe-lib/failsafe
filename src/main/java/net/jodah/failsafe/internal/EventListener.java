@@ -35,7 +35,7 @@ public interface EventListener {
     return (ExecutionResult result, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionCompletedEvent<R>>) handler).accept(
-          new ExecutionCompletedEvent<>((R) result.getResult(), result.getFailure(), context.copy()));
+          new ExecutionCompletedEvent<>(result.getResult(), result.getFailure(), context));
       } catch (Throwable ignore) {
       }
     };
@@ -46,7 +46,7 @@ public interface EventListener {
     return (ExecutionResult result, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionAttemptedEvent<R>>) handler).accept(
-          new ExecutionAttemptedEvent<>((R) result.getResult(), result.getFailure(), context.copy()));
+          new ExecutionAttemptedEvent<>(result.getResult(), result.getFailure(), context));
       } catch (Throwable ignore) {
       }
     };
@@ -57,8 +57,8 @@ public interface EventListener {
     return (ExecutionResult result, ExecutionContext context) -> {
       try {
         ((CheckedConsumer<ExecutionScheduledEvent<R>>) handler).accept(
-          new ExecutionScheduledEvent<>((R) result.getResult(), result.getFailure(),
-            Duration.ofNanos(result.getWaitNanos()), context.copy()));
+          new ExecutionScheduledEvent<>(result.getResult(), result.getFailure(),
+            Duration.ofNanos(result.getWaitNanos()), context));
       } catch (Throwable ignore) {
       }
     };

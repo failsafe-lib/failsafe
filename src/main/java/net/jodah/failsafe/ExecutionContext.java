@@ -25,30 +25,38 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Jonathan Halterman
  */
 public class ExecutionContext<R> {
-  volatile Duration startTime = Duration.ZERO;
-  volatile Duration attemptStartTime = Duration.ZERO;
-  // Number of execution attempts
-  AtomicInteger attempts = new AtomicInteger();
-  // Number of completed executions
-  AtomicInteger executions = new AtomicInteger();
+  // -- Cross-attempt state --
 
-  // Internally mutable state
-  // The index of a PolicyExecutor that cancelled the execution. 0 represents non-cancelled.
-  volatile int cancelledIndex;
-  volatile R lastResult;
-  volatile Throwable lastFailure;
+  // When the first execution attempt was started
+  volatile Duration startTime;
+  // Number of execution attempts
+  AtomicInteger attempts;
+  // Number of completed executions
+  AtomicInteger executions;
+
+  // -- Per-attempt state --
+
+  // The result of the previous execution attempt
+  private ExecutionResult previousResult;
+  // The result of the current execution attempt;
+  volatile ExecutionResult result;
+  // When the most recent execution attempt was started
+  volatile Duration attemptStartTime;
+  // The index of a PolicyExecutor that cancelled the execution. Integer.MIN_VALUE represents non-cancelled.
+  volatile int cancelledIndex = Integer.MIN_VALUE;
 
   ExecutionContext() {
+    startTime = Duration.ZERO;
+    attemptStartTime = Duration.ZERO;
+    attempts = new AtomicInteger();
+    executions = new AtomicInteger();
   }
 
-  private ExecutionContext(ExecutionContext<R> context) {
+  ExecutionContext(ExecutionContext<R> context) {
     this.startTime = context.startTime;
-    this.attemptStartTime = context.attemptStartTime;
     this.attempts = context.attempts;
     this.executions = context.executions;
-    this.cancelledIndex = context.cancelledIndex;
-    this.lastResult = context.lastResult;
-    this.lastFailure = context.lastFailure;
+    previousResult = context.result;
   }
 
   /**
@@ -88,21 +96,26 @@ public class ExecutionContext<R> {
    */
   @SuppressWarnings("unchecked")
   public <T extends Throwable> T getLastFailure() {
-    return (T) lastFailure;
+    ExecutionResult r = result != null ? result : previousResult;
+    return r == null ? null : (T) r.getFailure();
   }
 
   /**
    * Returns the last result that was recorded else {@code null}.
    */
+  @SuppressWarnings("unchecked")
   public R getLastResult() {
-    return lastResult;
+    ExecutionResult r = result != null ? result : previousResult;
+    return r == null ? null : (R) r.getResult();
   }
 
   /**
    * Returns the last result that was recorded else the {@code defaultValue}.
    */
+  @SuppressWarnings("unchecked")
   public R getLastResult(R defaultValue) {
-    return lastResult != null ? lastResult : defaultValue;
+    ExecutionResult r = result != null ? result : previousResult;
+    return r == null ? defaultValue : (R) r.getResult();
   }
 
   /**
@@ -116,7 +129,7 @@ public class ExecutionContext<R> {
    * Returns whether the execution has been cancelled. In this case the implementor should attempt to stop execution.
    */
   public boolean isCancelled() {
-    return cancelledIndex != 0;
+    return cancelledIndex > Integer.MIN_VALUE;
   }
 
   /**
@@ -133,25 +146,21 @@ public class ExecutionContext<R> {
     return attempts.get() > 0;
   }
 
-  public ExecutionContext<R> copy() {
-    return new ExecutionContext<>(this);
-  }
-
   static <R> ExecutionContext<R> ofResult(R result) {
     ExecutionContext<R> context = new ExecutionContext<>();
-    context.lastResult = result;
+    context.previousResult = ExecutionResult.success(result);
     return context;
   }
 
   static <R> ExecutionContext<R> ofFailure(Throwable failure) {
     ExecutionContext<R> context = new ExecutionContext<>();
-    context.lastFailure = failure;
+    context.previousResult = ExecutionResult.failure(failure);
     return context;
   }
 
   @Override
   public String toString() {
-    return "ExecutionContext[" + "attempts=" + attempts + ", executions=" + executions + ", lastResult=" + lastResult
-      + ", lastFailure=" + lastFailure + ']';
+    return "ExecutionContext[" + "attempts=" + attempts + ", executions=" + executions + ", lastResult="
+      + getLastResult() + ", lastFailure=" + getLastFailure() + ']';
   }
 }

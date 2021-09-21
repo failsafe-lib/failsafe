@@ -30,38 +30,60 @@ import java.util.ListIterator;
  * @author Jonathan Halterman
  */
 public abstract class AbstractExecution<R> extends ExecutionContext<R> {
+  // Cross-attempt state --
   final Scheduler scheduler;
-  final FailsafeExecutor<R> executor;
-  final List<PolicyExecutor<R, Policy<R>>> policyExecutors;
+  final List<PolicyExecutor<R, ? extends Policy<R>>> policyExecutors;
 
-  // Internally mutable state
-  /* Whether the supplier is in progress */
-  volatile boolean inProgress;
-  /* Whether the execution attempt has been recorded */
+  // Per-attempt state --
+  // Whether the execution has started
+  volatile boolean attemptStarted;
+  // Whether the execution attempt has been recorded
   volatile boolean attemptRecorded;
-  /* Whether a result has been post-executed */
-  volatile boolean resultHandled;
-  /* Whether the execution can be interrupted */
-  volatile boolean canInterrupt;
-  /* Whether the execution has been internally interrupted */
-  volatile boolean interrupted;
-  /* The wait time in nanoseconds. */
+  // The wait time in nanoseconds
   volatile long waitNanos;
-  /* Whether the execution has been completed */
+  // Whether the entire Failsafe execution has been completed
   volatile boolean completed;
 
   /**
-   * Creates a new AbstractExecution for the {@code executor}.
+   * Creates a new AbstractExecution for the {@code policies}.
    */
-  AbstractExecution(Scheduler scheduler, FailsafeExecutor<R> executor) {
+  AbstractExecution(List<? extends Policy<R>> policies, Scheduler scheduler) {
     this.scheduler = scheduler;
-    this.executor = executor;
-    policyExecutors = new ArrayList<>(executor.policies.size());
-    ListIterator<Policy<R>> policyIterator = executor.policies.listIterator(executor.policies.size());
-    for (int i = 1; policyIterator.hasPrevious(); i++) {
-      PolicyExecutor<R, Policy<R>> policyExecutor = policyIterator.previous().toExecutor(this);
-      policyExecutor.policyIndex = i;
+    policyExecutors = new ArrayList<>(policies.size());
+    ListIterator<? extends Policy<R>> policyIterator = policies.listIterator(policies.size());
+    for (int i = 0; policyIterator.hasPrevious(); i++) {
+      Policy<R> policy = Assert.notNull(policyIterator.previous(), "policies");
+      PolicyExecutor<R, ? extends Policy<R>> policyExecutor = policy.toExecutor(i);
       policyExecutors.add(policyExecutor);
+    }
+  }
+
+  AbstractExecution(AbstractExecution<R> execution) {
+    super(execution);
+    scheduler = execution.scheduler;
+    policyExecutors = execution.policyExecutors;
+  }
+
+  /**
+   * Called when execution of the user's supplier is about to begin.
+   */
+  synchronized void preExecute() {
+    if (!attemptRecorded) {
+      attemptStartTime = Duration.ofNanos(System.nanoTime());
+      if (startTime == Duration.ZERO)
+        startTime = attemptStartTime;
+      attemptStarted = true;
+    }
+  }
+
+  /**
+   * Records an execution attempt which may correspond with an execution result. Async executions will have results
+   * recorded separately.
+   */
+  synchronized void recordAttempt() {
+    if (!attemptRecorded) {
+      attempts.incrementAndGet();
+      attemptRecorded = true;
     }
   }
 
@@ -72,50 +94,22 @@ public abstract class AbstractExecution<R> extends ExecutionContext<R> {
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  void record(ExecutionResult result) {
-    record(result, false);
-  }
-
-  @SuppressWarnings("unchecked")
-  void record(ExecutionResult result, boolean timeout) {
+  synchronized void record(ExecutionResult result) {
     Assert.state(!completed, "Execution has already been completed");
-    if (!interrupted) {
+
+    if (attemptStarted && !attemptRecorded) {
+      Assert.log(this, "Recording result=%s, exec=%s", result.toSummary(), hashCode());
       recordAttempt();
-      if (inProgress) {
-        lastResult = (R) result.getResult();
-        lastFailure = result.getFailure();
-        executions.incrementAndGet();
-        if (!timeout)
-          inProgress = false;
-      }
+      executions.incrementAndGet();
+      this.result = result;
     }
   }
 
   /**
-   * Records an execution attempt which may correspond with an execution result. Async executions will have results
-   * recorded separately.
+   * Returns whether the {@code policyExecutor} has been cancelled for the execution.
    */
-  void recordAttempt() {
-    if (!attemptRecorded) {
-      attempts.incrementAndGet();
-      attemptRecorded = true;
-    }
-  }
-
-  synchronized void preExecute() {
-    attemptStartTime = Duration.ofNanos(System.nanoTime());
-    if (startTime == Duration.ZERO)
-      startTime = attemptStartTime;
-    inProgress = true;
-    attemptRecorded = false;
-    resultHandled = false;
-    cancelledIndex = 0;
-    canInterrupt = true;
-    interrupted = false;
-  }
-
-  boolean isAsyncExecution() {
-    return false;
+  boolean isCancelled(PolicyExecutor<?, ?> policyExecutor) {
+    return cancelledIndex >= policyExecutor.policyIndex;
   }
 
   /**
@@ -127,8 +121,8 @@ public abstract class AbstractExecution<R> extends ExecutionContext<R> {
   synchronized ExecutionResult postExecute(ExecutionResult result) {
     record(result);
     boolean allComplete = true;
-    for (PolicyExecutor<R, Policy<R>> policyExecutor : policyExecutors) {
-      result = policyExecutor.postExecute(result);
+    for (PolicyExecutor<R, ? extends Policy<R>> policyExecutor : policyExecutors) {
+      result = policyExecutor.postExecute(this, result);
       allComplete = allComplete && result.isComplete();
     }
 

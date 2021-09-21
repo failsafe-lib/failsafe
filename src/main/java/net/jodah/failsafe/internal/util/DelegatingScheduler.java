@@ -136,6 +136,7 @@ public final class DelegatingScheduler implements Scheduler {
           // Guard against race with promise.cancel 
           synchronized (promise) {
             promise.forkJoinPoolThread = Thread.currentThread();
+            Assert.log("DelegatingScheduler Acquiring thread " + promise.forkJoinPoolThread.getName());
           }
         }
         promise.complete(callable.call());
@@ -144,6 +145,7 @@ public final class DelegatingScheduler implements Scheduler {
       } finally {
         if (isForkJoinPool) {
           synchronized (promise) {
+            Assert.log("DelegatingScheduler Releasing thread " + promise.forkJoinPoolThread.getName());
             promise.forkJoinPoolThread = null;
           }
         }

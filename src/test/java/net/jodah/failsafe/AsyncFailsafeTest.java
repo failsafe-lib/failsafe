@@ -315,8 +315,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
       try {
         // Assert not cancelled
         waiter.assertFalse(ctx.isCancelled());
-        if (!futureRef.get().getTimeoutDelegates().isEmpty())
-          waiter.assertFalse(futureRef.get().getTimeoutDelegates().stream().allMatch(Future::isCancelled));
+        waiter.assertFalse(futureRef.get().cancelFunctions.isEmpty());
         Thread.sleep(1000);
       } catch (InterruptedException e) {
         // Assert cancelled
@@ -355,8 +354,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // Then
     assertTrue(future.isCancelled());
-    assertTrue(
-      future.getTimeoutDelegates() == null || future.getTimeoutDelegates().stream().allMatch(Future::isCancelled));
+    assertTrue(future.cancelFunctions.isEmpty());
     assertTrue(future.isDone());
     assertThrows(future::get, CancellationException.class);
   }
@@ -383,7 +381,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldCancelOnGetAsyncExecution() throws Throwable {
     assertCancel(executor -> getAsync(executor, (AsyncRunnable<?>) (e) -> {
-      Thread.sleep(1000);
+      Thread.sleep(20000);
       e.complete();
     }), retryAlways);
   }
@@ -395,7 +393,7 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
   }
 
   public void shouldCancelOnRunAsyncExecution() throws Throwable {
-    assertCancel(executor -> runAsync(executor, (AsyncRunnable) (e) -> {
+    assertCancel(executor -> runAsync(executor, (AsyncRunnable) e -> {
       Thread.sleep(1000);
       e.complete();
     }), retryAlways);
@@ -488,13 +486,61 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
     // When / Then
     Failsafe.with(rp, timeout).onComplete(e -> {
-      assertNull(e.getResult());
-      assertTrue(e.getFailure() instanceof TimeoutExceededException);
+      waiter.assertEquals(e.getResult(), false);
       waiter.resume();
     }).getAsyncExecution(exec -> {
-      Thread.sleep(100);
-      if (!exec.complete(false))
-        exec.retry();
+      System.out.println("Executing exec=" + exec.hashCode());
+      if (exec.getAttemptCount() < 2)
+        Thread.sleep(100);
+      exec.recordResult(false);
+    });
+    waiter.await(1000);
+
+    // Given
+    timeout = Timeout.of(Duration.ofMillis(100));
+
+    // When / Then
+    Failsafe.with(rp, timeout).onComplete(e -> {
+      waiter.assertEquals(e.getResult(), false);
+      waiter.resume();
+    }).getAsyncExecution(exec -> {
+      System.out.println("Executing exec=" + exec.hashCode());
+      if (exec.getAttemptCount() < 2)
+        Thread.sleep(200);
+      exec.recordResult(false);
+    });
+    waiter.await(1000);
+  }
+
+  public void shouldRejectInitialAsyncExecutionWhenCircuitOpen() throws Throwable {
+    // Given
+    CircuitBreaker<Object> cb = new CircuitBreaker<>();
+    cb.open();
+
+    // When / Then
+    Failsafe.with(cb).onComplete(e -> {
+      waiter.assertNull(e.getResult());
+      waiter.assertTrue(e.getFailure() instanceof CircuitBreakerOpenException);
+      waiter.resume();
+    }).getAsyncExecution(exec -> {
+    });
+
+    waiter.await(1000);
+  }
+
+  public void shouldRejectAsyncExecutionRetryWhenCircuitOpen() throws Throwable {
+    // Given
+    RetryPolicy<Object> retryPolicy = Testing.withLogs(new RetryPolicy<>());
+    CircuitBreaker<Object> cb = Testing.withLogs(new CircuitBreaker<>());
+
+    // When / Then
+    Failsafe.with(retryPolicy, cb).onComplete(e -> {
+      waiter.assertNull(e.getResult());
+      waiter.assertTrue(e.getFailure() instanceof CircuitBreakerOpenException);
+      waiter.resume();
+    }).getAsyncExecution(exec -> {
+      Thread.sleep(10);
+      exec.recordFailure(new Exception());
     });
 
     waiter.await(1000);
@@ -502,13 +548,13 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
 
   public void shouldOpenCircuitWhenTimeoutExceeded() throws Throwable {
     // Given
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(10));
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
+    Timeout<Object> timeout = Testing.withLogs(Timeout.of(Duration.ofMillis(20)));
+    CircuitBreaker<Object> breaker = Testing.withLogs(new CircuitBreaker<>());
     assertTrue(breaker.isClosed());
 
     // When
-    Failsafe.with(breaker, timeout).with(executor).runAsyncExecution(exec -> {
-      Thread.sleep(100);
+    Failsafe.with(breaker, timeout).runAsyncExecution(exec -> {
+      Thread.sleep(200);
       exec.complete();
       waiter.resume();
     });

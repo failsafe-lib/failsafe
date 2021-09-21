@@ -15,7 +15,12 @@
  */
 package net.jodah.failsafe.internal.util;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
+ * Assertion utilities.
+ *
  * @author Jonathan Halterman
  */
 public final class Assert {
@@ -36,5 +41,28 @@ public final class Assert {
   public static void state(boolean expression, String errorMessageFormat, Object... args) {
     if (!expression)
       throw new IllegalStateException(String.format(errorMessageFormat, args));
+  }
+
+  static volatile long lastTimestamp;
+
+  public static void log(Object object, String msg, Object... args) {
+    Class<?> clazz = object instanceof Class ? (Class<?>) object : object.getClass();
+    log(clazz.getSimpleName() + " " + String.format(msg, args));
+  }
+
+  public static void log(Class<?> clazz, String msg) {
+    log(clazz.getSimpleName() + " " + msg);
+  }
+
+  public static void log(String msg) {
+    long currentTimestamp = System.currentTimeMillis();
+    if (lastTimestamp + 80 < currentTimestamp)
+      System.out.printf("%n%n");
+    lastTimestamp = currentTimestamp;
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("H:mm:ss.SSS"));
+    StringBuilder threadName = new StringBuilder(Thread.currentThread().getName());
+    for (int i = threadName.length(); i < 35; i++)
+      threadName.append(" ");
+    System.out.println("[" + time + "] " + "[" + threadName + "] " + msg);
   }
 }

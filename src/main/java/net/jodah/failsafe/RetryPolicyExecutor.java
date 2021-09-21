@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.EventListener;
+import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.util.concurrent.Scheduler;
 
 import java.time.Duration;
@@ -23,7 +24,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelay;
 import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
@@ -48,10 +50,10 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   private final EventListener retryListener;
   private final EventListener retryScheduledListener;
 
-  RetryPolicyExecutor(RetryPolicy<R> retryPolicy, AbstractExecution<R> execution, EventListener abortListener,
+  RetryPolicyExecutor(RetryPolicy<R> retryPolicy, int policyIndex, EventListener abortListener,
     EventListener failedAttemptListener, EventListener retriesExceededListener, EventListener retryListener,
     EventListener retryScheduledListener) {
-    super(retryPolicy, execution);
+    super(retryPolicy, policyIndex);
     this.abortListener = abortListener;
     this.failedAttemptListener = failedAttemptListener;
     this.retriesExceededListener = retriesExceededListener;
@@ -60,16 +62,17 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   }
 
   @Override
-  protected Supplier<ExecutionResult> supply(Supplier<ExecutionResult> supplier, Scheduler scheduler) {
-    return () -> {
+  protected Function<Execution<R>, ExecutionResult> apply(Function<Execution<R>, ExecutionResult> innerFn,
+    Scheduler scheduler) {
+    return execution -> {
       while (true) {
-        ExecutionResult result = supplier.get();
+        ExecutionResult result = innerFn.apply(execution);
         // Returns if retries exceeded or an outer policy cancelled the execution
-        if (retriesExceeded || executionCancelled())
+        if (retriesExceeded || execution.isCancelled(this))
           return result;
 
-        result = postExecute(result);
-        if (result.isComplete() || executionCancelled())
+        result = postExecute(execution, result);
+        if (result.isComplete() || execution.isCancelled(this))
           return result;
 
         try {
@@ -77,19 +80,26 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
             retryScheduledListener.handle(result, execution);
 
           // Guard against race with Timeout so that sleep can either be skipped or interrupted
-          execution.canInterrupt = true;
+          execution.interruptState.canInterrupt = true;
           Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getWaitNanos()));
         } catch (InterruptedException e) {
+          Assert.log(RetryPolicyExecutor.class, "Retry sleep interrupted exec=%s", execution.hashCode());
+
           // Set interrupt flag if interrupt was not intended
-          if (!execution.interrupted)
+          if (!execution.interruptState.interrupted)
             Thread.currentThread().interrupt();
           return ExecutionResult.failure(new FailsafeException(e));
         } finally {
-          execution.canInterrupt = false;
+          execution.interruptState.canInterrupt = false;
         }
 
-        if (executionCancelled())
+        if (execution.isCancelled(this))
           return result;
+
+        // Initialize next attempt
+        execution = execution.copy();
+
+        Assert.log(RetryPolicyExecutor.class, "Retrying for new exec=%s", execution.hashCode());
 
         // Call retry listener
         if (retryListener != null)
@@ -99,73 +109,16 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   }
 
   @Override
-  protected Supplier<CompletableFuture<ExecutionResult>> supplyAsync(
-    Supplier<CompletableFuture<ExecutionResult>> supplier, Scheduler scheduler, FailsafeFuture<R> future) {
-    return () -> {
+  protected Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> applyAsync(
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler,
+    FailsafeFuture<R> future) {
+
+    return initialRequest -> {
       CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
-      Callable<Object> callable = new Callable<Object>() {
-        volatile ExecutionResult previousResult;
-
-        @Override
-        public Object call() {
-          // Call retry listener
-          if (retryListener != null && previousResult != null)
-            retryListener.handle(previousResult, execution);
-
-          // Propagate execution and handle result
-          supplier.get().whenComplete((result, error) -> {
-            if (error != null)
-              promise.completeExceptionally(error);
-            else if (result == null)
-              promise.complete(null);
-            else {
-              if (retriesExceeded || executionCancelled()) {
-                promise.complete(result);
-              } else {
-                postExecuteAsync(result, scheduler, future).whenComplete((postResult, postError) -> {
-                  if (postError != null)
-                    promise.completeExceptionally(postError);
-                  else if (postResult == null)
-                    promise.complete(null);
-                  else {
-                    if (postResult.isComplete() || executionCancelled()) {
-                      promise.complete(postResult);
-                    } else {
-                      // Guard against race with future.complete or future.cancel
-                      synchronized (future) {
-                        if (!future.isDone()) {
-                          try {
-                            if (retryScheduledListener != null)
-                              retryScheduledListener.handle(postResult, execution);
-
-                            previousResult = postResult;
-                            Future<?> scheduledRetry = scheduler.schedule(this, postResult.getWaitNanos(),
-                              TimeUnit.NANOSECONDS);
-
-                            // Propagate cancellation to the scheduled retry and its promise
-                            future.injectCancelFn((mayInterrupt, cancelResult) -> {
-                              scheduledRetry.cancel(mayInterrupt);
-                              if (executionCancelled())
-                                promise.complete(cancelResult);
-                            });
-                          } catch (Throwable t) {
-                            // Hard scheduling failure
-                            promise.completeExceptionally(t);
-                          }
-                        }
-                      }
-                    }
-                  }
-                });
-              }
-            }
-          });
-          return null;
-        }
-      };
+      AtomicReference<ExecutionResult> previousResultRef = new AtomicReference<>();
 
       try {
-        callable.call();
+        handleAsync(initialRequest, innerFn, scheduler, future, promise, previousResultRef);
       } catch (Throwable t) {
         promise.completeExceptionally(t);
       }
@@ -174,9 +127,93 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     };
   }
 
+  public Object handleAsync(AsyncExecution<R> execution,
+    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler,
+    FailsafeFuture<R> future, CompletableFuture<ExecutionResult> promise,
+    AtomicReference<ExecutionResult> previousResultRef) {
+
+    // Call retry listener
+    ExecutionResult previousResult = previousResultRef.get();
+    if (!execution.recordCalled && retryListener != null && previousResult != null) {
+      Assert.log(this, "Calling onRetry attempts=%s, exec=%s", execution.attempts.get(), execution.hashCode());
+      retryListener.handle(previousResult, execution);
+    }
+
+    // Propagate execution and handle result
+    Assert.log(this, "Applying innerFn exec=%s, promise=%s", execution.hashCode(), promise.hashCode());
+    innerFn.apply(execution).whenComplete((result, error) -> {
+      Assert.log(this, "Applied innerFn exec=%s, promise=%s, result=%s", execution.hashCode(), promise.hashCode(),
+        result == null ? null : result.toSummary());
+      if (isValidResult(result, error, promise)) {
+        if (retriesExceeded || execution.isCancelled(this)) {
+          promise.complete(result);
+        } else {
+          Assert.log(RetryPolicyExecutor.class, "Maybe post executing for exec=%s, promise=%s", execution.hashCode(),
+            promise.hashCode());
+          postExecuteAsync(execution, result, scheduler, future).whenComplete((postResult, postError) -> {
+            if (isValidResult(postResult, postError, promise)) {
+              if (postResult.isComplete() || execution.isCancelled(this)) {
+                Assert.log(RetryPolicyExecutor.class, "Completing promise=%s", promise.hashCode());
+                promise.complete(postResult);
+              } else {
+                // Guard against race with future.complete or future.cancel
+                synchronized (future) {
+                  if (!future.isDone()) {
+                    try {
+                      if (retryScheduledListener != null)
+                        retryScheduledListener.handle(postResult, execution);
+
+                      previousResultRef.set(postResult);
+                      AsyncExecution<R> retryExecution = execution.copy();
+                      future.inject(retryExecution);
+                      Callable<Object> retryFn = () -> handleAsync(retryExecution, innerFn, scheduler, future, promise,
+                        previousResultRef);
+                      Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getWaitNanos(),
+                        TimeUnit.NANOSECONDS);
+                      retryExecution.innerFuture = scheduledRetry;
+                      Assert.log(RetryPolicyExecutor.class, "Scheduled retry for new exec=%s, future=%s",
+                        retryExecution.hashCode(), scheduledRetry.hashCode());
+
+                      // Propagate outer cancellations to the retry future and its promise
+                      future.injectCancelFn(policyIndex, (mayInterrupt, cancelResult) -> {
+                        Assert.log(Functions.class, "Cancelling retry future=%s", scheduledRetry.hashCode());
+                        scheduledRetry.cancel(mayInterrupt);
+                        promise.complete(cancelResult);
+                      });
+                    } catch (Throwable t) {
+                      // Hard scheduling failure
+                      promise.completeExceptionally(t);
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+
+    return null;
+  }
+
+  /**
+   * Completes the {@code promise} and returns {@code false} if the {@code result} or {@code error} are invalid, else
+   * returns {@code true}.
+   */
+  boolean isValidResult(ExecutionResult result, Throwable error, CompletableFuture<ExecutionResult> promise) {
+    if (error != null) {
+      promise.completeExceptionally(error);
+      return false;
+    } else if (result == null) {
+      promise.complete(null);
+      return false;
+    }
+    return true;
+  }
+
   @Override
   @SuppressWarnings("unchecked")
-  protected ExecutionResult onFailure(ExecutionResult result) {
+  protected ExecutionResult onFailure(AbstractExecution<R> execution, ExecutionResult result) {
     if (failedAttemptListener != null)
       failedAttemptListener.handle(result, execution);
 
@@ -190,7 +227,7 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     } else {
       // Determine the fixed or random delay
       waitNanos = getFixedOrRandomDelayNanos(waitNanos);
-      waitNanos = adjustForBackoff(waitNanos);
+      waitNanos = adjustForBackoff(execution, waitNanos);
       delayNanos = waitNanos;
     }
 
@@ -217,12 +254,13 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   }
 
   /**
-   * Defaults async executions to not be complete until {@link #onFailure(ExecutionResult) says they are}.
+   * Defaults async executions to not be complete until {@link #onFailure(AbstractExecution, ExecutionResult) says they
+   * are}.
    */
   @Override
-  protected CompletableFuture<ExecutionResult> onFailureAsync(ExecutionResult result, Scheduler scheduler,
-    FailsafeFuture<R> future) {
-    return super.onFailureAsync(result.withNotComplete(), scheduler, future);
+  protected CompletableFuture<ExecutionResult> onFailureAsync(AbstractExecution<R> execution, ExecutionResult result,
+    Scheduler scheduler, FailsafeFuture<R> future) {
+    return super.onFailureAsync(execution, result.withNotComplete(), scheduler, future);
   }
 
   private long getFixedOrRandomDelayNanos(long waitNanos) {
@@ -237,7 +275,7 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     return waitNanos;
   }
 
-  private long adjustForBackoff(long waitNanos) {
+  private long adjustForBackoff(AbstractExecution<R> execution, long waitNanos) {
     if (execution.getAttemptCount() != 1 && policy.getMaxDelay() != null)
       waitNanos = (long) Math.min(waitNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
     return waitNanos;

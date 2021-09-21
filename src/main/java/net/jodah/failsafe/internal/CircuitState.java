@@ -27,10 +27,10 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public abstract class CircuitState {
-  final CircuitBreaker breaker;
+  final CircuitBreaker<?> breaker;
   volatile CircuitStats stats;
 
-  CircuitState(CircuitBreaker breaker, CircuitStats stats) {
+  CircuitState(CircuitBreaker<?> breaker, CircuitStats stats) {
     this.breaker = breaker;
     this.stats = stats;
   }
@@ -47,7 +47,7 @@ public abstract class CircuitState {
 
   public abstract State getState();
 
-  public synchronized void recordFailure(ExecutionContext context) {
+  public synchronized void recordFailure(ExecutionContext<?> context) {
     stats.recordFailure();
     checkThreshold(context);
   }
@@ -60,6 +60,6 @@ public abstract class CircuitState {
   public void handleConfigChange() {
   }
 
-  void checkThreshold(ExecutionContext context) {
+  void checkThreshold(ExecutionContext<?> context) {
   }
 }

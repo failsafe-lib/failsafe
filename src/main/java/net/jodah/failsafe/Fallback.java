@@ -246,7 +246,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   }
 
   @Override
-  public PolicyExecutor toExecutor(AbstractExecution<R> execution) {
-    return new FallbackExecutor<>(this, execution, failedAttemptListener);
+  public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
+    return new FallbackExecutor<>(this, policyIndex, failedAttemptListener);
   }
 }

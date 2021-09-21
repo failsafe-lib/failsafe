@@ -22,7 +22,7 @@ import net.jodah.failsafe.ExecutionContext;
 public class HalfOpenState extends CircuitState {
   private final CircuitBreakerInternals internals;
 
-  public HalfOpenState(CircuitBreaker breaker, CircuitBreakerInternals internals) {
+  public HalfOpenState(CircuitBreaker<?> breaker, CircuitBreakerInternals internals) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), false, null));
     this.internals = internals;
   }
@@ -54,7 +54,7 @@ public class HalfOpenState extends CircuitState {
    * Else the circuit is opened or closed based on whether the failure threshold was exceeded.
    */
   @Override
-  synchronized void checkThreshold(ExecutionContext context) {
+  synchronized void checkThreshold(ExecutionContext<?> context) {
     boolean successesExceeded;
     boolean failuresExceeded;
 

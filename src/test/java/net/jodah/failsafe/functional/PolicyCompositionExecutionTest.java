@@ -27,12 +27,12 @@ import static org.testng.Assert.assertTrue;
  * Tests the handling of ordered policy execution via an Execution or AsyncExecution.
  */
 @Test
-public class ExecutionPolicyOrderingTest {
-  public void testRetryPolicyAndCircuitBreaker() {
+public class PolicyCompositionExecutionTest {
+  public void testRetryPolicyThenCircuitBreaker() {
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
-    Execution execution = new Execution(rp, cb);
+    Execution<Object> execution = new Execution<>(rp, cb);
     execution.recordFailure(new Exception());
     execution.recordFailure(new Exception());
     assertFalse(execution.isComplete());
@@ -42,11 +42,11 @@ public class ExecutionPolicyOrderingTest {
     assertTrue(cb.isClosed());
   }
 
-  public void testCircuitBreakerAndRetryPolicy() {
-    RetryPolicy rp = new RetryPolicy().withMaxRetries(1);
-    CircuitBreaker cb = new CircuitBreaker().withFailureThreshold(5);
+  public void testCircuitBreakerThenRetryPolicy() {
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(1);
+    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
-    Execution execution = new Execution(cb, rp);
+    Execution<Object> execution = new Execution<>(cb, rp);
     execution.recordFailure(new Exception());
     assertFalse(execution.isComplete());
     execution.recordFailure(new Exception());

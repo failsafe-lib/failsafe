@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Jonathan Halterman
  */
-public class ExecutionResult {
+public final class ExecutionResult {
   static final CompletableFuture<ExecutionResult> NULL_FUTURE = CompletableFuture.completedFuture(null);
 
   /** An execution that was completed with a non-result */
@@ -66,15 +66,12 @@ public class ExecutionResult {
   }
 
   /**
-   * Returns an ExecutionResult with the {@code result} set, {@code complete} true and {@code success} true.
+   * Returns a an ExecutionResult with the {@code result} set, {@code complete} true and {@code success} true.
    */
   public static ExecutionResult success(Object result) {
     return new ExecutionResult(result, null, false, 0, true, true, true);
   }
 
-  /**
-   * Returns an ExecutionResult with the {@code failure} set, {@code complete} true and {@code success} false.
-   */
   public static ExecutionResult failure(Throwable failure) {
     return new ExecutionResult(null, failure, false, 0, true, false, false);
   }
@@ -175,9 +172,12 @@ public class ExecutionResult {
 
   @Override
   public String toString() {
-    return "ExecutionResult[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult
-      + ", waitNanos=" + waitNanos + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll
-      + ']';
+    return "[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult + ", waitNanos=" + waitNanos
+      + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll + ']';
+  }
+
+  String toSummary() {
+    return "[result=" + result + ", failure=" + failure + "]";
   }
 
   @Override

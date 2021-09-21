@@ -45,7 +45,7 @@ public class Asserts {
       if (!expected.equals(current.getClass()))
         Assert.fail(
           String.format("Bad exception type. Expected %s but was %s", Arrays.toString(throwableHierarchy.toArray()),
-            actual));
+            actual), actual);
       current = current.getCause();
     }
   }

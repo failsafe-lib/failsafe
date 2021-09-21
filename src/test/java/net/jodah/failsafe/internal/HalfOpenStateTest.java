@@ -20,24 +20,21 @@ import net.jodah.failsafe.Testing;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static net.jodah.failsafe.Testing.withLogs;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 @Test
 public class HalfOpenStateTest {
-  CircuitBreaker breaker;
+  CircuitBreaker<Object> breaker;
 
   @BeforeMethod
   protected void beforeMethod() {
-    breaker = new CircuitBreaker<>().onOpen(() -> System.out.println("Opening"));
-    //      .onHalfOpen(() -> System.out.println("Half-opening"))
-    //      .onClose(() -> System.out.println("Closing"))
-    //      .onSuccess(e -> System.out.println("Success"))
-    //      .onFailure(e -> System.out.println("Failure"));
+    breaker = withLogs(new CircuitBreaker<>());
   }
 
   /**
-   * Asserts that the the circuit is opened after a single failure.
+   * Asserts that  the circuit is opened after a single failure.
    */
   public void testFailureWithDefaultConfig() {
     // Given
@@ -54,7 +51,7 @@ public class HalfOpenStateTest {
   }
 
   /**
-   * Asserts that the the circuit is opened after the failure threshold is met.
+   * Asserts that  the circuit is opened after the failure threshold is met.
    */
   public void testFailureWithFailureThreshold() {
     // Given
@@ -74,7 +71,7 @@ public class HalfOpenStateTest {
   }
 
   /**
-   * Asserts that the the circuit is opened after the failure ratio is met.
+   * Asserts that  the circuit is opened after the failure ratio is met.
    */
   public void testFailureWithFailureRatio() {
     // Given
@@ -215,7 +212,7 @@ public class HalfOpenStateTest {
   }
 
   /**
-   * Asserts that the the circuit is closed after a single success.
+   * Asserts that the circuit is closed after a single success.
    */
   public void testSuccessWithDefaultConfig() {
     // Given
@@ -232,7 +229,7 @@ public class HalfOpenStateTest {
   }
 
   /**
-   * Asserts that the the circuit is closed after the failure ratio fails to be met.
+   * Asserts that the circuit is closed after the failure ratio fails to be met.
    */
   public void testSuccessWithFailureRatio() {
     // Given
@@ -410,7 +407,7 @@ public class HalfOpenStateTest {
     assertTrue(breaker.isOpen());
 
     // Given
-    breaker = new CircuitBreaker().withFailureThreshold(3);
+    breaker = new CircuitBreaker<>().withFailureThreshold(3);
     breaker.halfOpen();
     state = Testing.stateFor(breaker);
 
@@ -446,7 +443,7 @@ public class HalfOpenStateTest {
     assertTrue(breaker.isClosed());
 
     // Given
-    breaker = new CircuitBreaker().withFailureThreshold(3);
+    breaker = new CircuitBreaker<>().withFailureThreshold(3);
     breaker.halfOpen();
     state = Testing.stateFor(breaker);
 

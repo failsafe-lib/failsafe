@@ -40,7 +40,7 @@ public class Issue190Test {
       successEvents.incrementAndGet();
       waiter.resume();
     }).getAsyncExecution(execution -> Testing.futureResult(executor, true).whenComplete((result, failure) -> {
-      execution.complete(result);
+      execution.recordResult(result);
     })).get();
 
     waiter.await(1000);

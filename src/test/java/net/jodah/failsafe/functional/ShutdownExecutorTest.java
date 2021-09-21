@@ -38,7 +38,7 @@ public class ShutdownExecutorTest {
       .with(executor)
       .runAsync(() -> waiter.fail("Should not execute supplier since executor has been shutdown"));
 
-    assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
+    assertThrows(() -> future.get(1000, TimeUnit.SECONDS), ExecutionException.class, RejectedExecutionException.class);
   }
 
   /**

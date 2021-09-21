@@ -93,6 +93,15 @@ class CountingCircuitStats implements CircuitStats {
     return (int) Math.round(occupiedBits == 0 ? 0 : (double) successes / (double) occupiedBits * 100.0);
   }
 
+  @Override
+  public synchronized void reset() {
+    bitSet.clear();
+    currentIndex = 0;
+    occupiedBits = 0;
+    successes = 0;
+    failures = 0;
+  }
+
   /**
    * Sets the value of the next bit in the bitset, returning the previous value, else -1 if no previous value was set
    * for the bit.

@@ -17,8 +17,7 @@ public class Issue242Test {
 
     long startTime = System.currentTimeMillis();
     Failsafe.with(retryPolicy).runAsyncExecution(exec -> {
-      if (!exec.complete(null, null))
-        exec.retry();
+      exec.record(null, null);
     }).get();
     assertTrue(System.currentTimeMillis() - startTime > 200, "Expected delay between retries");
   }

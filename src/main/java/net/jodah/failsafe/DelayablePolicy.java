@@ -14,7 +14,7 @@ import java.time.Duration;
  */
 public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
   DelayFunction<R, ? extends Throwable> delayFn;
-  Object delayResult;
+  R delayResult;
   Class<? extends Throwable> delayFailure;
 
   /**
@@ -82,15 +82,15 @@ public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
    * configured or the computed delay is invalid.
    */
   @SuppressWarnings("unchecked")
-  protected Duration computeDelay(ExecutionContext context) {
+  protected Duration computeDelay(ExecutionContext<R> context) {
     Duration computed = null;
     if (context != null && delayFn != null) {
-      Object exResult = context.getLastResult();
+      R exResult = context.getLastResult();
       Throwable exFailure = context.getLastFailure();
 
       if ((delayResult == null || delayResult.equals(exResult)) && (delayFailure == null || (exFailure != null
         && delayFailure.isAssignableFrom(exFailure.getClass())))) {
-        computed = ((DelayFunction<Object, Throwable>) delayFn).computeDelay(exResult, exFailure, context);
+        computed = ((DelayFunction<R, Throwable>) delayFn).computeDelay(exResult, exFailure, context);
       }
     }
 

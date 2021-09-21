@@ -16,10 +16,8 @@
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
-import net.jodah.failsafe.Testing.Stats;
 import org.testng.annotations.Test;
 
-import static net.jodah.failsafe.Testing.*;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -27,18 +25,18 @@ import static org.testng.Assert.assertEquals;
  * Supplier from being called. This occurs when a CircuitBreaker is open.
  */
 @Test
-public class AlternativeResultTest {
+public class AlternativeResultTest extends Testing {
   public void testRejectedSyncAndAsync() {
     Stats rpStats = new Stats();
     Stats cbStats = new Stats();
-    RetryPolicy<Object> rp = withStats(new RetryPolicy<>().withMaxAttempts(7), rpStats, true);
-    CircuitBreaker<Object> cb = withStats(new CircuitBreaker<>().withFailureThreshold(3), cbStats, true);
+    RetryPolicy<Object> rp = withStatsAndLogs(new RetryPolicy<>().withMaxAttempts(7), rpStats);
+    CircuitBreaker<Object> cb = withStatsAndLogs(new CircuitBreaker<>().withFailureThreshold(3), cbStats);
 
-    testSyncAndAsyncFailure(Failsafe.with(rp, cb), () -> {
+    testRunFailure(() -> {
       rpStats.reset();
       cbStats.reset();
       cb.close();
-    }, () -> {
+    }, Failsafe.with(rp, cb), ctx -> {
       System.out.println("Executing");
       throw new Exception();
     }, e -> {
@@ -51,45 +49,17 @@ public class AlternativeResultTest {
     }, CircuitBreakerOpenException.class);
   }
 
-  public void testRejectedAsyncExecutionWithRetry() {
+  public void testRejectedAsyncExecutionWithRecordFailure() {
     Stats rpStats = new Stats();
     Stats cbStats = new Stats();
-    RetryPolicy<Object> rp = withStats(new RetryPolicy<>().withMaxAttempts(7), rpStats, true);
-    CircuitBreaker<Object> cb = withStats(new CircuitBreaker<>().withFailureThreshold(3), cbStats, true);
+    RetryPolicy<Object> rp = withStatsAndLogs(new RetryPolicy<>().withMaxAttempts(7), rpStats);
+    CircuitBreaker<Object> cb = withStatsAndLogs(new CircuitBreaker<>().withFailureThreshold(3), cbStats);
 
-    // Test with retryOn()
+    // Test with recordFailure()
     testAsyncExecutionFailure(Failsafe.with(rp, cb), ex -> {
       runAsync(() -> {
         System.out.println("Executing");
-        ex.retryOn(new IllegalStateException());
-      });
-    }, e -> {
-      assertEquals(e.getAttemptCount(), 7);
-      assertEquals(e.getExecutionCount(), 3);
-      assertEquals(rpStats.failedAttemptCount, 7);
-      assertEquals(rpStats.retryCount, 6);
-      assertEquals(cb.getExecutionCount(), 3);
-      assertEquals(cb.getFailureCount(), 3);
-    }, CircuitBreakerOpenException.class);
-  }
-
-  @Test(enabled = false)
-  public void testRejectedAsyncExecutionWithCompleteAndRetry() {
-    Stats rpStats = new Stats();
-    Stats cbStats = new Stats();
-    RetryPolicy<Object> rp = withStats(new RetryPolicy<>().withMaxAttempts(7), rpStats, true);
-    CircuitBreaker<Object> cb = withStats(new CircuitBreaker<>().withFailureThreshold(3), cbStats, true);
-
-    // Test with complete() and retry()
-    rpStats.reset();
-    cbStats.reset();
-    cb.close();
-    testAsyncExecutionFailure(Failsafe.with(rp, cb), ex -> {
-      runAsync(() -> {
-        System.out.println("Executing");
-        if (!ex.complete(null, new IllegalStateException())) {
-          ex.retry();
-        }
+        ex.recordFailure(new IllegalStateException());
       });
     }, e -> {
       assertEquals(e.getAttemptCount(), 7);

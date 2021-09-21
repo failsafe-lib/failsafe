@@ -21,6 +21,8 @@ import net.jodah.failsafe.internal.CircuitBreakerInternals;
 import net.jodah.failsafe.internal.CircuitState;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -30,11 +32,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 /**
- * Utilities to to assist with testing.
+ * Utilities to assist with testing.
  */
-public class Testing {
+public class Testing extends Asserts {
   public static class ConnectException extends RuntimeException {
   }
 
@@ -53,6 +56,7 @@ public class Testing {
 
   public static class Stats {
     // Common
+    public volatile int executionCount;
     public volatile int failureCount;
     public volatile int successCount;
 
@@ -69,6 +73,7 @@ public class Testing {
     public volatile int closedCount;
 
     public void reset() {
+      executionCount = 0;
       failureCount = 0;
       successCount = 0;
       failedAttemptCount = 0;
@@ -140,6 +145,12 @@ public class Testing {
     }
   }
 
+  public static void resetBreaker(CircuitBreaker<?> breaker) {
+    breaker.close();
+    CircuitState state = stateFor(breaker);
+    state.getStats().reset();
+  }
+
   /**
    * Returns a future that is completed with the {@code result} on the {@code executor}.
    */
@@ -195,54 +206,116 @@ public class Testing {
     }
   }
 
-  public static void log(Object category, String msg, Object... args) {
-    String clazz = category instanceof Class ?
-      ((Class<?>) category).getSimpleName() :
-      category.getClass().getSimpleName();
-    String entry = String.format("[%s] %s - %s", Thread.currentThread().getName(), clazz, String.format(msg, args));
-    System.out.println(entry);
+  static volatile long lastTimestamp;
+
+  public static void log(Object object, String msg, Object... args) {
+    Class<?> clazz = object instanceof Class ? (Class<?>) object : object.getClass();
+    log(clazz.getSimpleName() + " " + String.format(msg, args));
+  }
+
+  public static void log(Class<?> clazz, String msg) {
+    log(clazz.getSimpleName() + " " + msg);
+  }
+
+  public static void log(String msg) {
+    long currentTimestamp = System.currentTimeMillis();
+    if (lastTimestamp + 80 < currentTimestamp)
+      System.out.printf("%n%n");
+    lastTimestamp = currentTimestamp;
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("H:mm:ss.SSS"));
+    StringBuilder threadName = new StringBuilder(Thread.currentThread().getName());
+    for (int i = threadName.length(); i < 35; i++)
+      threadName.append(" ");
+    System.out.println("[" + time + "] " + "[" + threadName + "] " + msg);
   }
 
   public static <T> RetryPolicy<T> withLogs(RetryPolicy<T> retryPolicy) {
-    return withStats(retryPolicy, new Stats(), true);
+    return withStatsAndLogs(retryPolicy, new Stats(), true);
+  }
+
+  public static <T> Timeout<T> withLogs(Timeout<T> timeout) {
+    return withStatsAndLogs(timeout, new Stats(), true);
   }
 
   public static <T> CircuitBreaker<T> withLogs(CircuitBreaker<T> circuitBreaker) {
-    return withStats(circuitBreaker, new Stats(), true);
+    return withStatsAndLogs(circuitBreaker, new Stats(), true);
   }
 
   public static <T extends FailurePolicy<T, R>, R> T withLogs(T policy) {
-    return withStats(policy, new Stats(), true);
+    return withStatsAndLogs(policy, new Stats(), true);
   }
 
-  public static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats, boolean withLogging) {
+  public static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats) {
+    return withStats(retryPolicy, stats, false);
+  }
+
+  public static <T> RetryPolicy<T> withStatsAndLogs(RetryPolicy<T> retryPolicy, Stats stats) {
+    return withStats(retryPolicy, stats, true);
+  }
+
+  private static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats, boolean withLogging) {
     retryPolicy.onFailedAttempt(e -> {
+      stats.executionCount++;
       stats.failedAttemptCount++;
       if (withLogging)
-        System.out.printf("RetryPolicy failed an attempt with attempts: %s, executions: %s%n", e.getAttemptCount(),
-          e.getExecutionCount());
+        System.out.printf("RetryPolicy %s failed attempt [result: %s, failure: %s, attempts: %s, executions: %s]%n",
+          retryPolicy.hashCode(), e.getLastResult(), e.getLastFailure(), e.getAttemptCount(), e.getExecutionCount());
     }).onRetry(e -> {
       stats.retryCount++;
       if (withLogging)
-        System.out.println("RetryPolicy retrying");
+        System.out.printf("RetryPolicy %s retrying [result: %s, failure: %s]%n", retryPolicy.hashCode(),
+          e.getLastResult(), e.getLastFailure());
     }).onRetryScheduled(e -> {
       stats.retryScheduledCount++;
       if (withLogging)
-        System.out.printf("RetryPolicy scheduled with delay: %s ms%n", e.getDelay().toMillis());
+        System.out.printf("RetryPolicy %s scheduled [delay: %s ms]%n", retryPolicy.hashCode(), e.getDelay().toMillis());
     }).onRetriesExceeded(e -> {
       stats.retriesExceededCount++;
       if (withLogging)
-        System.out.println("RetryPolicy retries exceeded");
+        System.out.printf("RetryPolicy %s retries exceeded%n", retryPolicy.hashCode());
     }).onAbort(e -> {
       stats.abortCount++;
       if (withLogging)
-        System.out.println("RetryPolicy abort");
+        System.out.printf("RetryPolicy %s abort%n", retryPolicy.hashCode());
     });
-    withStats((FailurePolicy) retryPolicy, stats, withLogging);
+    withStatsAndLogs((FailurePolicy) retryPolicy, stats, withLogging);
     return retryPolicy;
   }
 
-  public static <T> CircuitBreaker<T> withStats(CircuitBreaker<T> circuitBreaker, Stats stats, boolean withLogging) {
+  public static <T> Timeout<T> withStats(Timeout<T> timeout, Stats stats) {
+    return withStatsAndLogs(timeout, stats, false);
+  }
+
+  public static <T> Timeout<T> withStatsAndLogs(Timeout<T> timeout, Stats stats) {
+    return withStatsAndLogs(timeout, stats, true);
+  }
+
+  private static <T> Timeout<T> withStatsAndLogs(Timeout<T> timeout, Stats stats, boolean withLogging) {
+    return timeout.onSuccess(e -> {
+      stats.executionCount++;
+      stats.successCount++;
+      if (withLogging)
+        System.out.printf("Timeout %s success policy executions=%s, successes=%s%n", timeout.hashCode(),
+          stats.executionCount, stats.successCount);
+    }).onFailure(e -> {
+      stats.executionCount++;
+      stats.failureCount++;
+      if (withLogging)
+        System.out.printf("Timeout %s exceeded policy executions=%s, failure=%s%n", timeout.hashCode(),
+          stats.executionCount, stats.failureCount);
+    });
+  }
+
+  public static <T> CircuitBreaker<T> withStats(CircuitBreaker<T> circuitBreaker, Stats stats) {
+    return withStatsAndLogs(circuitBreaker, stats, false);
+  }
+
+  public static <T> CircuitBreaker<T> withStatsAndLogs(CircuitBreaker<T> circuitBreaker, Stats stats) {
+    return withStatsAndLogs(circuitBreaker, stats, true);
+  }
+
+  private static <T> CircuitBreaker<T> withStatsAndLogs(CircuitBreaker<T> circuitBreaker, Stats stats,
+    boolean withLogging) {
     circuitBreaker.onOpen(() -> {
       stats.openCount++;
       if (withLogging)
@@ -256,21 +329,31 @@ public class Testing {
       if (withLogging)
         System.out.println("CircuitBreaker closing");
     });
-    withStats((FailurePolicy) circuitBreaker, stats, withLogging);
+    withStatsAndLogs((FailurePolicy) circuitBreaker, stats, withLogging);
     return circuitBreaker;
   }
 
-  public static <T extends FailurePolicy<T, R>, R> T withStats(T policy, Stats stats, boolean withLogging) {
+  public static <T extends FailurePolicy<T, R>, R> T withStats(T policy, Stats stats) {
+    return withStatsAndLogs(policy, stats, false);
+  }
+
+  public static <T extends FailurePolicy<T, R>, R> T withStatsAndLogs(T policy, Stats stats) {
+    return withStatsAndLogs(policy, stats, true);
+  }
+
+  private static <T extends FailurePolicy<T, R>, R> T withStatsAndLogs(T policy, Stats stats, boolean withLogging) {
     return policy.onSuccess(e -> {
+      stats.executionCount++;
       stats.successCount++;
       if (withLogging)
-        System.out.printf("%s success with attempts: %s, executions: %s%n", policy.getClass().getSimpleName(),
-          e.getAttemptCount(), e.getExecutionCount());
+        System.out.printf("%s success [result: %s, attempts: %s, executions: %s]%n", policy.getClass().getSimpleName(),
+          e.getResult(), e.getAttemptCount(), e.getExecutionCount());
     }).onFailure(e -> {
+      stats.executionCount++;
       stats.failureCount++;
       if (withLogging)
-        System.out.printf("%s failure with attempts: %s, executions: %s%n", policy.getClass().getSimpleName(),
-          e.getAttemptCount(), e.getExecutionCount());
+        System.out.printf("%s failure [result: %s, failure: %s, attempts: %s, executions: %s]%n",
+          policy.getClass().getSimpleName(), e.getResult(), e.getFailure(), e.getAttemptCount(), e.getExecutionCount());
     });
   }
 
@@ -289,97 +372,121 @@ public class Testing {
     };
   }
 
-  public static CircuitBreakerInternals getInternals(CircuitBreaker circuitBreaker) {
+  public static CircuitBreakerInternals<?> getInternals(CircuitBreaker<?> circuitBreaker) {
     try {
       Field internalsField = CircuitBreaker.class.getDeclaredField("internals");
       internalsField.setAccessible(true);
-      return (CircuitBreakerInternals) internalsField.get(circuitBreaker);
+      return (CircuitBreakerInternals<?>) internalsField.get(circuitBreaker);
     } catch (Exception e) {
       return null;
     }
   }
 
-  public static <T> void testAsyncSuccess(FailsafeExecutor<T> failsafe, CheckedRunnable when,
+  public static <T> void testRunAsyncSuccess(FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
-    CheckedSupplier<T> supplier = () -> {
-      when.run();
+    ContextualSupplier<T, T> supplier = ctx -> {
+      when.run(ctx);
       return null;
     };
-    testSyncAndAsyncInternal(false, failsafe, null, supplier, then, expectedResult);
+    testGetInternal(null, failsafe, supplier, then, expectedResult, null, false);
   }
 
-  public static <T> void testAsyncSuccess(FailsafeExecutor<T> failsafe, CheckedSupplier<T> when,
+  public static <T> void testGetAsyncSuccess(FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
-    testSyncAndAsyncInternal(false, failsafe, null, when, then, expectedResult);
+    testGetInternal(null, failsafe, when, then, expectedResult, null, false);
   }
 
   @SafeVarargs
-  public static <T> void testAsyncFailure(FailsafeExecutor<T> failsafe, CheckedRunnable when,
+  public static <T> void testRunAsyncFailure(FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
-    CheckedSupplier<T> supplier = () -> {
-      when.run();
+    ContextualSupplier<T, T> supplier = ctx -> {
+      when.run(ctx);
       return null;
     };
-    testSyncAndAsyncInternal(false, failsafe, null, supplier, then, null, expectedExceptions);
+    testGetInternal(null, failsafe, supplier, then, null, expectedExceptions, false);
   }
 
   @SafeVarargs
-  public static <T> void testAsyncFailure(FailsafeExecutor<T> failsafe, CheckedSupplier<T> when,
+  public static <T> void testGetAsyncFailure(FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
     Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
-    testSyncAndAsyncInternal(false, failsafe, null, when, then, null, expectedExceptions);
+    testGetInternal(null, failsafe, when, then, null, expectedExceptions, false);
   }
 
-  public static <T> void testSyncAndAsyncSuccess(FailsafeExecutor<T> failsafe, Runnable given, CheckedRunnable when,
+  public static <T> void testRunSuccess(FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
-    CheckedSupplier<T> supplier = () -> {
-      when.run();
+    ContextualSupplier<T, T> supplier = ctx -> {
+      when.run(ctx);
       return null;
     };
-    testSyncAndAsyncInternal(true, failsafe, given, supplier, then, expectedResult);
+    testGetInternal(null, failsafe, supplier, then, expectedResult, null, true);
   }
 
-  public static <T> void testSyncAndAsyncSuccess(FailsafeExecutor<T> failsafe, Runnable given, CheckedSupplier<T> when,
+  public static <T> void testRunSuccess(Runnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
-    testSyncAndAsyncInternal(true, failsafe, given, when, then, expectedResult);
-  }
-
-  @SafeVarargs
-  public static <T> void testSyncAndAsyncFailure(FailsafeExecutor<T> failsafe, Runnable given, CheckedRunnable when,
-    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
-    CheckedSupplier<T> supplier = () -> {
-      when.run();
+    ContextualSupplier<T, T> supplier = ctx -> {
+      when.run(ctx);
       return null;
     };
-    testSyncAndAsyncInternal(true, failsafe, given, supplier, then, null, expectedExceptions);
+    testGetInternal(given, failsafe, supplier, then, expectedResult, null, true);
+  }
+
+  public static <T> void testGetSuccess(FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
+    testGetInternal(null, failsafe, when, then, expectedResult, null, true);
+  }
+
+  public static <T> void testGetSuccess(Runnable given, FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult) {
+    testGetInternal(given, failsafe, when, then, expectedResult, null, true);
   }
 
   @SafeVarargs
-  public static <T> void testSyncAndAsyncFailure(FailsafeExecutor<T> failsafe, Runnable given, CheckedSupplier<T> when,
+  public static <T> void testRunFailure(FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
-    testSyncAndAsyncInternal(true, failsafe, given, when, then, null, expectedExceptions);
+    testRunFailure(null, failsafe, when, then, expectedExceptions);
+  }
+
+  @SafeVarargs
+  public static <T> void testRunFailure(Runnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
+    ContextualSupplier<T, T> supplier = ctx -> {
+      when.run(ctx);
+      return null;
+    };
+    testGetInternal(given, failsafe, supplier, then, null, expectedExceptions, true);
+  }
+
+  @SafeVarargs
+  public static <T> void testGetFailure(Runnable given, FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, Class<? extends Throwable>... expectedExceptions) {
+    testGetInternal(given, failsafe, when, then, null, expectedExceptions, true);
   }
 
   /**
-   * Does a .run and .runAsync against the failsafe, performing pre-test setup and post-test assertion checks. {@code
-   * expectedExceptions} are verified against thrown exceptions _and_ the ExecutionCompletedEvent's failure.
-   * <p>
    * This method helps ensure behavior is identical between sync and async executions.
+   * <p>
+   * Does a .get and .getAsync against the failsafe, performing pre-test setup and post-test assertion checks. {@code
+   * expectedResult} and {@code expectedExceptions} are verified against the returned result or thrown exceptions _and_
+   * the ExecutionCompletedEvent's result and failure.
    */
-  @SafeVarargs
-  private static <T> void testSyncAndAsyncInternal(boolean testSync, FailsafeExecutor<T> failsafe, Runnable given,
-    CheckedSupplier<T> when, Consumer<ExecutionCompletedEvent<T>> then, T expectedResult,
-    Class<? extends Throwable>... expectedExceptions) {
+  private static <T> void testGetInternal(Runnable given, FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
+    Consumer<ExecutionCompletedEvent<T>> then, T expectedResult, Class<? extends Throwable>[] expectedExceptions,
+    boolean testSync) {
     AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
     CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = completedEventRef::set;
     List<Class<? extends Throwable>> expected = new LinkedList<>();
-    Collections.addAll(expected, expectedExceptions);
+    Class<? extends Throwable>[] expectedExInner = expectedExceptions == null ? new Class[] {} : expectedExceptions;
+    Collections.addAll(expected, expectedExInner);
 
     Runnable postTestFn = () -> {
       ExecutionCompletedEvent<T> completedEvent = completedEventRef.get();
-      if (expectedExceptions.length > 0)
-        Asserts.assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExceptions));
-      else
+      if (expectedExInner.length > 0) {
+        assertNull(completedEvent.getResult());
+        Asserts.assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExInner));
+      } else {
         assertEquals(completedEvent.getResult(), expectedResult);
+        assertNull(completedEvent.getFailure());
+      }
       then.accept(completedEventRef.get());
     };
 
@@ -388,11 +495,11 @@ public class Testing {
       System.out.println("\nRunning sync test");
       if (given != null)
         given.run();
-      if (expectedExceptions.length == 0) {
+      if (expectedExInner.length == 0) {
         T result = Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn).get(when));
         assertEquals(result, expectedResult);
       } else
-        Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn).get(when), expectedExceptions);
+        Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn).get(when), expectedExInner);
       postTestFn.run();
     }
 
@@ -400,7 +507,7 @@ public class Testing {
     System.out.println("\nRunning async test");
     if (given != null)
       given.run();
-    if (expectedExceptions.length == 0) {
+    if (expectedExInner.length == 0) {
       T result = Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn).getAsync(when).get());
       assertEquals(result, expectedResult);
     } else {
@@ -439,15 +546,13 @@ public class Testing {
     // Async test
     System.out.println("\nRunning async execution test");
     if (expectedExceptions.length == 0) {
-      T result = Testing.unwrapExceptions(
-        () -> failsafe.onComplete(setCompletedEventFn).getAsyncExecution(when).get());
+      T result = Testing.unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn).getAsyncExecution(when).get());
       assertEquals(result, expectedResult);
     } else {
       List<Class<? extends Throwable>> expected = new LinkedList<>();
       Collections.addAll(expected, expectedExceptions);
       expected.add(0, ExecutionException.class);
-      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn).getAsyncExecution(when).get(),
-        expected);
+      Asserts.assertThrows(() -> failsafe.onComplete(setCompletedEventFn).getAsyncExecution(when).get(), expected);
     }
     postTestFn.run();
   }
