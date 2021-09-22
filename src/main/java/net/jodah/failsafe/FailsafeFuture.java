@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
 /**
@@ -38,10 +37,9 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   // Mutable state guarded by "this" --
 
   private AbstractExecution<R> newestExecution;
-  private Future<R> dependentStageFuture;
   Map<Integer, BiConsumer<Boolean, ExecutionResult>> cancelFunctions;
   // Whether a cancel with interrupt has already occurred
-  private boolean cancelWithInterrupt;
+  boolean cancelledWithInterrupt;
 
   FailsafeFuture(FailsafeExecutor<R> executor) {
     this.executor = executor;
@@ -72,7 +70,7 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     if (isDone())
       return false;
 
-    this.cancelWithInterrupt = mayInterruptIfRunning;
+    this.cancelledWithInterrupt = mayInterruptIfRunning;
     newestExecution.cancelledIndex = Integer.MAX_VALUE;
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
     cancelDependencies(Integer.MAX_VALUE, mayInterruptIfRunning, null);
@@ -102,15 +100,13 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   }
 
   /**
-   * Cancels any {@link #injectStage(Future) dependent stage future} and any {@link #injectCancelFn(int, BiConsumer)
-   * cancel functions} whose policy index is <= the given {@code cancellingPolicyIndex}.
+   * Cancels any {@link #injectCancelFn(int, BiConsumer) cancel functions} whose policy index is <= the given {@code
+   * cancellingPolicyIndex}.
    *
    * @param cancellingPolicyIndex the policyIndex of the PolicyExecutor that the cancellation request is originating
    * from
    */
   synchronized void cancelDependencies(int cancellingPolicyIndex, boolean mayInterrupt, ExecutionResult cancelResult) {
-    if (dependentStageFuture != null)
-      dependentStageFuture.cancel(mayInterrupt);
     if (cancelFunctions != null) {
       Iterator<Entry<Integer, BiConsumer<Boolean, ExecutionResult>>> it = cancelFunctions.entrySet().iterator();
       while (it.hasNext()) {
@@ -128,17 +124,6 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
 
   synchronized void inject(AbstractExecution<R> execution) {
     this.newestExecution = execution;
-  }
-
-  /**
-   * Injects a {@code dependentStageFuture} to be cancelled when this future is cancelled.
-   */
-  synchronized void injectStage(Future<R> dependentStageFuture) {
-    // If outer future has already been cancelled, propagate the cancellation
-    if (isCancelled())
-      dependentStageFuture.cancel(cancelWithInterrupt);
-    else
-      this.dependentStageFuture = dependentStageFuture;
   }
 
   /**

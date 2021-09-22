@@ -130,8 +130,18 @@ final class Functions {
       try {
         execution.preExecute();
         CompletionStage<? extends R> stage = supplier.get(execution);
-        if (stage instanceof Future)
-          execution.future.injectStage((Future<R>) stage);
+
+        // Propagate outer cancellations to the stage
+        if (stage instanceof Future) {
+          Future<R> future = (Future<R>) stage;
+          synchronized (execution.future) {
+            if (execution.future.isCancelled())
+              future.cancel(execution.future.cancelledWithInterrupt);
+            else
+              execution.future.injectCancelFn(-1, (mayInterrupt, cancelResult) -> future.cancel(mayInterrupt));
+          }
+        }
+
         stage.whenComplete((result, failure) -> {
           if (failure instanceof CompletionException)
             failure = failure.getCause();
