@@ -146,6 +146,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
+   * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
+   * CompletionStage} if it's a {@link Future}.</p>
    * <p>
    * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
    * {@link TimeoutExceededException}.
@@ -165,6 +167,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
+   * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
+   * CompletionStage} if it's a {@link Future}.</p>
    * <p>
    * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
    * {@link TimeoutExceededException}.
@@ -191,6 +195,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * completed. Any exception that is thrown from the {@code supplier} will automatically be recorded via {@code
    * AsyncExecution.recordFailure}.
    * </p>
+   * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
+   * CompletionStage} if it's a {@link Future}.</p>
    * <p>
    * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
    * {@link TimeoutExceededException}.

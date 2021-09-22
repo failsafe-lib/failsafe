@@ -132,15 +132,8 @@ final class Functions {
         CompletionStage<? extends R> stage = supplier.get(execution);
 
         // Propagate outer cancellations to the stage
-        if (stage instanceof Future) {
-          Future<R> future = (Future<R>) stage;
-          synchronized (execution.future) {
-            if (execution.future.isCancelled())
-              future.cancel(execution.future.cancelledWithInterrupt);
-            else
-              execution.future.injectCancelFn(-1, (mayInterrupt, cancelResult) -> future.cancel(mayInterrupt));
-          }
-        }
+        if (stage instanceof Future)
+          execution.future.propagateCancellation((Future<R>) stage, -1);
 
         stage.whenComplete((result, failure) -> {
           if (failure instanceof CompletionException)
@@ -165,6 +158,7 @@ final class Functions {
    *
    * @param <R> result type
    */
+  @SuppressWarnings("unchecked")
   static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseOfStageExecution(
     AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier) {
 
@@ -175,6 +169,11 @@ final class Functions {
         execution.preExecute();
         asyncFutureLock.acquire();
         CompletionStage<? extends R> stage = supplier.get(execution);
+
+        // Propagate outer cancellations to the stage
+        if (stage instanceof Future)
+          execution.future.propagateCancellation((Future<R>) stage, -1);
+
         stage.whenComplete((innerResult, failure) -> {
           try {
             if (failure != null)

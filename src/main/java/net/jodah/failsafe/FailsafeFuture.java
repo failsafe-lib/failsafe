@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
 /**
@@ -39,7 +40,7 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   private AbstractExecution<R> newestExecution;
   Map<Integer, BiConsumer<Boolean, ExecutionResult>> cancelFunctions;
   // Whether a cancel with interrupt has already occurred
-  boolean cancelledWithInterrupt;
+  private boolean cancelledWithInterrupt;
 
   FailsafeFuture(FailsafeExecutor<R> executor) {
     this.executor = executor;
@@ -134,5 +135,16 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     if (cancelFunctions == null)
       cancelFunctions = new HashMap<>();
     cancelFunctions.put(policyIndex, cancelFn);
+  }
+
+  /**
+   * Propogates any previous cancellation to the {@code future}, either by cancelling it immediately or storing a cancel
+   * function for later.
+   */
+  synchronized void propagateCancellation(Future<R> future, int policyIndex) {
+    if (isCancelled())
+      future.cancel(cancelledWithInterrupt);
+    else
+      injectCancelFn(policyIndex, (mayInterrupt, cancelResult) -> future.cancel(mayInterrupt));
   }
 }

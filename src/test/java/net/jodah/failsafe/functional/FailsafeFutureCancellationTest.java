@@ -3,20 +3,22 @@ package net.jodah.failsafe.functional;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.*;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.function.AsyncSupplier;
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 import static org.testng.Assert.*;
 
 /**
- * Tests behavior when a Failsafe Future is manually cancelled.
+ * Tests behavior when a FailsafeFuture is manually cancelled.
  */
 @Test
-public class ManualCancellationTest extends Testing {
+public class FailsafeFutureCancellationTest extends Testing {
   /**
    * Asserts that cancelling a FailsafeFuture causes both retry policies to stop.
    */
@@ -55,29 +57,62 @@ public class ManualCancellationTest extends Testing {
   /**
    * Asserts that FailsafeFuture cancellations are propagated to a CompletionStage.
    */
-  public void shouldPropagateCancellationToCompletionStage() throws Throwable {
+  public void shouldPropagateCancellationToStage() throws Throwable {
     // Given
     Policy<String> retryPolicy = new RetryPolicy<>();
-    Waiter cancelledWaiter = new Waiter();
-    CheckedSupplier<CompletionStage<String>> computeSomething = () -> {
-      CompletableFuture<String> future = new CompletableFuture<>();
-      future.whenComplete((r, t) -> {
-        if (t instanceof CancellationException)
-          cancelledWaiter.resume();
-      });
-      return future;
+    Waiter cancellationWaiter = new Waiter();
+    BiConsumer<String, Throwable> waiterResumer = (r, t) -> {
+      if (t instanceof CancellationException)
+        cancellationWaiter.resume();
+    };
+    CheckedSupplier<CompletionStage<String>> doWork = () -> {
+      CompletableFuture<String> promise = new CompletableFuture<>();
+      promise.whenComplete(waiterResumer);
+
+      // Simulate asynchronous work
+      runInThread(() -> Thread.sleep(1000));
+      return promise;
     };
 
     // When
-    CompletableFuture<String> future = Failsafe.with(retryPolicy).getStageAsync(computeSomething);
-    future.whenComplete((r, t) -> {
-      if (t instanceof CancellationException)
-        cancelledWaiter.resume();
-    });
-    future.cancel(true);
+    CompletableFuture<String> failsafeFuture = Failsafe.with(retryPolicy).getStageAsync(doWork);
+    failsafeFuture.whenComplete(waiterResumer);
+    failsafeFuture.cancel(true);
 
     // Then
-    Asserts.assertThrows(future::get, CancellationException.class);
-    cancelledWaiter.await(1000, 2);
+    Asserts.assertThrows(failsafeFuture::get, CancellationException.class);
+    // Wait for the promise and failsafeFuture to complete with cancellation
+    cancellationWaiter.await(1000, 2);
+  }
+
+  /**
+   * Asserts that FailsafeFuture cancellations are propagated to a CompletionStage in an async integration execution.
+   */
+  public void shouldPropagateCancellationToStageAsyncExecution() throws Throwable {
+    // Given
+    Policy<String> retryPolicy = new RetryPolicy<>();
+    Waiter cancellationWaiter = new Waiter();
+    BiConsumer<String, Throwable> waiterResumer = (r, t) -> {
+      if (t instanceof CancellationException)
+        cancellationWaiter.resume();
+    };
+    AsyncSupplier<String, CompletionStage<String>> doWork = exec -> {
+      CompletableFuture<String> promise = new CompletableFuture<>();
+      promise.whenComplete(waiterResumer);
+
+      // Simulate asynchronous work
+      runInThread(() -> Thread.sleep(1000));
+      return promise;
+    };
+
+    // When
+    CompletableFuture<String> failsafeFuture = Failsafe.with(retryPolicy).getStageAsyncExecution(doWork);
+    failsafeFuture.whenComplete(waiterResumer);
+    failsafeFuture.cancel(true);
+
+    // Then
+    Asserts.assertThrows(failsafeFuture::get, CancellationException.class);
+    // Wait for the promise and failsafeFuture to complete with cancellation
+    cancellationWaiter.await(1000, 2);
   }
 }
