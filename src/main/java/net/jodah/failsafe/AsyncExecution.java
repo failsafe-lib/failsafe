@@ -36,8 +36,6 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
   // The outer-most function that executions begin with
   private Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> outerFn;
   private final boolean asyncExecution;
-  // Whether a policy executor completed post execution
-  private final boolean[] policyPostExecuted;
   final FailsafeFuture<R> future;
 
   // Per-attempt state --
@@ -45,6 +43,8 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
   volatile boolean recordCalled;
   // The future for the thread that the innerFn is running in
   volatile Future<?> innerFuture;
+  // Whether a policy executor completed post execution
+  private final boolean[] policyPostExecuted;
 
   AsyncExecution(List<Policy<R>> policies, Scheduler scheduler, FailsafeFuture<R> future, boolean asyncExecution,
     Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn) {
