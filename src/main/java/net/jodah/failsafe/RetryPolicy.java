@@ -301,6 +301,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * Returns the delay between retries. Defaults to {@link Duration#ZERO}.
    *
    * @see #withDelay(Duration)
+   * @see #withBackoff(Duration, Duration, double)
+   * @see #withBackoff(Duration, Duration, double)
    * @see #withBackoff(long, long, ChronoUnit)
    * @see #withBackoff(long, long, ChronoUnit, double)
    */
@@ -311,6 +313,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Returns the min delay between retries.
    *
+   * @see #withDelay(Duration, Duration)
    * @see #withDelay(long, long, ChronoUnit)
    */
   public Duration getDelayMin() {
@@ -320,6 +323,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Returns the max delay between retries.
    *
+   * @see #withDelay(Duration, Duration)
    * @see #withDelay(long, long, ChronoUnit)
    */
   public Duration getDelayMax() {
@@ -329,6 +333,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Returns the delay factor for backoff retries.
    *
+   * @see #withBackoff(Duration, Duration, double)
    * @see #withBackoff(long, long, ChronoUnit, double)
    */
   public double getDelayFactor() {
@@ -367,7 +372,10 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Returns the max delay between backoff retries.
    *
+   * @see #withBackoff(Duration, Duration)
+   * @see #withBackoff(Duration, Duration, double)
    * @see #withBackoff(long, long, ChronoUnit)
+   * @see #withBackoff(long, long, ChronoUnit, double)
    */
   public Duration getMaxDelay() {
     return maxDelay;
@@ -397,6 +405,19 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
    * successive delays by a factor of 2.
    *
+   * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
+   * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
+   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(Duration) maxDuration},
+   * if delays have already been set, or if random delays have already been set
+   */
+  public RetryPolicy<R> withBackoff(Duration delay, Duration maxDelay) {
+    return withBackoff(delay, maxDelay, 2);
+  }
+
+  /**
+   * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
+   * successive delays by a factor of 2.
+   *
    * @throws NullPointerException if {@code chronoUnit} is null
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(Duration) maxDuration},
@@ -417,18 +438,31 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * if delays have already been set, or if random delays have already been set
    */
   public RetryPolicy<R> withBackoff(long delay, long maxDelay, ChronoUnit chronoUnit, double delayFactor) {
-    Assert.notNull(chronoUnit, "chronoUnit");
-    Assert.isTrue(delay > 0, "The delay must be greater than 0");
-    Duration delayDuration = Duration.of(delay, chronoUnit);
-    Duration maxDelayDuration = Duration.of(maxDelay, chronoUnit);
-    Assert.state(maxDuration == null || delayDuration.toNanos() < maxDuration.toNanos(),
+    return withBackoff(Duration.of(delay, chronoUnit), Duration.of(maxDelay, chronoUnit), delayFactor);
+  }
+
+  /**
+   * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
+   * successive delays by the {@code delayFactor}.
+   *
+   * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
+   * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the {@code
+   * delayFactor} is <= 1
+   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(Duration) maxDuration},
+   * if delays have already been set, or if random delays have already been set
+   */
+  public RetryPolicy<R> withBackoff(Duration delay, Duration maxDelay, double delayFactor) {
+    Assert.notNull(delay, "delay");
+    Assert.notNull(maxDelay, "maxDelay");
+    Assert.isTrue(!delay.isNegative() && !delay.isZero(), "The delay must be greater than 0");
+    Assert.state(maxDuration == null || delay.toNanos() < maxDuration.toNanos(),
       "delay must be less than the maxDuration");
-    Assert.isTrue(delayDuration.toNanos() < maxDelayDuration.toNanos(), "delay must be less than the maxDelay");
+    Assert.isTrue(delay.toNanos() < maxDelay.toNanos(), "delay must be less than the maxDelay");
     Assert.isTrue(delayFactor > 1, "delayFactor must be greater than 1");
     Assert.state(this.delay == null || this.delay.equals(Duration.ZERO), "Delays have already been set");
     Assert.state(delayMin == null, "Random delays have already been set");
-    this.delay = delayDuration;
-    this.maxDelay = maxDelayDuration;
+    this.delay = delay;
+    this.maxDelay = maxDelay;
     this.delayFactor = delayFactor;
     return this;
   }
@@ -436,7 +470,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Sets the {@code delay} to occur between retries.
    *
-   * @throws NullPointerException if {@code chronoUnit} is null
+   * @throws NullPointerException if {@code delay} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
    * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicy#withMaxDuration(Duration) maxDuration},
    * if random delays have already been set, or if backoff delays have already been set
@@ -462,18 +496,30 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * maxDuration}, if delays have already been set, if backoff delays have already been set
    */
   public RetryPolicy<R> withDelay(long delayMin, long delayMax, ChronoUnit chronoUnit) {
-    Assert.notNull(chronoUnit, "chronoUnit");
-    Assert.isTrue(delayMin > 0, "delayMin must be greater than 0");
-    Assert.isTrue(delayMax > 0, "delayMax must be greater than 0");
-    Duration delayMinDuration = Duration.of(delayMin, chronoUnit);
-    Duration delayMaxDuration = Duration.of(delayMax, chronoUnit);
-    Assert.isTrue(delayMinDuration.toNanos() < delayMaxDuration.toNanos(), "delayMin must be less than delayMax");
-    Assert.state(maxDuration == null || delayMaxDuration.toNanos() < maxDuration.toNanos(),
+    return withDelay(Duration.of(delayMin, chronoUnit), Duration.of(delayMax, chronoUnit));
+  }
+
+  /**
+   * Sets a random delay between the {@code delayMin} and {@code delayMax} (inclusive) to occur between retries.
+   *
+   * @throws NullPointerException if {@code delayMin} or {@code delayMax} are null
+   * @throws IllegalArgumentException if {@code delayMin} or {@code delayMax} are <= 0, or {@code delayMin} >= {@code
+   * delayMax}
+   * @throws IllegalStateException if {@code delayMax} is >= the {@link RetryPolicy#withMaxDuration(Duration)
+   * maxDuration}, if delays have already been set, if backoff delays have already been set
+   */
+  public RetryPolicy<R> withDelay(Duration delayMin, Duration delayMax) {
+    Assert.notNull(delayMin, "delayMin");
+    Assert.notNull(delayMax, "delayMax");
+    Assert.isTrue(!delayMin.isNegative() && !delayMin.isZero(), "delayMin must be greater than 0");
+    Assert.isTrue(!delayMax.isNegative() && !delayMax.isZero(), "delayMax must be greater than 0");
+    Assert.isTrue(delayMin.toNanos() < delayMax.toNanos(), "delayMin must be less than delayMax");
+    Assert.state(maxDuration == null || delayMax.toNanos() < maxDuration.toNanos(),
       "delayMax must be less than the maxDuration");
     Assert.state(delay == null || delay.equals(Duration.ZERO), "Delays have already been set");
     Assert.state(maxDelay == null, "Backoff delays have already been set");
-    this.delayMin = delayMinDuration;
-    this.delayMax = delayMaxDuration;
+    this.delayMin = delayMin;
+    this.delayMax = delayMax;
     return this;
   }
 

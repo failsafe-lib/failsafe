@@ -19,7 +19,6 @@ import org.testng.annotations.Test;
 
 import java.net.ConnectException;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -183,7 +182,7 @@ public class ExecutionTest {
 
   public void shouldAdjustWaitTimeForBackoff() {
     Execution<Object> exec = new Execution<>(
-      new RetryPolicy<>().withMaxAttempts(10).withBackoff(1, 10, ChronoUnit.NANOS));
+      new RetryPolicy<>().withMaxAttempts(10).withBackoff(Duration.ofNanos(1), Duration.ofNanos(10)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getWaitTime().toNanos(), 1);
@@ -234,7 +233,7 @@ public class ExecutionTest {
 
   public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
     Execution<Object> exec = new Execution<>(new RetryPolicy<>().withMaxAttempts(10)
-      .withBackoff(1, 10, ChronoUnit.NANOS)
+      .withBackoff(Duration.ofNanos(1), Duration.ofNanos(10))
       .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
     assertEquals(exec.getWaitTime().toNanos(), 0);
     exec.recordFailure(e);
