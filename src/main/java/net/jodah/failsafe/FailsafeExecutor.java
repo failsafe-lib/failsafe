@@ -60,8 +60,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
+   * @throws TimeoutExceededException if the execution fails because {@link Timeout} is exceeded.
+   * @throws CircuitBreakerOpenException if the execution fails because {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
     return call(toCtxSupplier(supplier));
@@ -73,8 +73,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
+   * @throws TimeoutExceededException if the execution fails because {@link Timeout} is exceeded.
+   * @throws CircuitBreakerOpenException if the execution fails because {@link CircuitBreaker} is open.
    */
   public <T extends R> T get(ContextualSupplier<T, T> supplier) {
     return call(Assert.notNull(supplier, "supplier"));
@@ -84,12 +84,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
    * exceeded.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -103,12 +103,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
    * exceeded.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -128,12 +128,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * AsyncExecution.recordFailure}.
    * </p>
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -147,12 +147,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -166,12 +166,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Executes the {@code supplier} asynchronously until the resulting future is successfully completed or the configured
    * policies are exceeded.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -192,12 +192,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * AsyncExecution.recordFailure}.
    * </p>
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -214,8 +214,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
+   * @throws TimeoutExceededException if the execution fails because {@link Timeout} is exceeded.
+   * @throws CircuitBreakerOpenException if the execution fails because {@link CircuitBreaker} is open.
    */
   public void run(CheckedRunnable runnable) {
     call(toCtxSupplier(runnable));
@@ -227,8 +227,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
    * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
-   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
+   * @throws TimeoutExceededException if the execution fails because {@link Timeout} is exceeded.
+   * @throws CircuitBreakerOpenException if the execution fails because {@link CircuitBreaker} is open.
    */
   public void run(ContextualRunnable<Void> runnable) {
     call(toCtxSupplier(runnable));
@@ -237,12 +237,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -255,12 +255,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -280,12 +280,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * AsyncExecution.recordFailure}.
    * </p>
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -382,8 +382,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    *
    * @throws FailsafeException if the {@code innerSupplier} fails with a checked Exception or if interrupted while
    * waiting to perform a retry.
-   * @throws TimeoutExceededException if a configured {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if a configured {@link CircuitBreaker} is open.
+   * @throws TimeoutExceededException if the execution fails because {@link Timeout} is exceeded.
+   * @throws CircuitBreakerOpenException if the execution fails because {@link CircuitBreaker} is open.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> T call(ContextualSupplier<T, T> innerSupplier) {
@@ -406,12 +406,12 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Calls the asynchronous {@code innerFn} via the configured Scheduler, handling results according to the configured
    * policies.
    * <p>
-   * If a configured {@link Timeout} is exceeded, the resulting future is completed exceptionally with {@link
-   * TimeoutExceededException}.
+   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
+   * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If a configured {@link CircuitBreaker} is open, the resulting future is completed exceptionally with {@link
-   * CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
+   * {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @param asyncExecution whether this is a detached, async execution that must be manually completed
