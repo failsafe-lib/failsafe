@@ -36,13 +36,13 @@ public class RxJavaExample {
       else
         System.out.println("Subscriber completed successfully");
     }).retryWhen(attempts -> {
-      Execution execution = new Execution(retryPolicy);
+      Execution<Object> execution = new Execution<>(retryPolicy);
       return attempts.flatMap(failure -> {
         System.out.println("Failure detected");
         if (execution.canRetryOn(failure))
           return Observable.timer(execution.getWaitTime().toNanos(), TimeUnit.NANOSECONDS);
         else
-          return Observable.<Long>error(failure);
+          return Observable.error(failure);
       });
     }).toBlocking().forEach(System.out::println);
   }
