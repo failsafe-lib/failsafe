@@ -88,8 +88,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -107,8 +107,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -132,8 +132,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -151,8 +151,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -170,8 +170,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -196,8 +196,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code supplier} is null
@@ -241,8 +241,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -259,8 +259,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -284,8 +284,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -410,8 +410,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * {@link TimeoutExceededException}.
    * </p>
    * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally with
-   * {@link CircuitBreakerOpenException}.
+   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
+   * with {@link CircuitBreakerOpenException}.
    * </p>
    *
    * @param asyncExecution whether this is a detached, async execution that must be manually completed
