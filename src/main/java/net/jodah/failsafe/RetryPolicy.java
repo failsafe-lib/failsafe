@@ -275,8 +275,11 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   }
 
   /**
-   * Registers the {@code listener} to be called when a retry is about to be scheduled. A retry will actually be
-   * performed after any scheduled delay.
+   * Registers the {@code listener} to be called when a retry for an async call is about to be scheduled. This method
+   * differs from {@link #onRetry(CheckedConsumer)} since it is called when a retry is initially scheduled but before
+   * any configured delay, whereas {@link #onRetry(CheckedConsumer) onRetry} is called after a delay, just before the
+   * retry attempt takes place.
+   * <p>
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    *
