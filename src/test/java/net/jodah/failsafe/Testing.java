@@ -246,14 +246,14 @@ public class Testing extends Asserts {
   }
 
   public static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats) {
-    return withStats(retryPolicy, stats, false);
+    return withStatsAndLogs(retryPolicy, stats, false);
   }
 
   public static <T> RetryPolicy<T> withStatsAndLogs(RetryPolicy<T> retryPolicy, Stats stats) {
-    return withStats(retryPolicy, stats, true);
+    return withStatsAndLogs(retryPolicy, stats, true);
   }
 
-  private static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats, boolean withLogging) {
+  private static <T> RetryPolicy<T> withStatsAndLogs(RetryPolicy<T> retryPolicy, Stats stats, boolean withLogging) {
     retryPolicy.onFailedAttempt(e -> {
       stats.executionCount++;
       stats.failedAttemptCount++;
