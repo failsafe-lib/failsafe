@@ -39,8 +39,8 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   // Mutable state
   private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
-  /** The fixed, backoff, random or computed delay time in nanoseconds. */
-  private volatile long delayNanos;
+  /** The last fixed, backoff, random or computed delay time in nanoseconds. */
+  private volatile long lastDelayNanos;
 
   // Listeners
   private final EventListener abortListener;
@@ -80,7 +80,7 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
 
           // Guard against race with Timeout so that sleep can either be skipped or interrupted
           execution.interruptState.canInterrupt = true;
-          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getWaitNanos()));
+          Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getDelay()));
         } catch (InterruptedException e) {
           // Set interrupt flag if interrupt was not intended
           if (!execution.interruptState.interrupted)
@@ -155,7 +155,7 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
                       future.inject(retryExecution);
                       Callable<Object> retryFn = () -> handleAsync(retryExecution, innerFn, scheduler, future, promise,
                         previousResultRef);
-                      Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getWaitNanos(),
+                      Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getDelay(),
                         TimeUnit.NANOSECONDS);
                       retryExecution.innerFuture = scheduledRetry;
 
@@ -202,22 +202,22 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
       failedAttemptListener.handle(result, execution);
 
     failedAttempts++;
-    long waitNanos = delayNanos;
+    long delayNanos = lastDelayNanos;
 
     // Determine the computed delay
     Duration computedDelay = policy.computeDelay(execution);
     if (computedDelay != null) {
-      waitNanos = computedDelay.toNanos();
+      delayNanos = computedDelay.toNanos();
     } else {
       // Determine the fixed or random delay
-      waitNanos = getFixedOrRandomDelayNanos(waitNanos);
-      waitNanos = adjustForBackoff(execution, waitNanos);
-      delayNanos = waitNanos;
+      delayNanos = getFixedOrRandomDelayNanos(delayNanos);
+      delayNanos = adjustForBackoff(execution, delayNanos);
+      lastDelayNanos = delayNanos;
     }
 
-    waitNanos = adjustForJitter(waitNanos);
+    delayNanos = adjustForJitter(delayNanos);
     long elapsedNanos = execution.getElapsedTime().toNanos();
-    waitNanos = adjustForMaxDuration(waitNanos, elapsedNanos);
+    delayNanos = adjustForMaxDuration(delayNanos, elapsedNanos);
 
     // Calculate result
     boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && failedAttempts > policy.getMaxRetries();
@@ -234,7 +234,7 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     else if (retriesExceededListener != null && !success && retriesExceeded)
       retriesExceededListener.handle(result, execution);
 
-    return result.with(waitNanos, completed, success);
+    return result.with(delayNanos, completed, success);
   }
 
   /**
@@ -247,39 +247,39 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     return super.onFailureAsync(execution, result.withNotComplete(), scheduler, future);
   }
 
-  private long getFixedOrRandomDelayNanos(long waitNanos) {
+  private long getFixedOrRandomDelayNanos(long delayNanos) {
     Duration delay = policy.getDelay();
     Duration delayMin = policy.getDelayMin();
     Duration delayMax = policy.getDelayMax();
 
-    if (waitNanos == 0 && delay != null && !delay.equals(Duration.ZERO))
-      waitNanos = delay.toNanos();
+    if (delayNanos == 0 && delay != null && !delay.equals(Duration.ZERO))
+      delayNanos = delay.toNanos();
     else if (delayMin != null && delayMax != null)
-      waitNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
-    return waitNanos;
+      delayNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
+    return delayNanos;
   }
 
-  private long adjustForBackoff(AbstractExecution<R> execution, long waitNanos) {
+  private long adjustForBackoff(AbstractExecution<R> execution, long delayNanos) {
     if (execution.getAttemptCount() != 1 && policy.getMaxDelay() != null)
-      waitNanos = (long) Math.min(waitNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
-    return waitNanos;
+      delayNanos = (long) Math.min(delayNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
+    return delayNanos;
   }
 
-  private long adjustForJitter(long waitNanos) {
+  private long adjustForJitter(long delayNanos) {
     if (policy.getJitter() != null)
-      waitNanos = randomDelay(waitNanos, policy.getJitter().toNanos(), Math.random());
+      delayNanos = randomDelay(delayNanos, policy.getJitter().toNanos(), Math.random());
     else if (policy.getJitterFactor() > 0.0)
-      waitNanos = randomDelay(waitNanos, policy.getJitterFactor(), Math.random());
-    return waitNanos;
+      delayNanos = randomDelay(delayNanos, policy.getJitterFactor(), Math.random());
+    return delayNanos;
   }
 
-  private long adjustForMaxDuration(long waitNanos, long elapsedNanos) {
+  private long adjustForMaxDuration(long delayNanos, long elapsedNanos) {
     if (policy.getMaxDuration() != null) {
-      long maxRemainingWaitTime = policy.getMaxDuration().toNanos() - elapsedNanos;
-      waitNanos = Math.min(waitNanos, maxRemainingWaitTime < 0 ? 0 : maxRemainingWaitTime);
-      if (waitNanos < 0)
-        waitNanos = 0;
+      long maxRemainingDelay = policy.getMaxDuration().toNanos() - elapsedNanos;
+      delayNanos = Math.min(delayNanos, maxRemainingDelay < 0 ? 0 : maxRemainingDelay);
+      if (delayNanos < 0)
+        delayNanos = 0;
     }
-    return waitNanos;
+    return delayNanos;
   }
 }

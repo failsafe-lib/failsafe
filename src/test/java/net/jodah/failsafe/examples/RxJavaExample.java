@@ -41,7 +41,7 @@ public class RxJavaExample {
         System.out.println("Failure detected");
         execution.recordFailure(failure);
         if (!execution.isComplete())
-          return Observable.timer(execution.getWaitTime().toNanos(), TimeUnit.NANOSECONDS);
+          return Observable.timer(execution.getDelay().toNanos(), TimeUnit.NANOSECONDS);
         else
           return Observable.error(failure);
       });

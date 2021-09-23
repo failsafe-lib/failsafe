@@ -39,8 +39,8 @@ public abstract class AbstractExecution<R> extends ExecutionContext<R> {
   volatile boolean attemptStarted;
   // Whether the execution attempt has been recorded
   volatile boolean attemptRecorded;
-  // The wait time in nanoseconds
-  volatile long waitNanos;
+  // The delay time in nanoseconds
+  volatile long delayNanos;
   // Whether the entire Failsafe execution has been completed
   volatile boolean completed;
 
@@ -125,17 +125,17 @@ public abstract class AbstractExecution<R> extends ExecutionContext<R> {
       allComplete = allComplete && result.isComplete();
     }
 
-    waitNanos = result.getWaitNanos();
+    delayNanos = result.getDelay();
     completed = allComplete;
     return result;
   }
 
   /**
-   * Returns the time to wait before the next execution attempt. Returns {@code 0} if an execution has not yet
+   * Returns the time to delay before the next execution attempt. Returns {@code 0} if an execution has not yet
    * occurred.
    */
-  public Duration getWaitTime() {
-    return Duration.ofNanos(waitNanos);
+  public Duration getDelay() {
+    return Duration.ofNanos(delayNanos);
   }
 
   /**

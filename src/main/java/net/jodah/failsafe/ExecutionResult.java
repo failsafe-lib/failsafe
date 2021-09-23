@@ -38,7 +38,7 @@ public final class ExecutionResult {
   /** Whether the result represents a non result rather than a {@code null} result */
   private final boolean nonResult;
   /** The amount of time to wait prior to the next execution, according to the policy */
-  private final long waitNanos;
+  private final long delayNanos;
   /** Whether a policy has completed handling of the execution */
   private final boolean complete;
   /** Whether a policy determined the execution to be a success */
@@ -54,12 +54,12 @@ public final class ExecutionResult {
     this(result, failure, false, 0, true, failure == null, failure == null);
   }
 
-  private ExecutionResult(Object result, Throwable failure, boolean nonResult, long waitNanos, boolean complete,
+  private ExecutionResult(Object result, Throwable failure, boolean nonResult, long delayNanos, boolean complete,
     boolean success, Boolean successAll) {
     this.nonResult = nonResult;
     this.result = result;
     this.failure = failure;
-    this.waitNanos = waitNanos;
+    this.delayNanos = delayNanos;
     this.complete = complete;
     this.success = success;
     this.successAll = successAll;
@@ -84,8 +84,8 @@ public final class ExecutionResult {
     return failure;
   }
 
-  public long getWaitNanos() {
-    return waitNanos;
+  public long getDelay() {
+    return delayNanos;
   }
 
   public boolean isComplete() {
@@ -107,7 +107,7 @@ public final class ExecutionResult {
   ExecutionResult withNonResult() {
     return success && this.result == null && nonResult ?
       this :
-      new ExecutionResult(null, null, true, waitNanos, true, true, successAll);
+      new ExecutionResult(null, null, true, delayNanos, true, true, successAll);
   }
 
   /**
@@ -119,7 +119,7 @@ public final class ExecutionResult {
     boolean unchangedNotNull = this.result != null && this.result.equals(result);
     return success && (unchangedNull || unchangedNotNull) ?
       this :
-      new ExecutionResult(result, null, nonResult, waitNanos, true, true, successAll);
+      new ExecutionResult(result, null, nonResult, delayNanos, true, true, successAll);
   }
 
   /**
@@ -128,14 +128,14 @@ public final class ExecutionResult {
   ExecutionResult withNotComplete() {
     return !this.complete ?
       this :
-      new ExecutionResult(result, failure, nonResult, waitNanos, false, success, successAll);
+      new ExecutionResult(result, failure, nonResult, delayNanos, false, success, successAll);
   }
 
   /**
    * Returns a copy of the ExecutionResult with success value of {code false}.
    */
   ExecutionResult withFailure() {
-    return !this.success ? this : new ExecutionResult(result, failure, nonResult, waitNanos, complete, false, false);
+    return !this.success ? this : new ExecutionResult(result, failure, nonResult, delayNanos, complete, false, false);
   }
 
   /**
@@ -144,25 +144,25 @@ public final class ExecutionResult {
   ExecutionResult withSuccess() {
     return this.complete && this.success ?
       this :
-      new ExecutionResult(result, failure, nonResult, waitNanos, true, true, successAll);
+      new ExecutionResult(result, failure, nonResult, delayNanos, true, true, successAll);
   }
 
   /**
-   * Returns a copy of the ExecutionResult with the {@code waitNanos} value.
+   * Returns a copy of the ExecutionResult with the {@code delayNanos} value.
    */
-  public ExecutionResult withWaitNanos(long waitNanos) {
-    return this.waitNanos == waitNanos ?
+  public ExecutionResult withDelay(long delayNanos) {
+    return this.delayNanos == delayNanos ?
       this :
-      new ExecutionResult(result, failure, nonResult, waitNanos, complete, success, successAll);
+      new ExecutionResult(result, failure, nonResult, delayNanos, complete, success, successAll);
   }
 
   /**
-   * Returns a copy of the ExecutionResult with the {@code waitNanos}, {@code complete} and {@code success} values.
+   * Returns a copy of the ExecutionResult with the {@code delayNanos}, {@code complete} and {@code success} values.
    */
-  public ExecutionResult with(long waitNanos, boolean complete, boolean success) {
-    return this.waitNanos == waitNanos && this.complete == complete && this.success == success ?
+  public ExecutionResult with(long delayNanos, boolean complete, boolean success) {
+    return this.delayNanos == delayNanos && this.complete == complete && this.success == success ?
       this :
-      new ExecutionResult(result, failure, nonResult, waitNanos, complete, success,
+      new ExecutionResult(result, failure, nonResult, delayNanos, complete, success,
         successAll == null ? success : success && successAll);
   }
 
@@ -172,7 +172,7 @@ public final class ExecutionResult {
 
   @Override
   public String toString() {
-    return "[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult + ", waitNanos=" + waitNanos
+    return "[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult + ", delayNanos=" + delayNanos
       + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll + ']';
   }
 

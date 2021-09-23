@@ -58,7 +58,7 @@ public interface EventListener {
       try {
         ((CheckedConsumer<ExecutionScheduledEvent<R>>) handler).accept(
           new ExecutionScheduledEvent<>(result.getResult(), result.getFailure(),
-            Duration.ofNanos(result.getWaitNanos()), context));
+            Duration.ofNanos(result.getDelay()), context));
       } catch (Throwable ignore) {
       }
     };

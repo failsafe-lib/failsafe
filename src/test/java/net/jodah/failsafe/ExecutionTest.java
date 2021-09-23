@@ -180,85 +180,85 @@ public class ExecutionTest {
     assertEquals(exec.getExecutionCount(), 3);
   }
 
-  public void shouldAdjustWaitTimeForBackoff() {
+  public void shouldAdjustDelayForBackoff() {
     Execution<Object> exec = new Execution<>(
       new RetryPolicy<>().withMaxAttempts(10).withBackoff(Duration.ofNanos(1), Duration.ofNanos(10)));
-    assertEquals(exec.getWaitTime().toNanos(), 0);
+    assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 1);
+    assertEquals(exec.getDelay().toNanos(), 1);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 2);
+    assertEquals(exec.getDelay().toNanos(), 2);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 4);
+    assertEquals(exec.getDelay().toNanos(), 4);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 8);
+    assertEquals(exec.getDelay().toNanos(), 8);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 10);
+    assertEquals(exec.getDelay().toNanos(), 10);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 10);
+    assertEquals(exec.getDelay().toNanos(), 10);
   }
 
-  public void shouldAdjustWaitTimeForComputedDelay() {
+  public void shouldAdjustDelayForComputedDelay() {
     Execution<Object> exec = new Execution<>(
       new RetryPolicy<>().withMaxAttempts(10).withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() * 2)));
-    assertEquals(exec.getWaitTime().toNanos(), 0);
+    assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 2);
+    assertEquals(exec.getDelay().toNanos(), 2);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 4);
+    assertEquals(exec.getDelay().toNanos(), 4);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 6);
+    assertEquals(exec.getDelay().toNanos(), 6);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 8);
+    assertEquals(exec.getDelay().toNanos(), 8);
   }
 
-  public void shouldFallbackWaitTimeFromComputedToFixedDelay() {
+  public void shouldFallbackDelayFromComputedToFixedDelay() {
     Execution<Object> exec = new Execution<>(new RetryPolicy<>().withMaxAttempts(10)
       .withDelay(Duration.ofNanos(5))
       .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
-    assertEquals(exec.getWaitTime().toNanos(), 0);
+    assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 5);
+    assertEquals(exec.getDelay().toNanos(), 5);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 4);
+    assertEquals(exec.getDelay().toNanos(), 4);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 5);
+    assertEquals(exec.getDelay().toNanos(), 5);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 8);
+    assertEquals(exec.getDelay().toNanos(), 8);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 5);
+    assertEquals(exec.getDelay().toNanos(), 5);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 12);
+    assertEquals(exec.getDelay().toNanos(), 12);
   }
 
-  public void shouldFallbackWaitTimeFromComputedToBackoffDelay() {
+  public void shouldFallbackDelayFromComputedToBackoffDelay() {
     Execution<Object> exec = new Execution<>(new RetryPolicy<>().withMaxAttempts(10)
       .withBackoff(Duration.ofNanos(1), Duration.ofNanos(10))
       .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
-    assertEquals(exec.getWaitTime().toNanos(), 0);
+    assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 1);
+    assertEquals(exec.getDelay().toNanos(), 1);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 4);
+    assertEquals(exec.getDelay().toNanos(), 4);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 2);
+    assertEquals(exec.getDelay().toNanos(), 2);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 8);
+    assertEquals(exec.getDelay().toNanos(), 8);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 4);
+    assertEquals(exec.getDelay().toNanos(), 4);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 12);
+    assertEquals(exec.getDelay().toNanos(), 12);
     exec.recordFailure(e);
-    assertEquals(exec.getWaitTime().toNanos(), 8);
+    assertEquals(exec.getDelay().toNanos(), 8);
   }
 
-  public void shouldAdjustWaitTimeForMaxDuration() throws Throwable {
+  public void shouldAdjustDelayForMaxDuration() throws Throwable {
     Execution<Object> exec = new Execution<>(
       new RetryPolicy<>().withDelay(Duration.ofMillis(49)).withMaxDuration(Duration.ofMillis(50)));
     Thread.sleep(10);
     exec.recordFailure(e);
     assertFalse(exec.isComplete());
-    assertTrue(exec.getWaitTime().toNanos() < TimeUnit.MILLISECONDS.toNanos(50) && exec.getWaitTime().toNanos() > 0);
+    assertTrue(exec.getDelay().toNanos() < TimeUnit.MILLISECONDS.toNanos(50) && exec.getDelay().toNanos() > 0);
   }
 
   public void shouldSupportMaxDuration() throws Exception {
@@ -284,16 +284,16 @@ public class ExecutionTest {
     assertTrue(exec.isComplete());
   }
 
-  public void shouldGetWaitMillis() throws Throwable {
+  public void shouldGetDelayMillis() throws Throwable {
     Execution<Object> exec = new Execution<>(
       new RetryPolicy<>().withDelay(Duration.ofMillis(100)).withMaxDuration(Duration.ofMillis(101)).handleResult(null));
-    assertEquals(exec.getWaitTime().toMillis(), 0);
+    assertEquals(exec.getDelay().toMillis(), 0);
     exec.recordResult(null);
-    assertTrue(exec.getWaitTime().toMillis() <= 100);
+    assertTrue(exec.getDelay().toMillis() <= 100);
     Thread.sleep(150);
     exec.recordResult(null);
     assertTrue(exec.isComplete());
-    assertEquals(exec.getWaitTime().toMillis(), 0);
+    assertEquals(exec.getDelay().toMillis(), 0);
   }
 
   @Test(expectedExceptions = IllegalStateException.class)

@@ -98,7 +98,7 @@ public final class AsyncExecution<R> extends AbstractExecution<R> {
     // Guard against race with a timeout expiring
     synchronized (future) {
       if (!attemptRecorded) {
-        ExecutionResult er = new ExecutionResult(result, failure).withWaitNanos(waitNanos);
+        ExecutionResult er = new ExecutionResult(result, failure).withDelay(delayNanos);
         record(er);
       }
 
