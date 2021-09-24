@@ -128,8 +128,6 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
 
   @Override
   public synchronized void record(ExecutionResult<R> result) {
-    Assert.state(!completed, "Execution has already been completed");
-
     if (preExecuted && !attemptRecorded) {
       recordAttempt();
       executions.incrementAndGet();
@@ -144,6 +142,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
    * @throws IllegalStateException if the execution is already complete
    */
   synchronized ExecutionResult<R> postExecute(ExecutionResult<R> result) {
+    Assert.state(!completed, "Execution has already been completed");
     record(result);
     boolean allComplete = true;
     for (PolicyExecutor<R, ? extends Policy<R>> policyExecutor : policyExecutors) {

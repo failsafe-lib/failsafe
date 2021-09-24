@@ -33,8 +33,6 @@ public interface ExecutionInternal<R> extends ExecutionContext<R> {
   /**
    * Records the {@code result} if the execution has been {@link #preExecute() pre-executed} and a result has not
    * already been recorded.
-   *
-   * @throws IllegalStateException if the execution is already complete
    */
   void record(ExecutionResult<R> result);
 

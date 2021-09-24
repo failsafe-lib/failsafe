@@ -93,6 +93,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
     // Guard against race with a timeout expiring
     synchronized (future) {
       if (!attemptRecorded) {
+        Assert.state(!completed, "Execution has already been completed");
         record(new ExecutionResult<>(result, failure));
       }
 
