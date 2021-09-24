@@ -43,6 +43,7 @@ import static net.jodah.failsafe.Functions.*;
  */
 public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
   private Scheduler scheduler = Scheduler.DEFAULT;
+  private Executor executor;
   /** Policies sorted outer-most first */
   final List<? extends Policy<R>> policies;
   private EventHandler<R> completeHandler;
@@ -134,7 +135,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsync(CheckedSupplier<T> supplier) {
-    return callAsync(future -> getPromise(toCtxSupplier(supplier)), false);
+    return callAsync(future -> getPromise(toCtxSupplier(supplier), executor), false);
   }
 
   /**
@@ -153,7 +154,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsync(ContextualSupplier<T, T> supplier) {
-    return callAsync(future -> getPromise(supplier), false);
+    return callAsync(future -> getPromise(supplier, executor), false);
   }
 
   /**
@@ -178,7 +179,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncRunnable<T> runnable) {
-    return callAsync(future -> getPromiseExecution(runnable), true);
+    return callAsync(future -> getPromiseExecution(runnable, executor), true);
   }
 
   /**
@@ -199,7 +200,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future), false);
+    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future, executor), false);
   }
 
   /**
@@ -221,7 +222,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsync(
     ContextualSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStage(supplier, future), false);
+    return callAsync(future -> getPromiseOfStage(supplier, future, executor), false);
   }
 
   /**
@@ -249,7 +250,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
     AsyncSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStageExecution(supplier, future), true);
+    return callAsync(future -> getPromiseOfStageExecution(supplier, future, executor), true);
   }
 
   /**
@@ -293,7 +294,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsync(CheckedRunnable runnable) {
-    return callAsync(future -> getPromise(toCtxSupplier(runnable)), false);
+    return callAsync(future -> getPromise(toCtxSupplier(runnable), executor), false);
   }
 
   /**
@@ -311,7 +312,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsync(ContextualRunnable<Void> runnable) {
-    return callAsync(future -> getPromise(toCtxSupplier(runnable)), false);
+    return callAsync(future -> getPromise(toCtxSupplier(runnable), executor), false);
   }
 
   /**
@@ -336,7 +337,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsyncExecution(AsyncRunnable<Void> runnable) {
-    return callAsync(future -> getPromiseExecution(runnable), true);
+    return callAsync(future -> getPromiseExecution(runnable, executor), true);
   }
 
   /**
@@ -372,33 +373,46 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * Configures the {@code executor} to use for performing asynchronous executions and listener callbacks.
+   * Configures the {@code scheduledExecutorService} to use for performing asynchronous executions and listener
+   * callbacks.
    * <p>
-   * Note: The {@code executor} should have a core pool size of at least 2 in order for {@link Timeout timeouts} to
-   * work.
+   * Note: The {@code scheduledExecutorService} should have a core pool size of at least 2 in order for {@link Timeout
+   * timeouts} to work.
    * </p>
    *
-   * @throws NullPointerException if {@code executor} is null
-   * @throws IllegalArgumentException if the {@code executor} has a core pool size of less than 2
+   * @throws NullPointerException if {@code scheduledExecutorService} is null
+   * @throws IllegalArgumentException if the {@code scheduledExecutorService} has a core pool size of less than 2
    */
-  public FailsafeExecutor<R> with(ScheduledExecutorService executor) {
-    this.scheduler = Scheduler.of(executor);
+  public FailsafeExecutor<R> with(ScheduledExecutorService scheduledExecutorService) {
+    this.scheduler = Scheduler.of(Assert.notNull(scheduledExecutorService, "scheduledExecutorService"));
     return this;
   }
 
   /**
-   * Configures the {@code executor} to use for performing asynchronous executions and listener callbacks. For
-   * executions that require a delay, an internal ScheduledExecutorService will be used for the delay, then the {@code
-   * executor} will be used for actual execution.
+   * Configures the {@code executorService} to use for performing asynchronous executions and listener callbacks. For
+   * async executions that require a delay, an internal ScheduledExecutorService will be used for the delay, then the
+   * {@code executorService} will be used for actual execution.
    * <p>
-   * Note: The {@code executor} should have a core pool size or parallelism of at least 2 in order for {@link Timeout
-   * timeouts} to work.
+   * Note: The {@code executorService} should have a core pool size or parallelism of at least 2 in order for {@link
+   * Timeout timeouts} to work.
    * </p>
+   *
+   * @throws NullPointerException if {@code executorService} is null
+   */
+  public FailsafeExecutor<R> with(ExecutorService executorService) {
+    this.scheduler = Scheduler.of(Assert.notNull(executorService, "executorService"));
+    return this;
+  }
+
+  /**
+   * Configures the {@code executor} to use as a wrapper around executions. The {@code executor} is responsible for
+   * propagating executions. Executions that normally return a result, such as {@link #get(CheckedSupplier)} will return
+   * {@code null} since the {@link Executor} interface does not support results.
    *
    * @throws NullPointerException if {@code executor} is null
    */
   public FailsafeExecutor<R> with(Executor executor) {
-    this.scheduler = Scheduler.of(executor);
+    this.executor = Assert.notNull(executor, "executor");
     return this;
   }
 
@@ -422,7 +436,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> T call(ContextualSupplier<T, T> innerSupplier) {
-    SyncExecutionImpl<T> execution = new SyncExecutionImpl(this, scheduler, Functions.get(innerSupplier));
+    SyncExecutionImpl<T> execution = new SyncExecutionImpl(this, scheduler, Functions.get(innerSupplier, executor));
     ExecutionResult<T> result = execution.executeSync();
     Throwable failure = result.getFailure();
     if (failure != null) {

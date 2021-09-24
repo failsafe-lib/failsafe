@@ -31,7 +31,7 @@ import static org.testng.Assert.*;
 @Test
 public class AsyncExecutionTest extends Testing {
   Function<AsyncExecutionInternal<Object>, CompletableFuture<ExecutionResult<Object>>> innerFn = Functions.getPromise(
-    ctx -> null);
+    ctx -> null, null);
   ConnectException e = new ConnectException();
   AsyncExecutionInternal<Object> exec;
   FailsafeFuture<Object> future;

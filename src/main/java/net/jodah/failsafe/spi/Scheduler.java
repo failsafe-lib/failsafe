@@ -15,8 +15,6 @@
  */
 package net.jodah.failsafe.spi;
 
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.internal.util.DelegatingExecutorService;
 import net.jodah.failsafe.internal.util.DelegatingScheduler;
 
 import java.util.concurrent.*;
@@ -40,25 +38,16 @@ public interface Scheduler {
   ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit);
 
   /**
-   * Returns a Scheduler adapted from the {@code executor}.
-   *
-   * @throws NullPointerException if {@code executor} is null
+   * Returns a Scheduler adapted from the {@code scheduledExecutorService}.
    */
-  static Scheduler of(final ScheduledExecutorService executor) {
-    Assert.notNull(executor, "executor");
-    return executor::schedule;
+  static Scheduler of(ScheduledExecutorService scheduledExecutorService) {
+    return scheduledExecutorService::schedule;
   }
 
   /**
-   * Returns a Scheduler adapted from the {@code executor}.
-   *
-   * @throws NullPointerException if {@code executor} is null
+   * Returns a Scheduler adapted from the {@code executorService}.
    */
-  static Scheduler of(final Executor executor) {
-    Assert.notNull(executor, "executor");
-    ExecutorService executorService = executor instanceof ExecutorService ?
-      (ExecutorService) executor :
-      new DelegatingExecutorService(executor);
+  static Scheduler of(ExecutorService executorService) {
     return new DelegatingScheduler(executorService);
   }
 }

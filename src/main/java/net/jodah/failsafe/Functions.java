@@ -35,13 +35,15 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<SyncExecutionInternal<R>, ExecutionResult<R>> get(ContextualSupplier<R, R> supplier) {
+  static <R> Function<SyncExecutionInternal<R>, ExecutionResult<R>> get(ContextualSupplier<R, R> supplier,
+    Executor executor) {
+
     return execution -> {
       ExecutionResult<R> result;
       Throwable throwable = null;
       try {
         execution.preExecute();
-        result = ExecutionResult.success(supplier.get(execution));
+        result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
       } catch (Throwable t) {
         throwable = t;
         result = ExecutionResult.failure(t);
@@ -71,14 +73,14 @@ final class Functions {
    * @param <R> result type
    */
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromise(
-    ContextualSupplier<R, R> supplier) {
+    ContextualSupplier<R, R> supplier, Executor executor) {
 
     Assert.notNull(supplier, "supplier");
     return execution -> {
       ExecutionResult<R> result;
       try {
         execution.preExecute();
-        result = ExecutionResult.success(supplier.get(execution));
+        result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
       } catch (Throwable t) {
         result = ExecutionResult.failure(t);
       }
@@ -95,7 +97,7 @@ final class Functions {
    * @param <R> result type
    */
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseExecution(
-    AsyncRunnable<R> runnable) {
+    AsyncRunnable<R> runnable, Executor executor) {
 
     Assert.notNull(runnable, "runnable");
     return new Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>>() {
@@ -103,7 +105,7 @@ final class Functions {
       public synchronized CompletableFuture<ExecutionResult<R>> apply(AsyncExecutionInternal<R> execution) {
         try {
           execution.preExecute();
-          runnable.run(execution);
+          withExecutor(runnable, executor).run(execution);
         } catch (Throwable e) {
           execution.record(null, e);
         }
@@ -122,14 +124,15 @@ final class Functions {
    */
   @SuppressWarnings("unchecked")
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStage(
-    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
+    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future,
+    Executor executor) {
 
     Assert.notNull(supplier, "supplier");
     return execution -> {
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       try {
         execution.preExecute();
-        CompletionStage<? extends R> stage = supplier.get(execution);
+        CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
 
         // Propagate outer cancellations to the stage
         if (stage instanceof Future)
@@ -160,7 +163,7 @@ final class Functions {
    */
   @SuppressWarnings("unchecked")
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStageExecution(
-    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
+    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future, Executor executor) {
 
     Assert.notNull(supplier, "supplier");
     Semaphore asyncFutureLock = new Semaphore(1);
@@ -168,7 +171,7 @@ final class Functions {
       try {
         execution.preExecute();
         asyncFutureLock.acquire();
-        CompletionStage<? extends R> stage = supplier.get(execution);
+        CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
 
         // Propagate outer cancellations to the stage
         if (stage instanceof Future)
@@ -275,6 +278,52 @@ final class Functions {
   static <R, T> ContextualSupplier<R, T> toCtxSupplier(CheckedSupplier<T> supplier) {
     Assert.notNull(supplier, "supplier");
     return ctx -> supplier.get();
+  }
+
+  static <R, T> ContextualSupplier<R, T> withExecutor(ContextualSupplier<R, T> supplier, Executor executor) {
+    return executor == null ? supplier : ctx -> {
+      executor.execute(() -> {
+        try {
+          supplier.get(ctx);
+        } catch (Throwable e) {
+          handleExecutorThrowablen(e);
+        }
+      });
+      return null;
+    };
+  }
+
+  static <R> AsyncRunnable<R> withExecutor(AsyncRunnable<R> runnable, Executor executor) {
+    return executor == null ? runnable : exec -> {
+      executor.execute(() -> {
+        try {
+          runnable.run(exec);
+        } catch (Throwable e) {
+          handleExecutorThrowablen(e);
+        }
+      });
+    };
+  }
+
+  static <R, T> AsyncSupplier<R, T> withExecutor(AsyncSupplier<R, T> supplier, Executor executor) {
+    return executor == null ? supplier : exec -> {
+      executor.execute(() -> {
+        try {
+          supplier.get(exec);
+        } catch (Throwable e) {
+          handleExecutorThrowablen(e);
+        }
+      });
+      return null;
+    };
+  }
+
+  private static void handleExecutorThrowablen(Throwable e) {
+    if (e instanceof RuntimeException)
+      throw (RuntimeException) e;
+    if (e instanceof Error)
+      throw (Error) e;
+    throw new FailsafeException(e);
   }
 
   static <T, R> CheckedFunction<T, R> toFn(CheckedConsumer<T> consumer) {
