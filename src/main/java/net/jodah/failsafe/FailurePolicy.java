@@ -113,7 +113,8 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   }
 
   /**
-   * Specifies that a failure has occurred if the {@code result} matches the execution result.
+   * Specifies that a failure has occurred if the {@code result} matches the execution result. This method is only
+   * considered when a result is returned from an execution, not when an exception is thrown.
    */
   public S handleResult(R result) {
     failureConditions.add(resultPredicateFor(result));
@@ -121,7 +122,9 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   }
 
   /**
-   * Specifies that a failure has occurred if the {@code resultPredicate} matches the execution result.
+   * Specifies that a failure has occurred if the {@code resultPredicate} matches the execution result. This method is
+   * only considered when a result is returned from an execution, not when an exception is thrown. To handle results or
+   * exceptions with the same condition, use {@link #handleIf(BiPredicate)}.
    *
    * @throws NullPointerException if {@code resultPredicate} is null
    */
