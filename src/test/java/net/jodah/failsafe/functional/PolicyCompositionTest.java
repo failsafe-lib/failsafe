@@ -36,7 +36,7 @@ public class PolicyCompositionTest extends Testing {
 
     testRunSuccess(() -> {
       resetBreaker(cb);
-    }, Failsafe.with(fb, rp, cb), ctx -> {
+    }, Failsafe.with(fb).compose(rp).compose(cb), ctx -> {
       throw new IllegalStateException();
     }, e -> {
       assertEquals(cb.getFailureCount(), 3);
@@ -54,7 +54,7 @@ public class PolicyCompositionTest extends Testing {
 
     testRunFailure(() -> {
       resetBreaker(cb);
-    }, Failsafe.with(cb, rp), ctx -> {
+    }, Failsafe.with(cb).compose(rp), ctx -> {
       throw new IllegalStateException();
     }, e -> {
       assertEquals(e.getAttemptCount(), 3);
@@ -71,7 +71,7 @@ public class PolicyCompositionTest extends Testing {
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     Fallback<Object> fb = Fallback.of("test");
 
-    testRunSuccess(Failsafe.with(fb, rp), ctx -> {
+    testRunSuccess(Failsafe.with(fb).compose(rp), ctx -> {
       throw new IllegalStateException();
     }, e -> {
       assertEquals(e.getAttemptCount(), 3);
@@ -85,7 +85,7 @@ public class PolicyCompositionTest extends Testing {
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     Fallback<Object> fb = Fallback.of("test");
 
-    testRunSuccess(Failsafe.with(rp, fb), ctx -> {
+    testRunSuccess(Failsafe.with(rp).compose(fb), ctx -> {
       throw new IllegalStateException();
     }, e -> {
       assertEquals(e.getAttemptCount(), 1);

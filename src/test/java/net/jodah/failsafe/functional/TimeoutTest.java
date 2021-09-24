@@ -163,7 +163,7 @@ public class TimeoutTest extends Testing {
       executionCounter.set(0);
       timeoutStats.reset();
       rpStats.reset();
-    }, Failsafe.with(timeout, retryPolicy), ctx -> {
+    }, Failsafe.with(timeout).compose(retryPolicy), ctx -> {
       System.out.println("Executing");
       executionCounter.incrementAndGet();
       throw new Exception();
@@ -198,7 +198,7 @@ public class TimeoutTest extends Testing {
     Runnable test = () -> testRunFailure(() -> {
       timeoutStats.reset();
       fbStats.reset();
-    }, Failsafe.with(fallback, timeout), ctx -> {
+    }, Failsafe.with(fallback).compose(timeout), ctx -> {
       System.out.println("Executing");
       Thread.sleep(100);
       throw new Exception();
@@ -233,7 +233,7 @@ public class TimeoutTest extends Testing {
     Runnable test = () -> testRunFailure(() -> {
       timeoutStats.reset();
       fbStats.reset();
-    }, Failsafe.with(fallback, timeout), ctx -> {
+    }, Failsafe.with(fallback).compose(timeout), ctx -> {
       System.out.println("Executing");
       throw new Exception();
     }, e -> {
@@ -266,7 +266,7 @@ public class TimeoutTest extends Testing {
     Runnable test = () -> testRunFailure(() -> {
       timeoutStats.reset();
       fbStats.reset();
-    }, Failsafe.with(timeout, fallback), ctx -> {
+    }, Failsafe.with(timeout).compose(fallback), ctx -> {
       System.out.println("Executing");
       Thread.sleep(100);
       throw new Exception();
@@ -301,7 +301,7 @@ public class TimeoutTest extends Testing {
     Runnable test = () -> testRunFailure(() -> {
       timeoutStats.reset();
       fbStats.reset();
-    }, Failsafe.with(timeout, fallback), ctx -> {
+    }, Failsafe.with(timeout).compose(fallback), ctx -> {
       System.out.println("Executing");
       throw new Exception();
     }, e -> {

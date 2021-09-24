@@ -117,4 +117,9 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
     return new TimeoutExecutor<>(this, policyIndex, policyHandlers);
   }
+
+  @Override
+  public String toString() {
+    return "Timeout[timeout=" + timeout + ", interruptable=" + interruptable + ']';
+  }
 }

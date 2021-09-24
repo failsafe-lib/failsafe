@@ -29,7 +29,6 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static net.jodah.failsafe.Asserts.assertThrows;
@@ -291,51 +290,6 @@ public class AsyncFailsafeTest extends AbstractFailsafeTest {
     // Then
     assertThrows(() -> unwrapExceptions(future2::get), IllegalArgumentException.class);
     waiter.await(1000);
-  }
-
-  /**
-   * Tests a scenario where three timeouts should cause all delegates to be cancelled with interrupts.
-   */
-  public void shouldCancelNestedTimeoutsWithInterrupt() throws Throwable {
-    // Given
-    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().onRetry(e -> System.out.println("Retrying"));
-    Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
-    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
-    AtomicReference<FailsafeFuture<Boolean>> futureRef = new AtomicReference<>();
-    CountDownLatch futureLatch = new CountDownLatch(1);
-
-    // When
-    FailsafeFuture<Boolean> future = (FailsafeFuture<Boolean>) Failsafe.with(rp, timeout2, timeout1).onComplete(e -> {
-      waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
-      waiter.resume();
-    }).getAsync(ctx -> {
-      // Wait for futureRef to be set
-      futureLatch.await();
-      waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
-
-      try {
-        // Assert not cancelled
-        waiter.assertFalse(ctx.isCancelled());
-        // waiter.assertFalse(futureRef.get().cancelFunctions.isEmpty());
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        // Assert cancelled
-        waiter.assertTrue(ctx.isCancelled());
-        waiter.resume();
-        throw e;
-      }
-      waiter.fail("Expected interruption");
-      return false;
-    });
-    futureRef.set(future);
-    futureLatch.countDown();
-
-    // Then
-    waiter.await(1000, 4);
-    assertFalse(future.isCancelled());
-    assertTrue(future.isDone());
-    assertThrows(future::get, ExecutionException.class, TimeoutExceededException.class);
   }
 
   private void assertCancel(Function<FailsafeExecutor<?>, Future<?>> executorCallable, Policy<?> policy)

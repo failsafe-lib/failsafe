@@ -38,7 +38,13 @@ public class Failsafe {
    *   Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
    * </pre>
    * </p>
-   * This results in the following internal composition when executing a {@code runnable} or {@code supplier} and
+   * <p>
+   * This is equivalent to composition using the the {@link FailsafeExecutor#compose(Policy) compose} method:
+   * <pre>
+   *   Failsafe.with(fallback).compose(retryPolicy).compose(circuitBreaker).get(supplier);
+   * </pre>
+   * </p>
+   * These result in the following internal composition when executing a {@code runnable} or {@code supplier} and
    * handling its result:
    * <p>
    * <pre>

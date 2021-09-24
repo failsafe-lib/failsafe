@@ -43,7 +43,7 @@ public class BlockedExecutionTest {
     Timeout<Boolean> timeout = Timeout.of(Duration.ofMillis(100));
     RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withDelay(Duration.ofMillis(1000)).handleResult(false);
 
-    Future<Boolean> future = Failsafe.with(timeout, rp).with(executor).getAsync(() -> {
+    Future<Boolean> future = Failsafe.with(timeout).compose(rp).with(executor).getAsync(() -> {
       // Tie up single thread immediately after execution, before the retry is scheduled
       executor.submit(Testing.uncheck(() -> Thread.sleep(1000)));
       return false;
@@ -65,7 +65,7 @@ public class BlockedExecutionTest {
       return true;
     }).handleResult(false);
 
-    Future<Boolean> future = Failsafe.with(timeout, fallback).with(executor).getAsync(() -> {
+    Future<Boolean> future = Failsafe.with(timeout).compose(fallback).with(executor).getAsync(() -> {
       // Tie up single thread immediately after execution, before the fallback is scheduled
       executor.submit(Testing.uncheck(() -> Thread.sleep(1000)));
       return false;
