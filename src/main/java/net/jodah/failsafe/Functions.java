@@ -17,7 +17,7 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.*;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,9 +35,9 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<Execution<R>, ExecutionResult> get(ContextualSupplier<R, R> supplier) {
+  static <R> Function<SyncExecutionInternal<R>, ExecutionResult<R>> get(ContextualSupplier<R, R> supplier) {
     return execution -> {
-      ExecutionResult result;
+      ExecutionResult<R> result;
       Throwable throwable = null;
       try {
         execution.preExecute();
@@ -49,12 +49,12 @@ final class Functions {
       execution.record(result);
 
       // Guard against race with Timeout interruption
-      synchronized (execution.interruptState) {
-        execution.interruptState.canInterrupt = false;
-        if (execution.interruptState.interrupted) {
+      synchronized (execution.getInitial()) {
+        execution.setInterruptable(false);
+        if (execution.isInterrupted()) {
           // Clear interrupt flag if interruption was intended
           Thread.interrupted();
-          return execution.result;
+          return execution.getResult();
         } else if (throwable instanceof InterruptedException)
           // Set interrupt flag if interrupt occurred but was not intended
           Thread.currentThread().interrupt();
@@ -70,12 +70,12 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromise(
+  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromise(
     ContextualSupplier<R, R> supplier) {
 
     Assert.notNull(supplier, "supplier");
     return execution -> {
-      ExecutionResult result;
+      ExecutionResult<R> result;
       try {
         execution.preExecute();
         result = ExecutionResult.success(supplier.get(execution));
@@ -94,13 +94,13 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseExecution(
+  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseExecution(
     AsyncRunnable<R> runnable) {
 
     Assert.notNull(runnable, "runnable");
-    return new Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>>() {
+    return new Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>>() {
       @Override
-      public synchronized CompletableFuture<ExecutionResult> apply(AsyncExecution<R> execution) {
+      public synchronized CompletableFuture<ExecutionResult<R>> apply(AsyncExecutionInternal<R> execution) {
         try {
           execution.preExecute();
           runnable.run(execution);
@@ -109,7 +109,7 @@ final class Functions {
         }
 
         // Result will be provided later via AsyncExecution.record
-        return ExecutionResult.NULL_FUTURE;
+        return ExecutionResult.nullFuture();
       }
     };
   }
@@ -121,29 +121,29 @@ final class Functions {
    * @param <R> result type
    */
   @SuppressWarnings("unchecked")
-  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseOfStage(
-    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier) {
+  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStage(
+    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
 
     Assert.notNull(supplier, "supplier");
     return execution -> {
-      CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+      CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       try {
         execution.preExecute();
         CompletionStage<? extends R> stage = supplier.get(execution);
 
         // Propagate outer cancellations to the stage
         if (stage instanceof Future)
-          execution.future.propagateCancellation((Future<R>) stage, -1);
+          future.propagateCancellation((Future<R>) stage);
 
         stage.whenComplete((result, failure) -> {
           if (failure instanceof CompletionException)
             failure = failure.getCause();
-          ExecutionResult r = failure == null ? ExecutionResult.success(result) : ExecutionResult.failure(failure);
+          ExecutionResult<R> r = failure == null ? ExecutionResult.success(result) : ExecutionResult.failure(failure);
           execution.record(r);
           promise.complete(r);
         });
       } catch (Throwable t) {
-        ExecutionResult result = ExecutionResult.failure(t);
+        ExecutionResult<R> result = ExecutionResult.failure(t);
         execution.record(result);
         promise.complete(result);
       }
@@ -159,8 +159,8 @@ final class Functions {
    * @param <R> result type
    */
   @SuppressWarnings("unchecked")
-  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> getPromiseOfStageExecution(
-    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier) {
+  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStageExecution(
+    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
 
     Assert.notNull(supplier, "supplier");
     Semaphore asyncFutureLock = new Semaphore(1);
@@ -172,7 +172,7 @@ final class Functions {
 
         // Propagate outer cancellations to the stage
         if (stage instanceof Future)
-          execution.future.propagateCancellation((Future<R>) stage, -1);
+          future.propagateCancellation((Future<R>) stage);
 
         stage.whenComplete((innerResult, failure) -> {
           try {
@@ -191,7 +191,7 @@ final class Functions {
       }
 
       // Result will be provided later via AsyncExecution.record
-      return ExecutionResult.NULL_FUTURE;
+      return ExecutionResult.nullFuture();
     };
   }
 
@@ -201,13 +201,14 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> toExecutionAware(
-    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn) {
+  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> toExecutionAware(
+    Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> innerFn) {
     return execution -> {
-      if (execution.result == null) {
+      ExecutionResult<R> result = execution.getResult();
+      if (result == null) {
         return innerFn.apply(execution);
       } else {
-        return CompletableFuture.completedFuture(execution.result);
+        return CompletableFuture.completedFuture(result);
       }
     };
   }
@@ -218,21 +219,16 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> toAsync(
-    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler) {
+  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> toAsync(
+    Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> innerFn, Scheduler scheduler,
+    FailsafeFuture<R> future) {
 
     AtomicBoolean scheduled = new AtomicBoolean();
     return execution -> {
       if (scheduled.get()) {
-        // Propagate outer cancellations to the thread that the innerFn is running with
-        execution.future.injectCancelFn(-1, (mayInterrupt, cancelResult) -> {
-          if (execution.innerFuture != null)
-            execution.innerFuture.cancel(mayInterrupt);
-        });
-
         return innerFn.apply(execution);
       } else {
-        CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+        CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
         Callable<Object> callable = () -> innerFn.apply(execution).whenComplete((result, error) -> {
           if (error != null)
             promise.completeExceptionally(error);
@@ -242,14 +238,14 @@ final class Functions {
 
         try {
           scheduled.set(true);
-          Future<?> future = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
+          Future<?> scheduledFuture = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
           // Propagate outer cancellations to the scheduled innerFn and its promise
-          execution.future.injectCancelFn(-1, (mayInterrupt, cancelResult) -> {
-            future.cancel(mayInterrupt);
+          future.setCancelFn((mayInterrupt, cancelResult) -> {
+            scheduledFuture.cancel(mayInterrupt);
 
             // Cancel a pending promise if the execution attempt has not started
-            if (!execution.attemptStarted)
+            if (!execution.isPreExecuted())
               promise.complete(cancelResult);
           });
         } catch (Throwable t) {

@@ -3,6 +3,8 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.function.AsyncRunnable;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.spi.Policy;
+import net.jodah.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
 
@@ -63,7 +65,8 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
   }
 
   /**
-   * This method is deprecated and will be removed in a future minor release.
+   * This method is deprecated and will be removed in a future minor release. Cancellation always occurs for timeouts.
+   * Use {@link #withInterrupt(boolean)} instead if you wish to set interruption.
    *
    * @see #withInterrupt(boolean)
    * @deprecated Tasks are cancelled by default when a Timeout is exceeded. Use {@link #withInterrupt(boolean)}
@@ -112,6 +115,6 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
 
   @Override
   public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
-    return new TimeoutExecutor<>(this, policyIndex);
+    return new TimeoutExecutor<>(this, policyIndex, policyHandlers);
   }
 }

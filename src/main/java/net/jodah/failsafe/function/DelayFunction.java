@@ -1,11 +1,12 @@
 package net.jodah.failsafe.function;
 
 import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.spi.Policy;
 
 import java.time.Duration;
 
 /**
- * A functional interface for computing delays between {@link net.jodah.failsafe.Policy} execution attempts.
+ * A functional interface for computing delays between {@link Policy} execution attempts.
  *
  * @param <R> result type
  * @param <F> failure type
@@ -13,7 +14,7 @@ import java.time.Duration;
 @FunctionalInterface
 public interface DelayFunction<R, F extends Throwable> {
   /**
-   * Returns the amount of delay before the next {@link net.jodah.failsafe.Policy} execution attempt based on the result
+   * Returns the amount of delay before the next {@link Policy} execution attempt based on the result
    * or failure of the last attempt and the execution context (executions so far). This method must complete quickly,
    * not have side-effects, and always return the same result for the same input. Unchecked exceptions thrown by this
    * method will <strong>not</strong> be treated as part of the fail-safe processing and will instead abort that

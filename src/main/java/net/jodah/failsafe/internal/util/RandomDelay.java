@@ -16,6 +16,8 @@
 package net.jodah.failsafe.internal.util;
 
 /**
+ * Utilities for computing random delays.
+ *
  * @author Jonathan Halterman
  */
 public final class RandomDelay {

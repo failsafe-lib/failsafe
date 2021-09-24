@@ -15,7 +15,7 @@
  */
 package net.jodah.failsafe.internal.util;
 
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.Scheduler;
 
 import java.util.concurrent.*;
 

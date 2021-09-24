@@ -18,11 +18,13 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.internal.*;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.spi.*;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 /**
  * A circuit breaker temporarily blocks execution when a configured number of failures are exceeded.
@@ -38,15 +40,27 @@ import java.util.concurrent.atomic.AtomicReference;
  * successful.
  * </p>
  * <p>
- * A circuit breaker can be <i>count based</i> or <i>time based</i>. A <i>count based</i> circuit breaker will
- * transition between states when recent execution results exceed a threshold. A <i>time based</i> circuit breaker will
- * transition between states when recent execution results exceed a threshold within a time period. A minimum number of
- * executions must be performed in order for a state transition to occur.
+ * A circuit breaker can be <i>count based</i> or <i>time based</i>:
+ * <ul>
+ *   <li><i>Count based</i> circuit breakers will transition between states when recent execution results exceed a threshold.</li>
+ *   <li><i>Time based</i> circuit breakers will transition between states when recent execution results exceed a threshold
+ *   within a time period.</li>
+ * </ul>
  * </p>
- * <p>Time based circuit breakers use a sliding window to aggregate execution results. The window is divided into
- * {@code 10} time slices, each representing 1/10th of the {@link #getFailureThresholdingPeriod()
- * failureThresholdingPeriod}. As time progresses, statistics for old time slices are gradually discarded, which
- * smoothes the calculation of success and failure rates.</p>
+ * <p>A minimum number of executions must be performed in order for a state transition to occur. Time based circuit
+ * breakers use a sliding window to aggregate execution results. The window is divided into {@code 10} time slices,
+ * each representing 1/10th of the {@link #getFailureThresholdingPeriod() failureThresholdingPeriod}.
+ * As time progresses, statistics for old time slices are gradually discarded, which smoothes the calculation of
+ * success and failure rates.</p>
+ * <ul>
+ *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
+ *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
+ *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
+ *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
+ *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
+ *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
+ *   will trigger policy handling.</li>
+ * </ul>
  * <p>
  * Note: CircuitBreaker extends {@link DelayablePolicy}, {@link FailurePolicy}, and {@link PolicyListeners} which offer
  * additional configuration.
@@ -59,7 +73,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressWarnings("WeakerAccess")
 public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /** Writes guarded by "this" */
-  private final AtomicReference<CircuitState> state = new AtomicReference<>();
+  private final AtomicReference<CircuitState<R>> state = new AtomicReference<>();
   private final AtomicInteger currentExecutions = new AtomicInteger();
   private Duration delay = Duration.ofMinutes(1);
 
@@ -85,8 +99,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
    * default.
    */
   public CircuitBreaker() {
-    failureConditions = new ArrayList<>();
-    state.set(new ClosedState(this, internals));
+    state.set(new ClosedState<>(this, internal));
   }
 
   /**
@@ -615,14 +628,14 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
       if (!getState().equals(newState)) {
         switch (newState) {
           case CLOSED:
-            state.set(new ClosedState(this, internals));
+            state.set(new ClosedState<>(this, internal));
             break;
           case OPEN:
             Duration computedDelay = computeDelay(context);
-            state.set(new OpenState(this, state.get(), computedDelay != null ? computedDelay : delay));
+            state.set(new OpenState<>(this, state.get(), computedDelay != null ? computedDelay : delay));
             break;
           case HALF_OPEN:
-            state.set(new HalfOpenState(this, internals));
+            state.set(new HalfOpenState<>(this, internal));
             break;
         }
         transitioned = true;
@@ -649,7 +662,7 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   }
 
   // Internal delegate implementation
-  final CircuitBreakerInternals<R> internals = new CircuitBreakerInternals<R>() {
+  final CircuitBreakerInternal<R> internal = new CircuitBreakerInternal<R>() {
     @Override
     public int getCurrentExecutions() {
       return currentExecutions.get();
@@ -663,6 +676,6 @@ public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
 
   @Override
   public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
-    return new CircuitBreakerExecutor<>(this, policyIndex);
+    return new CircuitBreakerExecutor<>(this, policyIndex, failurePolicyInternal, policyHandlers);
   }
 }

@@ -2,7 +2,7 @@ package net.jodah.failsafe.internal.util;
 
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Asserts;
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.Scheduler;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -41,20 +41,9 @@ public class DelegatingSchedulerTest {
   }
 
   public void shouldNotInterruptAlreadyDoneTask() throws Throwable {
-    Waiter waiter = new Waiter();
     Future<?> future1 = scheduler.schedule(() -> null, 0, TimeUnit.MILLISECONDS);
-    Future<?> future2 = scheduler.schedule(() -> {
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        waiter.fail("Cancelling one future should not interrupt another");
-      }
-      waiter.resume();
-      return null;
-    }, 0, TimeUnit.MILLISECONDS);
     Thread.sleep(100);
     assertFalse(future1.cancel(true));
-    waiter.await(1000);
   }
 
   /**

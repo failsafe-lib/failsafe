@@ -16,6 +16,9 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.spi.ExecutionResult;
+import net.jodah.failsafe.spi.FailurePolicyInternal;
+import net.jodah.failsafe.spi.Policy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +28,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
- * A Policy that captures conditions to determine whether an execution is a failure.
+ * A Policy that allows configurable conditions to determine whether an execution is a failure.
  * <ul>
  *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
  *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
@@ -38,16 +41,26 @@ import java.util.function.Predicate;
  *
  * @param <S> self type
  * @param <R> result type
+ * @author Jonathan Halterman
  */
 @SuppressWarnings("unchecked")
 public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implements Policy<R> {
   /** Indicates whether failures are checked by a configured failure condition */
-  boolean failuresChecked;
+  private boolean failuresChecked;
   /** Conditions that determine whether an execution is a failure */
-  List<BiPredicate<R, Throwable>> failureConditions;
+  private final List<BiPredicate<R, Throwable>> failureConditions;
 
-  FailurePolicy() {
+  public FailurePolicy() {
     failureConditions = new ArrayList<>();
+  }
+
+  /**
+   * Copy constructor.
+   */
+  public FailurePolicy(FailurePolicy<S, R> policy) {
+    super(policy);
+    failuresChecked = policy.failuresChecked;
+    failureConditions = policy.failureConditions;
   }
 
   /**
@@ -144,22 +157,6 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * @see #handleResult(R)
    * @see #handleResultIf(Predicate)
    */
-  boolean isFailure(ExecutionResult result) {
-    return failureConditions.isEmpty() ?
-      result.getFailure() != null :
-      isFailure((R) result.getResult(), result.getFailure());
-  }
-
-  /**
-   * Returns whether an execution result can be retried given the configured failure conditions.
-   *
-   * @see #handle(Class...)
-   * @see #handle(List)
-   * @see #handleIf(BiPredicate)
-   * @see #handleIf(Predicate)
-   * @see #handleResult(R)
-   * @see #handleResultIf(Predicate)
-   */
   public boolean isFailure(R result, Throwable failure) {
     for (BiPredicate<R, Throwable> predicate : failureConditions) {
       try {
@@ -178,7 +175,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   /**
    * Returns a predicate that evaluates whether the {@code result} equals an execution result.
    */
-  static <R> BiPredicate<R, Throwable> resultPredicateFor(R result) {
+  public static <R> BiPredicate<R, Throwable> resultPredicateFor(R result) {
     return (t, u) -> result == null ? t == null && u == null : Objects.equals(result, t);
   }
 
@@ -186,7 +183,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * Returns a predicate that evaluates the {@code failurePredicate} against a failure.
    */
   @SuppressWarnings("unchecked")
-  static <R> BiPredicate<R, Throwable> failurePredicateFor(Predicate<? extends Throwable> failurePredicate) {
+  public static <R> BiPredicate<R, Throwable> failurePredicateFor(Predicate<? extends Throwable> failurePredicate) {
     return (t, u) -> u != null && ((Predicate<Throwable>) failurePredicate).test(u);
   }
 
@@ -196,7 +193,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * Short-circuits to false without invoking {@code resultPredicate}, when result is not present (i.e.
    * BiPredicate.test(null, Throwable)).
    */
-  static <R> BiPredicate<R, Throwable> resultPredicateFor(Predicate<R> resultPredicate) {
+  public static <R> BiPredicate<R, Throwable> resultPredicateFor(Predicate<R> resultPredicate) {
     return (t, u) -> {
       if (u == null) {
         return resultPredicate.test(t);
@@ -212,7 +209,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   /**
    * Returns a predicate that returns whether any of the {@code failures} are assignable from an execution failure.
    */
-  static <R> BiPredicate<R, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
+  public static <R> BiPredicate<R, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
     return (t, u) -> {
       if (u == null)
         return false;
@@ -222,4 +219,13 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
       return false;
     };
   }
+
+  final protected FailurePolicyInternal<R> failurePolicyInternal = new FailurePolicyInternal<R>() {
+    @Override
+    public boolean isFailure(ExecutionResult<R> result) {
+      return failureConditions.isEmpty() ?
+        result.getFailure() != null :
+        FailurePolicy.this.isFailure(result.getResult(), result.getFailure());
+    }
+  };
 }

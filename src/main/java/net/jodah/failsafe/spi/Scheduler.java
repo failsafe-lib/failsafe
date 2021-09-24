@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.util.concurrent;
+package net.jodah.failsafe.spi;
 
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.DelegatingExecutorService;
@@ -25,7 +25,7 @@ import java.util.concurrent.*;
  * Schedules executions.
  *
  * @author Jonathan Halterman
- * @see net.jodah.failsafe.util.concurrent.DefaultScheduledFuture
+ * @see DefaultScheduledFuture
  */
 public interface Scheduler {
   /**

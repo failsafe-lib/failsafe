@@ -36,7 +36,7 @@ public class RxJavaExample {
       else
         System.out.println("Subscriber completed successfully");
     }).retryWhen(attempts -> {
-      Execution<Object> execution = new Execution<>(retryPolicy);
+      Execution<Object> execution = Execution.of(retryPolicy);
       return attempts.flatMap(failure -> {
         System.out.println("Failure detected");
         execution.recordFailure(failure);

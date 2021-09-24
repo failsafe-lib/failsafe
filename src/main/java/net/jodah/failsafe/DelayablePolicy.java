@@ -13,9 +13,22 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
-  DelayFunction<R, ? extends Throwable> delayFn;
-  R delayResult;
-  Class<? extends Throwable> delayFailure;
+  private R delayResult;
+  private Class<? extends Throwable> delayFailure;
+  private DelayFunction<R, ? extends Throwable> delayFn;
+
+  public DelayablePolicy() {
+  }
+
+  /**
+   * Copy constructor.
+   */
+  public DelayablePolicy(DelayablePolicy<S, R> policy) {
+    super(policy);
+    delayFn = policy.delayFn;
+    delayResult = policy.delayResult;
+    delayFailure = policy.delayFailure;
+  }
 
   /**
    * Returns the function that determines the next delay before allowing another execution.
@@ -82,7 +95,7 @@ public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
    * configured or the computed delay is invalid.
    */
   @SuppressWarnings("unchecked")
-  protected Duration computeDelay(ExecutionContext<R> context) {
+  public Duration computeDelay(ExecutionContext<R> context) {
     Duration computed = null;
     if (context != null && delayFn != null) {
       R exResult = context.getLastResult();

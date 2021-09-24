@@ -21,8 +21,8 @@ import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.eventbus.ReplyFailure;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.DefaultScheduledFuture;
+import net.jodah.failsafe.spi.Scheduler;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;

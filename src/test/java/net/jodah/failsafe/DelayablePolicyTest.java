@@ -1,6 +1,8 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.function.DelayFunction;
+import net.jodah.failsafe.spi.Policy;
+import net.jodah.failsafe.spi.PolicyExecutor;
 import org.testng.annotations.Test;
 
 import java.time.Duration;

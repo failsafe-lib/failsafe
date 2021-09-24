@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.internal;
+
+import net.jodah.failsafe.ExecutionContext;
 
 /**
- * Thrown when an execution is attempted while a configured {@link CircuitBreaker} is open.
+ * Internal {@link net.jodah.failsafe.CircuitBreaker} APIs.
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public class CircuitBreakerOpenException extends FailsafeException {
-  private static final long serialVersionUID = 1L;
+public interface CircuitBreakerInternal<R> {
+  /**
+   * Returns the current number of executions occurring on the circuit breaker. Executions are started when a {@code
+   * Failsafe} call begins and ended when a result is recorded.
+   */
+  int getCurrentExecutions();
 
-  private final CircuitBreaker<?> circuitBreaker;
-
-  public CircuitBreakerOpenException(CircuitBreaker<?> circuitBreaker) {
-    this.circuitBreaker = circuitBreaker;
-  }
-
-  /** Returns the {@link CircuitBreaker} that caused the exception. */
-  public CircuitBreaker<?> getCircuitBreaker() {
-    return circuitBreaker;
-  }
+  /**
+   * Opens the circuit breaker and considers the {@code context} when computing the delay before the circuit breaker
+   * will transition to half open.
+   */
+  void open(ExecutionContext<R> context);
 }

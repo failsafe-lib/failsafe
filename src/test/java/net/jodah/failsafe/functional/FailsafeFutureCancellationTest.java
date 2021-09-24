@@ -3,12 +3,14 @@ package net.jodah.failsafe.functional;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.*;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.function.AsyncSupplier;
-import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.spi.Policy;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 
@@ -51,7 +53,6 @@ public class FailsafeFutureCancellationTest extends Testing {
     assertTrue(completedRef.get().getFailure() instanceof CancellationException);
     assertEquals(outerRetryStats.failedAttemptCount, 0);
     assertEquals(innerRetryStats.failedAttemptCount, 1);
-    Thread.sleep(1000);
   }
 
   /**
@@ -60,29 +61,28 @@ public class FailsafeFutureCancellationTest extends Testing {
   public void shouldPropagateCancellationToStage() throws Throwable {
     // Given
     Policy<String> retryPolicy = new RetryPolicy<>();
-    Waiter cancellationWaiter = new Waiter();
-    BiConsumer<String, Throwable> waiterResumer = (r, t) -> {
+    Waiter waiter = new Waiter();
+    BiConsumer<String, Throwable> resumeWaiter = (r, t) -> {
       if (t instanceof CancellationException)
-        cancellationWaiter.resume();
-    };
-    CheckedSupplier<CompletionStage<String>> doWork = () -> {
-      CompletableFuture<String> promise = new CompletableFuture<>();
-      promise.whenComplete(waiterResumer);
-
-      // Simulate asynchronous work
-      runInThread(() -> Thread.sleep(1000));
-      return promise;
+        waiter.resume();
     };
 
     // When
-    CompletableFuture<String> failsafeFuture = Failsafe.with(retryPolicy).getStageAsync(doWork);
-    failsafeFuture.whenComplete(waiterResumer);
-    failsafeFuture.cancel(true);
+    CompletableFuture<String> future = Failsafe.with(retryPolicy).getStageAsync(() -> {
+      waiter.resume();
+      CompletableFuture<String> promise = new CompletableFuture<>();
+      promise.whenComplete(resumeWaiter);
+      return promise;
+    });
+    // Wait for execution to start
+    waiter.await(1000);
+    future.whenComplete(resumeWaiter);
+    future.cancel(false);
 
     // Then
-    Asserts.assertThrows(failsafeFuture::get, CancellationException.class);
-    // Wait for the promise and failsafeFuture to complete with cancellation
-    cancellationWaiter.await(1000, 2);
+    Asserts.assertThrows(future::get, CancellationException.class);
+    // Wait for the promise and future to complete with cancellation
+    waiter.await(1000, 2);
   }
 
   /**
@@ -91,28 +91,52 @@ public class FailsafeFutureCancellationTest extends Testing {
   public void shouldPropagateCancellationToStageAsyncExecution() throws Throwable {
     // Given
     Policy<String> retryPolicy = new RetryPolicy<>();
-    Waiter cancellationWaiter = new Waiter();
-    BiConsumer<String, Throwable> waiterResumer = (r, t) -> {
+    Waiter waiter = new Waiter();
+    BiConsumer<String, Throwable> resumeWaiter = (r, t) -> {
       if (t instanceof CancellationException)
-        cancellationWaiter.resume();
-    };
-    AsyncSupplier<String, CompletionStage<String>> doWork = exec -> {
-      CompletableFuture<String> promise = new CompletableFuture<>();
-      promise.whenComplete(waiterResumer);
-
-      // Simulate asynchronous work
-      runInThread(() -> Thread.sleep(1000));
-      return promise;
+        waiter.resume();
     };
 
     // When
-    CompletableFuture<String> failsafeFuture = Failsafe.with(retryPolicy).getStageAsyncExecution(doWork);
-    failsafeFuture.whenComplete(waiterResumer);
-    failsafeFuture.cancel(true);
+    CompletableFuture<String> future = Failsafe.with(retryPolicy).getStageAsyncExecution(exec -> {
+      waiter.resume();
+      CompletableFuture<String> promise = new CompletableFuture<>();
+      promise.whenComplete(resumeWaiter);
+      return promise;
+    });
+    // Wait for execution to start
+    waiter.await(1000);
+    future.whenComplete(resumeWaiter);
+    future.cancel(true);
 
     // Then
-    Asserts.assertThrows(failsafeFuture::get, CancellationException.class);
+    Asserts.assertThrows(future::get, CancellationException.class);
     // Wait for the promise and failsafeFuture to complete with cancellation
-    cancellationWaiter.await(1000, 2);
+    waiter.await(1000, 2);
+  }
+
+  /**
+   * Asserts that FailsafeFuture cancellations are propagated to the most recent ExecutionContext.
+   */
+  public void shouldPropagateCancellationToExecutionContext() throws Throwable {
+    // Given
+    Policy<Void> retryPolicy = new RetryPolicy<>();
+    AtomicReference<ExecutionContext<Void>> ctxRef = new AtomicReference<>();
+    Waiter waiter = new Waiter();
+
+    // When
+    Future<?> future = Failsafe.with(retryPolicy).runAsync(ctx -> {
+      waiter.resume();
+      ctxRef.set(ctx);
+      if (ctx.getAttemptCount() < 3)
+        throw new Exception();
+      else
+        Thread.sleep(1000);
+    });
+    waiter.await(1000);
+    future.cancel(true);
+
+    // Then
+    assertTrue(ctxRef.get().isCancelled());
   }
 }

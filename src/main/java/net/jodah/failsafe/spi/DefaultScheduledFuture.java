@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.util.concurrent;
+package net.jodah.failsafe.spi;
 
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutionException;
@@ -22,12 +22,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * A default ScheduledFuture implementation.
- * 
+ * A default ScheduledFuture implementation. Useful for {@link Scheduler} implementations.
+ *
+ * @param <R> result type
  * @author Jonathan Halterman
- * @param <T> result type
  */
-public class DefaultScheduledFuture<T> implements ScheduledFuture<T> {
+public class DefaultScheduledFuture<R> implements ScheduledFuture<R> {
   /**
    * @return {@code 0}
    */
@@ -72,7 +72,7 @@ public class DefaultScheduledFuture<T> implements ScheduledFuture<T> {
    * @return {@code null}
    */
   @Override
-  public T get() throws InterruptedException, ExecutionException {
+  public R get() throws InterruptedException, ExecutionException {
     return null;
   }
 
@@ -80,7 +80,7 @@ public class DefaultScheduledFuture<T> implements ScheduledFuture<T> {
    * @return {@code null}
    */
   @Override
-  public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+  public R get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
     return null;
   }
 }

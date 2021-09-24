@@ -15,8 +15,7 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.util.concurrent.DefaultScheduledFuture;
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.*;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -31,9 +30,10 @@ import static org.testng.Assert.*;
 
 @Test
 public class AsyncExecutionTest extends Testing {
-  Function<AsyncExecution<Object>, CompletableFuture<ExecutionResult>> innerFn = Functions.getPromise(ctx -> null);
+  Function<AsyncExecutionInternal<Object>, CompletableFuture<ExecutionResult<Object>>> innerFn = Functions.getPromise(
+    ctx -> null);
   ConnectException e = new ConnectException();
-  AsyncExecution<Object> exec;
+  AsyncExecutionInternal<Object> exec;
   FailsafeFuture<Object> future;
   Callable<Object> callable;
   Scheduler scheduler;
@@ -50,7 +50,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testCompleteForNoResult() {
     // Given
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
 
     // When
     exec.preExecute();
@@ -62,12 +62,12 @@ public class AsyncExecutionTest extends Testing {
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
     assertNull(exec.getLastFailure());
-    verify(future).completeResult(ExecutionResult.NONE);
+    verify(future).completeResult(ExecutionResult.none());
   }
 
   public void testRetryForResult() {
     // Given retry for null
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>().handleResult(null)), scheduler, future, true,
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>().handleResult(null)), scheduler, future, true,
       innerFn);
 
     // When / Then
@@ -95,8 +95,8 @@ public class AsyncExecutionTest extends Testing {
 
   public void testRetryForThrowable() {
     // Given retry on IllegalArgumentException
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>().handle(IllegalArgumentException.class)), scheduler,
-      future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>().handle(IllegalArgumentException.class)),
+      scheduler, future, true, innerFn);
 
     // When / Then
     exec.preExecute();
@@ -119,8 +119,8 @@ public class AsyncExecutionTest extends Testing {
 
   public void testRetryForResultAndThrowable() {
     // Given retry for null
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>().withMaxAttempts(10).handleResult(null)), scheduler,
-      future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>().withMaxAttempts(10).handleResult(null)),
+      scheduler, future, true, innerFn);
 
     // When / Then
     exec.preExecute();
@@ -151,7 +151,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testGetAttemptCount() {
     // Given
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
 
     // When
     exec.preExecute();
@@ -167,7 +167,7 @@ public class AsyncExecutionTest extends Testing {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnRetryWhenAlreadyComplete() {
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
     exec.complete();
     exec.preExecute();
     exec.recordFailure(e);
@@ -175,7 +175,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testCompleteOrRetry() {
     // Given retry on IllegalArgumentException
-    exec = new AsyncExecution<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
 
     // When / Then
     exec.preExecute();
@@ -192,7 +192,7 @@ public class AsyncExecutionTest extends Testing {
     assertNull(exec.getLastResult());
     assertNull(exec.getLastFailure());
     verifyScheduler(1);
-    verify(future).completeResult(ExecutionResult.NONE);
+    verify(future).completeResult(ExecutionResult.none());
   }
 
   public void testExecutor() {

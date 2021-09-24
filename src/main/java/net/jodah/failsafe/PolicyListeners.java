@@ -17,8 +17,11 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.spi.EventHandler;
+import net.jodah.failsafe.spi.ExecutionResult;
+import net.jodah.failsafe.spi.Policy;
+import net.jodah.failsafe.spi.PolicyHandlers;
 
 /**
  * Policy listener configuration.
@@ -29,8 +32,19 @@ import net.jodah.failsafe.internal.util.Assert;
  */
 @SuppressWarnings("unchecked")
 public class PolicyListeners<S, R> {
-  EventListener failureListener;
-  EventListener successListener;
+  protected EventHandler<R> failureHandler;
+  protected EventHandler<R> successHandler;
+
+  public PolicyListeners() {
+  }
+
+  /**
+   * Copy constructor.
+   */
+  public PolicyListeners(PolicyListeners<S, R> listeners) {
+    failureHandler = listeners.failureHandler;
+    successHandler = listeners.successHandler;
+  }
 
   /**
    * Registers the {@code listener} to be called when a {@link Policy} fails to handle an execution. This means that not
@@ -39,8 +53,8 @@ public class PolicyListeners<S, R> {
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
-  public S onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    failureListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public S onFailure(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
+    failureHandler = EventHandler.of(Assert.notNull(listener, "listener"));
     return (S) this;
   }
 
@@ -49,8 +63,22 @@ public class PolicyListeners<S, R> {
    * that the supplied execution either succeeded, or if it failed, the policy was able to produce a successful result.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  public S onSuccess(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    successListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public S onSuccess(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
+    successHandler = EventHandler.of(Assert.notNull(listener, "listener"));
     return (S) this;
   }
+
+  final protected PolicyHandlers<R> policyHandlers = new PolicyHandlers<R>() {
+    @Override
+    public void handleSuccess(ExecutionResult<R> result, ExecutionContext<R> context) {
+      if (result.isComplete() && successHandler != null)
+        successHandler.handle(result, context);
+    }
+
+    @Override
+    public void handleFailure(ExecutionResult<R> result, ExecutionContext<R> context) {
+      if (result.isComplete() && failureHandler != null)
+        failureHandler.handle(result, context);
+    }
+  };
 }

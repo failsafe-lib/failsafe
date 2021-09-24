@@ -16,6 +16,7 @@
 package net.jodah.failsafe.event;
 
 import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.spi.Scheduler;
 
 import java.time.Duration;
 
@@ -23,7 +24,7 @@ import java.time.Duration;
  * Indicates an execution was scheduled. A scheduled execution will be executed after the {@link #getDelay() delay}
  * unless it is cancelled, either explicitly or via {@link java.util.concurrent.Future#cancel(boolean)
  * Future.cancel(boolean)}, a {@link net.jodah.failsafe.Timeout Timeout}, or if the underlying {@link
- * net.jodah.failsafe.util.concurrent.Scheduler Scheduler} or {@link java.util.concurrent.ExecutorService
+ * Scheduler Scheduler} or {@link java.util.concurrent.ExecutorService
  * ExecutorService} is shutdown.
  *
  * @param <R> result type

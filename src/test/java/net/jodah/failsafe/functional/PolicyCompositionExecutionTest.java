@@ -32,7 +32,7 @@ public class PolicyCompositionExecutionTest {
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
-    Execution<Object> execution = new Execution<>(rp, cb);
+    Execution<Object> execution = Execution.of(rp, cb);
     execution.recordFailure(new Exception());
     execution.recordFailure(new Exception());
     assertFalse(execution.isComplete());
@@ -46,7 +46,7 @@ public class PolicyCompositionExecutionTest {
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(1);
     CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
 
-    Execution<Object> execution = new Execution<>(cb, rp);
+    Execution<Object> execution = Execution.of(cb, rp);
     execution.recordFailure(new Exception());
     assertFalse(execution.isComplete());
     execution.recordFailure(new Exception());

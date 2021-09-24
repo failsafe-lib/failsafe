@@ -17,9 +17,8 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
-import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.*;
 
 import java.util.List;
 import java.util.concurrent.*;
@@ -45,7 +44,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   private Scheduler scheduler = Scheduler.DEFAULT;
   /** Policies sorted outer-most first */
   final List<? extends Policy<R>> policies;
-  private EventListener completeListener;
+  private EventHandler<R> completeHandler;
 
   /**
    * @throws IllegalArgumentException if {@code policies} is empty
@@ -96,7 +95,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsync(CheckedSupplier<T> supplier) {
-    return callAsync(getPromise(toCtxSupplier(supplier)), false);
+    return callAsync(future -> getPromise(toCtxSupplier(supplier)), false);
   }
 
   /**
@@ -115,7 +114,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsync(ContextualSupplier<T, T> supplier) {
-    return callAsync(getPromise(supplier), false);
+    return callAsync(future -> getPromise(supplier), false);
   }
 
   /**
@@ -140,7 +139,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncRunnable<T> runnable) {
-    return callAsync(getPromiseExecution(runnable), true);
+    return callAsync(future -> getPromiseExecution(runnable), true);
   }
 
   /**
@@ -161,7 +160,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(getPromiseOfStage(toCtxSupplier(supplier)), false);
+    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future), false);
   }
 
   /**
@@ -183,7 +182,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsync(
     ContextualSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(getPromiseOfStage(supplier), false);
+    return callAsync(future -> getPromiseOfStage(supplier, future), false);
   }
 
   /**
@@ -211,7 +210,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
     AsyncSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(getPromiseOfStageExecution(supplier), true);
+    return callAsync(future -> getPromiseOfStageExecution(supplier, future), true);
   }
 
   /**
@@ -255,7 +254,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsync(CheckedRunnable runnable) {
-    return callAsync(getPromise(toCtxSupplier(runnable)), false);
+    return callAsync(future -> getPromise(toCtxSupplier(runnable)), false);
   }
 
   /**
@@ -273,7 +272,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsync(ContextualRunnable<Void> runnable) {
-    return callAsync(getPromise(toCtxSupplier(runnable)), false);
+    return callAsync(future -> getPromise(toCtxSupplier(runnable)), false);
   }
 
   /**
@@ -298,27 +297,27 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public CompletableFuture<Void> runAsyncExecution(AsyncRunnable<Void> runnable) {
-    return callAsync(getPromiseExecution(runnable), true);
+    return callAsync(future -> getPromiseExecution(runnable), true);
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution is complete for all of the configured policies are
-   * exceeded.
+   * Registers the {@code listener} to be called when an execution is complete. This occurs when an execution is
+   * successful according to all policies, or all policies have been exceeded.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  public FailsafeExecutor<R> onComplete(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    completeListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public FailsafeExecutor<R> onComplete(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
+    completeHandler = EventHandler.of(Assert.notNull(listener, "listener"));
     return this;
   }
 
   /**
-   * Registers the {@code listener} to be called when an execution fails. If multiple policies, are configured, this
-   * handler is called when execution is complete and <i>any</i> policy fails.
+   * Registers the {@code listener} to be called when an execution fails. This occurs when the execution fails according
+   * to some policy, and all policies have been exceeded.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
   @Override
-  public FailsafeExecutor<R> onFailure(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
+  public FailsafeExecutor<R> onFailure(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
     return super.onFailure(listener);
   }
 
@@ -329,17 +328,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
   @Override
-  public FailsafeExecutor<R> onSuccess(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
+  public FailsafeExecutor<R> onSuccess(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
     return super.onSuccess(listener);
-  }
-
-  void handleComplete(ExecutionResult result, AbstractExecution<R> execution) {
-    if (successListener != null && result.getSuccessAll())
-      successListener.handle(result, execution);
-    else if (failureListener != null && !result.getSuccessAll())
-      failureListener.handle(result, execution);
-    if (completeListener != null)
-      completeListener.handle(result, execution);
   }
 
   /**
@@ -393,10 +383,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> T call(ContextualSupplier<T, T> innerSupplier) {
-    Execution<T> execution = new Execution(this);
-    Function<Execution<T>, ExecutionResult> innerFn = Functions.get(innerSupplier);
-
-    ExecutionResult result = execution.executeSync(innerFn);
+    SyncExecutionImpl<T> execution = new SyncExecutionImpl(this, scheduler, Functions.get(innerSupplier));
+    ExecutionResult<T> result = execution.executeSync();
     Throwable failure = result.getFailure();
     if (failure != null) {
       if (failure instanceof RuntimeException)
@@ -405,7 +393,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
         throw (Error) failure;
       throw new FailsafeException(failure);
     }
-    return (T) result.getResult();
+    return result.getResult();
   }
 
   /**
@@ -425,13 +413,24 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code innerFn} cannot be scheduled for execution
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  private <T> CompletableFuture<T> callAsync(Function<AsyncExecution<T>, CompletableFuture<ExecutionResult>> innerFn,
+  private <T> CompletableFuture<T> callAsync(
+    Function<FailsafeFuture<T>, Function<AsyncExecutionInternal<T>, CompletableFuture<ExecutionResult<T>>>> innerFn,
     boolean asyncExecution) {
 
-    FailsafeFuture<T> future = new FailsafeFuture(this);
-    AsyncExecution<T> execution = new AsyncExecution(policies, scheduler, future, asyncExecution, innerFn);
-    future.inject(execution);
+    FailsafeFuture<T> future = new FailsafeFuture(completionHandler);
+    AsyncExecutionImpl<T> execution = new AsyncExecutionImpl(policies, scheduler, future, asyncExecution,
+      innerFn.apply(future));
+    future.setExecution(execution);
     execution.executeAsync();
     return future;
   }
+
+  final CompletionHandler<R> completionHandler = (result, context) -> {
+    if (successHandler != null && result.getSuccessAll())
+      successHandler.handle(result, context);
+    else if (failureHandler != null && !result.getSuccessAll())
+      failureHandler.handle(result, context);
+    if (completeHandler != null)
+      completeHandler.handle(result, context);
+  };
 }

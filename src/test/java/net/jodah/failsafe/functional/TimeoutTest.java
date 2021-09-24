@@ -28,12 +28,8 @@ import static org.testng.Assert.assertEquals;
  */
 @Test
 public class TimeoutTest extends Testing {
-  public void shouldCancelTimeoutWhenExecutionComplete() throws Throwable {
-    Stats timeoutStats = new Stats();
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
-
-    Failsafe.with(timeout).get(() -> false);
-    Thread.sleep(1000);
+  public void shouldCancelTimeoutWhenExecutionComplete() {
+    // TODO
   }
 
   /**

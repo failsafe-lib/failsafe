@@ -19,12 +19,12 @@ import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.ExecutionContext;
 
-public class ClosedState extends CircuitState {
-  private final CircuitBreakerInternals internals;
+public class ClosedState<R> extends CircuitState<R> {
+  private final CircuitBreakerInternal<R> internal;
 
-  public ClosedState(CircuitBreaker<?> breaker, CircuitBreakerInternals internals) {
+  public ClosedState(CircuitBreaker<R> breaker, CircuitBreakerInternal<R> internal) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), true, null));
-    this.internals = internals;
+    this.internal = internal;
   }
 
   @Override
@@ -46,13 +46,13 @@ public class ClosedState extends CircuitState {
    * Checks to see if the executions and failure thresholds have been exceeded, opening the circuit if so.
    */
   @Override
-  synchronized void checkThreshold(ExecutionContext<?> context) {
+  synchronized void checkThreshold(ExecutionContext<R> context) {
     // Execution threshold will only be set for time based thresholding
     if (stats.getExecutionCount() >= breaker.getFailureExecutionThreshold()) {
       double failureRateThreshold = breaker.getFailureRateThreshold();
       if ((failureRateThreshold != 0 && stats.getFailureRate() >= failureRateThreshold) || (failureRateThreshold == 0
         && stats.getFailureCount() >= breaker.getFailureThreshold()))
-        internals.open(context);
+        internal.open(context);
     }
   }
 

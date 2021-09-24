@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.internal;
-
-import net.jodah.failsafe.ExecutionContext;
+package net.jodah.failsafe.spi;
 
 /**
- * Internal CircuitBreaker APIs.
+ * A policy for handling executions.
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public interface CircuitBreakerInternals<R> {
+public interface Policy<R> {
   /**
-   * Returns the current number of executions occurring on the circuit breaker. Executions are started when a {@code
-   * Failsafe} call begins and ended when a result is recorded.
+   * Returns an {@link PolicyExecutor} capable of performing an execution in the context of a Policy and handling
+   * results or failures according to the Policy.
    */
-  int getCurrentExecutions();
-
-  /**
-   * Opens the circuit breaker and considers the {@code context} when computing the delay before the
-   * circuit breaker will transition to half open.
-   */
-  void open(ExecutionContext<R> context);
+  PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex);
 }

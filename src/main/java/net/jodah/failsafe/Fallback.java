@@ -20,18 +20,29 @@ import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.function.CheckedFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
-import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.spi.*;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 import static net.jodah.failsafe.Functions.toFn;
 
 /**
  * A Policy that handles failures using a fallback function or result.
+ * <ul>
+ *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
+ *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
+ *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
+ *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
+ *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
+ *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
+ *   will trigger policy handling.</li>
+ * </ul>
  * <p>
- * Note: Fallback extends {@link FailurePolicy} {@link PolicyListeners} which offer additional configuration.
+ * Note: Fallback extends {@link FailurePolicy} and {@link PolicyListeners} which offer additional configuration.
  * </p>
  *
  * @param <R> result type
@@ -46,7 +57,7 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
   private final CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback;
   private final CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage;
   private final boolean async;
-  private EventListener failedAttemptListener;
+  private EventHandler<R> failedAttemptHandler;
 
   private Fallback() {
     this(null, null, false);
@@ -111,10 +122,9 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <R> Fallback<R> ofException(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends Exception> fallback) {
-    Assert.notNull((CheckedFunction) fallback, "fallback");
+    Assert.notNull(fallback, "fallback");
     return new Fallback<>(e -> {
       throw fallback.apply(e);
     }, null, false);
@@ -224,8 +234,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * also use {@link #onFailure(CheckedConsumer) onFailure} to determine when the fallback attempt also fails.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  public Fallback<R> onFailedAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
-    failedAttemptListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
+  public Fallback<R> onFailedAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
+    failedAttemptHandler = EventHandler.ofAttempt(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -247,6 +257,6 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
 
   @Override
   public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
-    return new FallbackExecutor<>(this, policyIndex, failedAttemptListener);
+    return new FallbackExecutor<>(this, policyIndex, failurePolicyInternal, policyHandlers, failedAttemptHandler);
   }
 }

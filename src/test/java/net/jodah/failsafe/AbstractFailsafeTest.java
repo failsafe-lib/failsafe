@@ -19,6 +19,7 @@ import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.spi.Policy;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

@@ -15,7 +15,8 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.util.concurrent.Scheduler;
+import net.jodah.failsafe.spi.*;
+import net.jodah.failsafe.spi.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -33,12 +34,12 @@ import java.util.function.Function;
  * @param <R> result type
  */
 class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
-  TimeoutExecutor(Timeout<R> timeout, int policyIndex) {
-    super(timeout, policyIndex);
+  TimeoutExecutor(Timeout<R> timeout, int policyIndex, PolicyHandlers<R> policyHandlers) {
+    super(timeout, policyIndex, null, policyHandlers);
   }
 
   @Override
-  protected boolean isFailure(ExecutionResult result) {
+  public boolean isFailure(ExecutionResult<R> result) {
     return !result.isNonResult() && result.getFailure() instanceof TimeoutExceededException;
   }
 
@@ -50,11 +51,12 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
    * completes first will be the result that's recorded.
    */
   @Override
-  protected Function<Execution<R>, ExecutionResult> apply(Function<Execution<R>, ExecutionResult> innerFn,
-    Scheduler scheduler) {
+  public Function<SyncExecutionInternal<R>, ExecutionResult<R>> apply(
+    Function<SyncExecutionInternal<R>, ExecutionResult<R>> innerFn, Scheduler scheduler) {
+
     return execution -> {
       // Coordinates a result between the timeout and execution threads
-      AtomicReference<ExecutionResult> result = new AtomicReference<>();
+      AtomicReference<ExecutionResult<R>> result = new AtomicReference<>();
       Future<?> timeoutFuture;
       Thread executionThread = Thread.currentThread();
 
@@ -62,16 +64,16 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
         // Schedule timeout check
         timeoutFuture = Scheduler.DEFAULT.schedule(() -> {
           // Guard against race with execution completion
-          ExecutionResult cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
+          ExecutionResult<R> cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
           if (result.compareAndSet(null, cancelResult)) {
             // Cancel and interrupt
             execution.record(cancelResult);
-            execution.cancelledIndex = policyIndex;
+            execution.cancel(this);
             if (policy.canInterrupt()) {
               // Guard against race with the execution completing
-              synchronized (execution.interruptState) {
-                if (execution.interruptState.canInterrupt) {
-                  execution.interruptState.interrupted = true;
+              synchronized (execution.getInitial()) {
+                if (execution.isInterruptable()) {
+                  execution.setInterrupted(true);
                   executionThread.interrupt();
                 }
               }
@@ -100,29 +102,29 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
    */
   @Override
   @SuppressWarnings("unchecked")
-  protected Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> applyAsync(
-    Function<AsyncExecution<R>, CompletableFuture<ExecutionResult>> innerFn, Scheduler scheduler,
+  public Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> applyAsync(
+    Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> innerFn, Scheduler scheduler,
     FailsafeFuture<R> future) {
 
     return execution -> {
       // Coordinates a race between the timeout and execution threads
-      AtomicReference<ExecutionResult> resultRef = new AtomicReference<>();
+      AtomicReference<ExecutionResult<R>> resultRef = new AtomicReference<>();
       AtomicReference<Future<R>> timeoutFutureRef = new AtomicReference<>();
-      CompletableFuture<ExecutionResult> promise = new CompletableFuture<>();
+      CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
 
       // Guard against race with AsyncExecution.record, AsyncExecution.complete, future.complete or future.cancel
       synchronized (future) {
         // Schedule timeout if we are not done and not recording a result
-        if (!future.isDone() && !execution.recordCalled) {
+        if (!future.isDone() && !execution.isRecorded()) {
           try {
             Future<R> timeoutFuture = (Future<R>) Scheduler.DEFAULT.schedule(() -> {
               // Guard against race with execution completion
-              ExecutionResult cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
+              ExecutionResult<R> cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
               if (resultRef.compareAndSet(null, cancelResult)) {
                 // Cancel and interrupt
                 execution.record(cancelResult);
-                execution.cancelledIndex = policyIndex;
-                future.cancelDependencies(policyIndex, policy.canInterrupt(), cancelResult);
+                execution.cancel(this);
+                future.cancelDependencies(this, policy.canInterrupt(), cancelResult);
               }
 
               return null;
@@ -130,7 +132,7 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
             timeoutFutureRef.set(timeoutFuture);
 
             // Propagate outer cancellations to the Timeout future
-            future.injectCancelFn(policyIndex, (mayInterrupt, cancelResult) -> {
+            future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
               resultRef.compareAndSet(null, cancelResult);
               timeoutFuture.cancel(mayInterrupt);
             });

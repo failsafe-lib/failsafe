@@ -15,6 +15,11 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.spi.ExecutionResult;
+import net.jodah.failsafe.spi.FailurePolicyInternal;
+import net.jodah.failsafe.spi.PolicyExecutor;
+import net.jodah.failsafe.spi.PolicyHandlers;
+
 /**
  * A PolicyExecutor that handles failures according to a {@link CircuitBreaker}.
  *
@@ -22,12 +27,13 @@ package net.jodah.failsafe;
  * @author Jonathan Halterman
  */
 class CircuitBreakerExecutor<R> extends PolicyExecutor<R, CircuitBreaker<R>> {
-  CircuitBreakerExecutor(CircuitBreaker<R> circuitBreaker, int policyIndex) {
-    super(circuitBreaker, policyIndex);
+  CircuitBreakerExecutor(CircuitBreaker<R> circuitBreaker, int policyIndex, FailurePolicyInternal<R> failurePolicy,
+    PolicyHandlers<R> policyHandlers) {
+    super(circuitBreaker, policyIndex, failurePolicy, policyHandlers);
   }
 
   @Override
-  protected ExecutionResult preExecute() {
+  protected ExecutionResult<R> preExecute() {
     if (policy.allowsExecution()) {
       policy.preExecute();
       return null;
@@ -36,13 +42,13 @@ class CircuitBreakerExecutor<R> extends PolicyExecutor<R, CircuitBreaker<R>> {
   }
 
   @Override
-  protected void onSuccess(ExecutionResult result) {
+  public void onSuccess(ExecutionResult<R> result) {
     policy.recordSuccess();
   }
 
   @Override
-  protected ExecutionResult onFailure(AbstractExecution<R> execution, ExecutionResult result) {
-    policy.recordExecutionFailure(execution);
+  protected ExecutionResult<R> onFailure(ExecutionContext<R> context, ExecutionResult<R> result) {
+    policy.recordExecutionFailure(context);
     return result;
   }
 }

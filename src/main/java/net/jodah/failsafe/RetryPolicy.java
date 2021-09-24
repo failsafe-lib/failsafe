@@ -19,8 +19,8 @@ import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.event.ExecutionScheduledEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.internal.EventListener;
 import net.jodah.failsafe.internal.util.Assert;
+import net.jodah.failsafe.spi.*;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -37,17 +37,18 @@ import java.util.function.Predicate;
  *   between retry attempts.</li>
  *   <li>You can change the default number of retry attempts and delay between retries by using the {@code with}
  *   configuration methods.</li>
- *   <li>You can change the default {@code Exception} handling behavior by specifying
- *   your own {@code handle} conditions. The default exception handling condition will only be overridden by
+ *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
+ *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
  *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
  *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
  *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
  *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
- *   can cause a retry.</li>
+ *   will trigger policy handling.</li>
  *   <li>The {@code abortOn}, {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.</li>
  * </ul>
  * <p>
- * Note: RetryPolicy extends {@link DelayablePolicy} and {@link FailurePolicy} which offer additional configuration.
+ * Note: CircuitBreaker extends {@link DelayablePolicy}, {@link FailurePolicy}, and {@link PolicyListeners} which offer
+ * additional configuration.
  * </p>
  *
  * @param <R> result type
@@ -69,12 +70,12 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   private int maxRetries;
   private List<BiPredicate<R, Throwable>> abortConditions;
 
-  // Listeners
-  private EventListener abortListener;
-  private EventListener failedAttemptListener;
-  private EventListener retriesExceededListener;
-  private EventListener retryListener;
-  private EventListener retryScheduledListener;
+  // Event Handlers
+  private EventHandler<R> abortHandler;
+  private EventHandler<R> failedAttemptHandler;
+  private EventHandler<R> retriesExceededHandler;
+  private EventHandler<R> retryHandler;
+  private EventHandler<R> retryScheduledHandler;
 
   /**
    * Creates a retry policy that allows 3 execution attempts max with no delay.
@@ -88,29 +89,23 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
   /**
    * Copy constructor.
    */
-  private RetryPolicy(RetryPolicy<R> rp) {
-    this.delay = rp.delay;
-    this.delayMin = rp.delayMin;
-    this.delayMax = rp.delayMax;
-    this.delayFactor = rp.delayFactor;
-    this.maxDelay = rp.maxDelay;
-    this.delayFn = rp.delayFn;
-    this.delayResult = rp.delayResult;
-    this.delayFailure = rp.delayFailure;
-    this.maxDuration = rp.maxDuration;
-    this.maxRetries = rp.maxRetries;
-    this.jitter = rp.jitter;
-    this.jitterFactor = rp.jitterFactor;
-    this.failuresChecked = rp.failuresChecked;
-    this.failureConditions = new ArrayList<>(rp.failureConditions);
-    this.abortConditions = new ArrayList<>(rp.abortConditions);
-    this.abortListener = rp.abortListener;
-    this.failedAttemptListener = rp.failedAttemptListener;
-    this.retriesExceededListener = rp.retriesExceededListener;
-    this.retryListener = rp.retryListener;
-    this.retryScheduledListener = rp.retryScheduledListener;
-    this.failureListener = rp.failureListener;
-    this.successListener = rp.successListener;
+  private RetryPolicy(RetryPolicy<R> policy) {
+    super(policy);
+    delay = policy.delay;
+    delayMin = policy.delayMin;
+    delayMax = policy.delayMax;
+    delayFactor = policy.delayFactor;
+    maxDelay = policy.maxDelay;
+    maxDuration = policy.maxDuration;
+    maxRetries = policy.maxRetries;
+    jitter = policy.jitter;
+    jitterFactor = policy.jitterFactor;
+    abortConditions = new ArrayList<>(policy.abortConditions);
+    abortHandler = policy.abortHandler;
+    failedAttemptHandler = policy.failedAttemptHandler;
+    retriesExceededHandler = policy.retriesExceededHandler;
+    retryHandler = policy.retryHandler;
+    retryScheduledHandler = policy.retryScheduledHandler;
   }
 
   /**
@@ -234,8 +229,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
-  public RetryPolicy<R> onAbort(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    abortListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onAbort(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
+    abortHandler = EventHandler.of(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -246,8 +241,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
-  public RetryPolicy<R> onFailedAttempt(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
-    failedAttemptListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onFailedAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
+    failedAttemptHandler = EventHandler.ofAttempt(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -257,8 +252,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
-  public RetryPolicy<R> onRetriesExceeded(CheckedConsumer<? extends ExecutionCompletedEvent<R>> listener) {
-    retriesExceededListener = EventListener.of(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onRetriesExceeded(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
+    retriesExceededHandler = EventHandler.of(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -269,8 +264,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    *
    * @see #onRetryScheduled(CheckedConsumer)
    */
-  public RetryPolicy<R> onRetry(CheckedConsumer<? extends ExecutionAttemptedEvent<R>> listener) {
-    retryListener = EventListener.ofAttempt(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onRetry(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
+    retryHandler = EventHandler.ofAttempt(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -285,8 +280,8 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
    *
    * @see #onRetry(CheckedConsumer)
    */
-  public RetryPolicy<R> onRetryScheduled(CheckedConsumer<? extends ExecutionScheduledEvent<R>> listener) {
-    retryScheduledListener = EventListener.ofScheduled(Assert.notNull(listener, "listener"));
+  public RetryPolicy<R> onRetryScheduled(CheckedConsumer<ExecutionScheduledEvent<R>> listener) {
+    retryScheduledHandler = EventHandler.ofScheduled(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -617,7 +612,7 @@ public class RetryPolicy<R> extends DelayablePolicy<RetryPolicy<R>, R> {
 
   @Override
   public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
-    return new RetryPolicyExecutor<>(this, policyIndex, abortListener, failedAttemptListener, retriesExceededListener,
-      retryListener, retryScheduledListener);
+    return new RetryPolicyExecutor<>(this, policyIndex, failurePolicyInternal, policyHandlers, abortHandler,
+      failedAttemptHandler, retriesExceededHandler, retryHandler, retryScheduledHandler);
   }
 }
