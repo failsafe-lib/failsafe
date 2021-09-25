@@ -27,14 +27,22 @@ import static org.testng.Assert.*;
 
 @Test
 public class RetryPolicyTest {
+  static class FooException extends Exception {
+    String bar;
+
+    FooException(String bar) {
+      this.bar = bar;
+    }
+  }
+
   public void testIsFailureNull() {
     RetryPolicy<Object> policy = new RetryPolicy<>();
     assertFalse(policy.isFailure(null, null));
   }
 
   public void testIsFailureCompletionPredicate() {
-    RetryPolicy<Object> policy = new RetryPolicy<>()
-        .handleIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
+    RetryPolicy<Object> policy = new RetryPolicy<>().handleIf(
+      (result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.isFailure("test", null));
     // No retries needed for successful result
     assertFalse(policy.isFailure(0, null));
@@ -45,6 +53,12 @@ public class RetryPolicyTest {
   public void testIsFailureFailurePredicate() {
     RetryPolicy<Object> policy = new RetryPolicy<>().handleIf(failure -> failure instanceof ConnectException);
     assertTrue(policy.isFailure(null, new ConnectException()));
+    assertFalse(policy.isFailure(null, new IllegalStateException()));
+  }
+
+  public void testIsFailureTypedFailurePredicate() {
+    RetryPolicy<Boolean> policy = new RetryPolicy<Boolean>().<FooException>handleIf((result, failure) -> failure.bar.equals("bar"));
+    assertTrue(policy.isFailure(null, new FooException("bar")));
     assertFalse(policy.isFailure(null, new IllegalStateException()));
   }
 
@@ -93,8 +107,8 @@ public class RetryPolicyTest {
   }
 
   public void testIsAbortableCompletionPredicate() {
-    RetryPolicy<Object> policy = new RetryPolicy<>()
-        .abortIf((result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
+    RetryPolicy<Object> policy = new RetryPolicy<>().abortIf(
+      (result, failure) -> result == "test" || failure instanceof IllegalArgumentException);
     assertTrue(policy.isAbortable("test", null));
     assertFalse(policy.isAbortable(0, null));
     assertTrue(policy.isAbortable(null, new IllegalArgumentException()));
@@ -142,19 +156,23 @@ public class RetryPolicyTest {
   public void shouldRequireValidBackoff() {
     Asserts.assertThrows(() -> new RetryPolicy().withBackoff(0, 0, null), NullPointerException.class);
     Asserts.assertThrows(
-        () -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withBackoff(100, 120, ChronoUnit.MILLIS),
-        IllegalStateException.class);
-    Asserts.assertThrows(() -> new RetryPolicy().withBackoff(-3, 10, ChronoUnit.MILLIS), IllegalArgumentException.class);
-    Asserts.assertThrows(() -> new RetryPolicy().withBackoff(100, 10, ChronoUnit.MILLIS), IllegalArgumentException.class);
-    Asserts.assertThrows(() -> new RetryPolicy().withBackoff(5, 10, ChronoUnit.MILLIS, .5), IllegalArgumentException.class);
+      () -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withBackoff(100, 120, ChronoUnit.MILLIS),
+      IllegalStateException.class);
+    Asserts.assertThrows(() -> new RetryPolicy().withBackoff(-3, 10, ChronoUnit.MILLIS),
+      IllegalArgumentException.class);
+    Asserts.assertThrows(() -> new RetryPolicy().withBackoff(100, 10, ChronoUnit.MILLIS),
+      IllegalArgumentException.class);
+    Asserts.assertThrows(() -> new RetryPolicy().withBackoff(5, 10, ChronoUnit.MILLIS, .5),
+      IllegalArgumentException.class);
   }
 
   public void shouldRequireValidDelay() {
-    Asserts.assertThrows(() -> new RetryPolicy().withDelay((Duration)null), NullPointerException.class);
-    Asserts.assertThrows(() -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withDelay(Duration.ofMillis(100)),
-        IllegalStateException.class);
+    Asserts.assertThrows(() -> new RetryPolicy().withDelay((Duration) null), NullPointerException.class);
+    Asserts.assertThrows(
+      () -> new RetryPolicy().withMaxDuration(Duration.ofMillis(1)).withDelay(Duration.ofMillis(100)),
+      IllegalStateException.class);
     Asserts.assertThrows(() -> new RetryPolicy().withBackoff(1, 2, ChronoUnit.MILLIS).withDelay(Duration.ofMillis(100)),
-        IllegalStateException.class);
+      IllegalStateException.class);
     Asserts.assertThrows(() -> new RetryPolicy().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
   }
 
@@ -164,8 +182,8 @@ public class RetryPolicyTest {
 
   public void shouldRequireValidMaxDuration() {
     Asserts.assertThrows(
-        () -> new RetryPolicy().withDelay(Duration.ofMillis(100)).withMaxDuration(Duration.ofMillis(100)),
-        IllegalStateException.class);
+      () -> new RetryPolicy().withDelay(Duration.ofMillis(100)).withMaxDuration(Duration.ofMillis(100)),
+      IllegalStateException.class);
   }
 
   public void testGetMaxAttempts() {

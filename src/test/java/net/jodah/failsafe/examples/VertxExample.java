@@ -30,9 +30,9 @@ public class VertxExample {
   static Vertx vertx = Vertx.vertx();
 
   /** Create RetryPolicy to handle Vert.x failures */
-  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleIf(
-    (ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
-      || ReplyFailure.TIMEOUT.equals(failure.failureType()));
+  static RetryPolicy<Object> retryPolicy = new RetryPolicy<>().<ReplyException>handleIf(
+    failure -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType()) || ReplyFailure.TIMEOUT.equals(
+      failure.failureType()));
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
   static Scheduler scheduler = (callable, delay, unit) -> {

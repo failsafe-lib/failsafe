@@ -90,9 +90,10 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   /**
    * Specifies that a failure has occurred if the {@code failurePredicate} matches the failure.
    *
+   * @param <T> failure type
    * @throws NullPointerException if {@code failurePredicate} is null
    */
-  public S handleIf(Predicate<? extends Throwable> failurePredicate) {
+  public <T extends Throwable> S handleIf(Predicate<T> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
     failuresChecked = true;
     failureConditions.add(failurePredicateFor(failurePredicate));
@@ -102,10 +103,11 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   /**
    * Specifies that a failure has occurred if the {@code resultPredicate} matches the execution result.
    *
+   * @param <T> failure type
    * @throws NullPointerException if {@code resultPredicate} is null
    */
   @SuppressWarnings("unchecked")
-  public S handleIf(BiPredicate<R, ? extends Throwable> resultPredicate) {
+  public <T extends Throwable> S handleIf(BiPredicate<R, T> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
     failuresChecked = true;
     failureConditions.add((BiPredicate<R, Throwable>) resultPredicate);
