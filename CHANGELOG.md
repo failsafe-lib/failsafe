@@ -1,3 +1,41 @@
+# 2.5.0
+
+
+### Bug Fixes
+
+- Improved the reliability of async executions, cancellations, and Timeouts.
+
+### Improvements
+
+- Issue #292 - Created an extensible Policy SPI (API changes described below).
+- Issue #254 - Added an explicit `compose` method to `FailsafeExecutor`.
+- Issue #293 - Added `RetryPolicy.withBackoff(Duration, Duration)` and `.withDelay(Duration, Duration)`.
+- Issue #221 - `Executor` instances configured via `FailsafeExecutor.with(Executor)` are now used on all executions, including sync executions, and can be used in conjunction with a separately configured `ExecutorService` or `Scheduler` for async executions.
+
+### API Changes
+
+This release contains some breaking API changes for users of the standalone `Execution` class and also async executions created via `FailsafeExecutor.runAsyncExecution`, `getAsyncExecution`, or `getStageAsyncExecution`.
+
+- The `Execution` and `AsyncExecution` methods for recording a result or completing an execution have changed to:
+  - `record(R, Throwable)`
+  - `recordResult(R)`
+  - `recordFailure(Throwable)`
+  - `complete()`
+- The previously supported `Execution` and `AsyncExecution` methods for recording a result have been removed. The methods for performing a retry have also been removed. For `Execution`, `isComplete` will indicate whether the execution is complete else is retries can be performed. For `AsyncExecution` retries will automatically be performed, if possible, immediately after a result or failure is recorded.
+- The `Execution` constructor is no longer visible. `Execution` instances must now be constructed via `Execution.of(policies)`.
+- `Execution.getWaitTime()` was renamed to `getDelay()`.
+- Added a type parameter to `ExecutionContext`.
+
+### SPI Changes
+
+The following changes effect the SPI classes, for users who are extending Failsafe with custom schedulers or policies:
+
+- `Scheduler` and `DefauledScheduledFuture` were moved to the `spi` package.
+- `Policy` and `PolicyExecutor` were moved to the `spi` package and some method signatures changed.
+- `ExecutionResult` was moved to the `spi` package and made generic.
+- Several new classes were added to the `spi` package to contain internal execution APIs including `ExecutionInternal`, `SyncExecutionInternal`, and `AsyncExecutionInternal`.
+- `FailsafeFuture` was moved to the SPI package and some method signatures changed.
+
 # 2.4.4
 
 ### Bug Fixes
