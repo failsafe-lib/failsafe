@@ -67,6 +67,35 @@ final class Functions {
     };
   }
 
+  static <T, E extends Throwable> Supplier<ExecutionResultWithException<E>> getWithException(CheckedSupplierWithException<T, E> supplier, AbstractExecution execution) throws E {
+    return () -> {
+      ExecutionResultWithException<E> result;
+      Throwable throwable = null;
+      try {
+        execution.preExecute();
+        result = ExecutionResultWithException.successWithException(supplier.get());
+      } catch (Throwable t) {
+        throwable = t;
+        // this probably needs some extra code in case an unexpected Exception is thrown
+        result = ExecutionResultWithException.failureWithException((E) t);
+      } finally {
+        // Guard against race with Timeout interruption
+        synchronized (execution) {
+          execution.canInterrupt = false;
+          if (execution.interrupted)
+            // Clear interrupt flag if interruption was intended
+            Thread.interrupted();
+          else if (throwable instanceof InterruptedException)
+            // Set interrupt flag if interrupt occurred but was not intentional
+            Thread.currentThread().interrupt();
+        }
+      }
+
+      execution.record(result);
+      return result;
+    };
+  }
+
   /**
    * Returns a Supplier that pre-executes the {@code execution}, applies the {@code supplier}, records the result and
    * returns a promise containing the result.
