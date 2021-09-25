@@ -23,8 +23,7 @@ package net.jodah.failsafe.spi;
  */
 public interface Policy<R> {
   /**
-   * Returns an {@link PolicyExecutor} capable of performing an execution in the context of a Policy and handling
-   * results or failures according to the Policy.
+   * Returns a {@link PolicyExecutor} capable of handling an execution for the Policy.
    */
   PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex);
 }
