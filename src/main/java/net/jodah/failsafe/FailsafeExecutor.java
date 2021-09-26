@@ -200,7 +200,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future, executor), false);
+    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future), false);
   }
 
   /**
@@ -222,7 +222,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsync(
     ContextualSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStage(supplier, future, executor), false);
+    return callAsync(future -> getPromiseOfStage(supplier, future), false);
   }
 
   /**
@@ -250,7 +250,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    */
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
     AsyncSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStageExecution(supplier, future, executor), true);
+    return callAsync(future -> getPromiseOfStageExecution(supplier, future), true);
   }
 
   /**
@@ -408,6 +408,9 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Configures the {@code executor} to use as a wrapper around executions. The {@code executor} is responsible for
    * propagating executions. Executions that normally return a result, such as {@link #get(CheckedSupplier)} will return
    * {@code null} since the {@link Executor} interface does not support results.
+   * <p>The {@code executor} will not be used for {@link #getStageAsync(CheckedSupplier) getStageAsync} or {@link
+   * #getStageAsyncExecution(AsyncSupplier) getStageAsyncExecution} calls since those require a returned result.
+   * </p>
    *
    * @throws NullPointerException if {@code executor} is null
    */

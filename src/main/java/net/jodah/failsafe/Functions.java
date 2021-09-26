@@ -121,18 +121,18 @@ final class Functions {
    * supplier}, records the result and returns a promise containing the result.
    *
    * @param <R> result type
+   * @throws UnsupportedOperationException when using
    */
   @SuppressWarnings("unchecked")
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStage(
-    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future,
-    Executor executor) {
+    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
 
     Assert.notNull(supplier, "supplier");
     return execution -> {
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       try {
         execution.preExecute();
-        CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
+        CompletionStage<? extends R> stage = supplier.get(execution);
 
         // Propagate outer cancellations to the stage
         if (stage instanceof Future)
@@ -163,7 +163,7 @@ final class Functions {
    */
   @SuppressWarnings("unchecked")
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStageExecution(
-    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future, Executor executor) {
+    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
 
     Assert.notNull(supplier, "supplier");
     Semaphore asyncFutureLock = new Semaphore(1);
@@ -171,7 +171,7 @@ final class Functions {
       try {
         execution.preExecute();
         asyncFutureLock.acquire();
-        CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
+        CompletionStage<? extends R> stage = supplier.get(execution);
 
         // Propagate outer cancellations to the stage
         if (stage instanceof Future)
@@ -302,19 +302,6 @@ final class Functions {
           handleExecutorThrowablen(e);
         }
       });
-    };
-  }
-
-  static <R, T> AsyncSupplier<R, T> withExecutor(AsyncSupplier<R, T> supplier, Executor executor) {
-    return executor == null ? supplier : exec -> {
-      executor.execute(() -> {
-        try {
-          supplier.get(exec);
-        } catch (Throwable e) {
-          handleExecutorThrowablen(e);
-        }
-      });
-      return null;
     };
   }
 
