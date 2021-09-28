@@ -49,8 +49,9 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    * This method is deprecated and will be removed in a future minor release.
    *
    * @see #withCancel(boolean)
-   * @deprecated Always returns {@code true}
+   * @deprecated This will be removed in 3.0. Always returns {@code true}.
    */
+  @Deprecated
   public boolean canCancel() {
     return true;
   }
@@ -69,9 +70,10 @@ public class Timeout<R> extends PolicyListeners<Timeout<R>, R> implements Policy
    * Use {@link #withInterrupt(boolean)} instead if you wish to set interruption.
    *
    * @see #withInterrupt(boolean)
-   * @deprecated Tasks are cancelled by default when a Timeout is exceeded. Use {@link #withInterrupt(boolean)}
+   * @deprecated This will be removed in 3.0. Tasks are cancelled by default when a Timeout is exceeded. Use {@link #withInterrupt(boolean)}
    * interrupt cancelled tasks when a Timeout is exceeded.
    */
+  @Deprecated
   public Timeout<R> withCancel(boolean mayInterruptIfRunning) {
     interruptable = mayInterruptIfRunning;
     return this;

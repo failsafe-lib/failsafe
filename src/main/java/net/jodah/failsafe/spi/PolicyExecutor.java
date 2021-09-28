@@ -126,8 +126,8 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
     ExecutionResult<R> result, Scheduler scheduler, FailsafeFuture<R> future) {
     CompletableFuture<ExecutionResult<R>> postFuture = null;
 
-    // Guard against post executing twice for the same execution. This will happen if one async execution result
-    // is recorded by a timeout and another asynchronously.
+    /* Guard against post executing twice for the same execution. This will happen if one async execution result is
+     * recorded by a timeout and another via AsyncExecution.record. */
     if (!execution.isAsyncExecution() || !execution.isPostExecuted(policyIndex)) {
       execution.recordAttempt();
       if (isFailure(result)) {

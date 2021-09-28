@@ -16,6 +16,7 @@
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -28,6 +29,22 @@ import static org.testng.Assert.assertEquals;
  */
 @Test
 public class TimeoutTest extends Testing {
+  /**
+   * Tests a simple execution that does not timeout.
+   */
+  public void shouldNotTimeout() {
+    // Given
+    Timeout<Object> timeout = Timeout.of(Duration.ofSeconds(1));
+
+    // When / Then
+    testGetSuccess(Failsafe.with(timeout), ctx -> {
+      return "success";
+    }, (f, e) -> {
+      assertEquals(e.getAttemptCount(), 1);
+      assertEquals(e.getExecutionCount(), 1);
+    }, "success");
+  }
+
   public void shouldCancelTimeoutWhenExecutionComplete() {
     // TODO
   }
@@ -36,24 +53,25 @@ public class TimeoutTest extends Testing {
    * Tests that an inner timeout does not prevent outer retries from being performed when the inner Supplier is
    * blocked.
    */
-  public void testTimeoutThenRetryWithBlockedSupplier() {
+  public void testRetryTimeoutWithBlockedSupplier() {
     Stats timeoutStats = new Stats();
     Stats rpStats = new Stats();
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
-    RetryPolicy<Object> retryPolicy = withStatsAndLogs(new RetryPolicy<>().withMaxRetries(2), rpStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), timeoutStats);
+    RetryPolicy<Object> retryPolicy = withStatsAndLogs(new RetryPolicy<>(), rpStats);
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testGetSuccess(false, () -> {
       timeoutStats.reset();
       rpStats.reset();
     }, Failsafe.with(retryPolicy, timeout), ctx -> {
-      Thread.sleep(100);
-      throw new Exception();
-    }, e -> {
+      if (ctx.getAttemptCount() < 2)
+        Thread.sleep(100);
+      return false;
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 3);
       assertEquals(e.getExecutionCount(), 3);
       assertEquals(timeoutStats.executionCount, 3);
       assertEquals(rpStats.retryCount, 2);
-    }, TimeoutExceededException.class);
+    }, false);
 
     // Test without interrupt
     timeout.withInterrupt(false);
@@ -65,10 +83,10 @@ public class TimeoutTest extends Testing {
   }
 
   /**
-   * Tests that an inner timeout does not prevent outer retries from being performed when a retry is pending. In this
-   * test, the timeout has no effect on the outer retry policy.
+   * Tests that when an outer retry is scheduled any inner timeouts are cancelled. This prevents the timeout from
+   * accidentally cancelling a scheduled retry that may be pending.
    */
-  public void testTimeoutThenRetryWithPendingRetry() {
+  public void testRetryTimeoutWithPendingRetry() {
     AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
@@ -80,7 +98,7 @@ public class TimeoutTest extends Testing {
     }, Failsafe.with(retryPolicy, timeout), ctx -> {
       executionCounter.incrementAndGet();
       throw new IllegalStateException();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 3);
       assertEquals(e.getExecutionCount(), 3);
       assertEquals(executionCounter.get(), 3);
@@ -103,7 +121,7 @@ public class TimeoutTest extends Testing {
    * <br>Execution that blocks
    * <br>Timeout
    */
-  public void testRetryThenTimeoutWithBlockedSupplier() {
+  public void testTimeoutRetryWithBlockedSupplier() {
     AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
@@ -111,7 +129,7 @@ public class TimeoutTest extends Testing {
       System.out.println("Retrying");
     });
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testRunFailure(false, () -> {
       executionCounter.set(0);
       timeoutStats.reset();
     }, Failsafe.with(timeout, retryPolicy), ctx -> {
@@ -119,7 +137,7 @@ public class TimeoutTest extends Testing {
       executionCounter.incrementAndGet();
       Thread.sleep(100);
       throw new Exception();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(executionCounter.get(), 1);
@@ -135,16 +153,6 @@ public class TimeoutTest extends Testing {
     test.run();
   }
 
-  public void testTimeoutDuringExecution() {
-    Timeout<Object> timeout = withLogs(Timeout.of(Duration.ofMillis(100)));
-    RetryPolicy<Object> retryPolicy = withLogs(new RetryPolicy<>().withDelay(Duration.ofMillis(1000)));
-
-    Asserts.assertThrows(() -> Failsafe.with(timeout, retryPolicy).run(() -> {
-      Thread.sleep(1000);
-      throw new Exception();
-    }), TimeoutExceededException.class);
-  }
-
   /**
    * Tests that an outer timeout will cancel inner retries when an inner retry is pending. The flow should be:
    * <p>
@@ -152,14 +160,14 @@ public class TimeoutTest extends Testing {
    * <br>Retry sleep/scheduled that blocks
    * <br>Timeout
    */
-  public void testRetryThenTimeoutWithPendingRetry() {
+  public void testTimeoutRetryWithPendingRetry() {
     AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
     Stats rpStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
     RetryPolicy<Object> retryPolicy = withStatsAndLogs(new RetryPolicy<>().withDelay(Duration.ofMillis(1000)), rpStats);
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testRunFailure(false, () -> {
       executionCounter.set(0);
       timeoutStats.reset();
       rpStats.reset();
@@ -167,7 +175,7 @@ public class TimeoutTest extends Testing {
       System.out.println("Executing");
       executionCounter.incrementAndGet();
       throw new Exception();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(executionCounter.get(), 1);
@@ -186,7 +194,7 @@ public class TimeoutTest extends Testing {
   /**
    * Tests an inner timeout that fires while the supplier is blocked.
    */
-  public void testTimeoutThenFallbackWithBlockedSupplier() {
+  public void testFallbackTimeoutWithBlockedSupplier() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
@@ -195,14 +203,14 @@ public class TimeoutTest extends Testing {
       throw new IllegalStateException();
     }), fbStats);
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testRunFailure(false, () -> {
       timeoutStats.reset();
       fbStats.reset();
     }, Failsafe.with(fallback).compose(timeout), ctx -> {
       System.out.println("Executing");
       Thread.sleep(100);
       throw new Exception();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutStats.failureCount, 1);
@@ -221,7 +229,7 @@ public class TimeoutTest extends Testing {
    * Tests that an inner timeout will not interrupt an outer fallback. The inner timeout is never triggered since the
    * supplier completes immediately.
    */
-  public void testTimeoutThenFallback() {
+  public void testFallbackTimeout() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
@@ -236,7 +244,7 @@ public class TimeoutTest extends Testing {
     }, Failsafe.with(fallback).compose(timeout), ctx -> {
       System.out.println("Executing");
       throw new Exception();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutStats.failureCount, 0);
@@ -254,7 +262,7 @@ public class TimeoutTest extends Testing {
   /**
    * Tests that an outer timeout will interrupt an inner supplier that is blocked, skipping the inner fallback.
    */
-  public void testFallbackThenTimeoutWithBlockedSupplier() {
+  public void testTimeoutFallbackWithBlockedSupplier() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
@@ -263,14 +271,14 @@ public class TimeoutTest extends Testing {
       throw new IllegalStateException();
     }), fbStats);
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testRunFailure(false, () -> {
       timeoutStats.reset();
       fbStats.reset();
     }, Failsafe.with(timeout).compose(fallback), ctx -> {
       System.out.println("Executing");
       Thread.sleep(100);
       throw new Exception();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutStats.failureCount, 1);
@@ -288,7 +296,7 @@ public class TimeoutTest extends Testing {
   /**
    * Tests that an outer timeout will interrupt an inner fallback that is blocked.
    */
-  public void testFallbackThenTimeoutWithBlockedFallback() {
+  public void testTimeoutFallbackWithBlockedFallback() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
     Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
@@ -298,13 +306,13 @@ public class TimeoutTest extends Testing {
       throw new IllegalStateException();
     }), fbStats);
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testRunFailure(false, () -> {
       timeoutStats.reset();
       fbStats.reset();
     }, Failsafe.with(timeout).compose(fallback), ctx -> {
       System.out.println("Executing");
       throw new Exception();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
       assertEquals(timeoutStats.failureCount, 1);

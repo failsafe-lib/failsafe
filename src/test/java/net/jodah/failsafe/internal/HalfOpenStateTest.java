@@ -16,11 +16,11 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.Testing;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static net.jodah.failsafe.Testing.withLogs;
+import static net.jodah.failsafe.testing.Testing.withLogs;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 

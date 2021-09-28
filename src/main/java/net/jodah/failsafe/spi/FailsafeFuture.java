@@ -15,10 +15,11 @@
  */
 package net.jodah.failsafe.spi;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -35,9 +36,9 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
 
   // Mutable state guarded by "this"
 
-  // The most recent executoin attempt
+  // The most recent execution attempt
   private ExecutionInternal<R> newestExecution;
-  // Functions to apply when this future is cancelled
+  // Functions to apply when this future is cancelled for each policy index, in descending order
   private Map<Integer, BiConsumer<Boolean, ExecutionResult<R>>> cancelFunctions;
   // Whether a cancel with interrupt has already occurred
   private boolean cancelledWithInterrupt;
@@ -111,6 +112,10 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
       int cancellingPolicyIndex =
         cancellingPolicyExecutor == null ? Integer.MAX_VALUE : cancellingPolicyExecutor.getPolicyIndex();
       Iterator<Entry<Integer, BiConsumer<Boolean, ExecutionResult<R>>>> it = cancelFunctions.entrySet().iterator();
+
+      /* This iteration occurs in descending order to ensure that the {@code cancelResult} can be supplied to outer
+      cancel functions before the inner supplier is cancelled, which would cause PolicyExecutors to complete with
+      CancellationException rather than the expected {@code cancelResult}. */
       while (it.hasNext()) {
         Map.Entry<Integer, BiConsumer<Boolean, ExecutionResult<R>>> entry = it.next();
         if (cancellingPolicyIndex > entry.getKey()) {
@@ -134,12 +139,13 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
 
   /**
    * Sets a {@code cancelFn} to be called when a PolicyExecutor {@link #cancelDependencies(PolicyExecutor, boolean,
-   * ExecutionResult) cancels dependencies} or when this future is {@link #cancel(boolean) cancelled}.
+   * ExecutionResult) cancels dependencies} with a policyIndex > the given {@code policyIndex}, or when this future is
+   * {@link #cancel(boolean) cancelled}.
    */
-  public synchronized void setCancelFn(BiConsumer<Boolean, ExecutionResult<R>> cancelFn) {
+  public synchronized void setCancelFn(int policyIndex, BiConsumer<Boolean, ExecutionResult<R>> cancelFn) {
     if (cancelFunctions == null)
-      cancelFunctions = new HashMap<>();
-    cancelFunctions.put(-1, cancelFn);
+      cancelFunctions = new TreeMap<>(Collections.reverseOrder());
+    cancelFunctions.put(policyIndex, cancelFn);
   }
 
   /**
@@ -150,7 +156,7 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   public synchronized void setCancelFn(PolicyExecutor<R, ?> policyExecutor,
     BiConsumer<Boolean, ExecutionResult<R>> cancelFn) {
     if (cancelFunctions == null)
-      cancelFunctions = new HashMap<>();
+      cancelFunctions = new TreeMap<>(Collections.reverseOrder());
     cancelFunctions.put(policyExecutor.getPolicyIndex(), cancelFn);
   }
 
@@ -162,6 +168,6 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     if (isCancelled())
       future.cancel(cancelledWithInterrupt);
     else
-      setCancelFn((mayInterrupt, cancelResult) -> future.cancel(mayInterrupt));
+      setCancelFn(-2, (mayInterrupt, cancelResult) -> future.cancel(mayInterrupt));
   }
 }

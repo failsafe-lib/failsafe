@@ -16,8 +16,12 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.Testing.Service;
+import net.jodah.failsafe.event.ExecutionAttemptedEvent;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.testing.Asserts;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -26,7 +30,6 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.jodah.failsafe.Testing.failures;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertTrue;
 
@@ -34,9 +37,9 @@ import static org.testng.Assert.assertTrue;
  * Tests event listener capabilities of FailsafeExecutor and Policy implementations.
  */
 @Test
-public class ListenersTest {
-  private Service service = mock(Service.class);
-  CheckedSupplier<Boolean> supplier = () -> service.connect();
+public class ListenersTest extends Testing {
+  private Server server = mock(Server.class);
+  CheckedSupplier<Boolean> supplier = () -> server.connect();
   Waiter waiter;
 
   // RetryPolicy listener counters
@@ -86,7 +89,7 @@ public class ListenersTest {
 
   @BeforeMethod
   void beforeMethod() {
-    reset(service);
+    reset(server);
     waiter = new Waiter();
 
     rpAbort.reset();
@@ -114,10 +117,10 @@ public class ListenersTest {
   }
 
   private <T> FailsafeExecutor<T> registerListeners(RetryPolicy<T> retryPolicy, CircuitBreaker<T> circuitBreaker,
-      Fallback<T> fallback) {
+    Fallback<T> fallback) {
     FailsafeExecutor<T> failsafe = fallback == null ?
-        Failsafe.with(retryPolicy, circuitBreaker) :
-        Failsafe.with(fallback, retryPolicy, circuitBreaker);
+      Failsafe.with(retryPolicy, circuitBreaker) :
+      Failsafe.with(fallback, retryPolicy, circuitBreaker);
 
     retryPolicy.onAbort(e -> rpAbort.record());
     retryPolicy.onFailedAttempt(e -> rpFailedAttempt.record());
@@ -154,7 +157,7 @@ public class ListenersTest {
    */
   private void assertForSuccess(boolean sync) throws Throwable {
     // Given - Fail 4 times then succeed
-    when(service.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
+    when(server.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
     RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().withMaxAttempts(10).handleResult(false);
     CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().handleResult(false).withDelay(Duration.ZERO);
     Fallback<Boolean> fallback = Fallback.of(true);
@@ -204,8 +207,8 @@ public class ListenersTest {
    */
   private void assertForUnhandledFailure(boolean sync) throws Throwable {
     // Given - Fail 2 times then don't match policy
-    when(service.connect()).thenThrow(failures(2, new IllegalStateException()))
-        .thenThrow(IllegalArgumentException.class);
+    when(server.connect()).thenThrow(failures(2, new IllegalStateException()))
+      .thenThrow(IllegalArgumentException.class);
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class);
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, null);
@@ -215,7 +218,7 @@ public class ListenersTest {
       Asserts.assertThrows(() -> failsafe.get(supplier), IllegalArgumentException.class);
     else
       Asserts.assertThrows(() -> failsafe.getAsync(supplier).get(), ExecutionException.class,
-          IllegalArgumentException.class);
+        IllegalArgumentException.class);
 
     // Then
     waiter.await(1000);
@@ -251,7 +254,7 @@ public class ListenersTest {
    */
   private void assertForRetriesExceeded(boolean sync) throws Throwable {
     // Given - Fail 4 times and exceed retries
-    when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
+    when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, null);
@@ -261,7 +264,7 @@ public class ListenersTest {
       Asserts.assertThrows(() -> failsafe.get(supplier), IllegalStateException.class);
     else
       Asserts.assertThrows(() -> failsafe.getAsync(supplier).get(), ExecutionException.class,
-          IllegalStateException.class);
+        IllegalStateException.class);
 
     // Then
     waiter.await(1000);
@@ -297,8 +300,8 @@ public class ListenersTest {
    */
   private void assertForAbort(boolean sync) throws Throwable {
     // Given - Fail twice then abort
-    when(service.connect()).thenThrow(failures(3, new IllegalStateException()))
-        .thenThrow(new IllegalArgumentException());
+    when(server.connect()).thenThrow(failures(3, new IllegalStateException()))
+      .thenThrow(new IllegalArgumentException());
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, null);
@@ -308,7 +311,7 @@ public class ListenersTest {
       Asserts.assertThrows(() -> failsafe.get(supplier), IllegalArgumentException.class);
     else
       Asserts.assertThrows(() -> failsafe.getAsync(supplier).get(), ExecutionException.class,
-          IllegalArgumentException.class);
+        IllegalArgumentException.class);
 
     // Then
     waiter.await(1000);
@@ -340,13 +343,13 @@ public class ListenersTest {
   }
 
   private void assertForFailingRetryPolicy(boolean sync) throws Throwable {
-    when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
+    when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given failing RetryPolicy
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
     // And successful CircuitBreaker and Fallback
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().handle(NullPointerException.class)
-        .withDelay(Duration.ZERO);
+      .withDelay(Duration.ZERO);
     Fallback<Object> fallback = Fallback.<Object>of(() -> true).handle(NullPointerException.class);
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
 
@@ -382,7 +385,7 @@ public class ListenersTest {
   }
 
   private void assertForFailingCircuitBreaker(boolean sync) throws Throwable {
-    when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
+    when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given successful RetryPolicy
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(NullPointerException.class);
@@ -424,14 +427,16 @@ public class ListenersTest {
   }
 
   private void assertForFailingFallback(boolean sync) throws Throwable {
-    when(service.connect()).thenThrow(failures(10, new IllegalStateException()));
+    when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given successful RetryPolicy and CircuitBreaker
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(NullPointerException.class);
     CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO)
-        .handle(NullPointerException.class);
+      .handle(NullPointerException.class);
     // And failing Fallback
-    Fallback<Object> fallback = Fallback.ofAsync(() -> { throw new Exception(); });
+    Fallback<Object> fallback = Fallback.ofAsync(() -> {
+      throw new Exception();
+    });
     FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
 
     // When
@@ -464,7 +469,7 @@ public class ListenersTest {
   public void testFailingFallbackAsync() throws Throwable {
     assertForFailingFallback(false);
   }
-  
+
   public void shouldGetElapsedAttemptTime() {
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxAttempts(3)
       .onRetry(e -> assertTrue(e.getElapsedAttemptTime().toMillis() >= 90))
@@ -473,5 +478,44 @@ public class ListenersTest {
       Thread.sleep(100);
       return false;
     });
+  }
+
+  /**
+   * Asserts that Failsafe does not block when an error occurs in an event listener.
+   */
+  public void shouldIgnoreExceptionsInListeners() throws Throwable {
+    // Given
+    CheckedConsumer<ExecutionAttemptedEvent<Object>> attemptedError = e -> {
+      throw new AssertionError();
+    };
+    CheckedConsumer<ExecutionCompletedEvent<Object>> completedError = e -> {
+      throw new AssertionError();
+    };
+    CheckedSupplier<Object> noop = () -> null;
+    RetryPolicy<Object> rp;
+
+    // onFailedAttempt
+    rp = new RetryPolicy<>().onFailedAttempt(attemptedError).handleResult(null).withMaxRetries(0);
+    Failsafe.with(rp).get(noop);
+
+    // RetryPolicy.onRetry
+    rp = new RetryPolicy<>().onRetry(attemptedError).handleResult(null).withMaxRetries(1);
+    Failsafe.with(rp).get(noop);
+
+    // RetryPolicy.onAbort
+    rp = new RetryPolicy<>().onAbort(completedError).handleResult(null).abortWhen(null);
+    Failsafe.with(rp).get(noop);
+
+    // RetryPolicy.onRetriesExceeded
+    rp = new RetryPolicy<>().onRetriesExceeded(completedError).handleResult(null).withMaxRetries(0);
+    Failsafe.with(rp).get(noop);
+
+    // RetryPolicy.onFailure
+    rp = new RetryPolicy<>().onFailure(completedError).handleResult(null).withMaxRetries(0);
+    Failsafe.with(rp).get(noop);
+
+    // Failsafe.onComplete
+    rp = new RetryPolicy<>().handleResult(null).withMaxRetries(0);
+    Failsafe.with(rp).onComplete(completedError).get(noop);
   }
 }

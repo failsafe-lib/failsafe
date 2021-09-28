@@ -22,7 +22,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static net.jodah.failsafe.Testing.failures;
+import static net.jodah.failsafe.testing.Testing.failures;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;

@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.testing.Asserts;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 

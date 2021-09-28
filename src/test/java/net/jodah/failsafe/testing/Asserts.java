@@ -13,21 +13,83 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.testing;
 
 import net.jodah.failsafe.function.CheckedRunnable;
+import net.jodah.failsafe.function.CheckedSupplier;
 import org.testng.Assert;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 /**
  * Utilities to assist with performing assertions.
  */
 public class Asserts {
+  /**
+   * Records assertions from any thread so that they can be re-thrown from a main test thread.
+   */
+  public static class Recorder {
+    private volatile AssertionError error;
+
+    public void reset() {
+      this.error = null;
+    }
+
+    public void assertEquals(Object expected, Object actual) {
+      if (expected == null && actual == null)
+        return;
+      if (expected != null && expected.equals(actual))
+        return;
+      fail(format(expected, actual));
+    }
+
+    public void assertFalse(boolean condition) {
+      if (condition)
+        fail("expected false");
+    }
+
+    public void assertNotNull(Object object) {
+      if (object == null)
+        fail("expected not null");
+    }
+
+    public void assertNull(Object object) {
+      if (object != null)
+        fail(format("null", object));
+    }
+
+    public void assertTrue(boolean condition) {
+      if (!condition)
+        fail("expected true");
+    }
+
+    public void fail(String reason) {
+      fail(new AssertionError(reason));
+    }
+
+    public void fail(Throwable reason) {
+      if (reason instanceof AssertionError)
+        error = (AssertionError) reason;
+      else {
+        error = new AssertionError();
+        error.initCause(reason);
+      }
+    }
+
+    public void throwFailure() {
+      if (error != null)
+        throw error;
+    }
+
+    private String format(Object expected, Object actual) {
+      return "expected:<" + expected + "> but was:<" + actual + ">";
+    }
+  }
+
   @SafeVarargs
   public static boolean matches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
     Throwable current = actual;
@@ -82,6 +144,12 @@ public class Asserts {
     }
 
     if (fail)
-      Assert.fail("No exception was thrown");
+      Assert.fail("No exception was thrown. Expected: " + throwableHierarchy);
+  }
+
+  public static <T> void assertThrowsSup(CheckedSupplier<T> supplier,
+    List<Class<? extends Throwable>> throwableHierarchy) {
+    assertThrows(supplier::get, t -> {
+    }, throwableHierarchy);
   }
 }

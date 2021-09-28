@@ -9,8 +9,8 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.jodah.failsafe.Asserts.assertThrows;
-import static net.jodah.failsafe.Testing.runAsync;
+import static net.jodah.failsafe.testing.Asserts.assertThrows;
+import static net.jodah.failsafe.testing.Testing.runAsync;
 import static org.testng.Assert.assertEquals;
 
 /**

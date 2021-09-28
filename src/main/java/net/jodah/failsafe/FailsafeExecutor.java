@@ -247,7 +247,10 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
+   * @deprecated This will be removed in 3.0. Use either {@link #getStageAsync(ContextualSupplier) getStageAsync} or
+   * {@link #getAsyncExecution(AsyncRunnable) getAsyncExecution} instead
    */
+  @Deprecated
   public <T extends R> CompletableFuture<T> getStageAsyncExecution(
     AsyncSupplier<T, ? extends CompletionStage<T>> supplier) {
     return callAsync(future -> getPromiseOfStageExecution(supplier, future), true);

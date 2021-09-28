@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 
 import java.time.Duration;
 
-import static net.jodah.failsafe.Testing.withLogs;
+import static net.jodah.failsafe.testing.Testing.withLogs;
 import static org.testng.Assert.assertTrue;
 
 @Test

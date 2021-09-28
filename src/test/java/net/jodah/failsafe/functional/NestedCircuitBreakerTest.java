@@ -2,7 +2,7 @@ package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.Testing;
+import net.jodah.failsafe.testing.Testing;
 import net.jodah.failsafe.function.CheckedRunnable;
 import org.testng.annotations.Test;
 
@@ -47,7 +47,7 @@ public class NestedCircuitBreakerTest extends Testing {
       resetBreaker(cb2);
     }, Failsafe.with(cb2, cb1), ctx -> {
       throw new IllegalStateException();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(1, e.getAttemptCount());
       assertEquals(cb1.getFailureCount(), 1);
       assertTrue(cb1.isOpen());
@@ -60,7 +60,7 @@ public class NestedCircuitBreakerTest extends Testing {
       resetBreaker(cb2);
     }, Failsafe.with(cb2, cb1), ctx -> {
       throw new IllegalStateException();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(1, e.getAttemptCount());
       assertEquals(cb1.getFailureCount(), 1);
       assertTrue(cb1.isOpen());

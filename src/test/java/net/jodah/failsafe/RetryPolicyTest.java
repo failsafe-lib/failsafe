@@ -15,6 +15,7 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.testing.Asserts;
 import org.testng.annotations.Test;
 
 import java.io.IOException;

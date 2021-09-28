@@ -15,7 +15,7 @@
  */
 package net.jodah.failsafe.issues;
 
-import net.jodah.failsafe.Asserts;
+import net.jodah.failsafe.testing.Asserts;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.testng.annotations.AfterClass;

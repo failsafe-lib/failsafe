@@ -160,8 +160,10 @@ final class Functions {
    * supplier cannot be applied multiple times concurrently.
    *
    * @param <R> result type
+   * @deprecated This will be removed in 3.0.
    */
   @SuppressWarnings("unchecked")
+  @Deprecated
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStageExecution(
     AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
 
@@ -177,10 +179,10 @@ final class Functions {
         if (stage instanceof Future)
           future.propagateCancellation((Future<R>) stage);
 
-        stage.whenComplete((innerResult, failure) -> {
+        stage.whenComplete((result, failure) -> {
           try {
             if (failure != null)
-              execution.record(innerResult, failure instanceof CompletionException ? failure.getCause() : failure);
+              execution.record(result, failure instanceof CompletionException ? failure.getCause() : failure);
           } finally {
             asyncFutureLock.release();
           }
@@ -244,7 +246,7 @@ final class Functions {
           Future<?> scheduledFuture = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
           // Propagate outer cancellations to the scheduled innerFn and its promise
-          future.setCancelFn((mayInterrupt, cancelResult) -> {
+          future.setCancelFn(-1, (mayInterrupt, cancelResult) -> {
             scheduledFuture.cancel(mayInterrupt);
 
             // Cancel a pending promise if the execution attempt has not started

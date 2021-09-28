@@ -22,7 +22,7 @@ import java.net.ConnectException;
 import java.time.Duration;
 import java.util.Arrays;
 
-import static net.jodah.failsafe.Asserts.assertThrows;
+import static net.jodah.failsafe.testing.Asserts.assertThrows;
 import static org.testng.Assert.*;
 
 @Test
@@ -59,9 +59,8 @@ public class CircuitBreakerTest {
     breaker.isFailure("result", null);
   }
 
-  @SuppressWarnings("unchecked")
   public void testIsFailureForFailure() {
-    CircuitBreaker breaker = new CircuitBreaker();
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     assertTrue(breaker.isFailure(null, new Exception()));
     assertTrue(breaker.isFailure(null, new IllegalArgumentException()));
 
@@ -113,7 +112,7 @@ public class CircuitBreakerTest {
   }
 
   public void shouldDefaultDelay() throws Throwable {
-    CircuitBreaker breaker = new CircuitBreaker();
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
     breaker.recordFailure();
     Thread.sleep(100);
     breaker.allowsExecution();
@@ -122,7 +121,7 @@ public class CircuitBreakerTest {
 
   public void shouldGetSuccessAndFailureStats() {
     // Given
-    CircuitBreaker breaker = new CircuitBreaker().withFailureThreshold(5, 10).withSuccessThreshold(15, 20);
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(5, 10).withSuccessThreshold(15, 20);
 
     // When
     for (int i = 0; i < 7; i++)

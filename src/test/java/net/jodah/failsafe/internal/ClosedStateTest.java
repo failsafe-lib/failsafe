@@ -16,10 +16,10 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.Testing;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
-import static net.jodah.failsafe.Testing.getInternals;
+import static net.jodah.failsafe.testing.Testing.getInternals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 

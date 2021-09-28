@@ -1,13 +1,10 @@
 package net.jodah.failsafe.functional;
 
-import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.*;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import static org.testng.Assert.*;
 
@@ -30,13 +27,13 @@ public class NestedTimeoutTest extends Testing {
     RetryPolicy<Object> retryPolicy = withStatsAndLogs(new RetryPolicy<>().withMaxRetries(10), retryStats);
     Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(500)), outerTimeoutStats);
 
-    Runnable test = () -> testRunFailure(() -> {
+    Runnable test = () -> testRunFailure(false, () -> {
       innerTimeoutStats.reset();
       retryStats.reset();
       outerTimeoutStats.reset();
     }, Failsafe.with(outerTimeout, retryPolicy, innerTimeout), ctx -> {
       Thread.sleep(150);
-    }, e -> {
+    }, (f, e) -> {
       assertTrue(e.getAttemptCount() >= 3);
       assertTrue(e.getExecutionCount() >= 3);
       assertTrue(innerTimeoutStats.failureCount >= 3);
@@ -68,12 +65,12 @@ public class NestedTimeoutTest extends Testing {
     RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
     Fallback<Object> fallback = Fallback.of(true);
 
-    Runnable test = () -> testRunSuccess(() -> {
+    Runnable test = () -> testRunSuccess(false, () -> {
       innerTimeoutStats.reset();
       outerTimeoutStats.reset();
     }, Failsafe.with(fallback, retryPolicy, outerTimeout, innerTimeout), ctx -> {
       Thread.sleep(150);
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(3, e.getAttemptCount());
       assertEquals(innerTimeoutStats.failureCount, 3);
       assertEquals(outerTimeoutStats.failureCount, 3);
@@ -89,47 +86,31 @@ public class NestedTimeoutTest extends Testing {
   }
 
   /**
+   * RetryPolicy -> Timeout -> Timeout
+   * <p>
    * Tests a scenario where three timeouts should cause all delegates to be cancelled with interrupts.
    */
-  // TODO consider removing this test in favor of the ones above
-  public void shouldCancelNestedTimeoutsWithInterrupt() throws Throwable {
+  public void shouldCancelNestedTimeoutsWithInterrupt() {
     // Given
-    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().onRetry(e -> System.out.println("Retrying"));
-    Timeout<Boolean> timeout1 = Timeout.of(Duration.ofMillis(1000));
-    Timeout<Boolean> timeout2 = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
-    CountDownLatch futureLatch = new CountDownLatch(1);
-    Waiter waiter = new Waiter();
+    RetryPolicy<Boolean> rp = new RetryPolicy<>();
+    Timeout<Boolean> outerTimeout = Timeout.of(Duration.ofMillis(1000));
+    Timeout<Boolean> innerTimeout = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
 
-    // When
-    Future<Boolean> future = Failsafe.with(rp).compose(timeout2).compose(timeout1).onComplete(e -> {
-      waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof TimeoutExceededException);
-      waiter.resume();
-    }).getAsync(ctx -> {
-      // Wait for futureRef to be set
-      futureLatch.await();
-      waiter.assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
+    // When / Then
+    testGetFailure(false, Failsafe.with(rp, innerTimeout, outerTimeout), ctx -> {
+      assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
 
       try {
-        // Assert not cancelled
-        waiter.assertFalse(ctx.isCancelled());
-        // waiter.assertFalse(futureRef.get().cancelFunctions.isEmpty());
+        assertFalse(ctx.isCancelled());
         Thread.sleep(1000);
       } catch (InterruptedException e) {
-        // Assert cancelled
-        waiter.assertTrue(ctx.isCancelled());
-        waiter.resume();
+        assertTrue(ctx.isCancelled());
         throw e;
       }
-      waiter.fail("Expected interruption");
+      fail("Expected interruption");
       return false;
-    });
-    futureLatch.countDown();
-
-    // Then
-    waiter.await(1000, 4);
-    assertFalse(future.isCancelled());
-    assertTrue(future.isDone());
-    assertThrows(future::get, ExecutionException.class, TimeoutExceededException.class);
+    }, (f, e) -> {
+      assertEquals(e.getAttemptCount(), 3);
+    }, TimeoutExceededException.class);
   }
 }

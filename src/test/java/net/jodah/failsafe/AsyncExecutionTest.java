@@ -16,6 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.spi.*;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -195,19 +196,6 @@ public class AsyncExecutionTest extends Testing {
     verify(future).completeResult(ExecutionResult.none());
   }
 
-  public void testExecutor() {
-    Stats rpStats = new Stats();
-    RetryPolicy<Object> rp = withStats(new RetryPolicy<>(), rpStats);
-
-    testRunAsyncFailure(Failsafe.with(rp).with(new SyncExecutor()), ctx -> {
-      throw new IllegalStateException();
-    }, e -> {
-      assertEquals(e.getAttemptCount(), 3);
-      assertEquals(e.getExecutionCount(), 3);
-      assertEquals(rpStats.failedAttemptCount, 3);
-      assertEquals(rpStats.retryCount, 2);
-    }, IllegalStateException.class);
-  }
 
   private void verifyScheduler(int executions) {
     verify(scheduler, times(executions)).schedule(any(Callable.class), any(Long.class), any(TimeUnit.class));

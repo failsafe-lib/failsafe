@@ -16,10 +16,12 @@
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import java.time.Duration;
+
+import static org.testng.Assert.*;
 
 /**
  * Tests various policy composition scenarios.
@@ -27,22 +29,45 @@ import static org.testng.Assert.assertTrue;
 @Test
 public class PolicyCompositionTest extends Testing {
   /**
-   * Fallback -> RetryPolicy -> CircuitBreaker
+   * RetryPolicy -> CircuitBreaker
    */
-  public void testFallbackRetryPolicyCircuitBreaker() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
-    Fallback<Object> fb = Fallback.ofAsync(() -> "test");
+  public void testRetryPolicyCircuitBreaker() {
+    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(-1);
+    CircuitBreaker<Boolean> cb = new CircuitBreaker<Boolean>().withFailureThreshold(3)
+      .withDelay(Duration.ofMinutes(10));
+    Service service = mockService(2, true);
 
-    testRunSuccess(() -> {
+    testGetSuccess(() -> {
+      service.reset();
       resetBreaker(cb);
-    }, Failsafe.with(fb).compose(rp).compose(cb), ctx -> {
-      throw new IllegalStateException();
-    }, e -> {
-      assertEquals(cb.getFailureCount(), 3);
-      assertEquals(cb.getSuccessCount(), 0);
+    }, Failsafe.with(rp, cb), ctx -> {
+      return service.connect();
+    }, (f, e) -> {
+      assertEquals(e.getAttemptCount(), 3);
+      assertEquals(cb.getFailureCount(), 2);
+      assertEquals(cb.getSuccessCount(), 1);
       assertTrue(cb.isClosed());
-    }, "test");
+    }, true);
+  }
+
+  /**
+   * RetryPolicy -> CircuitBreaker
+   * <p>
+   * Asserts handling of an open breaker.
+   */
+  public void testRetryPolicyCircuitBreakerWithOpenBreaker() {
+    // Given
+    RetryPolicy<Object> retryPolicy = Testing.withLogs(new RetryPolicy<>());
+    CircuitBreaker<Object> cb = Testing.withLogs(new CircuitBreaker<>());
+
+    // When / Then
+    testRunFailure(() -> {
+      resetBreaker(cb);
+    }, Failsafe.with(retryPolicy, cb), ctx -> {
+      Thread.sleep(10);
+      throw new Exception();
+    }, (f, e) -> {
+    }, CircuitBreakerOpenException.class);
   }
 
   /**
@@ -56,7 +81,7 @@ public class PolicyCompositionTest extends Testing {
       resetBreaker(cb);
     }, Failsafe.with(cb).compose(rp), ctx -> {
       throw new IllegalStateException();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 3);
       assertEquals(cb.getFailureCount(), 1);
       assertEquals(cb.getSuccessCount(), 0);
@@ -65,15 +90,38 @@ public class PolicyCompositionTest extends Testing {
   }
 
   /**
+   * Fallback -> RetryPolicy -> CircuitBreaker
+   */
+  public void testFallbackRetryPolicyCircuitBreaker() {
+    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
+    Fallback<Object> fb = Fallback.ofAsync(() -> "test");
+
+    testRunSuccess(() -> {
+      resetBreaker(cb);
+    }, Failsafe.with(fb).compose(rp).compose(cb), ctx -> {
+      throw new IllegalStateException();
+    }, (f, e) -> {
+      assertEquals(cb.getFailureCount(), 3);
+      assertEquals(cb.getSuccessCount(), 0);
+      assertTrue(cb.isClosed());
+    }, "test");
+  }
+
+  /**
    * Fallback -> RetryPolicy
    */
   public void testFallbackRetryPolicy() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    Fallback<Object> fb = Fallback.of("test");
+    Fallback<Object> fb = Fallback.of(e -> {
+      assertNull(e.getLastResult());
+      assertTrue(e.getLastFailure() instanceof IllegalStateException);
+      return "test";
+    });
+    RetryPolicy<Object> rp = new RetryPolicy<>();
 
     testRunSuccess(Failsafe.with(fb).compose(rp), ctx -> {
       throw new IllegalStateException();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 3);
     }, "test");
   }
@@ -82,13 +130,138 @@ public class PolicyCompositionTest extends Testing {
    * RetryPolicy -> Fallback
    */
   public void testRetryPolicyFallback() {
+    // Given
     RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
     Fallback<Object> fb = Fallback.of("test");
 
+    // When / Then
     testRunSuccess(Failsafe.with(rp).compose(fb), ctx -> {
       throw new IllegalStateException();
-    }, e -> {
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
     }, "test");
+  }
+
+  /**
+   * Fallback -> CircuitBreaker
+   * <p>
+   * Tests fallback with a circuit breaker that is closed.
+   */
+  public void testFallbackCircuitBreaker() {
+    // Given
+    Fallback<Object> fallback = Fallback.of(e -> {
+      assertNull(e.getLastResult());
+      assertTrue(e.getLastFailure() instanceof IllegalStateException);
+      return false;
+    });
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
+
+    // When / Then
+    testGetSuccess(() -> {
+      resetBreaker(breaker);
+    }, Failsafe.with(fallback, breaker), ctx -> {
+      throw new IllegalStateException();
+    }, false);
+  }
+
+  /**
+   * Fallback -> CircuitBreaker
+   * <p>
+   * Tests fallback with a circuit breaker that is open.
+   */
+  public void testFallbackCircuitBreakerOpen() {
+    // Given
+    Fallback<Object> fallback = Fallback.of(e -> {
+      assertNull(e.getLastResult());
+      assertTrue(e.getLastFailure() instanceof CircuitBreakerOpenException);
+      return false;
+    });
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
+
+    // When / Then with open breaker
+    testGetSuccess(() -> {
+      breaker.open();
+    }, Failsafe.with(fallback, breaker), ctx -> {
+      return true;
+    }, false);
+  }
+
+  /**
+   * RetryPolicy -> Timeout
+   * <p>
+   * Tests 2 timeouts, then a success, and asserts the ExecutionContext is cancelled after each timeout.
+   */
+  public void testRetryPolicyTimeout() {
+    // Given
+    RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(e -> {
+      assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
+    });
+    Stats timeoutStats = new Stats();
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), timeoutStats);
+    Recorder recorder = new Recorder();
+
+    // When / Then
+    Runnable test = () -> testGetSuccess(false, () -> {
+      recorder.reset();
+      timeoutStats.reset();
+    }, Failsafe.with(rp, timeout), ctx -> {
+      if (ctx.getAttemptCount() < 2) {
+        Thread.sleep(100);
+        recorder.assertTrue(ctx.isCancelled());
+      } else {
+        recorder.assertFalse(ctx.isCancelled());
+      }
+      return "success";
+    }, (f, e) -> {
+      recorder.throwFailure();
+      assertEquals(e.getAttemptCount(), 3);
+      assertEquals(e.getExecutionCount(), 3);
+      assertEquals(timeoutStats.failureCount, 2);
+      assertEquals(timeoutStats.successCount, 1);
+    }, "success");
+
+    // Without interrupt
+    test.run();
+
+    // With interrupt
+    timeout.withInterrupt(true);
+    test.run();
+  }
+
+  /**
+   * CircuitBreaker -> Timeout
+   */
+  public void testCircuitBreakerTimeout() {
+    // Given
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(50));
+    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
+    assertTrue(breaker.isClosed());
+
+    // When / Then
+    testRunFailure(() -> {
+      resetBreaker(breaker);
+    }, Failsafe.with(breaker, timeout), ctx -> {
+      System.out.println("Executing");
+      Thread.sleep(100);
+    }, TimeoutExceededException.class);
+    assertTrue(breaker.isOpen());
+  }
+
+  /**
+   * Fallback -> Timeout
+   */
+  public void testFallbackTimeout() {
+    // Given
+    Fallback<Object> fallback = Fallback.of(e -> {
+      assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
+      return false;
+    });
+    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(10));
+
+    // When / Then
+    testGetSuccess(false, Failsafe.with(fallback, timeout), ctx -> {
+      Thread.sleep(100);
+      return true;
+    }, false);
   }
 }

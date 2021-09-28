@@ -3,7 +3,7 @@ package net.jodah.failsafe.issues;
 import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.Testing;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

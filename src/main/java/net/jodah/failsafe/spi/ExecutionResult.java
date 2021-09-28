@@ -189,7 +189,7 @@ public final class ExecutionResult<R> {
   }
 
   /**
-   * Returns whether all execution results leading to this result have been successful.
+   * Returns whether the execution was successful for all policies.
    */
   public boolean getSuccessAll() {
     return successAll != null && successAll;
@@ -214,9 +214,5 @@ public final class ExecutionResult<R> {
   @Override
   public int hashCode() {
     return Objects.hash(result, failure);
-  }
-
-  String toSummary() {
-    return "[result=" + result + ", failure=" + failure + "]";
   }
 }

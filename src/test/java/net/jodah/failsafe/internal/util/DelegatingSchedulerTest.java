@@ -1,7 +1,7 @@
 package net.jodah.failsafe.internal.util;
 
 import net.jodah.concurrentunit.Waiter;
-import net.jodah.failsafe.Asserts;
+import net.jodah.failsafe.testing.Asserts;
 import net.jodah.failsafe.spi.Scheduler;
 import org.testng.annotations.Test;
 

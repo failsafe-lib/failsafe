@@ -88,7 +88,7 @@ public class Failsafe {
    * @param <P> policy type
    * @throws NullPointerException if {@code policies} is null
    * @throws IllegalArgumentException if {@code policies} is empty
-   * @deprecated Use {@link #with(Policy, Policy[])} instead
+   * @deprecated This will be removed in 3.0. Use {@link #with(Policy, Policy[])} instead
    */
   @Deprecated
   public static <R, P extends Policy<R>> FailsafeExecutor<R> with(P[] policies) {

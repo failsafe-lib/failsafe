@@ -1,6 +1,8 @@
 package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
+import net.jodah.failsafe.testing.Asserts;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -17,7 +19,6 @@ public class BlockedExecutionTest {
   /**
    * Asserts that a scheduled execution that is blocked on a threadpool is properly cancelled when a timeout occurs.
    */
-  @Test
   public void shouldCancelScheduledExecutionOnTimeout() throws Throwable {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Timeout<Boolean> timeout = Timeout.of(Duration.ofMillis(100));

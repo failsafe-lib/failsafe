@@ -1,6 +1,7 @@
 package net.jodah.failsafe.issues;
 
 import net.jodah.failsafe.*;
+import net.jodah.failsafe.testing.Asserts;
 import org.testng.annotations.Test;
 
 import java.time.Duration;

@@ -2,7 +2,7 @@ package net.jodah.failsafe.issues;
 
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.Testing;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;

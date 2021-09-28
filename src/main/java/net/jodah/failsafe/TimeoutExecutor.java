@@ -16,7 +16,6 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.spi.*;
-import net.jodah.failsafe.spi.Scheduler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -131,10 +130,10 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
             }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
             timeoutFutureRef.set(timeoutFuture);
 
-            // Propagate outer cancellations to the Timeout future
+            // Propagate outer cancellations to the Timeout future and its promise
             future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
-              resultRef.compareAndSet(null, cancelResult);
               timeoutFuture.cancel(mayInterrupt);
+              resultRef.compareAndSet(null, cancelResult);
             });
           } catch (Throwable t) {
             // Hard scheduling failure
@@ -155,13 +154,14 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
         if (!resultRef.compareAndSet(null, result))
           result = resultRef.get();
 
-        // Cancel timeout task
-        Future<R> timeoutFuture = timeoutFutureRef.get();
-        if (timeoutFuture != null && !timeoutFuture.isDone())
-          timeoutFuture.cancel(false);
+        if (result != null) {
+          // Cancel timeout task
+          Future<R> timeoutFuture = timeoutFutureRef.get();
+          if (timeoutFuture != null && !timeoutFuture.isDone())
+            timeoutFuture.cancel(false);
 
-        if (result != null)
           postExecuteAsync(execution, result, scheduler, future);
+        }
 
         promise.complete(result);
       });

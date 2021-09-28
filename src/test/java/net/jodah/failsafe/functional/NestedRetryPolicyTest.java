@@ -3,7 +3,7 @@ package net.jodah.failsafe.functional;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.Testing;
+import net.jodah.failsafe.testing.Testing;
 import net.jodah.failsafe.function.ContextualRunnable;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -17,11 +17,11 @@ import static org.testng.Assert.assertEquals;
  */
 @Test
 public class NestedRetryPolicyTest extends Testing {
-  Service service;
+  Server server;
 
   @BeforeMethod
   protected void beforeMethod() {
-    service = mock(Service.class);
+    server = mock(Server.class);
   }
 
   /**
@@ -36,10 +36,12 @@ public class NestedRetryPolicyTest extends Testing {
     RetryPolicy<Object> innerRetryPolicy = withStats(new RetryPolicy<>().withMaxRetries(1), innerRetryStats);
 
     testGetSuccess(() -> {
-      when(service.connect()).thenThrow(failures(5, new IllegalStateException())).thenReturn(true);
+      when(server.connect()).thenThrow(failures(5, new IllegalStateException())).thenReturn(true);
       outerRetryStats.reset();
       innerRetryStats.reset();
-    }, Failsafe.with(outerRetryPolicy, innerRetryPolicy), ctx -> service.connect(), e -> {
+    }, Failsafe.with(outerRetryPolicy, innerRetryPolicy), ctx -> {
+      return server.connect();
+    }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 6);
       assertEquals(outerRetryStats.failedAttemptCount, 4);
       assertEquals(outerRetryStats.failureCount, 0);
@@ -67,7 +69,7 @@ public class NestedRetryPolicyTest extends Testing {
     testRunSuccess(() -> {
       retryPolicy1Stats.reset();
       retryPolicy2Stats.reset();
-    }, Failsafe.with(fallback, retryPolicy2, retryPolicy1), runnable, e -> {
+    }, Failsafe.with(fallback, retryPolicy2, retryPolicy1), runnable, (f, e) -> {
       // Then
       // Expected RetryPolicy failure sequence:
       //    rp1 java.lang.IllegalStateException - failure, retry
@@ -87,7 +89,7 @@ public class NestedRetryPolicyTest extends Testing {
     testRunSuccess(() -> {
       retryPolicy1Stats.reset();
       retryPolicy2Stats.reset();
-    }, Failsafe.with(fallback, retryPolicy1, retryPolicy2), runnable, e -> {
+    }, Failsafe.with(fallback, retryPolicy1, retryPolicy2), runnable, (f, e) -> {
       // Expected RetryPolicy failure sequence:
       //    rp2 java.lang.IllegalStateException - success
       //    rp1 java.lang.IllegalStateException - failure, retry

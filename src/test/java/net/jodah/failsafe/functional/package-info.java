@@ -1,4 +1,5 @@
 /**
- * Functional tests for sets of behavior.
+ * Functional tests for sets of behavior. When possible, each behavior will be tested against sync and various async
+ * executions with the same assertions.
  */
 package net.jodah.failsafe.functional;

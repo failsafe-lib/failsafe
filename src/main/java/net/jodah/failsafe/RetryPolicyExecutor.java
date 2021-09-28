@@ -157,8 +157,11 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
                         previousResultRef);
                       Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getDelay(),
                         TimeUnit.NANOSECONDS);
+                      // Cancel prior inner executions, such as pending timeouts
+                      future.cancelDependencies(this, false, null);
+
                       // Propagate outer cancellations to the thread that the innerFn will run with
-                      future.setCancelFn((mayInterrupt, cancelResult) -> {
+                      future.setCancelFn(-1, (mayInterrupt, cancelResult) -> {
                         scheduledRetry.cancel(mayInterrupt);
                       });
 
