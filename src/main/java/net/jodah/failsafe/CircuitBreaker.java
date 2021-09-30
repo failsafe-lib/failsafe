@@ -73,8 +73,8 @@ import java.util.function.Predicate;
 @SuppressWarnings("WeakerAccess")
 public class CircuitBreaker<R> extends DelayablePolicy<CircuitBreaker<R>, R> {
   /** Writes guarded by "this" */
-  private final AtomicReference<CircuitState<R>> state = new AtomicReference<>();
-  private final AtomicInteger currentExecutions = new AtomicInteger();
+  protected final AtomicReference<CircuitState<R>> state = new AtomicReference<>();
+  protected final AtomicInteger currentExecutions = new AtomicInteger();
   private Duration delay = Duration.ofMinutes(1);
 
   // Failure config
