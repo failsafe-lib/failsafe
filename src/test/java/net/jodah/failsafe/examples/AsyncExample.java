@@ -26,8 +26,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AsyncExample {
   static ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-  static RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().withDelay(Duration.ofMillis(100))
+  static RetryPolicy<Boolean> retryPolicy = RetryPolicy.<Boolean>builder()
+    .withDelay(Duration.ofMillis(100))
     .withJitter(.25)
+    .build()
     .onRetry(e -> System.out.println("Connection attempt failed. Retrying."))
     .onSuccess(e -> System.out.println("Success"))
     .onFailure(e -> System.out.println("Connection attempts failed"));

@@ -32,8 +32,8 @@ public class NestedRetryPolicyTest extends Testing {
   public void testNestedRetryPoliciesWhereInnerIsExceeded() {
     Stats outerRetryStats = new Stats();
     Stats innerRetryStats = new Stats();
-    RetryPolicy<Object> outerRetryPolicy = withStats(new RetryPolicy<>().withMaxRetries(10), outerRetryStats);
-    RetryPolicy<Object> innerRetryPolicy = withStats(new RetryPolicy<>().withMaxRetries(1), innerRetryStats);
+    RetryPolicy<Object> outerRetryPolicy = withStats(RetryPolicy.builder().withMaxRetries(10).build(), outerRetryStats);
+    RetryPolicy<Object> innerRetryPolicy = withStats(RetryPolicy.builder().withMaxRetries(1).build(), innerRetryStats);
 
     testGetSuccess(() -> {
       when(server.connect()).thenThrow(failures(5, new IllegalStateException())).thenReturn(true);
@@ -57,10 +57,10 @@ public class NestedRetryPolicyTest extends Testing {
     Stats retryPolicy1Stats = new Stats();
     Stats retryPolicy2Stats = new Stats();
     RetryPolicy<Object> retryPolicy1 = withStats(
-      new RetryPolicy<>().handle(IllegalStateException.class).withMaxRetries(2), retryPolicy1Stats);
+      RetryPolicy.builder().handle(IllegalStateException.class).withMaxRetries(2).build(), retryPolicy1Stats);
     RetryPolicy<Object> retryPolicy2 = withStats(
-      new RetryPolicy<>().handle(IllegalArgumentException.class).withMaxRetries(3), retryPolicy2Stats);
-    Fallback<Object> fallback = Fallback.ofAsync(() -> true);
+      RetryPolicy.builder().handle(IllegalArgumentException.class).withMaxRetries(3).build(), retryPolicy2Stats);
+    Fallback<Object> fallback = Fallback.<Object>builder(true).withAsync().build();
 
     ContextualRunnable<Object> runnable = ctx -> {
       throw ctx.getAttemptCount() % 2 == 0 ? new IllegalStateException() : new IllegalArgumentException();

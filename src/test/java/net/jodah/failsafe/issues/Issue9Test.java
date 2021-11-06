@@ -46,14 +46,14 @@ public class Issue9Test {
 
     // When
     AtomicInteger successCounter = new AtomicInteger();
-    Future<Boolean> future = Failsafe.with(new RetryPolicy<Boolean>().withMaxRetries(2)
-        .onRetry(e -> retryCounter.incrementAndGet()))
-        .with(executor)
-        .onSuccess(p -> {
-          successCounter.incrementAndGet();
-          waiter.resume();
-        })
-        .getAsync(service::connect);
+    Future<Boolean> future = Failsafe.with(
+        RetryPolicy.builder().withMaxRetries(2).build().onRetry(e -> retryCounter.incrementAndGet()))
+      .with(executor)
+      .onSuccess(p -> {
+        successCounter.incrementAndGet();
+        waiter.resume();
+      })
+      .getAsync(service::connect);
 
     // Then
     waiter.await(1000);

@@ -44,10 +44,10 @@ public interface ExecutionInternal<R> extends ExecutionContext<R> {
   /**
    * Marks the execution as having been cancelled by the {@code policyExecutor}.
    */
-  void cancel(PolicyExecutor<R, ?> policyExecutor);
+  void cancel(PolicyExecutor<R> policyExecutor);
 
   /**
    * Returns whether the execution is considered cancelled for the {@code policyExecutor}.
    */
-  boolean isCancelled(PolicyExecutor<R, ?> policyExecutor);
+  boolean isCancelled(PolicyExecutor<R> policyExecutor);
 }

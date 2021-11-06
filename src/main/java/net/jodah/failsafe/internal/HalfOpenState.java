@@ -20,11 +20,8 @@ import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.ExecutionContext;
 
 public class HalfOpenState<R> extends CircuitState<R> {
-  private final CircuitBreakerInternal<R> internal;
-
-  public HalfOpenState(CircuitBreaker<R> breaker, CircuitBreakerInternal<R> internal) {
+  public HalfOpenState(CircuitBreakerImpl<R> breaker) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), false, null));
-    this.internal = internal;
   }
 
   /**
@@ -32,7 +29,7 @@ public class HalfOpenState<R> extends CircuitState<R> {
    */
   @Override
   public boolean allowsExecution() {
-    return internal.getCurrentExecutions() < capacityFor(breaker);
+    return breaker.currentExecutions.get() < capacityFor(breaker);
   }
 
   @Override
@@ -58,20 +55,20 @@ public class HalfOpenState<R> extends CircuitState<R> {
     boolean successesExceeded;
     boolean failuresExceeded;
 
-    int successThreshold = breaker.getSuccessThreshold();
+    int successThreshold = config.getSuccessThreshold();
     if (successThreshold != 0) {
-      int successThresholdingCapacity = breaker.getSuccessThresholdingCapacity();
+      int successThresholdingCapacity = config.getSuccessThresholdingCapacity();
       successesExceeded = stats.getSuccessCount() >= successThreshold;
       failuresExceeded = stats.getFailureCount() > successThresholdingCapacity - successThreshold;
     } else {
-      int failureRateThreshold = breaker.getFailureRateThreshold();
+      int failureRateThreshold = config.getFailureRateThreshold();
       if (failureRateThreshold != 0) {
-        boolean executionThresholdExceeded = stats.getExecutionCount() >= breaker.getFailureExecutionThreshold();
+        boolean executionThresholdExceeded = stats.getExecutionCount() >= config.getFailureExecutionThreshold();
         failuresExceeded = executionThresholdExceeded && stats.getFailureRate() >= failureRateThreshold;
         successesExceeded = executionThresholdExceeded && stats.getSuccessRate() > 100 - failureRateThreshold;
       } else {
-        int failureThresholdingCapacity = breaker.getFailureThresholdingCapacity();
-        int failureThreshold = breaker.getFailureThreshold();
+        int failureThresholdingCapacity = config.getFailureThresholdingCapacity();
+        int failureThreshold = config.getFailureThreshold();
         failuresExceeded = stats.getFailureCount() >= failureThreshold;
         successesExceeded = stats.getSuccessCount() > failureThresholdingCapacity - failureThreshold;
       }
@@ -80,18 +77,18 @@ public class HalfOpenState<R> extends CircuitState<R> {
     if (successesExceeded)
       breaker.close();
     else if (failuresExceeded)
-      internal.open(context);
+      breaker.open(context);
   }
 
   /**
    * Returns the capacity of the breaker in the half-open state.
    */
   private static int capacityFor(CircuitBreaker<?> breaker) {
-    int capacity = breaker.getSuccessThresholdingCapacity();
+    int capacity = breaker.getConfig().getSuccessThresholdingCapacity();
     if (capacity == 0)
-      capacity = breaker.getFailureExecutionThreshold();
+      capacity = breaker.getConfig().getFailureExecutionThreshold();
     if (capacity == 0)
-      capacity = breaker.getFailureThresholdingCapacity();
+      capacity = breaker.getConfig().getFailureThresholdingCapacity();
     return capacity;
   }
 }

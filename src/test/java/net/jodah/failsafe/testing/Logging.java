@@ -1,9 +1,10 @@
 package net.jodah.failsafe.testing;
 
 import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.FailurePolicy;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.Timeout;
+import net.jodah.failsafe.ExecutionListeners;
+import net.jodah.failsafe.Policy;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -92,7 +93,7 @@ public class Logging extends Mocking {
   /**
    * Note: The internal stats that are logged are not reset, even across multiple executions.
    */
-  public static <T extends FailurePolicy<T, R>, R> T withLogs(T policy) {
+  public static <T extends Policy<R> & ExecutionListeners<T, R>, R> T withLogs(T policy) {
     return withStatsAndLogs(policy, new Stats(), true);
   }
 
@@ -129,7 +130,7 @@ public class Logging extends Mocking {
       if (withLogging)
         System.out.printf("RetryPolicy %s abort%n", retryPolicy.hashCode());
     });
-    withStatsAndLogs((FailurePolicy) retryPolicy, stats, withLogging);
+    withStatsAndLogs((Policy & ExecutionListeners) retryPolicy, stats, withLogging);
     return retryPolicy;
   }
 
@@ -180,19 +181,20 @@ public class Logging extends Mocking {
       if (withLogging)
         System.out.println("CircuitBreaker closing");
     });
-    withStatsAndLogs((FailurePolicy) circuitBreaker, stats, withLogging);
+    withStatsAndLogs((Policy & ExecutionListeners) circuitBreaker, stats, withLogging);
     return circuitBreaker;
   }
 
-  public static <T extends FailurePolicy<T, R>, R> T withStats(T policy, Stats stats) {
+  public static <T extends Policy<R> & ExecutionListeners<T, R>, R> T withStats(T policy, Stats stats) {
     return withStatsAndLogs(policy, stats, false);
   }
 
-  public static <T extends FailurePolicy<T, R>, R> T withStatsAndLogs(T policy, Stats stats) {
+  public static <T extends Policy<R> & ExecutionListeners<T, R>, R> T withStatsAndLogs(T policy, Stats stats) {
     return withStatsAndLogs(policy, stats, true);
   }
 
-  private static <T extends FailurePolicy<T, R>, R> T withStatsAndLogs(T policy, Stats stats, boolean withLogging) {
+  private static <T extends Policy<R> & ExecutionListeners<T, R>, R> T withStatsAndLogs(T policy, Stats stats,
+    boolean withLogging) {
     return policy.onSuccess(e -> {
       stats.executionCount++;
       stats.successCount++;

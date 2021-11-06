@@ -1,7 +1,7 @@
 package net.jodah.failsafe.function;
 
 import net.jodah.failsafe.ExecutionContext;
-import net.jodah.failsafe.spi.Policy;
+import net.jodah.failsafe.Policy;
 
 import java.time.Duration;
 

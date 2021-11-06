@@ -10,7 +10,7 @@ import static org.testng.Assert.fail;
 public class Issue206Test {
   public void test() {
     try {
-      Failsafe.with(Fallback.of(e -> true).handleResultIf(r -> true))
+      Failsafe.with(Fallback.builder(e -> true).handleResultIf(r -> true).build())
         .onFailure(e -> fail("Unexpected execution failure"))
         .get(() -> true);
     } catch (RuntimeException e) {

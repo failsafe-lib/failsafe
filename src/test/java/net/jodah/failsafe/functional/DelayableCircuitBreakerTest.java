@@ -30,9 +30,9 @@ import static org.testng.AssertJUnit.assertFalse;
 public class DelayableCircuitBreakerTest {
   @Test(expectedExceptions = RuntimeException.class)
   public void testUncheckedExceptionInDelayFunction() {
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay((result, failure, context) -> {
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withDelay((result, failure, context) -> {
       throw new UncheckedExpectedException();
-    });
+    }).build();
 
     assertFalse(breaker.isOpen());
     Failsafe.with(breaker).run((ExecutionContext<Void> context) -> {
@@ -43,11 +43,13 @@ public class DelayableCircuitBreakerTest {
 
   public void shouldDelayOnMatchingResult() {
     AtomicInteger delays = new AtomicInteger();
-    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleResultIf(r -> r > 0)
+    CircuitBreaker<Integer> breaker = CircuitBreaker.<Integer>builder()
+      .handleResultIf(r -> r > 0)
       .withDelayWhen((r, f, c) -> {
         delays.incrementAndGet(); // side-effect for test purposes
         return Duration.ofNanos(1);
-      }, 2);
+      }, 2)
+      .build();
 
     FailsafeExecutor<Integer> failsafe = Failsafe.with(breaker);
     failsafe.get(() -> 0);
@@ -60,11 +62,13 @@ public class DelayableCircuitBreakerTest {
 
   public void shouldDelayOnMatchingFailureType() {
     AtomicInteger delays = new AtomicInteger();
-    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleResultIf(r -> r > 0)
+    CircuitBreaker<Integer> breaker = CircuitBreaker.<Integer>builder()
+      .handleResultIf(r -> r > 0)
       .withDelayOn((r, f, c) -> {
         delays.incrementAndGet(); // side-effect for test purposes
         return Duration.ofNanos(1);
-      }, RuntimeException.class);
+      }, RuntimeException.class)
+      .build();
 
     Fallback<Integer> fallback = Fallback.of(0);
     FailsafeExecutor<Integer> failsafe = Failsafe.with(fallback, breaker);

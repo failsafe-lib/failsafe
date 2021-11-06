@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.internal;
 
+import net.jodah.failsafe.Fallback;
+import net.jodah.failsafe.FallbackConfig;
+import net.jodah.failsafe.spi.EventHandler;
 import net.jodah.failsafe.spi.*;
 
 import java.util.concurrent.*;
@@ -25,12 +28,16 @@ import java.util.function.Function;
  *
  * @param <R> result type
  */
-class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
+public class FallbackExecutor<R> extends PolicyExecutor<R> {
+  private final FallbackImpl<R> fallback;
+  private final FallbackConfig<R> config;
   private final EventHandler<R> failedAttemptHandler;
 
-  FallbackExecutor(Fallback<R> fallback, int policyIndex, FailurePolicyInternal<R> failurePolicy,
-    PolicyHandlers<R> policyHandlers, EventHandler<R> failedAttemptHandler) {
-    super(fallback, policyIndex, failurePolicy, policyHandlers);
+  public FallbackExecutor(FallbackImpl<R> fallback, int policyIndex, EventHandler<R> successHandler,
+    EventHandler<R> failureHandler, EventHandler<R> failedAttemptHandler) {
+    super(policyIndex, fallback, successHandler, failureHandler);
+    this.fallback = fallback;
+    this.config = fallback.getConfig();
     this.failedAttemptHandler = failedAttemptHandler;
   }
 
@@ -52,9 +59,9 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
           failedAttemptHandler.handle(result, execution);
 
         try {
-          result = policy == Fallback.VOID ?
+          result = fallback == FallbackImpl.NONE ?
             result.withNonResult() :
-            result.withResult(policy.apply(result.getResult(), result.getFailure(), execution));
+            result.withResult(fallback.apply(result.getResult(), result.getFailure(), execution));
         } catch (Throwable t) {
           result = ExecutionResult.failure(t);
         }
@@ -86,8 +93,8 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       Callable<R> callable = () -> {
         try {
-          CompletableFuture<R> fallback = policy.applyStage(result.getResult(), result.getFailure(), execution);
-          fallback.whenComplete((innerResult, failure) -> {
+          CompletableFuture<R> fallbackFuture = fallback.applyStage(result.getResult(), result.getFailure(), execution);
+          fallbackFuture.whenComplete((innerResult, failure) -> {
             if (failure instanceof CompletionException)
               failure = failure.getCause();
             ExecutionResult<R> r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
@@ -100,7 +107,7 @@ class FallbackExecutor<R> extends PolicyExecutor<R, Fallback<R>> {
       };
 
       try {
-        if (!policy.isAsync())
+        if (!config.isAsync())
           callable.call();
         else {
           Future<?> scheduledFallback = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);

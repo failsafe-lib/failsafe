@@ -54,7 +54,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
     outerFn = asyncExecution ? Functions.toExecutionAware(innerFn) : innerFn;
     outerFn = Functions.toAsync(outerFn, scheduler, future);
 
-    for (PolicyExecutor<R, ? extends Policy<R>> policyExecutor : policyExecutors)
+    for (PolicyExecutor<R> policyExecutor : policyExecutors)
       outerFn = policyExecutor.applyAsync(outerFn, scheduler, future);
   }
 

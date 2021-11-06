@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RxJavaExample {
   public static void main(String... args) {
     AtomicInteger failures = new AtomicInteger();
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofSeconds(1));
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withDelay(Duration.ofSeconds(1)).build();
 
     Observable.create((Subscriber<? super String> s) -> {
       // Fail 2 times then succeed

@@ -24,14 +24,14 @@ import net.jodah.failsafe.function.CheckedConsumer;
 import java.time.Duration;
 
 /**
- * Handles an execution event.
+ * Handling for execution events.
  *
  * @param <R> result type
  */
 public interface EventHandler<R> {
   void handle(ExecutionResult<R> result, ExecutionContext<R> context);
 
-  static <R> EventHandler<R> of(CheckedConsumer<ExecutionCompletedEvent<R>> handler) {
+  static <R> EventHandler<R> ofCompleted(CheckedConsumer<ExecutionCompletedEvent<R>> handler) {
     return (result, context) -> {
       try {
         handler.accept(new ExecutionCompletedEvent<>(result.getResult(), result.getFailure(), context));
@@ -40,7 +40,7 @@ public interface EventHandler<R> {
     };
   }
 
-  static <R> EventHandler<R> ofAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> handler) {
+  static <R> EventHandler<R> ofAttempted(CheckedConsumer<ExecutionAttemptedEvent<R>> handler) {
     return (result, context) -> {
       try {
         handler.accept(new ExecutionAttemptedEvent<>(result.getResult(), result.getFailure(), context));

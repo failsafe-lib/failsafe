@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.spi;
+package net.jodah.failsafe;
 
-/**
- * A policy for handling executions.
- *
- * @param <R> result type
- * @author Jonathan Halterman
- */
-public interface Policy<R> {
-  /**
-   * Returns a {@link PolicyExecutor} capable of handling an execution for the Policy.
-   */
-  PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex);
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.util.function.BiPredicate;
+
+@Test
+public class FailurePolicyBuilderTest {
+  public void testResultPredicateOnlyHandlesResults() {
+    BiPredicate<Object, Throwable> resultPredicate = FailurePolicyBuilder.resultPredicateFor(result -> true);
+    Assert.assertTrue(resultPredicate.test("result", null));
+    Assert.assertFalse(resultPredicate.test(null, new RuntimeException()));
+  }
 }

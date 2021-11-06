@@ -17,7 +17,6 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.Lists;
-import net.jodah.failsafe.spi.Policy;
 
 import java.util.Arrays;
 import java.util.Collections;

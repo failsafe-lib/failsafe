@@ -12,11 +12,15 @@ import java.time.Duration;
 public class Issue115Test {
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterLargerThanDelay() {
-    new RetryPolicy<>().handle(IllegalArgumentException.class).withDelay(Duration.ofMillis(100)).withJitter(Duration.ofMillis(200));
+    RetryPolicy.builder()
+      .handle(IllegalArgumentException.class)
+      .withDelay(Duration.ofMillis(100))
+      .withJitter(Duration.ofMillis(200))
+      .build();
   }
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldFailWithJitterWithNoDelay() {
-    new RetryPolicy<>().handle(IllegalArgumentException.class).withJitter(Duration.ofMillis(200));
+    RetryPolicy.builder().handle(IllegalArgumentException.class).withJitter(Duration.ofMillis(200)).build();
   }
 }

@@ -18,7 +18,6 @@ package net.jodah.failsafe;
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.spi.ExecutionInternal;
 import net.jodah.failsafe.spi.ExecutionResult;
-import net.jodah.failsafe.spi.Policy;
 import net.jodah.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
@@ -36,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 class ExecutionImpl<R> implements ExecutionInternal<R> {
   // -- Cross-attempt state --
 
-  final List<PolicyExecutor<R, ? extends Policy<R>>> policyExecutors;
+  final List<PolicyExecutor<R>> policyExecutors;
   // When the first execution attempt was started
   private volatile Duration startTime;
   // Number of execution attempts
@@ -76,7 +75,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     ListIterator<? extends Policy<R>> policyIterator = policies.listIterator(policies.size());
     for (int i = 0; policyIterator.hasPrevious(); i++) {
       Policy<R> policy = Assert.notNull(policyIterator.previous(), "policies");
-      PolicyExecutor<R, ? extends Policy<R>> policyExecutor = policy.toExecutor(i);
+      PolicyExecutor<R> policyExecutor = policy.toExecutor(i);
       policyExecutors.add(policyExecutor);
     }
   }
@@ -145,7 +144,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     Assert.state(!completed, "Execution has already been completed");
     record(result);
     boolean allComplete = true;
-    for (PolicyExecutor<R, ? extends Policy<R>> policyExecutor : policyExecutors) {
+    for (PolicyExecutor<R> policyExecutor : policyExecutors) {
       result = policyExecutor.postExecute(this, result);
       allComplete = allComplete && result.isComplete();
     }
@@ -160,7 +159,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   }
 
   @Override
-  public void cancel(PolicyExecutor<R, ?> policyExecutor) {
+  public void cancel(PolicyExecutor<R> policyExecutor) {
     cancelledIndex = policyExecutor.getPolicyIndex();
   }
 
@@ -170,7 +169,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   }
 
   @Override
-  public boolean isCancelled(PolicyExecutor<R, ?> policyExecutor) {
+  public boolean isCancelled(PolicyExecutor<R> policyExecutor) {
     return cancelledIndex > policyExecutor.getPolicyIndex();
   }
 

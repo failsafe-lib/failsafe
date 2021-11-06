@@ -18,7 +18,9 @@ public class Issue284Test {
   AtomicBoolean failure;
   AtomicBoolean executed;
   Fallback<String> fallback;
-  RetryPolicy<String> retryPolicy = new RetryPolicy<String>().handleResult(null)
+  RetryPolicy<String> retryPolicy = RetryPolicy.<String>builder()
+    .handleResult(null)
+    .build()
     .onFailedAttempt(e -> failedAttempt.incrementAndGet())
     .onSuccess(e -> success.set(true))
     .onFailure(e -> failure.set(true));
@@ -32,8 +34,9 @@ public class Issue284Test {
   }
 
   private Fallback<String> fallbackFor(String result) {
-    return Fallback.of(result)
+    return Fallback.builder(result)
       .handleResult(null)
+      .build()
       .onFailedAttempt(e -> failedAttempt.incrementAndGet())
       .onSuccess(e -> success.set(true))
       .onFailure(e -> failure.set(true));

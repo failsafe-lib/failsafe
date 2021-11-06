@@ -29,14 +29,14 @@ public class ExecutorTest extends Testing {
   }
 
   public void testExecutorWithSyncExecution() {
-    assertThrows(() -> Failsafe.with(new RetryPolicy<>()).with(executor).run(() -> {
+    assertThrows(() -> Failsafe.with(RetryPolicy.ofDefaults()).with(executor).run(() -> {
       throw new IllegalStateException();
     }), IllegalStateException.class);
     assertEquals(executions.get(), 3);
   }
 
   public void testExecutorWithAsyncExecution() {
-    assertThrows(() -> Failsafe.with(new RetryPolicy<>()).with(executor).runAsync(() -> {
+    assertThrows(() -> Failsafe.with(RetryPolicy.ofDefaults()).with(executor).runAsync(() -> {
       throw new IllegalStateException();
     }).get(), ExecutionException.class, IllegalStateException.class);
     assertEquals(executions.get(), 3);

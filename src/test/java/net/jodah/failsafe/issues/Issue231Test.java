@@ -18,7 +18,7 @@ public class Issue231Test {
    * Timeout, even with interruption, should wait for the execution to complete.
    */
   public void shouldWaitForExecutionCompletion() {
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(100)).withInterrupt(true);
+    Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(100)).withInterrupt().build();
     AtomicBoolean executionCompleted = new AtomicBoolean();
     Asserts.assertThrows(() -> Failsafe.with(timeout).runAsync(() -> {
       try {

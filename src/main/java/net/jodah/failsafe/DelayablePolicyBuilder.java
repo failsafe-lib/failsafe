@@ -6,39 +6,31 @@ import net.jodah.failsafe.internal.util.Assert;
 import java.time.Duration;
 
 /**
- * A policy that can be delayed between executions.
+ * A builder of policies that can be delayed between executions.
  *
  * @param <S> self type
+ * @param <C> config type
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
-  private R delayResult;
-  private Class<? extends Throwable> delayFailure;
-  private DelayFunction<R, ? extends Throwable> delayFn;
-
-  public DelayablePolicy() {
+public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<R>, R>
+  extends FailurePolicyBuilder<S, C, R> {
+  protected DelayablePolicyBuilder(C config) {
+    super(config);
   }
 
   /**
-   * Copy constructor.
-   */
-  public DelayablePolicy(DelayablePolicy<S, R> policy) {
-    super(policy);
-    delayFn = policy.delayFn;
-    delayResult = policy.delayResult;
-    delayFailure = policy.delayFailure;
-  }
-
-  /**
-   * Returns the function that determines the next delay before allowing another execution.
+   * Sets the {@code delay} to occur between execution attempts.
    *
-   * @see #withDelay(DelayFunction)
-   * @see #withDelayOn(DelayFunction, Class)
-   * @see #withDelayWhen(DelayFunction, Object)
+   * @throws NullPointerException if {@code delay} is null
+   * @throws IllegalArgumentException if {@code delay} <= 0
    */
-  public DelayFunction<R, ? extends Throwable> getDelayFn() {
-    return delayFn;
+  @SuppressWarnings("unchecked")
+  public S withDelay(Duration delay) {
+    Assert.notNull(delay, "delay");
+    Assert.isTrue(delay.toNanos() > 0, "delay must be greater than 0");
+    config.delay = delay;
+    return (S) this;
   }
 
   /**
@@ -51,7 +43,7 @@ public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
   @SuppressWarnings("unchecked")
   public S withDelay(DelayFunction<R, ? extends Throwable> delayFunction) {
     Assert.notNull(delayFunction, "delayFunction");
-    this.delayFn = delayFunction;
+    config.delayFn = delayFunction;
     return (S) this;
   }
 
@@ -69,7 +61,7 @@ public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
   public <F extends Throwable> S withDelayOn(DelayFunction<R, F> delayFunction, Class<F> failure) {
     withDelay(delayFunction);
     Assert.notNull(failure, "failure");
-    this.delayFailure = failure;
+    config.delayFailure = failure;
     return (S) this;
   }
 
@@ -86,27 +78,7 @@ public abstract class DelayablePolicy<S, R> extends FailurePolicy<S, R> {
   public S withDelayWhen(DelayFunction<R, ? extends Throwable> delayFunction, R result) {
     withDelay(delayFunction);
     Assert.notNull(result, "result");
-    this.delayResult = result;
+    config.delayResult = result;
     return (S) this;
-  }
-
-  /**
-   * Returns a computed delay for the {@code result} and {@code context} else {@code null} if no delay function is
-   * configured or the computed delay is invalid.
-   */
-  @SuppressWarnings("unchecked")
-  public Duration computeDelay(ExecutionContext<R> context) {
-    Duration computed = null;
-    if (context != null && delayFn != null) {
-      R exResult = context.getLastResult();
-      Throwable exFailure = context.getLastFailure();
-
-      if ((delayResult == null || delayResult.equals(exResult)) && (delayFailure == null || (exFailure != null
-        && delayFailure.isAssignableFrom(exFailure.getClass())))) {
-        computed = ((DelayFunction<R, Throwable>) delayFn).computeDelay(exResult, exFailure, context);
-      }
-    }
-
-    return computed != null && !computed.isNegative() ? computed : null;
   }
 }

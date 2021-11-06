@@ -16,7 +16,7 @@ import static org.testng.Assert.assertNull;
 public class Issue267Test {
   public void test() {
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1000L));
-    Fallback<Object> notFoundFallback = Fallback.of(this::handleNotFound).handleIf(this::causedBy404);
+    Fallback<Object> notFoundFallback = Fallback.builder(this::handleNotFound).handleIf(this::causedBy404).build();
     Fallback<Object> failureHandling = Fallback.ofException(this::handleException);
 
     Integer result = Failsafe.with(failureHandling, notFoundFallback, timeout).get(this::connect);

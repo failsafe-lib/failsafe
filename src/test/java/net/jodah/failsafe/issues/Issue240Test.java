@@ -13,9 +13,11 @@ import static org.testng.Assert.assertEquals;
 public class Issue240Test {
   public void testHandleResult() {
     AtomicInteger counter = new AtomicInteger();
-    RetryPolicy<Object> rp = new RetryPolicy<>().handle(IllegalArgumentException.class)
+    RetryPolicy<Object> rp = RetryPolicy.builder()
+      .handle(IllegalArgumentException.class)
       .withMaxRetries(2)
-      .handleResult(null);
+      .handleResult(null)
+      .build();
 
     Testing.ignoreExceptions(() -> {
       Failsafe.with(rp).get(() -> {
@@ -29,9 +31,11 @@ public class Issue240Test {
 
   public void testAbortWhen() {
     AtomicInteger counter = new AtomicInteger();
-    RetryPolicy<Object> rp = new RetryPolicy<>().handle(IllegalArgumentException.class)
+    RetryPolicy<Object> rp = RetryPolicy.builder()
+      .handle(IllegalArgumentException.class)
       .withMaxRetries(2)
-      .abortWhen(null);
+      .abortWhen(null)
+      .build();
 
     Testing.ignoreExceptions(() -> {
       Failsafe.with(rp).get(() -> {

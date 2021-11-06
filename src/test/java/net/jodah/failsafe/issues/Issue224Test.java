@@ -9,12 +9,7 @@ import java.time.temporal.ChronoUnit;
 @Test
 public class Issue224Test {
   public void test() {
-    new RetryPolicy<>()
-      .withDelay(10, 100, ChronoUnit.MILLIS)
-      .withJitter(Duration.ofMillis(5));
-
-    new RetryPolicy<>()
-      .withDelay(1, 100, ChronoUnit.MILLIS)
-      .withJitter(.5);
+    RetryPolicy.builder().withDelay(10, 100, ChronoUnit.MILLIS).withJitter(Duration.ofMillis(5)).build();
+    RetryPolicy.builder().withDelay(1, 100, ChronoUnit.MILLIS).withJitter(.5).build();
   }
 }

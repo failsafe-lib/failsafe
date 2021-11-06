@@ -39,11 +39,11 @@ public class Issue52Test {
 
   @Test(expectedExceptions = CancellationException.class)
   public void shouldCancelExecutionViaFuture() throws Throwable {
-    Future<Object> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
-        .with(scheduler)
-        .getAsync(exec -> {
-          throw new IllegalStateException();
-        });
+    Future<Object> proxyFuture = Failsafe.with(RetryPolicy.builder().withDelay(Duration.ofMillis(10)).build())
+      .with(scheduler)
+      .getAsync(exec -> {
+        throw new IllegalStateException();
+      });
 
     assertTrue(proxyFuture.cancel(true));
     proxyFuture.get(); // should throw CancellationException per .getAsync() javadoc.
@@ -51,15 +51,14 @@ public class Issue52Test {
 
   public void shouldCancelExecutionViaCompletableFuture() throws Throwable {
     AtomicInteger counter = new AtomicInteger();
-    CompletableFuture<String> proxyFuture = Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofMillis(10)))
-        .with(scheduler)
-        .getStageAsync(exec -> {
-          Thread.sleep(100);
-          counter.incrementAndGet();
-          CompletableFuture<String> result = new CompletableFuture<>();
-          result.completeExceptionally(new RuntimeException());
-          return result;
-        });
+    CompletableFuture<String> proxyFuture = Failsafe.with(
+      RetryPolicy.builder().withDelay(Duration.ofMillis(10)).build()).with(scheduler).getStageAsync(exec -> {
+      Thread.sleep(100);
+      counter.incrementAndGet();
+      CompletableFuture<String> result = new CompletableFuture<>();
+      result.completeExceptionally(new RuntimeException());
+      return result;
+    });
 
     assertTrue(proxyFuture.cancel(true));
     int count = counter.get();

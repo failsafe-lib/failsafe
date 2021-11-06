@@ -15,8 +15,8 @@
  */
 package net.jodah.failsafe.internal;
 
-import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
+import net.jodah.failsafe.CircuitBreakerConfig;
 import net.jodah.failsafe.ExecutionContext;
 
 import java.time.Duration;
@@ -28,11 +28,13 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public abstract class CircuitState<R> {
-  final CircuitBreaker<R> breaker;
+  final CircuitBreakerImpl<R> breaker;
+  final CircuitBreakerConfig<R> config;
   volatile CircuitStats stats;
 
-  CircuitState(CircuitBreaker<R> breaker, CircuitStats stats) {
+  CircuitState(CircuitBreakerImpl<R> breaker, CircuitStats stats) {
     this.breaker = breaker;
+    this.config = breaker.getConfig();
     this.stats = stats;
   }
 

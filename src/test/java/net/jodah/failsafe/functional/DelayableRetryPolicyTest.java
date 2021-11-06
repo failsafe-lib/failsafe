@@ -36,9 +36,9 @@ public class DelayableRetryPolicyTest {
 
   @Test(expectedExceptions = UncheckedExpectedException.class)
   public void testUncheckedExceptionInDelayFunction() {
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay((result, failure, context) -> {
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withDelay((result, failure, context) -> {
       throw new UncheckedExpectedException();
-    });
+    }).build();
 
     Failsafe.with(retryPolicy).run((ExecutionContext<Void> context) -> {
       throw new RuntimeException("try again");
@@ -47,11 +47,15 @@ public class DelayableRetryPolicyTest {
 
   public void shouldDelayOnMatchingResult() {
     AtomicInteger delays = new AtomicInteger(0);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResultIf(result -> true).withMaxRetries(4).withDelayWhen((r, f, c) -> {
-      delays.incrementAndGet(); // side-effect for test purposes
-      return Duration.ofNanos(1);
-    }, "expected");
-    Fallback<Object> fallback = Fallback.<Object>of(123).handleResultIf(result -> true);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
+      .handleResultIf(result -> true)
+      .withMaxRetries(4)
+      .withDelayWhen((r, f, c) -> {
+        delays.incrementAndGet(); // side-effect for test purposes
+        return Duration.ofNanos(1);
+      }, "expected")
+      .build();
+    Fallback<Object> fallback = Fallback.<Object>builder(123).handleResultIf(result -> true).build();
 
     AtomicInteger attempts = new AtomicInteger(0);
     Object result = Failsafe.with(fallback, retryPolicy).get(() -> {
@@ -72,13 +76,14 @@ public class DelayableRetryPolicyTest {
 
   public void shouldDelayOnMatchingFailureType() {
     AtomicInteger delays = new AtomicInteger(0);
-    RetryPolicy<Integer> retryPolicy = new RetryPolicy<Integer>()
-        .handle(UncheckedExpectedException.class)
-        .withMaxRetries(4)
-        .withDelayOn((r, f, c) -> {
-          delays.incrementAndGet(); // side-effect for test purposes
-          return Duration.ofNanos(1);
-        }, DelayException.class);
+    RetryPolicy<Integer> retryPolicy = RetryPolicy.<Integer>builder()
+      .handle(UncheckedExpectedException.class)
+      .withMaxRetries(4)
+      .withDelayOn((r, f, c) -> {
+        delays.incrementAndGet(); // side-effect for test purposes
+        return Duration.ofNanos(1);
+      }, DelayException.class)
+      .build();
 
     AtomicInteger attempts = new AtomicInteger(0);
     int result = Failsafe.with(Fallback.of(123), retryPolicy).get(() -> {

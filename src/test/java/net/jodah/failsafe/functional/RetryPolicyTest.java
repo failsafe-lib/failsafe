@@ -16,7 +16,7 @@ public class RetryPolicyTest extends Testing {
    * Tests a simple execution that does not retry.
    */
   public void shouldNotRetry() {
-    testGetSuccess(Failsafe.with(new RetryPolicy<>()), ctx -> {
+    testGetSuccess(Failsafe.with(RetryPolicy.ofDefaults()), ctx -> {
       return true;
     }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
@@ -29,7 +29,10 @@ public class RetryPolicyTest extends Testing {
    */
   public void shouldThrowOnNonRetriableFailure() {
     // Given
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(-1).handle(IllegalStateException.class);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
+      .withMaxRetries(-1)
+      .handle(IllegalStateException.class)
+      .build();
 
     // When / Then
     testRunFailure(Failsafe.with(retryPolicy), ctx -> {
@@ -47,7 +50,7 @@ public class RetryPolicyTest extends Testing {
   public void shouldCompleteWhenMaxDurationExceeded() {
     Stats stats = new Stats();
     RetryPolicy<Boolean> retryPolicy = withStats(
-      new RetryPolicy<Boolean>().handleResult(false).withMaxDuration(Duration.ofMillis(100)), stats);
+      RetryPolicy.<Boolean>builder().handleResult(false).withMaxDuration(Duration.ofMillis(100)).build(), stats);
 
     testGetSuccess(() -> {
       stats.reset();
@@ -66,7 +69,7 @@ public class RetryPolicyTest extends Testing {
   public void assertScheduledRetryDelay() throws Throwable {
     // Given
     Waiter waiter = new Waiter();
-    RetryPolicy<Object> rp = new RetryPolicy<>().withDelay(Duration.ofMillis(10)).onRetryScheduled(e -> {
+    RetryPolicy<Object> rp = RetryPolicy.builder().withDelay(Duration.ofMillis(10)).build().onRetryScheduled(e -> {
       waiter.assertEquals(e.getDelay().toMillis(), 10L);
       waiter.resume();
     });

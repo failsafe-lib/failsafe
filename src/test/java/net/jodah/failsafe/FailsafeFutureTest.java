@@ -41,7 +41,7 @@ public class FailsafeFutureTest {
    */
   public void shouldCallOnCompleteWhenCancelled() throws Throwable {
     Waiter waiter = new Waiter();
-    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).onComplete(e -> {
+    CompletableFuture<String> future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).onComplete(e -> {
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof CancellationException);
       waiter.resume();
@@ -69,7 +69,7 @@ public class FailsafeFutureTest {
    */
   public void shouldNotCancelCompletedFuture() throws Throwable {
     // Given
-    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<String>()).with(executor).getAsync(() -> "test");
+    CompletableFuture<String> future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).getAsync(() -> "test");
 
     // When
     Thread.sleep(200);
@@ -87,7 +87,7 @@ public class FailsafeFutureTest {
    * Asserts that a cancelled future ignores subsequent completion attempts.
    */
   public void shouldNotCompleteCancelledFuture() {
-    CompletableFuture<String> future = Failsafe.with(new RetryPolicy<>()).with(executor).getAsync(() -> {
+    CompletableFuture<String> future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).getAsync(() -> {
       Thread.sleep(1000);
       throw new IllegalStateException();
     });

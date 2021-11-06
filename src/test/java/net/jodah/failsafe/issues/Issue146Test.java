@@ -18,11 +18,14 @@ public class Issue146Test {
     AtomicInteger successCounter = new AtomicInteger();
     AtomicInteger failureCounter = new AtomicInteger();
     AtomicInteger failedAttemptCounter = new AtomicInteger();
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handleResultIf(Objects::isNull)
-        .onSuccess(e -> successCounter.incrementAndGet())
-        .onFailure(e -> failureCounter.incrementAndGet())
-        .onFailedAttempt(e -> failedAttemptCounter.incrementAndGet())
-        .withMaxRetries(2);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
+      .handleResultIf(Objects::isNull)
+      .withMaxRetries(2)
+      .build()
+      .onSuccess(e -> successCounter.incrementAndGet())
+      .onFailure(e -> failureCounter.incrementAndGet())
+      .onFailedAttempt(e -> failedAttemptCounter.incrementAndGet());
+
     Failsafe.with(retryPolicy).get(() -> null);
 
     assertEquals(3, failedAttemptCounter.get());

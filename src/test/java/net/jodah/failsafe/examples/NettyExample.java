@@ -32,7 +32,9 @@ public class NettyExample {
   public static void main(String... args) throws Throwable {
     EventLoopGroup group = new NioEventLoopGroup();
     Bootstrap bootstrap = createBootstrap(group);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withDelay(Duration.ofSeconds(1))
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
+      .withDelay(Duration.ofSeconds(1))
+      .build()
       .onSuccess(e -> System.out.println("Success!"))
       .onFailure(e -> System.out.println("Connection attempts failed"));
 

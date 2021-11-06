@@ -34,7 +34,7 @@ public class ShutdownExecutorTest {
     executor.shutdownNow();
 
     // When
-    Future future = Failsafe.with(Fallback.of(false), new RetryPolicy<>(), new CircuitBreaker<>())
+    Future<?> future = Failsafe.with(Fallback.of(false), RetryPolicy.ofDefaults(), CircuitBreaker.ofDefaults())
       .with(executor)
       .runAsync(() -> waiter.fail("Should not execute supplier since executor has been shutdown"));
 
@@ -50,7 +50,7 @@ public class ShutdownExecutorTest {
     AtomicInteger counter = new AtomicInteger();
 
     // When
-    Future future = Failsafe.with(new RetryPolicy<>()).with(executor).getAsync(() -> {
+    Future<?> future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).getAsync(() -> {
       Thread.sleep(200);
       counter.incrementAndGet();
       return "success";
@@ -61,7 +61,7 @@ public class ShutdownExecutorTest {
     assertEquals("success", future.get());
     assertEquals(counter.get(), 1, "Supplier should have completed execution before executor was shutdown");
 
-    future = Failsafe.with(new RetryPolicy<>()).with(executor).getAsync(() -> "test");
+    future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).getAsync(() -> "test");
     assertThrows(future::get, ExecutionException.class, RejectedExecutionException.class);
   }
 
@@ -74,7 +74,7 @@ public class ShutdownExecutorTest {
     AtomicInteger counter = new AtomicInteger();
 
     // When
-    Future future = Failsafe.with(new RetryPolicy<>()).with(executor).runAsync(() -> {
+    Future<?> future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).runAsync(() -> {
       Thread.sleep(200);
       counter.incrementAndGet();
     });
@@ -89,10 +89,10 @@ public class ShutdownExecutorTest {
    * Asserts that an ExecutorService shutdown() will not prevent internally scheduled Timeout tasks from cancelling a
    * sync execution.
    */
-  public void testShutdownDoesNotPreventTimeoutSync() throws Throwable {
+  public void testShutdownDoesNotPreventTimeoutSync() {
     // Given
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(200)).withInterrupt(true);
+    Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(200)).withInterrupt().build();
     AtomicInteger counter = new AtomicInteger();
 
     // When / then
@@ -114,11 +114,11 @@ public class ShutdownExecutorTest {
   public void testShutdownDoesNotPreventTimeoutAsync() throws Throwable {
     // Given
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(200)).withInterrupt(true);
+    Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(200)).withInterrupt().build();
     AtomicInteger counter = new AtomicInteger();
 
     // When
-    Future future = Failsafe.with(timeout).with(executor).runAsync(() -> {
+    Future<?> future = Failsafe.with(timeout).with(executor).runAsync(() -> {
       Thread.sleep(500);
       counter.incrementAndGet();
     });

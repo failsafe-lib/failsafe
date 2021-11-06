@@ -42,7 +42,10 @@ public class BlockedExecutionTest {
   public void shouldCancelScheduledRetryOnTimeout() {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Timeout<Boolean> timeout = Timeout.of(Duration.ofMillis(100));
-    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withDelay(Duration.ofMillis(1000)).handleResult(false);
+    RetryPolicy<Boolean> rp = RetryPolicy.<Boolean>builder()
+      .withDelay(Duration.ofMillis(1000))
+      .handleResult(false)
+      .build();
 
     Future<Boolean> future = Failsafe.with(timeout).compose(rp).with(executor).getAsync(() -> {
       // Tie up single thread immediately after execution, before the retry is scheduled
@@ -61,10 +64,10 @@ public class BlockedExecutionTest {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Timeout<Boolean> timeout = Timeout.of(Duration.ofMillis(100));
     AtomicBoolean fallbackCalled = new AtomicBoolean();
-    Fallback<Boolean> fallback = Fallback.ofAsync(() -> {
+    Fallback<Boolean> fallback = Fallback.builder(() -> {
       fallbackCalled.set(true);
       return true;
-    }).handleResult(false);
+    }).handleResult(false).withAsync().build();
 
     Future<Boolean> future = Failsafe.with(timeout).compose(fallback).with(executor).getAsync(() -> {
       // Tie up single thread immediately after execution, before the fallback is scheduled
@@ -84,10 +87,10 @@ public class BlockedExecutionTest {
   public void shouldCancelScheduledFallbackOnCancel() throws Throwable {
     AtomicBoolean fallbackCalled = new AtomicBoolean();
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    Fallback<Boolean> fallback = Fallback.ofAsync(() -> {
+    Fallback<Boolean> fallback = Fallback.builder(() -> {
       fallbackCalled.set(true);
       return true;
-    }).handleResult(false);
+    }).handleResult(false).withAsync().build();
 
     Future<Boolean> future = Failsafe.with(fallback).with(executor).getAsync(() -> {
       executor.submit(Testing.uncheck(() -> Thread.sleep(300)));

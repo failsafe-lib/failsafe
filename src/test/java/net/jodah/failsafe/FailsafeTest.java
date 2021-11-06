@@ -17,7 +17,7 @@ public class FailsafeTest extends Testing {
    */
   public void shouldSupportErrors() {
     // Given
-    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<>();
+    RetryPolicy<Boolean> retryPolicy = RetryPolicy.ofDefaults();
 
     // When / Then
     testRunFailure(Failsafe.with(retryPolicy), ctx -> {
@@ -31,7 +31,9 @@ public class FailsafeTest extends Testing {
    * Asserts that checked exeptions are wrapped with FailsafeException for sync executions.
    */
   public void shouldWrapCheckedExceptionsForSyncExecutions() {
-    assertThrows(() -> Failsafe.with(new RetryPolicy<>().withMaxRetries(0)).run(() -> {
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withMaxRetries(0).build();
+
+    assertThrows(() -> Failsafe.with(retryPolicy).run(() -> {
       throw new TimeoutException();
     }), FailsafeException.class, TimeoutException.class);
   }

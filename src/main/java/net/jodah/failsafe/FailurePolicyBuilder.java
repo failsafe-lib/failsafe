@@ -16,11 +16,7 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.ExecutionResult;
-import net.jodah.failsafe.spi.FailurePolicyInternal;
-import net.jodah.failsafe.spi.Policy;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -40,27 +36,16 @@ import java.util.function.Predicate;
  * </ul>
  *
  * @param <S> self type
+ * @param <C> config type
  * @param <R> result type
  * @author Jonathan Halterman
  */
 @SuppressWarnings("unchecked")
-public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implements Policy<R> {
-  /** Indicates whether failures are checked by a configured failure condition */
-  private boolean failuresChecked;
-  /** Conditions that determine whether an execution is a failure */
-  private final List<BiPredicate<R, Throwable>> failureConditions;
+public abstract class FailurePolicyBuilder<S, C extends FailurePolicyConfig<R>, R> {
+  protected C config;
 
-  public FailurePolicy() {
-    failureConditions = new ArrayList<>();
-  }
-
-  /**
-   * Copy constructor.
-   */
-  public FailurePolicy(FailurePolicy<S, R> policy) {
-    super(policy);
-    failuresChecked = policy.failuresChecked;
-    failureConditions = policy.failureConditions;
+  protected FailurePolicyBuilder(C config) {
+    this.config = config;
   }
 
   /**
@@ -95,8 +80,8 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   public S handle(List<Class<? extends Throwable>> failures) {
     Assert.notNull(failures, "failures");
     Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    failuresChecked = true;
-    failureConditions.add(failurePredicateFor(failures));
+    config.failuresChecked = true;
+    config.failureConditions.add(failurePredicateFor(failures));
     return (S) this;
   }
 
@@ -107,8 +92,8 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    */
   public S handleIf(Predicate<? extends Throwable> failurePredicate) {
     Assert.notNull(failurePredicate, "failurePredicate");
-    failuresChecked = true;
-    failureConditions.add(failurePredicateFor(failurePredicate));
+    config.failuresChecked = true;
+    config.failureConditions.add(failurePredicateFor(failurePredicate));
     return (S) this;
   }
 
@@ -120,8 +105,8 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   @SuppressWarnings("unchecked")
   public S handleIf(BiPredicate<R, ? extends Throwable> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    failuresChecked = true;
-    failureConditions.add((BiPredicate<R, Throwable>) resultPredicate);
+    config.failuresChecked = true;
+    config.failureConditions.add((BiPredicate<R, Throwable>) resultPredicate);
     return (S) this;
   }
 
@@ -130,7 +115,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * considered when a result is returned from an execution, not when an exception is thrown.
    */
   public S handleResult(R result) {
-    failureConditions.add(resultPredicateFor(result));
+    config.failureConditions.add(resultPredicateFor(result));
     return (S) this;
   }
 
@@ -143,39 +128,14 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    */
   public S handleResultIf(Predicate<R> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
-    failureConditions.add(resultPredicateFor(resultPredicate));
+    config.failureConditions.add(resultPredicateFor(resultPredicate));
     return (S) this;
-  }
-
-  /**
-   * Returns whether an execution result can be retried given the configured failure conditions.
-   *
-   * @see #handle(Class...)
-   * @see #handle(List)
-   * @see #handleIf(BiPredicate)
-   * @see #handleIf(Predicate)
-   * @see #handleResult(R)
-   * @see #handleResultIf(Predicate)
-   */
-  public boolean isFailure(R result, Throwable failure) {
-    for (BiPredicate<R, Throwable> predicate : failureConditions) {
-      try {
-        if (predicate.test(result, failure))
-          return true;
-      } catch (Exception ignored) {
-        // Ignore confused user-supplied predicates.
-        // They should not be allowed to halt execution of the operation.
-      }
-    }
-
-    // Fail by default if a failure is not checked by a condition
-    return failure != null && !failuresChecked;
   }
 
   /**
    * Returns a predicate that evaluates whether the {@code result} equals an execution result.
    */
-  public static <R> BiPredicate<R, Throwable> resultPredicateFor(R result) {
+  static <R> BiPredicate<R, Throwable> resultPredicateFor(R result) {
     return (t, u) -> result == null ? t == null && u == null : Objects.equals(result, t);
   }
 
@@ -183,7 +143,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * Returns a predicate that evaluates the {@code failurePredicate} against a failure.
    */
   @SuppressWarnings("unchecked")
-  public static <R> BiPredicate<R, Throwable> failurePredicateFor(Predicate<? extends Throwable> failurePredicate) {
+  static <R> BiPredicate<R, Throwable> failurePredicateFor(Predicate<? extends Throwable> failurePredicate) {
     return (t, u) -> u != null && ((Predicate<Throwable>) failurePredicate).test(u);
   }
 
@@ -193,7 +153,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
    * Short-circuits to false without invoking {@code resultPredicate}, when result is not present (i.e.
    * BiPredicate.test(null, Throwable)).
    */
-  public static <R> BiPredicate<R, Throwable> resultPredicateFor(Predicate<R> resultPredicate) {
+  static <R> BiPredicate<R, Throwable> resultPredicateFor(Predicate<R> resultPredicate) {
     return (t, u) -> {
       if (u == null) {
         return resultPredicate.test(t);
@@ -209,7 +169,7 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
   /**
    * Returns a predicate that returns whether any of the {@code failures} are assignable from an execution failure.
    */
-  public static <R> BiPredicate<R, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
+  static <R> BiPredicate<R, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
     return (t, u) -> {
       if (u == null)
         return false;
@@ -219,13 +179,4 @@ public abstract class FailurePolicy<S, R> extends PolicyListeners<S, R> implemen
       return false;
     };
   }
-
-  final protected FailurePolicyInternal<R> failurePolicyInternal = new FailurePolicyInternal<R>() {
-    @Override
-    public boolean isFailure(ExecutionResult<R> result) {
-      return failureConditions.isEmpty() ?
-        result.getFailure() != null :
-        FailurePolicy.this.isFailure(result.getResult(), result.getFailure());
-    }
-  };
 }
