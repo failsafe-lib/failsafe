@@ -178,7 +178,14 @@ public abstract class PolicyExecutor<R> {
    */
   protected CompletableFuture<ExecutionResult<R>> onFailureAsync(ExecutionContext<R> context, ExecutionResult<R> result,
     Scheduler scheduler, FailsafeFuture<R> future) {
-    return CompletableFuture.completedFuture(onFailure(context, result));
+    try {
+      return CompletableFuture.completedFuture(onFailure(context, result));
+    } catch (Throwable t) {
+      // Handle unexpected hard errors in user code
+      CompletableFuture<ExecutionResult<R>> r = new CompletableFuture<>();
+      r.completeExceptionally(t);
+      return r;
+    }
   }
 
   private void handleSuccess(ExecutionResult<R> result, ExecutionContext<R> context) {

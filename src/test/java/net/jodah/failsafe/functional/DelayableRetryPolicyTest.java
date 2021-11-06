@@ -19,30 +19,38 @@ import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class DelayableRetryPolicyTest {
+public class DelayableRetryPolicyTest extends Testing {
   static class UncheckedExpectedException extends RuntimeException {
   }
 
   static class DelayException extends UncheckedExpectedException {
   }
 
-  @Test(expectedExceptions = UncheckedExpectedException.class)
   public void testUncheckedExceptionInDelayFunction() {
-    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withDelay((result, failure, context) -> {
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withDelayFn(ctx -> {
       throw new UncheckedExpectedException();
     }).build();
 
-    Failsafe.with(retryPolicy).run((ExecutionContext<Void> context) -> {
+    // Sync
+    assertThrows(() -> Failsafe.with(retryPolicy).run((ExecutionContext<Void> context) -> {
       throw new RuntimeException("try again");
-    });
+    }), UncheckedExpectedException.class);
+
+    // Async
+    assertThrows(() -> Failsafe.with(retryPolicy).runAsync((ExecutionContext<Void> context) -> {
+      throw new RuntimeException("try again");
+    }).get(1, TimeUnit.SECONDS), ExecutionException.class, UncheckedExpectedException.class);
   }
 
   public void shouldDelayOnMatchingResult() {
@@ -50,7 +58,7 @@ public class DelayableRetryPolicyTest {
     RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
       .handleResultIf(result -> true)
       .withMaxRetries(4)
-      .withDelayWhen((r, f, c) -> {
+      .withDelayFnWhen(ctx -> {
         delays.incrementAndGet(); // side-effect for test purposes
         return Duration.ofNanos(1);
       }, "expected")
@@ -79,7 +87,7 @@ public class DelayableRetryPolicyTest {
     RetryPolicy<Integer> retryPolicy = RetryPolicy.<Integer>builder()
       .handle(UncheckedExpectedException.class)
       .withMaxRetries(4)
-      .withDelayOn((r, f, c) -> {
+      .withDelayFnOn(ctx -> {
         delays.incrementAndGet(); // side-effect for test purposes
         return Duration.ofNanos(1);
       }, DelayException.class)

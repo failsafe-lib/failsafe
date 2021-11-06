@@ -201,7 +201,7 @@ public class ExecutionTest {
   public void shouldAdjustDelayForComputedDelay() {
     Execution<Object> exec = Execution.of(RetryPolicy.builder()
       .withMaxAttempts(10)
-      .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() * 2))
+      .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() * 2))
       .build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
@@ -218,7 +218,7 @@ public class ExecutionTest {
     Execution<Object> exec = Execution.of(RetryPolicy.builder()
       .withMaxAttempts(10)
       .withDelay(Duration.ofNanos(5))
-      .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
+      .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
       .build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
@@ -239,7 +239,7 @@ public class ExecutionTest {
     Execution<Object> exec = Execution.of(RetryPolicy.builder()
       .withMaxAttempts(10)
       .withBackoff(Duration.ofNanos(1), Duration.ofNanos(10))
-      .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
+      .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
       .build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);

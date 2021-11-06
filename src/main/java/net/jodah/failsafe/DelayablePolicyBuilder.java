@@ -1,6 +1,6 @@
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.DelayFunction;
+import net.jodah.failsafe.function.ContextualSupplier;
 import net.jodah.failsafe.internal.util.Assert;
 
 import java.time.Duration;
@@ -36,12 +36,26 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
   /**
    * Sets the {@code delayFunction} that computes the next delay before allowing another execution.
    *
-   * @param delayFunction the function to use to compute the delay before a next attempt
+   * <p>
+   * The {@code delayFunction} must complete quickly, not have side-effects, and always return the same result for the
+   * same input. Exceptions thrown by the {@code delayFunction} method will <strong>not</strong> be handled and will
+   * cause Failsafe's execution to abort.
+   * </p>
+   * <p>
+   * Notes:
+   * <ul>
+   * <li>A negative return value will cause Failsafe to use a configured fixed or backoff delay
+   * <li>Any configured jitter is still applied to DelayFunction provided values
+   * <li>Any configured max duration is still applied to DelayFunction provided values
+   * <li>The {@link ExecutionContext} that is provided to the {@code delayFunction} may be {@code null} if the prior execution
+   * failure was manually recorded outside of a Failsafe execution.</li>
+   * </ul>
+   * </p>
+   *
    * @throws NullPointerException if {@code delayFunction} is null
-   * @see DelayFunction
    */
   @SuppressWarnings("unchecked")
-  public S withDelay(DelayFunction<R, ? extends Throwable> delayFunction) {
+  public S withDelayFn(ContextualSupplier<R, Duration> delayFunction) {
     Assert.notNull(delayFunction, "delayFunction");
     config.delayFn = delayFunction;
     return (S) this;
@@ -50,16 +64,30 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
   /**
    * Sets the {@code delayFunction} that computes the next delay before allowing another execution. Delays will only
    * occur for failures that are assignable from the {@code failure}.
+   * <p>
+   * The {@code delayFunction} must complete quickly, not have side-effects, and always return the same result for the
+   * same input. Exceptions thrown by the {@code delayFunction} method will <strong>not</strong> be handled and will
+   * cause Failsafe's execution to abort.
+   * </p>
+   * <p>
+   * Notes:
+   * <ul>
+   * <li>A negative return value will cause Failsafe to use a configured fixed or backoff delay
+   * <li>Any configured jitter is still applied to DelayFunction provided values
+   * <li>Any configured max duration is still applied to DelayFunction provided values
+   * <li>The {@link ExecutionContext} that is provided to the {@code delayFunction} may be {@code null} if the prior execution
+   * failure was manually recorded outside of a Failsafe execution.</li>
+   * </ul>
+   * </p>
    *
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @param failure the execution failure that is expected in order to trigger the delay
    * @param <F> failure type
    * @throws NullPointerException if {@code delayFunction} or {@code failure} are null
-   * @see DelayFunction
    */
   @SuppressWarnings("unchecked")
-  public <F extends Throwable> S withDelayOn(DelayFunction<R, F> delayFunction, Class<F> failure) {
-    withDelay(delayFunction);
+  public <F extends Throwable> S withDelayFnOn(ContextualSupplier<R, Duration> delayFunction, Class<F> failure) {
+    withDelayFn(delayFunction);
     Assert.notNull(failure, "failure");
     config.delayFailure = failure;
     return (S) this;
@@ -68,15 +96,29 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
   /**
    * Sets the {@code delayFunction} that computes the next delay before allowing another execution. Delays will only
    * occur for results that equal the {@code result}.
+   * <p>
+   * The {@code delayFunction} must complete quickly, not have side-effects, and always return the same result for the
+   * same input. Exceptions thrown by the {@code delayFunction} method will <strong>not</strong> be handled and will
+   * cause Failsafe's execution to abort.
+   * </p>
+   * <p>
+   * Notes:
+   * <ul>
+   * <li>A negative return value will cause Failsafe to use a configured fixed or backoff delay
+   * <li>Any configured jitter is still applied to DelayFunction provided values
+   * <li>Any configured max duration is still applied to DelayFunction provided values
+   * <li>The {@link ExecutionContext} that is provided to the {@code delayFunction} may be {@code null} if the prior execution
+   * failure was manually recorded outside of a Failsafe execution.</li>
+   * </ul>
+   * </p>
    *
    * @param delayFunction the function to use to compute the delay before a next attempt
    * @param result the execution result that is expected in order to trigger the delay
    * @throws NullPointerException if {@code delayFunction} or {@code result} are null
-   * @see DelayFunction
    */
   @SuppressWarnings("unchecked")
-  public S withDelayWhen(DelayFunction<R, ? extends Throwable> delayFunction, R result) {
-    withDelay(delayFunction);
+  public S withDelayFnWhen(ContextualSupplier<R, Duration> delayFunction, R result) {
+    withDelayFn(delayFunction);
     Assert.notNull(result, "result");
     config.delayResult = result;
     return (S) this;
