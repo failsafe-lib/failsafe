@@ -60,12 +60,17 @@ public interface CircuitBreaker<R> extends Policy<R>, ExecutionListeners<Circuit
    * Creates a CircuitBreakerBuilder that by default will build a count based circuit breaker that opens after a {@link
    * CircuitBreakerBuilder#withFailureThreshold(int) single failure}, closes after a {@link
    * CircuitBreakerBuilder#withSuccessThreshold(int) single success}, and has a 1 minute {@link
-   * CircuitBreakerBuilder#withDelay(Duration) delay} by default.
+   * CircuitBreakerBuilder#withDelay(Duration) delay}, unless configured otherwise.
    */
   static <R> CircuitBreakerBuilder<R> builder() {
     return new CircuitBreakerBuilder<>();
   }
 
+  /**
+   * Creates a count based CircuitBreaker that opens after a {@link CircuitBreakerBuilder#withFailureThreshold(int)
+   * single failure}, closes after a {@link CircuitBreakerBuilder#withSuccessThreshold(int) single success}, and has a 1
+   * minute {@link CircuitBreakerBuilder#withDelay(Duration) delay} by default.
+   */
   static <R> CircuitBreaker<R> ofDefaults() {
     return CircuitBreaker.<R>builder().build();
   }

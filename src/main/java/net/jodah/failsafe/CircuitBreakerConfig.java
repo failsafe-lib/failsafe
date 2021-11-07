@@ -13,9 +13,9 @@ import java.time.Duration;
  */
 public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   // Failure config
-  int failureThreshold = 1;
+  int failureThreshold;
   int failureRateThreshold;
-  int failureThresholdingCapacity = 1;
+  int failureThresholdingCapacity;
   int failureExecutionThreshold;
   Duration failureThresholdingPeriod;
 

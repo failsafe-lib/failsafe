@@ -57,9 +57,6 @@ import java.util.function.Predicate;
 public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBuilder<R>, RetryPolicyConfig<R>, R> {
   private static final int DEFAULT_MAX_RETRIES = 2;
 
-  /**
-   * Prepare a retry policy that allows 3 execution attempts max with no delay.
-   */
   RetryPolicyBuilder() {
     super(new RetryPolicyConfig<>());
     config.delay = Duration.ZERO;

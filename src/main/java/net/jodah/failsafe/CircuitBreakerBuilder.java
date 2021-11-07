@@ -52,6 +52,8 @@ public class CircuitBreakerBuilder<R>
   CircuitBreakerBuilder() {
     super(new CircuitBreakerConfig<>());
     config.delay = Duration.ofMinutes(1);
+    config.failureThreshold = 1;
+    config.failureThresholdingCapacity = 1;
   }
 
   /**

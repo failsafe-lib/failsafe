@@ -34,10 +34,17 @@ import java.time.Duration;
  * @see RetryPolicyBuilder
  */
 public interface RetryPolicy<R> extends Policy<R>, ExecutionListeners<RetryPolicy<R>, R> {
+  /**
+   * Creates a RetryPolicyBuilder that by default will build a RetryPolicy that allows 3 execution attempts max with no
+   * delay, unless configured otherwise.
+   */
   static <R> RetryPolicyBuilder<R> builder() {
     return new RetryPolicyBuilder<>();
   }
 
+  /**
+   * Creates a RetryPolicy that allows 3 execution attempts max with no delay.
+   */
   static <R> RetryPolicy<R> ofDefaults() {
     return RetryPolicy.<R>builder().build();
   }
