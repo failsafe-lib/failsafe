@@ -16,10 +16,8 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
-import static net.jodah.failsafe.testing.Testing.getInternals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -30,9 +28,9 @@ public class ClosedStateTest {
    */
   public void testFailureWithDefaultConfig() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.ofDefaults();
     breaker.close();
-    ClosedState state = new ClosedState(breaker, getInternals(breaker));
+    ClosedState<Object> state = new ClosedState<>(breaker);
     assertFalse(breaker.isOpen());
 
     // When
@@ -47,9 +45,11 @@ public class ClosedStateTest {
    */
   public void testFailureWithFailureRatio() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2, 3);
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withFailureThreshold(2, 3)
+      .build();
     breaker.close();
-    ClosedState state = new ClosedState(breaker, getInternals(breaker));
+    ClosedState<Object> state = new ClosedState<>(breaker);
 
     // When
     state.recordFailure(null);
@@ -66,9 +66,11 @@ public class ClosedStateTest {
    */
   public void testFailureWithFailureThreshold() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(3);
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withFailureThreshold(3)
+      .build();
     breaker.close();
-    ClosedState state = new ClosedState(breaker, getInternals(breaker));
+    ClosedState<Object> state = new ClosedState<>(breaker);
 
     // When
     state.recordFailure(null);
@@ -87,9 +89,9 @@ public class ClosedStateTest {
    */
   public void testSuccessWithDefaultConfig() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.ofDefaults();
     breaker.close();
-    ClosedState state = new ClosedState(breaker, getInternals(breaker));
+    ClosedState<Object> state = new ClosedState<>(breaker);
     assertTrue(breaker.isClosed());
 
     // When
@@ -104,9 +106,11 @@ public class ClosedStateTest {
    */
   public void testSuccessWithFailureRatio() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(3, 4);
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withFailureThreshold(3, 4)
+      .build();
     breaker.close();
-    ClosedState state = new ClosedState(breaker, getInternals(breaker));
+    ClosedState<Object> state = new ClosedState<>(breaker);
     assertTrue(breaker.isClosed());
 
     // When / Then
@@ -122,9 +126,11 @@ public class ClosedStateTest {
    */
   public void testSuccessWithFailureThreshold() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2);
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withFailureThreshold(2)
+      .build();
     breaker.close();
-    ClosedState state = new ClosedState(breaker, getInternals(breaker));
+    ClosedState<Object> state = new ClosedState<>(breaker);
     assertTrue(breaker.isClosed());
 
     // When / Then
@@ -135,39 +141,40 @@ public class ClosedStateTest {
     }
   }
 
-  /**
-   * Asserts that the late configuration of a failure ratio is handled by resetting the state's internal tracking. Also
-   * asserts that executions from prior configurations are carried over to a new configuration.
-   */
-  public void shouldHandleLateSetFailureRatio() {
-    // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
-    ClosedState state = Testing.stateFor(breaker);
-
-    // When
-    state.recordSuccess();
-    assertTrue(breaker.isClosed());
-    breaker.withFailureThreshold(2);
-    state.recordFailure(null);
-    assertTrue(breaker.isClosed());
-    state.recordFailure(null);
-
-    // Then
-    assertTrue(breaker.isOpen());
-
-    // Given
-    breaker = new CircuitBreaker<>();
-    state = Testing.stateFor(breaker);
-
-    // When
-    state.recordSuccess();
-    assertTrue(breaker.isClosed());
-    breaker.withFailureThreshold(2, 3);
-    state.recordFailure(null);
-    assertTrue(breaker.isClosed());
-    state.recordFailure(null);
-
-    // Then
-    assertTrue(breaker.isOpen());
-  }
+  // Disabled for now since thresholds are not dynamically configurable in 3.0, but may be again in future versions.
+  //  /**
+  //   * Asserts that the late configuration of a failure ratio is handled by resetting the state's internal tracking. Also
+  //   * asserts that executions from prior configurations are carried over to a new configuration.
+  //   */
+  //  public void shouldHandleLateSetFailureRatio() {
+  //    // Given
+  //    CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
+  //    ClosedState state = Testing.stateFor(breaker);
+  //
+  //    // When
+  //    state.recordSuccess();
+  //    assertTrue(breaker.isClosed());
+  //    breaker.withFailureThreshold(2);
+  //    state.recordFailure(null);
+  //    assertTrue(breaker.isClosed());
+  //    state.recordFailure(null);
+  //
+  //    // Then
+  //    assertTrue(breaker.isOpen());
+  //
+  //    // Given
+  //    breaker = new CircuitBreaker<>();
+  //    state = Testing.stateFor(breaker);
+  //
+  //    // When
+  //    state.recordSuccess();
+  //    assertTrue(breaker.isClosed());
+  //    breaker.withFailureThreshold(2, 3);
+  //    state.recordFailure(null);
+  //    assertTrue(breaker.isClosed());
+  //    state.recordFailure(null);
+  //
+  //    // Then
+  //    assertTrue(breaker.isOpen());
+  //  }
 }

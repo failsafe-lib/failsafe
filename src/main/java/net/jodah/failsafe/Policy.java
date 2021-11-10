@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.spi;
+package net.jodah.failsafe;
+
+import net.jodah.failsafe.spi.PolicyExecutor;
 
 /**
  * A policy for handling executions.
@@ -23,7 +25,12 @@ package net.jodah.failsafe.spi;
  */
 public interface Policy<R> {
   /**
+   * Returns the policy config.
+   */
+  PolicyConfig<R> getConfig();
+
+  /**
    * Returns a {@link PolicyExecutor} capable of handling an execution for the Policy.
    */
-  PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex);
+  PolicyExecutor<R> toExecutor(int policyIndex);
 }

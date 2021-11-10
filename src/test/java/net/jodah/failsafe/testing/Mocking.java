@@ -1,9 +1,51 @@
 package net.jodah.failsafe.testing;
 
+import net.jodah.failsafe.DelayablePolicyBuilder;
+import net.jodah.failsafe.DelayablePolicyConfig;
+import net.jodah.failsafe.spi.DelayablePolicy;
+import net.jodah.failsafe.spi.FailurePolicy;
+import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.spi.PolicyExecutor;
+
 /**
  * Utilities to assist with creating mocks.
  */
 public class Mocking extends Asserts {
+  public static class FooConfig<R> extends DelayablePolicyConfig<R> {
+  }
+
+  public static class FooPolicyBuilder<R> extends DelayablePolicyBuilder<FooPolicyBuilder<R>, FooConfig<R>, R> {
+    FooPolicyBuilder() {
+      super(new FooConfig<>());
+    }
+
+    public FooPolicy<R> build() {
+      return new FooPolicy<>(config);
+    }
+  }
+
+  public static class FooPolicy<R> implements Policy<R>, FailurePolicy<R>, DelayablePolicy<R> {
+    FooConfig<R> config;
+
+    FooPolicy(FooConfig<R> config) {
+      this.config = config;
+    }
+
+    public static <R> FooPolicyBuilder<R> builder() {
+      return new FooPolicyBuilder<>();
+    }
+
+    @Override
+    public FooConfig<R> getConfig() {
+      return config;
+    }
+
+    @Override
+    public PolicyExecutor<R> toExecutor(int policyIndex) {
+      return null;
+    }
+  }
+
   public static class ConnectException extends RuntimeException {
   }
 

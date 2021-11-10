@@ -18,7 +18,7 @@ public class Issue76Test {
   public void shouldAbortOnSyncError() {
     AssertionError error = new AssertionError();
     try {
-      Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)).run(() -> {
+      Failsafe.with(RetryPolicy.builder().abortOn(AssertionError.class).build()).run(() -> {
         throw error;
       });
       fail();
@@ -31,15 +31,12 @@ public class Issue76Test {
     final AssertionError error = new AssertionError();
     Waiter waiter = new Waiter();
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    Future<?> future = Failsafe.with(new RetryPolicy<>().abortOn(AssertionError.class)
-      .onAbort(e -> {
-        waiter.assertEquals(e.getFailure(), error);
-        waiter.resume();
-      }))
-      .with(executor)
-      .runAsync(() -> {
-        throw error;
-      });
+    Future<?> future = Failsafe.with(RetryPolicy.builder().abortOn(AssertionError.class).onAbort(e -> {
+      waiter.assertEquals(e.getFailure(), error);
+      waiter.resume();
+    }).build()).with(executor).runAsync(() -> {
+      throw error;
+    });
     waiter.await(1000);
 
     try {

@@ -44,15 +44,21 @@ public class Issue192Test {
     AtomicInteger exceptionA = new AtomicInteger();
     AtomicInteger exceptionB = new AtomicInteger();
     AtomicInteger exceptionC = new AtomicInteger();
-    RetryPolicy<Object> policyA = new RetryPolicy<>().handle(ExceptionA.class)
+    RetryPolicy<Object> policyA = RetryPolicy.builder()
+      .handle(ExceptionA.class)
       .withMaxRetries(5)
-      .onRetry(evt -> exceptionA.incrementAndGet());
-    RetryPolicy<Object> policyB = new RetryPolicy<>().handle(ExceptionB.class)
+      .onRetry(evt -> exceptionA.incrementAndGet())
+      .build();
+    RetryPolicy<Object> policyB = RetryPolicy.builder()
+      .handle(ExceptionB.class)
       .withMaxRetries(3)
-      .onRetry(evt -> exceptionB.incrementAndGet());
-    RetryPolicy<Object> policyC = new RetryPolicy<>().handle(ExceptionC.class)
+      .onRetry(evt -> exceptionB.incrementAndGet())
+      .build();
+    RetryPolicy<Object> policyC = RetryPolicy.builder()
+      .handle(ExceptionC.class)
       .withMaxRetries(2)
-      .onRetry(evt -> exceptionC.incrementAndGet());
+      .onRetry(evt -> exceptionC.incrementAndGet())
+      .build();
 
     Asserts.assertThrows(() -> Failsafe.with(policyA, policyB, policyC)
       .getAsyncExecution(

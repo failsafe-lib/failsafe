@@ -24,9 +24,9 @@ import net.jodah.failsafe.internal.TimedCircuitStats.Clock;
 public interface CircuitStats {
   static CircuitStats create(CircuitBreaker<?> breaker, int capacity, boolean supportsTimeBased,
     CircuitStats oldStats) {
-    if (supportsTimeBased && breaker.getFailureThresholdingPeriod() != null)
-      return new TimedCircuitStats(TimedCircuitStats.DEFAULT_BUCKET_COUNT, breaker.getFailureThresholdingPeriod(),
-        new Clock(), oldStats);
+    if (supportsTimeBased && breaker.getConfig().getFailureThresholdingPeriod() != null)
+      return new TimedCircuitStats(TimedCircuitStats.DEFAULT_BUCKET_COUNT,
+        breaker.getConfig().getFailureThresholdingPeriod(), new Clock(), oldStats);
     else if (capacity > 1) {
       return new CountingCircuitStats(capacity, oldStats);
     } else {

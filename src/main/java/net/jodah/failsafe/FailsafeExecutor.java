@@ -15,23 +15,29 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.internal.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.*;
+import net.jodah.failsafe.spi.AsyncExecutionInternal;
+import net.jodah.failsafe.spi.ExecutionResult;
+import net.jodah.failsafe.spi.FailsafeFuture;
+import net.jodah.failsafe.spi.Scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static net.jodah.failsafe.Functions.*;
 
 /**
  * <p>
- * An executor that handles failures according to configured {@link FailurePolicy policies}. Can be created via {@link
- * Failsafe#with(Policy, Policy[])} to support policy based execution failure handling, or {@link Failsafe#none()} to
- * support execution with no failure handling.
+ * An executor that handles failures according to configured {@link FailurePolicyBuilder policies}. Can be created via
+ * {@link Failsafe#with(Policy, Policy[])} to support policy based execution failure handling, or {@link
+ * Failsafe#none()} to support execution with no failure handling.
  * <p>
  * Async executions are run by default on the {@link ForkJoinPool#commonPool()}. Alternative executors can be configured
  * via {@link #with(ScheduledExecutorService)} and similar methods. All async executions are cancellable and
@@ -41,12 +47,14 @@ import static net.jodah.failsafe.Functions.*;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R> {
+public class FailsafeExecutor<R> {
   private Scheduler scheduler = Scheduler.DEFAULT;
   private Executor executor;
   /** Policies sorted outer-most first */
   final List<? extends Policy<R>> policies;
   private EventHandler<R> completeHandler;
+  private volatile EventHandler<R> failureHandler;
+  private volatile EventHandler<R> successHandler;
 
   /**
    * @throws IllegalArgumentException if {@code policies} is empty
@@ -226,37 +234,6 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
   }
 
   /**
-   * This method is intended for integration with asynchronous code.
-   * <p>
-   * Executes the {@code supplier} asynchronously until a successful result is recorded or the configured policies are
-   * exceeded. Executions must be recorded via one of the {@code AsyncExecution.record} methods which will trigger
-   * failure handling, if needed, by the configured policies, else the resulting {@link CompletableFuture} will be
-   * completed. Any exception that is thrown from the {@code supplier} will automatically be recorded via {@code
-   * AsyncExecution.recordFailure}.
-   * </p>
-   * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
-   * CompletionStage} if it's a {@link Future}.</p>
-   * <p>
-   * If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally with
-   * {@link TimeoutExceededException}.
-   * </p>
-   * <p>
-   * If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed exceptionally
-   * with {@link CircuitBreakerOpenException}.
-   * </p>
-   *
-   * @throws NullPointerException if the {@code supplier} is null
-   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
-   * @deprecated This will be removed in 3.0. Use either {@link #getStageAsync(ContextualSupplier) getStageAsync} or
-   * {@link #getAsyncExecution(AsyncRunnable) getAsyncExecution} instead
-   */
-  @Deprecated
-  public <T extends R> CompletableFuture<T> getStageAsyncExecution(
-    AsyncSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStageExecution(supplier, future), true);
-  }
-
-  /**
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
@@ -348,8 +325,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * successful according to all policies, or all policies have been exceeded.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  public FailsafeExecutor<R> onComplete(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    completeHandler = EventHandler.of(Assert.notNull(listener, "listener"));
+  public FailsafeExecutor<R> onComplete(EventListener<ExecutionCompletedEvent<R>> listener) {
+    completeHandler = EventHandler.ofExecutionCompleted(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -359,20 +336,20 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
-  @Override
-  public FailsafeExecutor<R> onFailure(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    return super.onFailure(listener);
+  public FailsafeExecutor<R> onFailure(EventListener<ExecutionCompletedEvent<R>> listener) {
+    failureHandler = EventHandler.ofExecutionCompleted(Assert.notNull(listener, "listener"));
+    return this;
   }
 
   /**
    * Registers the {@code listener} to be called when an execution is successful. If multiple policies, are configured,
    * this handler is called when execution is complete and <i>all</i> policies succeed. If <i>all</i> policies do not
-   * succeed, then the {@link #onFailure(CheckedConsumer)} registered listener is called instead.
+   * succeed, then the {@link #onFailure(EventListener)} registered listener is called instead.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  @Override
-  public FailsafeExecutor<R> onSuccess(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    return super.onSuccess(listener);
+  public FailsafeExecutor<R> onSuccess(EventListener<ExecutionCompletedEvent<R>> listener) {
+    successHandler = EventHandler.ofExecutionCompleted(Assert.notNull(listener, "listener"));
+    return this;
   }
 
   /**
@@ -411,8 +388,8 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
    * Configures the {@code executor} to use as a wrapper around executions. The {@code executor} is responsible for
    * propagating executions. Executions that normally return a result, such as {@link #get(CheckedSupplier)} will return
    * {@code null} since the {@link Executor} interface does not support results.
-   * <p>The {@code executor} will not be used for {@link #getStageAsync(CheckedSupplier) getStageAsync} or {@link
-   * #getStageAsyncExecution(AsyncSupplier) getStageAsyncExecution} calls since those require a returned result.
+   * <p>The {@code executor} will not be used for {@link #getStageAsync(CheckedSupplier) getStageAsync} calls since
+   * those require a returned result.
    * </p>
    *
    * @throws NullPointerException if {@code executor} is null
@@ -484,7 +461,7 @@ public class FailsafeExecutor<R> extends PolicyListeners<FailsafeExecutor<R>, R>
     return future;
   }
 
-  final CompletionHandler<R> completionHandler = (result, context) -> {
+  final BiConsumer<ExecutionResult<R>, ExecutionContext<R>> completionHandler = (result, context) -> {
     if (successHandler != null && result.getSuccessAll())
       successHandler.handle(result, context);
     else if (failureHandler != null && !result.getSuccessAll())

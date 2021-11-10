@@ -16,9 +16,9 @@
 package net.jodah.failsafe;
 
 import net.jodah.concurrentunit.Waiter;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.function.CheckedSupplier;
 import net.jodah.failsafe.testing.Asserts;
 import net.jodah.failsafe.testing.Testing;
@@ -116,31 +116,31 @@ public class ListenersTest extends Testing {
     failure.reset();
   }
 
-  private <T> FailsafeExecutor<T> registerListeners(RetryPolicy<T> retryPolicy, CircuitBreaker<T> circuitBreaker,
-    Fallback<T> fallback) {
-    FailsafeExecutor<T> failsafe = fallback == null ?
-      Failsafe.with(retryPolicy, circuitBreaker) :
-      Failsafe.with(fallback, retryPolicy, circuitBreaker);
+  private <T> FailsafeExecutor<T> registerListeners(RetryPolicyBuilder<T> rpBuilder, CircuitBreakerBuilder<T> cbBuilder,
+    FallbackBuilder<T> fbBuilder) {
+    rpBuilder.onAbort(e -> rpAbort.record());
+    rpBuilder.onFailedAttempt(e -> rpFailedAttempt.record());
+    rpBuilder.onRetriesExceeded(e -> rpRetriesExceeded.record());
+    rpBuilder.onRetryScheduled(e -> rpScheduled.record());
+    rpBuilder.onRetry(e -> rpRetry.record());
+    rpBuilder.onSuccess(e -> rpSuccess.record());
+    rpBuilder.onFailure(e -> rpFailure.record());
 
-    retryPolicy.onAbort(e -> rpAbort.record());
-    retryPolicy.onFailedAttempt(e -> rpFailedAttempt.record());
-    retryPolicy.onRetriesExceeded(e -> rpRetriesExceeded.record());
-    retryPolicy.onRetryScheduled(e -> rpScheduled.record());
-    retryPolicy.onRetry(e -> rpRetry.record());
-    retryPolicy.onSuccess(e -> rpSuccess.record());
-    retryPolicy.onFailure(e -> rpFailure.record());
+    cbBuilder.onOpen(e -> cbOpen.record());
+    cbBuilder.onHalfOpen(e -> cbHalfOpen.record());
+    cbBuilder.onClose(e -> cbClose.record());
+    cbBuilder.onSuccess(e -> cbSuccess.record());
+    cbBuilder.onFailure(e -> cbFailure.record());
 
-    circuitBreaker.onOpen(() -> cbOpen.record());
-    circuitBreaker.onHalfOpen(() -> cbHalfOpen.record());
-    circuitBreaker.onClose(() -> cbClose.record());
-    circuitBreaker.onSuccess(e -> cbSuccess.record());
-    circuitBreaker.onFailure(e -> cbFailure.record());
-
-    if (fallback != null) {
-      fallback.onFailedAttempt(e -> fbFailedAttempt.record());
-      fallback.onSuccess(e -> fbSuccess.record());
-      fallback.onFailure(e -> fbFailure.record());
+    if (fbBuilder != null) {
+      fbBuilder.onFailedAttempt(e -> fbFailedAttempt.record());
+      fbBuilder.onSuccess(e -> fbSuccess.record());
+      fbBuilder.onFailure(e -> fbFailure.record());
     }
+
+    FailsafeExecutor<T> failsafe = fbBuilder == null ?
+      Failsafe.with(rpBuilder.build(), cbBuilder.build()) :
+      Failsafe.with(fbBuilder.build(), rpBuilder.build(), cbBuilder.build());
 
     failsafe.onComplete(e -> {
       complete.record();
@@ -158,10 +158,12 @@ public class ListenersTest extends Testing {
   private void assertForSuccess(boolean sync) throws Throwable {
     // Given - Fail 4 times then succeed
     when(server.connect()).thenThrow(failures(2, new IllegalStateException())).thenReturn(false, false, true);
-    RetryPolicy<Boolean> retryPolicy = new RetryPolicy<Boolean>().withMaxAttempts(10).handleResult(false);
-    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().handleResult(false).withDelay(Duration.ZERO);
-    Fallback<Boolean> fallback = Fallback.of(true);
-    FailsafeExecutor<Boolean> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
+    RetryPolicyBuilder<Boolean> rpBuilder = RetryPolicy.<Boolean>builder().withMaxAttempts(10).handleResult(false);
+    CircuitBreakerBuilder<Boolean> cbBuilder = CircuitBreaker.<Boolean>builder()
+      .handleResult(false)
+      .withDelay(Duration.ZERO);
+    FallbackBuilder<Boolean> fbBuilder = Fallback.builder(true);
+    FailsafeExecutor<Boolean> failsafe = registerListeners(rpBuilder, cbBuilder, fbBuilder);
 
     // When
     if (sync)
@@ -209,9 +211,9 @@ public class ListenersTest extends Testing {
     // Given - Fail 2 times then don't match policy
     when(server.connect()).thenThrow(failures(2, new IllegalStateException()))
       .thenThrow(IllegalArgumentException.class);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class);
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
-    FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, null);
+    RetryPolicyBuilder<Object> rpBuilder = RetryPolicy.builder().handle(IllegalStateException.class);
+    CircuitBreakerBuilder<Object> cbBuilder = CircuitBreaker.builder().withDelay(Duration.ZERO);
+    FailsafeExecutor<Object> failsafe = registerListeners(rpBuilder, cbBuilder, null);
 
     // When
     if (sync)
@@ -255,9 +257,11 @@ public class ListenersTest extends Testing {
   private void assertForRetriesExceeded(boolean sync) throws Throwable {
     // Given - Fail 4 times and exceed retries
     when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
-    FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, null);
+    RetryPolicyBuilder<Object> rpBuilder = RetryPolicy.builder()
+      .abortOn(IllegalArgumentException.class)
+      .withMaxRetries(3);
+    CircuitBreakerBuilder<Object> cbBuilder = CircuitBreaker.builder().withDelay(Duration.ZERO);
+    FailsafeExecutor<Object> failsafe = registerListeners(rpBuilder, cbBuilder, null);
 
     // When
     if (sync)
@@ -302,9 +306,11 @@ public class ListenersTest extends Testing {
     // Given - Fail twice then abort
     when(server.connect()).thenThrow(failures(3, new IllegalStateException()))
       .thenThrow(new IllegalArgumentException());
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().abortOn(IllegalArgumentException.class).withMaxRetries(3);
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
-    FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, null);
+    RetryPolicyBuilder<Object> rpBuilder = RetryPolicy.builder()
+      .abortOn(IllegalArgumentException.class)
+      .withMaxRetries(3);
+    CircuitBreakerBuilder<Object> cbBuilder = CircuitBreaker.builder().withDelay(Duration.ZERO);
+    FailsafeExecutor<Object> failsafe = registerListeners(rpBuilder, cbBuilder, null);
 
     // When
     if (sync)
@@ -346,12 +352,13 @@ public class ListenersTest extends Testing {
     when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given failing RetryPolicy
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
+    RetryPolicyBuilder<Object> rpBuilder = RetryPolicy.builder();
     // And successful CircuitBreaker and Fallback
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().handle(NullPointerException.class)
+    CircuitBreakerBuilder<Object> cbBuilder = CircuitBreaker.builder()
+      .handle(NullPointerException.class)
       .withDelay(Duration.ZERO);
-    Fallback<Object> fallback = Fallback.<Object>of(() -> true).handle(NullPointerException.class);
-    FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
+    FallbackBuilder<Object> fbBuilder = Fallback.<Object>builder(() -> true).handle(NullPointerException.class);
+    FailsafeExecutor<Object> failsafe = registerListeners(rpBuilder, cbBuilder, fbBuilder);
 
     // When
     if (sync)
@@ -388,12 +395,14 @@ public class ListenersTest extends Testing {
     when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given successful RetryPolicy
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(NullPointerException.class);
+    RetryPolicyBuilder<Object> rpBuilder = RetryPolicy.builder().handle(NullPointerException.class);
     // And failing CircuitBreaker
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
+    CircuitBreakerBuilder<Object> cbBuilder = CircuitBreaker.builder().withDelay(Duration.ZERO);
     // And successful Fallback
-    Fallback<Object> fallback = Fallback.<Object>ofAsync(() -> true).handle(NullPointerException.class);
-    FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
+    FallbackBuilder<Object> fbBuilder = Fallback.<Object>builder(() -> true)
+      .handle(NullPointerException.class)
+      .withAsync();
+    FailsafeExecutor<Object> failsafe = registerListeners(rpBuilder, cbBuilder, fbBuilder);
 
     // When
     if (sync)
@@ -430,14 +439,15 @@ public class ListenersTest extends Testing {
     when(server.connect()).thenThrow(failures(10, new IllegalStateException()));
 
     // Given successful RetryPolicy and CircuitBreaker
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(NullPointerException.class);
-    CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>().withDelay(Duration.ZERO)
+    RetryPolicyBuilder<Object> rpBuilder = RetryPolicy.builder().handle(NullPointerException.class);
+    CircuitBreakerBuilder<Object> cbBuilder = CircuitBreaker.builder()
+      .withDelay(Duration.ZERO)
       .handle(NullPointerException.class);
     // And failing Fallback
-    Fallback<Object> fallback = Fallback.ofAsync(() -> {
+    FallbackBuilder<Object> fbBuilder = Fallback.builder(() -> {
       throw new Exception();
-    });
-    FailsafeExecutor<Object> failsafe = registerListeners(retryPolicy, circuitBreaker, fallback);
+    }).withAsync();
+    FailsafeExecutor<Object> failsafe = registerListeners(rpBuilder, cbBuilder, fbBuilder);
 
     // When
     if (sync)
@@ -471,10 +481,12 @@ public class ListenersTest extends Testing {
   }
 
   public void shouldGetElapsedAttemptTime() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxAttempts(3)
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
+      .withMaxAttempts(3)
+      .handleResult(false)
       .onRetry(e -> assertTrue(e.getElapsedAttemptTime().toMillis() >= 90))
-      .handleResult(false);
-    Failsafe.with(rp).get(() -> {
+      .build();
+    Failsafe.with(retryPolicy).get(() -> {
       Thread.sleep(100);
       return false;
     });
@@ -483,39 +495,39 @@ public class ListenersTest extends Testing {
   /**
    * Asserts that Failsafe does not block when an error occurs in an event listener.
    */
-  public void shouldIgnoreExceptionsInListeners() throws Throwable {
+  public void shouldIgnoreExceptionsInListeners() {
     // Given
-    CheckedConsumer<ExecutionAttemptedEvent<Object>> attemptedError = e -> {
+    EventListener<ExecutionAttemptedEvent<Object>> attemptedError = e -> {
       throw new AssertionError();
     };
-    CheckedConsumer<ExecutionCompletedEvent<Object>> completedError = e -> {
+    EventListener<ExecutionCompletedEvent<Object>> completedError = e -> {
       throw new AssertionError();
     };
     CheckedSupplier<Object> noop = () -> null;
     RetryPolicy<Object> rp;
 
     // onFailedAttempt
-    rp = new RetryPolicy<>().onFailedAttempt(attemptedError).handleResult(null).withMaxRetries(0);
+    rp = RetryPolicy.builder().handleResult(null).withMaxRetries(0).onFailedAttempt(attemptedError).build();
     Failsafe.with(rp).get(noop);
 
     // RetryPolicy.onRetry
-    rp = new RetryPolicy<>().onRetry(attemptedError).handleResult(null).withMaxRetries(1);
+    rp = RetryPolicy.builder().handleResult(null).withMaxRetries(1).onRetry(attemptedError).build();
     Failsafe.with(rp).get(noop);
 
     // RetryPolicy.onAbort
-    rp = new RetryPolicy<>().onAbort(completedError).handleResult(null).abortWhen(null);
+    rp = RetryPolicy.builder().handleResult(null).abortWhen(null).onAbort(completedError).build();
     Failsafe.with(rp).get(noop);
 
     // RetryPolicy.onRetriesExceeded
-    rp = new RetryPolicy<>().onRetriesExceeded(completedError).handleResult(null).withMaxRetries(0);
+    rp = RetryPolicy.builder().handleResult(null).withMaxRetries(0).onRetriesExceeded(completedError).build();
     Failsafe.with(rp).get(noop);
 
     // RetryPolicy.onFailure
-    rp = new RetryPolicy<>().onFailure(completedError).handleResult(null).withMaxRetries(0);
+    rp = RetryPolicy.builder().handleResult(null).withMaxRetries(0).onFailure(completedError).build();
     Failsafe.with(rp).get(noop);
 
     // Failsafe.onComplete
-    rp = new RetryPolicy<>().handleResult(null).withMaxRetries(0);
+    rp = RetryPolicy.builder().handleResult(null).withMaxRetries(0).build();
     Failsafe.with(rp).onComplete(completedError).get(noop);
   }
 }

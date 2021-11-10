@@ -38,7 +38,7 @@ public class FallbackTest extends Testing {
     }, true);
 
     // Given
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.ofDefaults();
 
     // When / Then
     testRunSuccess(Failsafe.with(fallback, retryPolicy), ctx -> {
@@ -51,7 +51,7 @@ public class FallbackTest extends Testing {
    */
   public void testFallbackWithConditions() {
     // Given
-    Fallback<Boolean> fallback = Fallback.of(true).handle(IllegalArgumentException.class);
+    Fallback<Boolean> fallback = Fallback.builder(true).handle(IllegalArgumentException.class).build();
 
     // When / Then
     testRunFailure(Failsafe.with(fallback), ctx -> {

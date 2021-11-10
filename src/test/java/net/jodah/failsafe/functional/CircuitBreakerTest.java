@@ -18,7 +18,7 @@ import static org.testng.Assert.assertTrue;
 public class CircuitBreakerTest extends Testing {
   public void shouldRejectInitialExecutionWhenCircuitOpen() {
     // Given
-    CircuitBreaker<Object> cb = new CircuitBreaker<>();
+    CircuitBreaker<Object> cb = CircuitBreaker.ofDefaults();
 
     // When / Then
     testRunFailure(() -> {
@@ -36,7 +36,7 @@ public class CircuitBreakerTest extends Testing {
    */
   public void shouldRejectExcessiveAttemptsWhenBreakerHalfOpen() throws Throwable {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
     breaker.halfOpen();
     Waiter waiter = new Waiter();
 
@@ -58,7 +58,7 @@ public class CircuitBreakerTest extends Testing {
    */
   public void testCircuitBreakerWithoutConditions() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ZERO);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withDelay(Duration.ZERO).build();
 
     // When / Then
     testRunFailure(() -> {
@@ -69,7 +69,7 @@ public class CircuitBreakerTest extends Testing {
     assertTrue(breaker.isOpen());
 
     // Given
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(5);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withMaxRetries(5).build();
     AtomicInteger counter = new AtomicInteger();
 
     // When / Then
@@ -85,9 +85,11 @@ public class CircuitBreakerTest extends Testing {
 
   public void shouldThrowCircuitBreakerOpenExceptionAfterFailuresExceeded() {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withFailureThreshold(2)
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withFailureThreshold(2)
       .handleResult(false)
-      .withDelay(Duration.ofSeconds(10));
+      .withDelay(Duration.ofSeconds(10))
+      .build();
 
     // When
     Failsafe.with(breaker).get(() -> false);
@@ -106,8 +108,8 @@ public class CircuitBreakerTest extends Testing {
   public void testRejectedWithRetries() {
     Stats rpStats = new Stats();
     Stats cbStats = new Stats();
-    RetryPolicy<Object> rp = withStatsAndLogs(new RetryPolicy<>().withMaxAttempts(7), rpStats);
-    CircuitBreaker<Object> cb = withStatsAndLogs(new CircuitBreaker<>().withFailureThreshold(3), cbStats);
+    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
+    CircuitBreaker<Object> cb = withStatsAndLogs(CircuitBreaker.builder().withFailureThreshold(3), cbStats).build();
 
     testRunFailure(() -> {
       rpStats.reset();
@@ -131,8 +133,11 @@ public class CircuitBreakerTest extends Testing {
    */
   public void shouldSupportTimeBasedFailureThresholding() throws Throwable {
     // Given
-    CircuitBreaker<Boolean> circuitBreaker = new CircuitBreaker<Boolean>().withFailureThreshold(2, 3,
-      Duration.ofMillis(200)).withDelay(Duration.ofMillis(0)).handleResult(false);
+    CircuitBreaker<Boolean> circuitBreaker = CircuitBreaker.<Boolean>builder()
+      .withFailureThreshold(2, 3, Duration.ofMillis(200))
+      .withDelay(Duration.ofMillis(0))
+      .handleResult(false)
+      .build();
     FailsafeExecutor<Boolean> executor = Failsafe.with(circuitBreaker);
 
     // When / Then
@@ -165,10 +170,10 @@ public class CircuitBreakerTest extends Testing {
   public void shouldSupportTimeBasedFailureRateThresholding() throws Throwable {
     // Given
     Stats cbStats = new Stats();
-    CircuitBreaker<Boolean> circuitBreaker = withStatsAndLogs(new CircuitBreaker<Boolean>(),
-      cbStats).withFailureRateThreshold(50, 3, Duration.ofMillis(200))
+    CircuitBreaker<Boolean> circuitBreaker = withStatsAndLogs(CircuitBreaker.<Boolean>builder()
+      .withFailureRateThreshold(50, 3, Duration.ofMillis(200))
       .withDelay(Duration.ofMillis(0))
-      .handleResult(false);
+      .handleResult(false), cbStats).build();
     FailsafeExecutor<Boolean> executor = Failsafe.with(circuitBreaker);
 
     // When / Then

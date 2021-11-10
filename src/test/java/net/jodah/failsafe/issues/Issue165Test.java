@@ -23,7 +23,7 @@ public class Issue165Test {
   }
 
   public void testOfStageAsync() throws Throwable {
-    Fallback<Object> fallback = Fallback.ofStageAsync(e -> CompletableFuture.completedFuture("test"));
+    Fallback<Object> fallback = Fallback.builderOfStage(e -> CompletableFuture.completedFuture("test")).withAsync().build();
     Object result = Failsafe.with(fallback).getAsync(() -> {
       throw new IllegalStateException();
     }).get();

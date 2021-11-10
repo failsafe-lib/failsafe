@@ -155,52 +155,6 @@ final class Functions {
   }
 
   /**
-   * Returns a Function for asynchronous executions, that pre-executes the {@code execution}, applies the {@code
-   * supplier}, and attempts to complete the {@code execution} if a failure occurs. Locks to ensure the resulting
-   * supplier cannot be applied multiple times concurrently.
-   *
-   * @param <R> result type
-   * @deprecated This will be removed in 3.0.
-   */
-  @SuppressWarnings("unchecked")
-  @Deprecated
-  static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStageExecution(
-    AsyncSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
-
-    Assert.notNull(supplier, "supplier");
-    Semaphore asyncFutureLock = new Semaphore(1);
-    return execution -> {
-      try {
-        execution.preExecute();
-        asyncFutureLock.acquire();
-        CompletionStage<? extends R> stage = supplier.get(execution);
-
-        // Propagate outer cancellations to the stage
-        if (stage instanceof Future)
-          future.propagateCancellation((Future<R>) stage);
-
-        stage.whenComplete((result, failure) -> {
-          try {
-            if (failure != null)
-              execution.record(result, failure instanceof CompletionException ? failure.getCause() : failure);
-          } finally {
-            asyncFutureLock.release();
-          }
-        });
-      } catch (Throwable e) {
-        try {
-          execution.record(null, e);
-        } finally {
-          asyncFutureLock.release();
-        }
-      }
-
-      // Result will be provided later via AsyncExecution.record
-      return ExecutionResult.nullFuture();
-    };
-  }
-
-  /**
    * Returns a Function that returns an execution result if one was previously recorded, else applies the {@code
    * innerFn}.
    *
@@ -288,7 +242,7 @@ final class Functions {
         try {
           supplier.get(ctx);
         } catch (Throwable e) {
-          handleExecutorThrowablen(e);
+          handleExecutorThrowable(e);
         }
       });
       return null;
@@ -301,13 +255,13 @@ final class Functions {
         try {
           runnable.run(exec);
         } catch (Throwable e) {
-          handleExecutorThrowablen(e);
+          handleExecutorThrowable(e);
         }
       });
     };
   }
 
-  private static void handleExecutorThrowablen(Throwable e) {
+  private static void handleExecutorThrowable(Throwable e) {
     if (e instanceof RuntimeException)
       throw (RuntimeException) e;
     if (e instanceof Error)
@@ -329,7 +283,7 @@ final class Functions {
     };
   }
 
-  static <T, R> CheckedFunction<T, R> toFn(CheckedSupplier<R> supplier) {
+  static <T, R> CheckedFunction<T, R> toFn(CheckedSupplier<? extends R> supplier) {
     return t -> supplier.get();
   }
 

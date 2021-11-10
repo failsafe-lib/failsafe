@@ -15,7 +15,6 @@
  */
 package net.jodah.failsafe.internal;
 
-import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
 
 import java.time.Duration;
@@ -24,7 +23,7 @@ public class OpenState<R> extends CircuitState<R> {
   private final long startTime = System.nanoTime();
   private final long delayNanos;
 
-  public OpenState(CircuitBreaker<R> breaker, CircuitState<R> previousState, Duration delay) {
+  public OpenState(CircuitBreakerImpl<R> breaker, CircuitState<R> previousState, Duration delay) {
     super(breaker, previousState.stats);
     this.delayNanos = delay.toNanos();
   }

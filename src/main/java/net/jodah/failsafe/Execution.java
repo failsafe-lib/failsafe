@@ -2,7 +2,6 @@ package net.jodah.failsafe;
 
 import net.jodah.failsafe.internal.util.Assert;
 import net.jodah.failsafe.internal.util.Lists;
-import net.jodah.failsafe.spi.Policy;
 
 import java.time.Duration;
 
@@ -15,8 +14,8 @@ import java.time.Duration;
  */
 public interface Execution<R> extends ExecutionContext<R> {
   /**
-   * Creates a new {@link SyncExecutionImpl} that will use the {@code outerPolicy} and {@code innerPolicies} to
-   * handle failures. Policies are applied in reverse order, with the last policy being applied first.
+   * Creates a new {@link SyncExecutionImpl} that will use the {@code outerPolicy} and {@code innerPolicies} to handle
+   * failures. Policies are applied in reverse order, with the last policy being applied first.
    *
    * @throws NullPointerException if {@code outerPolicy} is null
    */

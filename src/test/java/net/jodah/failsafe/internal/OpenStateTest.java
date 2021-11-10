@@ -17,7 +17,6 @@ package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreaker.State;
-import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -28,10 +27,11 @@ import static org.testng.Assert.*;
 public class OpenStateTest {
   public void testAllowsExecution() throws Throwable {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofMillis(100));
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withDelay(Duration.ofMillis(100))
+      .build();
     breaker.open();
-    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)),
-      breaker.getDelay());
+    OpenState<Object> state = new OpenState<>(breaker, new ClosedState<>(breaker), breaker.getConfig().getDelay());
     assertTrue(breaker.isOpen());
     assertFalse(state.allowsExecution());
 
@@ -45,9 +45,10 @@ public class OpenStateTest {
 
   public void testRemainingDelay() throws Throwable {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofSeconds(1));
-    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)),
-      breaker.getDelay());
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withDelay(Duration.ofSeconds(1))
+      .build();
+    OpenState<Object> state = new OpenState<>(breaker, new ClosedState<>(breaker), breaker.getConfig().getDelay());
 
     // When / Then
     long remainingDelayMillis = state.getRemainingDelay().toMillis();
@@ -62,12 +63,13 @@ public class OpenStateTest {
 
   public void testNoRemainingDelay() throws Throwable {
     // Given
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay(Duration.ofMillis(10));
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withDelay(Duration.ofMillis(10))
+      .build();
     assertEquals(breaker.getRemainingDelay(), Duration.ZERO);
 
     // When
-    OpenState state = new OpenState(breaker, new ClosedState(breaker, Testing.getInternals(breaker)),
-      breaker.getDelay());
+    OpenState<Object> state = new OpenState<>(breaker, new ClosedState<>(breaker), breaker.getConfig().getDelay());
     Thread.sleep(50);
 
     // Then

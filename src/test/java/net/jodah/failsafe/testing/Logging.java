@@ -1,9 +1,6 @@
 package net.jodah.failsafe.testing;
 
-import net.jodah.failsafe.CircuitBreaker;
-import net.jodah.failsafe.FailurePolicy;
-import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.Timeout;
+import net.jodah.failsafe.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -71,140 +68,146 @@ public class Logging extends Mocking {
   /**
    * Note: The internal stats that are logged are not reset, even across multiple executions.
    */
-  public static <T> RetryPolicy<T> withLogs(RetryPolicy<T> retryPolicy) {
+  public static <T> RetryPolicyBuilder<T> withLogs(RetryPolicyBuilder<T> retryPolicy) {
     return withStatsAndLogs(retryPolicy, new Stats(), true);
   }
 
   /**
    * Note: The internal stats that are logged are not reset, even across multiple executions.
    */
-  public static <T> Timeout<T> withLogs(Timeout<T> timeout) {
-    return withStatsAndLogs(timeout, new Stats(), true);
+  public static <T> TimeoutBuilder<T> withLogs(TimeoutBuilder<T> builder) {
+    return withStatsAndLogs(builder, new Stats(), true);
   }
 
   /**
    * Note: The internal stats that are logged are not reset, even across multiple executions.
    */
-  public static <T> CircuitBreaker<T> withLogs(CircuitBreaker<T> circuitBreaker) {
-    return withStatsAndLogs(circuitBreaker, new Stats(), true);
+  public static <T> CircuitBreakerBuilder<T> withLogs(CircuitBreakerBuilder<T> builder) {
+    return withStatsAndLogs(builder, new Stats(), true);
   }
 
   /**
    * Note: The internal stats that are logged are not reset, even across multiple executions.
    */
-  public static <T extends FailurePolicy<T, R>, R> T withLogs(T policy) {
+  public static <T extends PolicyBuilder<?, ? extends PolicyConfig<R>, R>, R> T withLogs(T policy) {
     return withStatsAndLogs(policy, new Stats(), true);
   }
 
-  public static <T> RetryPolicy<T> withStats(RetryPolicy<T> retryPolicy, Stats stats) {
-    return withStatsAndLogs(retryPolicy, stats, false);
+  public static <T> RetryPolicyBuilder<T> withStats(RetryPolicyBuilder<T> builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, false);
   }
 
-  public static <T> RetryPolicy<T> withStatsAndLogs(RetryPolicy<T> retryPolicy, Stats stats) {
-    return withStatsAndLogs(retryPolicy, stats, true);
+  public static <T> RetryPolicyBuilder<T> withStatsAndLogs(RetryPolicyBuilder<T> builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, true);
   }
 
-  private static <T> RetryPolicy<T> withStatsAndLogs(RetryPolicy<T> retryPolicy, Stats stats, boolean withLogging) {
-    retryPolicy.onFailedAttempt(e -> {
+  private static <T> RetryPolicyBuilder<T> withStatsAndLogs(RetryPolicyBuilder<T> builder, Stats stats,
+    boolean withLogging) {
+    builder.onFailedAttempt(e -> {
       stats.executionCount++;
       stats.failedAttemptCount++;
       if (withLogging)
         System.out.printf("RetryPolicy %s failed attempt [result: %s, failure: %s, attempts: %s, executions: %s]%n",
-          retryPolicy.hashCode(), e.getLastResult(), e.getLastFailure(), e.getAttemptCount(), e.getExecutionCount());
+          builder.hashCode(), e.getLastResult(), e.getLastFailure(), e.getAttemptCount(), e.getExecutionCount());
     }).onRetry(e -> {
       stats.retryCount++;
       if (withLogging)
-        System.out.printf("RetryPolicy %s retrying [result: %s, failure: %s]%n", retryPolicy.hashCode(),
-          e.getLastResult(), e.getLastFailure());
+        System.out.printf("RetryPolicy %s retrying [result: %s, failure: %s]%n", builder.hashCode(), e.getLastResult(),
+          e.getLastFailure());
     }).onRetryScheduled(e -> {
       stats.retryScheduledCount++;
       if (withLogging)
-        System.out.printf("RetryPolicy %s scheduled [delay: %s ms]%n", retryPolicy.hashCode(), e.getDelay().toMillis());
+        System.out.printf("RetryPolicy %s scheduled [delay: %s ms]%n", builder.hashCode(), e.getDelay().toMillis());
     }).onRetriesExceeded(e -> {
       stats.retriesExceededCount++;
       if (withLogging)
-        System.out.printf("RetryPolicy %s retries exceeded%n", retryPolicy.hashCode());
+        System.out.printf("RetryPolicy %s retries exceeded%n", builder.hashCode());
     }).onAbort(e -> {
       stats.abortCount++;
       if (withLogging)
-        System.out.printf("RetryPolicy %s abort%n", retryPolicy.hashCode());
+        System.out.printf("RetryPolicy %s abort%n", builder.hashCode());
     });
-    withStatsAndLogs((FailurePolicy) retryPolicy, stats, withLogging);
-    return retryPolicy;
+    withStatsAndLogs((PolicyBuilder) builder, stats, withLogging);
+    return builder;
   }
 
-  public static <T> Timeout<T> withStats(Timeout<T> timeout, Stats stats) {
-    return withStatsAndLogs(timeout, stats, false);
+  public static <T> TimeoutBuilder<T> withStats(TimeoutBuilder<T> builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, false);
   }
 
-  public static <T> Timeout<T> withStatsAndLogs(Timeout<T> timeout, Stats stats) {
-    return withStatsAndLogs(timeout, stats, true);
+  public static <T> TimeoutBuilder<T> withStatsAndLogs(TimeoutBuilder<T> builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, true);
   }
 
-  private static <T> Timeout<T> withStatsAndLogs(Timeout<T> timeout, Stats stats, boolean withLogging) {
-    return timeout.onSuccess(e -> {
+  private static <T> TimeoutBuilder<T> withStatsAndLogs(TimeoutBuilder<T> builder, Stats stats, boolean withLogging) {
+    return builder.onSuccess(e -> {
       stats.executionCount++;
       stats.successCount++;
       if (withLogging)
-        System.out.printf("Timeout %s success policy executions=%s, successes=%s%n", timeout.hashCode(),
+        System.out.printf("Timeout %s success policy executions=%s, successes=%s%n", builder.hashCode(),
           stats.executionCount, stats.successCount);
     }).onFailure(e -> {
       stats.executionCount++;
       stats.failureCount++;
       if (withLogging)
-        System.out.printf("Timeout %s exceeded policy executions=%s, failure=%s%n", timeout.hashCode(),
+        System.out.printf("Timeout %s exceeded policy executions=%s, failure=%s%n", builder.hashCode(),
           stats.executionCount, stats.failureCount);
     });
   }
 
-  public static <T> CircuitBreaker<T> withStats(CircuitBreaker<T> circuitBreaker, Stats stats) {
-    return withStatsAndLogs(circuitBreaker, stats, false);
+  public static <T> CircuitBreakerBuilder<T> withStats(CircuitBreakerBuilder<T> builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, false);
   }
 
-  public static <T> CircuitBreaker<T> withStatsAndLogs(CircuitBreaker<T> circuitBreaker, Stats stats) {
-    return withStatsAndLogs(circuitBreaker, stats, true);
+  public static <T> CircuitBreakerBuilder<T> withStatsAndLogs(CircuitBreakerBuilder<T> builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, true);
   }
 
-  private static <T> CircuitBreaker<T> withStatsAndLogs(CircuitBreaker<T> circuitBreaker, Stats stats,
+  private static <T> CircuitBreakerBuilder<T> withStatsAndLogs(CircuitBreakerBuilder<T> builder, Stats stats,
     boolean withLogging) {
-    circuitBreaker.onOpen(() -> {
+    builder.onOpen(e -> {
       stats.openCount++;
       if (withLogging)
         System.out.println("CircuitBreaker opening");
-    }).onHalfOpen(() -> {
+    }).onHalfOpen(e -> {
       stats.halfOpenCount++;
       if (withLogging)
         System.out.println("CircuitBreaker half-opening");
-    }).onClose(() -> {
+    }).onClose(e -> {
       stats.closedCount++;
       if (withLogging)
         System.out.println("CircuitBreaker closing");
     });
-    withStatsAndLogs((FailurePolicy) circuitBreaker, stats, withLogging);
-    return circuitBreaker;
+    withStatsAndLogs((PolicyBuilder) builder, stats, withLogging);
+    return builder;
   }
 
-  public static <T extends FailurePolicy<T, R>, R> T withStats(T policy, Stats stats) {
-    return withStatsAndLogs(policy, stats, false);
+  public static <T extends PolicyBuilder<?, ? extends PolicyConfig<R>, R>, R> T withStats(T builder, Stats stats) {
+    return withStatsAndLogs(builder, stats, false);
   }
 
-  public static <T extends FailurePolicy<T, R>, R> T withStatsAndLogs(T policy, Stats stats) {
-    return withStatsAndLogs(policy, stats, true);
+  public static <T extends PolicyBuilder<?, ? extends PolicyConfig<R>, R>, R> T withStatsAndLogs(T builder,
+    Stats stats) {
+    return withStatsAndLogs(builder, stats, true);
   }
 
-  private static <T extends FailurePolicy<T, R>, R> T withStatsAndLogs(T policy, Stats stats, boolean withLogging) {
-    return policy.onSuccess(e -> {
+  private static <T extends PolicyBuilder<?, ? extends PolicyConfig<R>, R>, R> T withStatsAndLogs(T builder,
+    Stats stats, boolean withLogging) {
+    builder.onSuccess(e -> {
       stats.executionCount++;
       stats.successCount++;
       if (withLogging)
-        System.out.printf("%s success [result: %s, attempts: %s, executions: %s]%n", policy.getClass().getSimpleName(),
+        System.out.printf("%s success [result: %s, attempts: %s, executions: %s]%n", builder.getClass().getSimpleName(),
           e.getResult(), e.getAttemptCount(), e.getExecutionCount());
-    }).onFailure(e -> {
+    });
+    builder.onFailure(e -> {
       stats.executionCount++;
       stats.failureCount++;
       if (withLogging)
         System.out.printf("%s failure [result: %s, failure: %s, attempts: %s, executions: %s]%n",
-          policy.getClass().getSimpleName(), e.getResult(), e.getFailure(), e.getAttemptCount(), e.getExecutionCount());
+          builder.getClass().getSimpleName(), e.getResult(), e.getFailure(), e.getAttemptCount(),
+          e.getExecutionCount());
     });
+    return builder;
   }
 }

@@ -17,29 +17,21 @@ package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.testing.Testing;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static net.jodah.failsafe.testing.Testing.withLogs;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 @Test
 public class HalfOpenStateTest {
-  CircuitBreaker<Object> breaker;
-
-  @BeforeMethod
-  protected void beforeMethod() {
-    breaker = withLogs(new CircuitBreaker<>());
-  }
-
   /**
    * Asserts that  the circuit is opened after a single failure.
    */
   public void testFailureWithDefaultConfig() {
     // Given
+    CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
 
@@ -55,9 +47,9 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithFailureThreshold() {
     // Given
-    breaker.withFailureThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withFailureThreshold(3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     for (int i = 0; i < 3; i++) {
@@ -75,9 +67,9 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithFailureRatio() {
     // Given
-    breaker.withFailureThreshold(2, 3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withFailureThreshold(2, 3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
 
     // When
@@ -96,9 +88,9 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithSuccessAndFailureThresholds() {
     // Given
-    breaker.withSuccessThreshold(3).withFailureThreshold(2);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).withFailureThreshold(2).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordSuccess();
@@ -116,9 +108,12 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithSuccessAndFailureRatios() {
     // Given
-    breaker.withFailureThreshold(3, 5).withSuccessThreshold(3, 4);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withFailureThreshold(3, 5)
+      .withSuccessThreshold(3, 4)
+      .build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordSuccess();
@@ -137,9 +132,9 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithSuccessRatio() {
     // Given
-    breaker.withSuccessThreshold(2, 3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(2, 3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
 
     // When
@@ -158,9 +153,12 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithSuccessRatioAndFailureThreshold() {
     // Given
-    breaker.withSuccessThreshold(2, 4).withFailureThreshold(1);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withSuccessThreshold(2, 4)
+      .withFailureThreshold(1)
+      .build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordSuccess();
@@ -179,9 +177,9 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithSuccessThreshold() {
     // Given
-    breaker.withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
 
@@ -198,9 +196,12 @@ public class HalfOpenStateTest {
    */
   public void testFailureWithSuccessThresholdAndFailureRatio() {
     // Given
-    breaker.withFailureThreshold(3, 5).withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withFailureThreshold(3, 5)
+      .withSuccessThreshold(3)
+      .build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
 
@@ -216,8 +217,9 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithDefaultConfig() {
     // Given
+    CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
 
@@ -233,9 +235,9 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithFailureRatio() {
     // Given
-    breaker.withFailureThreshold(2, 3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withFailureThreshold(2, 3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordFailure(null);
@@ -253,9 +255,9 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithFailureThreshold() {
     // Given
-    breaker.withFailureThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withFailureThreshold(3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
     assertFalse(breaker.isOpen());
     assertFalse(breaker.isClosed());
 
@@ -272,9 +274,12 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithSuccessAndFailureRatios() {
     // Given
-    breaker.withFailureThreshold(3, 5).withSuccessThreshold(3, 4);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withFailureThreshold(3, 5)
+      .withSuccessThreshold(3, 4)
+      .build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordSuccess();
@@ -293,9 +298,9 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithSuccessAndFailureThresholds() {
     // Given
-    breaker.withSuccessThreshold(3).withFailureThreshold(2);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).withFailureThreshold(2).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordSuccess();
@@ -313,9 +318,9 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithSuccessRatio() {
     // Given
-    breaker.withSuccessThreshold(2, 3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(2, 3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordFailure(null);
@@ -333,9 +338,12 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithSuccessRatioAndFailureThreshold() {
     // Given
-    breaker.withSuccessThreshold(3, 4).withFailureThreshold(2);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withSuccessThreshold(3, 4)
+      .withFailureThreshold(2)
+      .build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     state.recordSuccess();
@@ -354,9 +362,9 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithSuccessThreshold() {
     // Given
-    breaker.withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When
     for (int i = 0; i < 3; i++) {
@@ -374,9 +382,12 @@ public class HalfOpenStateTest {
    */
   public void testSuccessWithSuccessThresholdAndFailureRatio() {
     // Given
-    breaker.withFailureThreshold(3, 5).withSuccessThreshold(2);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder()
+      .withFailureThreshold(3, 5)
+      .withSuccessThreshold(2)
+      .build();
     breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
+    HalfOpenState<Object> state = Testing.stateFor(breaker);
 
     // When success threshold exceeded
     state.recordSuccess();
@@ -388,74 +399,77 @@ public class HalfOpenStateTest {
     assertTrue(breaker.isClosed());
   }
 
-  /**
-   * Asserts that the late configuration of a failure ratio is handled by resetting the state's internal tracking. Also
-   * asserts that executions from prior configurations are carried over to a new configuration.
-   */
-  public void shouldHandleLateSetFailureRatio() {
-    // Given
-    breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
-
-    // When
-    breaker.withFailureThreshold(2);
-    state.recordFailure(null);
-    assertTrue(breaker.isHalfOpen());
-    state.recordFailure(null);
-
-    // Then
-    assertTrue(breaker.isOpen());
-
-    // Given
-    breaker = new CircuitBreaker<>().withFailureThreshold(3);
-    breaker.halfOpen();
-    state = Testing.stateFor(breaker);
-
-    // When
-    state.recordFailure(null);
-    state.recordFailure(null);
-    breaker.withFailureThreshold(3, 5);
-    state.recordSuccess();
-    state.recordSuccess();
-    assertTrue(breaker.isHalfOpen());
-    state.recordFailure(null);
-
-    // Then
-    assertTrue(breaker.isOpen());
-  }
-
-  /**
-   * Asserts that the late configuration of a success ratio is handled by resetting the state's internal tracking. Also
-   * asserts that executions from prior configurations are carried over to a new configuration.
-   */
-  public void shouldHandleLateSetSuccessRatio() {
-    // Given
-    breaker.halfOpen();
-    HalfOpenState state = Testing.stateFor(breaker);
-
-    // When
-    breaker.withSuccessThreshold(2);
-    state.recordSuccess();
-    assertTrue(breaker.isHalfOpen());
-    state.recordSuccess();
-
-    // Then
-    assertTrue(breaker.isClosed());
-
-    // Given
-    breaker = new CircuitBreaker<>().withFailureThreshold(3);
-    breaker.halfOpen();
-    state = Testing.stateFor(breaker);
-
-    // When
-    state.recordFailure(null);
-    state.recordFailure(null);
-    breaker.withSuccessThreshold(2, 4);
-    state.recordSuccess();
-    assertTrue(breaker.isHalfOpen());
-    state.recordSuccess();
-
-    // Then
-    assertTrue(breaker.isClosed());
-  }
+  // Disabled for now since thresholds are not dynamically configurable in 3.0, but may be again in future versions.
+  //  /**
+  //   * Asserts that the late configuration of a failure ratio is handled by resetting the state's internal tracking. Also
+  //   * asserts that executions from prior configurations are carried over to a new configuration.
+  //   */
+  //  public void shouldHandleLateSetFailureRatio() {
+  //    // Given
+  //    CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
+  //    breaker.halfOpen();
+  //    HalfOpenState state = Testing.stateFor(breaker);
+  //
+  //    // When
+  //    breaker.withFailureThreshold(2);
+  //    state.recordFailure(null);
+  //    assertTrue(breaker.isHalfOpen());
+  //    state.recordFailure(null);
+  //
+  //    // Then
+  //    assertTrue(breaker.isOpen());
+  //
+  //    // Given
+  //    breaker = new CircuitBreaker<>().withFailureThreshold(3);
+  //    breaker.halfOpen();
+  //    state = Testing.stateFor(breaker);
+  //
+  //    // When
+  //    state.recordFailure(null);
+  //    state.recordFailure(null);
+  //    breaker.withFailureThreshold(3, 5);
+  //    state.recordSuccess();
+  //    state.recordSuccess();
+  //    assertTrue(breaker.isHalfOpen());
+  //    state.recordFailure(null);
+  //
+  //    // Then
+  //    assertTrue(breaker.isOpen());
+  //  }
+  //
+  //  /**
+  //   * Asserts that the late configuration of a success ratio is handled by resetting the state's internal tracking. Also
+  //   * asserts that executions from prior configurations are carried over to a new configuration.
+  //   */
+  //  public void shouldHandleLateSetSuccessRatio() {
+  //    // Given
+  //    CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
+  //    breaker.halfOpen();
+  //    HalfOpenState state = Testing.stateFor(breaker);
+  //
+  //    // When
+  //    breaker.withSuccessThreshold(2);
+  //    state.recordSuccess();
+  //    assertTrue(breaker.isHalfOpen());
+  //    state.recordSuccess();
+  //
+  //    // Then
+  //    assertTrue(breaker.isClosed());
+  //
+  //    // Given
+  //    breaker = new CircuitBreaker<>().withFailureThreshold(3);
+  //    breaker.halfOpen();
+  //    state = Testing.stateFor(breaker);
+  //
+  //    // When
+  //    state.recordFailure(null);
+  //    state.recordFailure(null);
+  //    breaker.withSuccessThreshold(2, 4);
+  //    state.recordSuccess();
+  //    assertTrue(breaker.isHalfOpen());
+  //    state.recordSuccess();
+  //
+  //    // Then
+  //    assertTrue(breaker.isClosed());
+  //  }
 }

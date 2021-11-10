@@ -17,11 +17,14 @@ import java.util.function.Function;
 public class Issue260Test {
   public void test() throws Throwable {
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(300))
+    Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(300))
+      .withInterrupt()
       .onFailure(e -> System.out.println("Interrupted"))
-      .withInterrupt(true);
-    RetryPolicy<Object> rp = new RetryPolicy<>().onRetry(e -> System.out.println("Retrying"))
-      .onSuccess(e -> System.out.println("Success"));
+      .build();
+    RetryPolicy<Object> rp = RetryPolicy.builder()
+      .onRetry(e -> System.out.println("Retrying"))
+      .onSuccess(e -> System.out.println("Success"))
+      .build();
 
     Function<Integer, ContextualRunnable> task = (taskId) -> ctx -> {
       System.out.println("Starting execution of task " + taskId);

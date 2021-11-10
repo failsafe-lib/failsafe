@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.internal;
 
+import net.jodah.failsafe.Timeout;
+import net.jodah.failsafe.TimeoutConfig;
+import net.jodah.failsafe.TimeoutExceededException;
 import net.jodah.failsafe.spi.*;
 
 import java.util.concurrent.CompletableFuture;
@@ -32,9 +35,14 @@ import java.util.function.Function;
  *
  * @param <R> result type
  */
-class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
-  TimeoutExecutor(Timeout<R> timeout, int policyIndex, PolicyHandlers<R> policyHandlers) {
-    super(timeout, policyIndex, null, policyHandlers);
+public class TimeoutExecutor<R> extends PolicyExecutor<R> {
+  private final Timeout<R> policy;
+  private final TimeoutConfig<R> config;
+
+  public TimeoutExecutor(TimeoutImpl<R> timeout, int policyIndex) {
+    super(timeout, policyIndex);
+    policy = timeout;
+    config = timeout.getConfig();
   }
 
   @Override
@@ -68,7 +76,7 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
             // Cancel and interrupt
             execution.record(cancelResult);
             execution.cancel(this);
-            if (policy.canInterrupt()) {
+            if (config.canInterrupt()) {
               // Guard against race with the execution completing
               synchronized (execution.getInitial()) {
                 if (execution.isInterruptable()) {
@@ -79,7 +87,7 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
             }
           }
           return null;
-        }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
+        }, config.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
       } catch (Throwable t) {
         // Hard scheduling failure
         return postExecute(execution, ExecutionResult.failure(t));
@@ -123,11 +131,11 @@ class TimeoutExecutor<R> extends PolicyExecutor<R, Timeout<R>> {
                 // Cancel and interrupt
                 execution.record(cancelResult);
                 execution.cancel(this);
-                future.cancelDependencies(this, policy.canInterrupt(), cancelResult);
+                future.cancelDependencies(this, config.canInterrupt(), cancelResult);
               }
 
               return null;
-            }, policy.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
+            }, config.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
             timeoutFutureRef.set(timeoutFuture);
 
             // Propagate outer cancellations to the Timeout future and its promise

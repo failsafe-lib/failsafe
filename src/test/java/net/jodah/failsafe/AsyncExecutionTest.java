@@ -51,7 +51,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testCompleteForNoResult() {
     // Given
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.ofDefaults()), scheduler, future, true, innerFn);
 
     // When
     exec.preExecute();
@@ -68,8 +68,8 @@ public class AsyncExecutionTest extends Testing {
 
   public void testRetryForResult() {
     // Given retry for null
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>().handleResult(null)), scheduler, future, true,
-      innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.builder().handleResult(null).build()), scheduler, future,
+      true, innerFn);
 
     // When / Then
     exec.preExecute();
@@ -96,7 +96,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testRetryForThrowable() {
     // Given retry on IllegalArgumentException
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>().handle(IllegalArgumentException.class)),
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.builder().handle(IllegalArgumentException.class).build()),
       scheduler, future, true, innerFn);
 
     // When / Then
@@ -120,7 +120,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testRetryForResultAndThrowable() {
     // Given retry for null
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>().withMaxAttempts(10).handleResult(null)),
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.builder().withMaxAttempts(10).handleResult(null).build()),
       scheduler, future, true, innerFn);
 
     // When / Then
@@ -152,7 +152,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testGetAttemptCount() {
     // Given
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.ofDefaults()), scheduler, future, true, innerFn);
 
     // When
     exec.preExecute();
@@ -168,7 +168,7 @@ public class AsyncExecutionTest extends Testing {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnRetryWhenAlreadyComplete() {
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.ofDefaults()), scheduler, future, true, innerFn);
     exec.complete();
     exec.preExecute();
     exec.recordFailure(e);
@@ -176,7 +176,7 @@ public class AsyncExecutionTest extends Testing {
 
   public void testCompleteOrRetry() {
     // Given retry on IllegalArgumentException
-    exec = new AsyncExecutionImpl<>(Arrays.asList(new RetryPolicy<>()), scheduler, future, true, innerFn);
+    exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.ofDefaults()), scheduler, future, true, innerFn);
 
     // When / Then
     exec.preExecute();
@@ -195,7 +195,6 @@ public class AsyncExecutionTest extends Testing {
     verifyScheduler(1);
     verify(future).completeResult(ExecutionResult.none());
   }
-
 
   private void verifyScheduler(int executions) {
     verify(scheduler, times(executions)).schedule(any(Callable.class), any(Long.class), any(TimeUnit.class));

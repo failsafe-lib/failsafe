@@ -17,37 +17,43 @@ package net.jodah.failsafe.functional;
 
 import net.jodah.failsafe.*;
 import net.jodah.failsafe.functional.DelayableRetryPolicyTest.UncheckedExpectedException;
+import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertFalse;
 
 @Test
-public class DelayableCircuitBreakerTest {
-  @Test(expectedExceptions = RuntimeException.class)
+public class DelayableCircuitBreakerTest extends Testing {
   public void testUncheckedExceptionInDelayFunction() {
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withDelay((result, failure, context) -> {
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withDelayFn(ctx -> {
       throw new UncheckedExpectedException();
-    });
+    }).build();
 
-    assertFalse(breaker.isOpen());
-    Failsafe.with(breaker).run((ExecutionContext<Void> context) -> {
+    // Sync
+    assertThrows(() -> Failsafe.with(breaker).run((ExecutionContext<Void> context) -> {
       throw new RuntimeException("try again");
-    });
-    assertTrue(breaker.isOpen());
+    }), UncheckedExpectedException.class);
+
+    // Async
+    assertThrows(() -> Failsafe.with(breaker).runAsync((ExecutionContext<Void> context) -> {
+      throw new RuntimeException("try again");
+    }).get(1, TimeUnit.SECONDS), ExecutionException.class, UncheckedExpectedException.class);
   }
 
   public void shouldDelayOnMatchingResult() {
     AtomicInteger delays = new AtomicInteger();
-    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleResultIf(r -> r > 0)
-      .withDelayWhen((r, f, c) -> {
+    CircuitBreaker<Integer> breaker = CircuitBreaker.<Integer>builder()
+      .handleResultIf(r -> r > 0)
+      .withDelayFnWhen(ctx -> {
         delays.incrementAndGet(); // side-effect for test purposes
         return Duration.ofNanos(1);
-      }, 2);
+      }, 2)
+      .build();
 
     FailsafeExecutor<Integer> failsafe = Failsafe.with(breaker);
     failsafe.get(() -> 0);
@@ -60,11 +66,13 @@ public class DelayableCircuitBreakerTest {
 
   public void shouldDelayOnMatchingFailureType() {
     AtomicInteger delays = new AtomicInteger();
-    CircuitBreaker<Integer> breaker = new CircuitBreaker<Integer>().handleResultIf(r -> r > 0)
-      .withDelayOn((r, f, c) -> {
+    CircuitBreaker<Integer> breaker = CircuitBreaker.<Integer>builder()
+      .handleResultIf(r -> r > 0)
+      .withDelayFnOn(ctx -> {
         delays.incrementAndGet(); // side-effect for test purposes
         return Duration.ofNanos(1);
-      }, RuntimeException.class);
+      }, RuntimeException.class)
+      .build();
 
     Fallback<Integer> fallback = Fallback.of(0);
     FailsafeExecutor<Integer> failsafe = Failsafe.with(fallback, breaker);

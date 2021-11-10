@@ -16,7 +16,6 @@
 package net.jodah.failsafe;
 
 import net.jodah.failsafe.spi.ExecutionResult;
-import net.jodah.failsafe.spi.Policy;
 import net.jodah.failsafe.spi.PolicyExecutor;
 import net.jodah.failsafe.spi.SyncExecutionInternal;
 import net.jodah.failsafe.spi.Scheduler;
@@ -70,7 +69,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     initial = this;
 
     outerFn = innerFn;
-    for (PolicyExecutor<R, ? extends Policy<R>> policyExecutor : policyExecutors)
+    for (PolicyExecutor<R> policyExecutor : policyExecutors)
       outerFn = policyExecutor.apply(outerFn, scheduler);
   }
 
@@ -176,7 +175,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   ExecutionResult<R> executeSync() {
     ExecutionResult<R> result = outerFn.apply(this);
     completed = result.isComplete();
-    executor.completionHandler.handleComplete(result, this);
+    executor.completionHandler.accept(result, this);
     return result;
   }
 }

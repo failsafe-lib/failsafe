@@ -16,6 +16,8 @@
 package net.jodah.failsafe.spi;
 
 import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.internal.EventHandler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -26,25 +28,22 @@ import java.util.function.Function;
  * failure.
  *
  * @param <R> result type
- * @param <P> policy type
  * @author Jonathan Halterman
  */
-public abstract class PolicyExecutor<R, P extends Policy<R>> {
-  /** Policy to handle executions for */
-  protected final P policy;
+public abstract class PolicyExecutor<R> {
   /** Index of the policy relative to other policies in a composition, inner-most first */
   private final int policyIndex;
-  /** Internal FailurePolicy APIs for policies that support them */
-  protected final FailurePolicyInternal<R> failurePolicy;
-  /** Event handlers for policies that support them */
-  protected final PolicyHandlers<R> policyHandlers;
 
-  protected PolicyExecutor(P policy, int policyIndex, FailurePolicyInternal<R> failurePolicy,
-    PolicyHandlers<R> policyHandlers) {
-    this.policy = policy;
+  /** Optional APIs for policies that support them */
+  private final FailurePolicy<R> failurePolicy;
+  private final EventHandler<R> successHandler;
+  private final EventHandler<R> failureHandler;
+
+  protected PolicyExecutor(Policy<R> policy, int policyIndex) {
     this.policyIndex = policyIndex;
-    this.failurePolicy = failurePolicy;
-    this.policyHandlers = policyHandlers;
+    this.failurePolicy = policy instanceof FailurePolicy ? (FailurePolicy<R>) policy : null;
+    this.successHandler = EventHandler.ofExecutionCompleted(policy.getConfig().getSuccessListener());
+    this.failureHandler = EventHandler.ofExecutionCompleted(policy.getConfig().getFailureListener());
   }
 
   /**
@@ -86,11 +85,11 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
     execution.recordAttempt();
     if (isFailure(result)) {
       result = onFailure(execution, result.withFailure());
-      policyHandlers.handleFailure(result, execution);
+      handleFailure(result, execution);
     } else {
       result = result.withSuccess();
       onSuccess(result);
-      policyHandlers.handleSuccess(result, execution);
+      handleSuccess(result, execution);
     }
 
     return result;
@@ -132,11 +131,11 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
       execution.recordAttempt();
       if (isFailure(result)) {
         postFuture = onFailureAsync(execution, result.withFailure(), scheduler, future).whenComplete(
-          (postResult, error) -> policyHandlers.handleFailure(postResult, execution));
+          (postResult, error) -> handleFailure(postResult, execution));
       } else {
         result = result.withSuccess();
         onSuccess(result);
-        policyHandlers.handleSuccess(result, execution);
+        handleSuccess(result, execution);
         postFuture = CompletableFuture.completedFuture(result);
       }
 
@@ -154,7 +153,7 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
     if (result.isNonResult())
       return false;
     else if (failurePolicy != null)
-      return failurePolicy.isFailure(result);
+      return failurePolicy.isFailure(result.getResult(), result.getFailure());
     else
       return result.getFailure() != null;
   }
@@ -180,6 +179,23 @@ public abstract class PolicyExecutor<R, P extends Policy<R>> {
    */
   protected CompletableFuture<ExecutionResult<R>> onFailureAsync(ExecutionContext<R> context, ExecutionResult<R> result,
     Scheduler scheduler, FailsafeFuture<R> future) {
-    return CompletableFuture.completedFuture(onFailure(context, result));
+    try {
+      return CompletableFuture.completedFuture(onFailure(context, result));
+    } catch (Throwable t) {
+      // Handle unexpected hard errors in user code
+      CompletableFuture<ExecutionResult<R>> r = new CompletableFuture<>();
+      r.completeExceptionally(t);
+      return r;
+    }
+  }
+
+  private void handleSuccess(ExecutionResult<R> result, ExecutionContext<R> context) {
+    if (successHandler != null && result.isComplete())
+      successHandler.handle(result, context);
+  }
+
+  private void handleFailure(ExecutionResult<R> result, ExecutionContext<R> context) {
+    if (failureHandler != null && result.isComplete())
+      failureHandler.handle(result, context);
   }
 }

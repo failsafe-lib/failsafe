@@ -13,7 +13,7 @@ import static org.testng.Assert.assertTrue;
 public class Issue242Test {
   public void shouldDelayOnExplicitRetry() throws Throwable {
     RetryPolicy<String> retryPolicy = withLogs(
-      new RetryPolicy<String>().handleResult(null).withDelay(Duration.ofMillis(110)));
+      RetryPolicy.<String>builder().handleResult(null).withDelay(Duration.ofMillis(110))).build();
 
     long startTime = System.currentTimeMillis();
     Failsafe.with(retryPolicy).runAsyncExecution(exec -> {

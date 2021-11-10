@@ -29,7 +29,7 @@ public class InterruptionTest extends Testing {
       }
     });
 
-    Asserts.assertThrows(() -> Failsafe.with(new RetryPolicy<>().withMaxRetries(0)).run(() -> {
+    Asserts.assertThrows(() -> Failsafe.with(RetryPolicy.builder().withMaxRetries(0).build()).run(() -> {
       try {
         Thread.sleep(10000);
       } catch (InterruptedException e) {
@@ -46,7 +46,7 @@ public class InterruptionTest extends Testing {
    * Asserts that the thread's interrupt flag is set after interrupting a sync RetryPolicy delay.
    */
   public void shouldThrowWhenInterruptedDuringRetryPolicyDelay() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withDelay(Duration.ofMillis(500));
+    RetryPolicy<Object> rp = RetryPolicy.builder().withDelay(Duration.ofMillis(500)).build();
     Thread main = Thread.currentThread();
     CompletableFuture.runAsync(() -> {
       try {
@@ -77,7 +77,7 @@ public class InterruptionTest extends Testing {
     }).start();
 
     try {
-      Failsafe.with(new RetryPolicy<>().withDelay(Duration.ofSeconds(5))).run(() -> {
+      Failsafe.with(RetryPolicy.builder().withDelay(Duration.ofSeconds(5)).build()).run(() -> {
         throw new Exception();
       });
     } catch (Exception e) {
@@ -119,7 +119,7 @@ public class InterruptionTest extends Testing {
    */
   public void shouldResetInterruptFlagAfterInterruption() throws Throwable {
     // Given
-    Timeout<Object> timeout = Timeout.of(Duration.ofMillis(1)).withInterrupt(true);
+    Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(1)).withInterrupt().build();
 
     // When / Then
     testRunFailure(false, Failsafe.with(timeout), ctx -> {

@@ -74,31 +74,14 @@ public class AsyncFailsafeTest extends Testing {
   }
 
   /**
-   * Assert handles a supplier that throws instead of returning a future.
-   */
-  public void shouldHandleThrowingGetStageAsyncExecution() {
-    // Given
-    AtomicInteger counter = new AtomicInteger();
-
-    // When
-    assertThrows(() -> Failsafe.with(retryTwice).getStageAsyncExecution(exec -> {
-      counter.incrementAndGet();
-      throw new IllegalArgumentException();
-    }).get(), ExecutionException.class, IllegalArgumentException.class);
-
-    // Then
-    assertEquals(counter.get(), 3);
-  }
-
-  /**
    * Asserts that asynchronous completion via an execution is supported. Also tests passing results through a Fallback
    * policy that should never be triggered.
    */
   public void testComplete() {
     Stats rpStats = new Stats();
-    RetryPolicy<Object> rp = withStatsAndLogs(new RetryPolicy<>().withMaxRetries(3), rpStats);
+    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxRetries(3), rpStats).build();
     // Passthrough policy that should allow async execution results through
-    Fallback<Object> fb = Fallback.<Object>of("test").handleIf((r, f) -> false);
+    Fallback<Object> fb = Fallback.<Object>builder("test").handleIf((r, f) -> false).build();
     Timeout<Object> timeout = Timeout.of(Duration.ofMinutes(1));
     AtomicInteger counter = new AtomicInteger();
 
@@ -134,6 +117,6 @@ public class AsyncFailsafeTest extends Testing {
   @SuppressWarnings("unused")
   public void shouldSupportCovariance() {
     FastServer fastService = mock(FastServer.class);
-    CompletionStage<Server> stage = Failsafe.with(new RetryPolicy<Server>()).getAsync(() -> fastService);
+    CompletionStage<Server> stage = Failsafe.with(RetryPolicy.ofDefaults()).getAsync(() -> fastService);
   }
 }

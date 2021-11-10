@@ -20,9 +20,10 @@ import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.FailsafeExecutor;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
-import net.jodah.failsafe.internal.CircuitBreakerInternal;
+import net.jodah.failsafe.internal.CircuitBreakerImpl;
 import net.jodah.failsafe.internal.CircuitState;
 
 import java.lang.reflect.Field;
@@ -45,9 +46,9 @@ public class Testing extends Logging {
   // Signals the test framework to call AsyncExecution.complete() for AsyncExecutions
   // Otherwise this is treated as a null expected result
   public static Object COMPLETE_SIGNAL = new Object();
-  public RetryPolicy<Boolean> retryAlways = new RetryPolicy<Boolean>().withMaxRetries(-1);
-  public RetryPolicy<Boolean> retryNever = new RetryPolicy<Boolean>().withMaxRetries(0);
-  public RetryPolicy<Boolean> retryTwice = new RetryPolicy<>();
+  public RetryPolicy<Boolean> retryAlways = RetryPolicy.<Boolean>builder().withMaxRetries(-1).build();
+  public RetryPolicy<Boolean> retryNever = RetryPolicy.<Boolean>builder().withMaxRetries(0).build();
+  public RetryPolicy<Boolean> retryTwice = RetryPolicy.ofDefaults();
 
   public interface Then<R> {
     void accept(CompletableFuture<R> future, ExecutionCompletedEvent<R> event);
@@ -100,7 +101,7 @@ public class Testing extends Logging {
   public static <T extends CircuitState> T stateFor(CircuitBreaker breaker) {
     Field stateField;
     try {
-      stateField = CircuitBreaker.class.getDeclaredField("state");
+      stateField = CircuitBreakerImpl.class.getDeclaredField("state");
       stateField.setAccessible(true);
       return ((AtomicReference<T>) stateField.get(breaker)).get();
     } catch (Exception e) {
@@ -172,16 +173,6 @@ public class Testing extends Logging {
         throw new RuntimeException(e);
       }
     };
-  }
-
-  public static CircuitBreakerInternal<?> getInternals(CircuitBreaker<?> circuitBreaker) {
-    try {
-      Field internalsField = CircuitBreaker.class.getDeclaredField("internal");
-      internalsField.setAccessible(true);
-      return (CircuitBreakerInternal<?>) internalsField.get(circuitBreaker);
-    } catch (Exception e) {
-      return null;
-    }
   }
 
   public static <T> void testRunSuccess(FailsafeExecutor<T> failsafe, ContextualRunnable<T> when, T expectedResult) {
@@ -323,7 +314,7 @@ public class Testing extends Logging {
     AtomicReference<CompletableFuture<T>> futureRef = new AtomicReference<>();
     AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
     Waiter completionListenerWaiter = new Waiter();
-    CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = e -> {
+    EventListener<ExecutionCompletedEvent<T>> setCompletedEventFn = e -> {
       completedEventRef.set(e);
       completionListenerWaiter.resume();
     };
@@ -422,31 +413,5 @@ public class Testing extends Logging {
       return promise;
     };
     asyncTester.accept(executor -> executor.getStageAsync(stageAsyncWhen));
-
-    // Run stage async execution test
-    if (runAsyncExecutions) {
-      System.out.println("\nRunning get stage async execution test");
-      AsyncSupplier<T, ? extends CompletionStage<T>> stageAsyncExecution = exec -> {
-        CompletableFuture<T> promise = new CompletableFuture<>();
-        // Run supplier in a different thread
-        runInThread(() -> {
-          try {
-            T result = when.get(exec);
-            if (result == COMPLETE_SIGNAL)
-              exec.complete();
-            else {
-              // Recording a result and completing the resulting future is why getStageAsyncExecution is now deprecated
-              exec.recordResult(result);
-              promise.complete(when.get(exec));
-            }
-          } catch (Throwable t) {
-            exec.recordFailure(t);
-            promise.completeExceptionally(t);
-          }
-        });
-        return promise;
-      };
-      asyncTester.accept(executor -> executor.getStageAsyncExecution(stageAsyncExecution));
-    }
   }
 }

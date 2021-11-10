@@ -31,20 +31,21 @@ import java.util.function.Predicate;
 @Test
 public class Issue131Test {
   /**
-   * This predicate is invoked in failure scenarios with an arg of null,
-   * producing a {@link NullPointerException} yielding surprising results.
+   * This predicate is invoked in failure scenarios with an arg of null, producing a {@link NullPointerException}
+   * yielding surprising results.
    */
   private static Predicate<String> handleIfEqualsIgnoreCaseFoo = s -> {
     return s.equalsIgnoreCase("foo"); // produces NPE when invoked in failing scenarios.
   };
 
   /**
-   * Simple synchronous case throwing a {@link NullPointerException}
-   * instead of the expected {@link FailsafeException}.
+   * Simple synchronous case throwing a {@link NullPointerException} instead of the expected {@link FailsafeException}.
    */
   @Test(expectedExceptions = FailsafeException.class)
   public void syncShouldThrowTheUnderlyingIOException() {
-    CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>().handleResultIf(handleIfEqualsIgnoreCaseFoo);
+    CircuitBreaker<String> circuitBreaker = CircuitBreaker.<String>builder()
+      .handleResultIf(handleIfEqualsIgnoreCaseFoo)
+      .build();
     FailsafeExecutor<String> failsafe = Failsafe.with(circuitBreaker);
 
     // I expect this getAsync() to throw IOException, not NPE.
@@ -53,25 +54,24 @@ public class Issue131Test {
     });
   }
 
-
   /**
-   * More alarming async case where the Future is not even completed
-   * since Failsafe does not recover from the {@link NullPointerException} thrown by the predicate.
+   * More alarming async case where the Future is not even completed since Failsafe does not recover from the {@link
+   * NullPointerException} thrown by the predicate.
    */
   public void asyncShouldCompleteTheFuture() throws Throwable {
-    CircuitBreaker<String> circuitBreaker = new CircuitBreaker<String>().handleResultIf(handleIfEqualsIgnoreCaseFoo);
+    CircuitBreaker<String> circuitBreaker = CircuitBreaker.<String>builder()
+      .handleResultIf(handleIfEqualsIgnoreCaseFoo)
+      .build();
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     FailsafeExecutor<String> failsafe = Failsafe.with(circuitBreaker).with(executor);
 
     Waiter waiter = new Waiter();
 
-    failsafe
-      .getStageAsync(() -> {
-        CompletableFuture<String> future = new CompletableFuture<>();
-        future.completeExceptionally(new IOException("let's blame it on network error"));
-        return future;
-      })
-      .whenComplete((s, t) -> waiter.resume()); // Never invoked!
+    failsafe.getStageAsync(() -> {
+      CompletableFuture<String> future = new CompletableFuture<>();
+      future.completeExceptionally(new IOException("let's blame it on network error"));
+      return future;
+    }).whenComplete((s, t) -> waiter.resume()); // Never invoked!
 
     waiter.await(1000);
     executor.shutdownNow();

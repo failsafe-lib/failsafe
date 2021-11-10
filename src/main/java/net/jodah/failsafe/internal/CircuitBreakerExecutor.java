@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.internal;
 
+import net.jodah.failsafe.CircuitBreaker;
+import net.jodah.failsafe.CircuitBreakerOpenException;
+import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.spi.ExecutionResult;
-import net.jodah.failsafe.spi.FailurePolicyInternal;
 import net.jodah.failsafe.spi.PolicyExecutor;
-import net.jodah.failsafe.spi.PolicyHandlers;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link CircuitBreaker}.
@@ -26,29 +27,31 @@ import net.jodah.failsafe.spi.PolicyHandlers;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-class CircuitBreakerExecutor<R> extends PolicyExecutor<R, CircuitBreaker<R>> {
-  CircuitBreakerExecutor(CircuitBreaker<R> circuitBreaker, int policyIndex, FailurePolicyInternal<R> failurePolicy,
-    PolicyHandlers<R> policyHandlers) {
-    super(circuitBreaker, policyIndex, failurePolicy, policyHandlers);
+public class CircuitBreakerExecutor<R> extends PolicyExecutor<R> {
+  private final CircuitBreakerImpl<R> circuitBreaker;
+
+  public CircuitBreakerExecutor(CircuitBreakerImpl<R> circuitBreaker, int policyIndex) {
+    super(circuitBreaker, policyIndex);
+    this.circuitBreaker = circuitBreaker;
   }
 
   @Override
   protected ExecutionResult<R> preExecute() {
-    if (policy.allowsExecution()) {
-      policy.preExecute();
+    if (circuitBreaker.allowsExecution()) {
+      circuitBreaker.preExecute();
       return null;
     }
-    return ExecutionResult.failure(new CircuitBreakerOpenException(policy));
+    return ExecutionResult.failure(new CircuitBreakerOpenException(circuitBreaker));
   }
 
   @Override
   public void onSuccess(ExecutionResult<R> result) {
-    policy.recordSuccess();
+    circuitBreaker.recordSuccess();
   }
 
   @Override
   protected ExecutionResult<R> onFailure(ExecutionContext<R> context, ExecutionResult<R> result) {
-    policy.recordExecutionFailure(context);
+    circuitBreaker.recordExecutionFailure(context);
     return result;
   }
 }

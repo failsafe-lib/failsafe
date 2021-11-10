@@ -28,7 +28,7 @@ public class Issue190Test {
   }
 
   public void test() throws Throwable {
-    RetryPolicy<Object> policy = new RetryPolicy<>().withMaxRetries(5);
+    RetryPolicy<Object> policy = RetryPolicy.builder().withMaxRetries(5).build();
     AtomicInteger failureEvents = new AtomicInteger();
     AtomicInteger successEvents = new AtomicInteger();
     Waiter waiter = new Waiter();

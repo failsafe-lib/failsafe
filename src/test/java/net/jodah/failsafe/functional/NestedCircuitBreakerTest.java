@@ -18,8 +18,8 @@ public class NestedCircuitBreakerTest extends Testing {
    * Tests that multiple circuit breakers handle failures as expected, regardless of order.
    */
   public void testNestedCircuitBreakers() {
-    CircuitBreaker<Object> innerCb = new CircuitBreaker<>().handle(IllegalArgumentException.class);
-    CircuitBreaker<Object> outerCb = new CircuitBreaker<>().handle(IllegalStateException.class);
+    CircuitBreaker<Object> innerCb = CircuitBreaker.builder().handle(IllegalArgumentException.class).build();
+    CircuitBreaker<Object> outerCb = CircuitBreaker.builder().handle(IllegalStateException.class).build();
 
     CheckedRunnable runnable = () -> {
       throw new IllegalArgumentException();
@@ -39,8 +39,8 @@ public class NestedCircuitBreakerTest extends Testing {
    */
   public void testCircuitBreakerCircuitBreaker() {
     // Given
-    CircuitBreaker<Object> cb1 = new CircuitBreaker<>().handle(IllegalStateException.class);
-    CircuitBreaker<Object> cb2 = new CircuitBreaker<>().handle(IllegalArgumentException.class);
+    CircuitBreaker<Object> cb1 = CircuitBreaker.builder().handle(IllegalStateException.class).build();
+    CircuitBreaker<Object> cb2 = CircuitBreaker.builder().handle(IllegalArgumentException.class).build();
 
     testRunFailure(() -> {
       resetBreaker(cb1);

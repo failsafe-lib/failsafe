@@ -20,59 +20,31 @@ import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.function.CheckedFunction;
 import net.jodah.failsafe.function.CheckedRunnable;
 import net.jodah.failsafe.function.CheckedSupplier;
+import net.jodah.failsafe.internal.FallbackImpl;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.*;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 import static net.jodah.failsafe.Functions.toFn;
 
 /**
  * A Policy that handles failures using a fallback function or result.
- * <ul>
- *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
- *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
- *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
- *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
- *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
- *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
- *   will trigger policy handling.</li>
- * </ul>
  * <p>
- * Note: Fallback extends {@link FailurePolicy} and {@link PolicyListeners} which offer additional configuration.
+ * This class is threadsafe.
  * </p>
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see FallbackBuilder
  */
-public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
+public interface Fallback<R> extends Policy<R> {
   /**
-   * A fallback that will return a void result if execution fails.
-   */
-  public static final Fallback<Void> VOID = new Fallback<>();
-
-  private final CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback;
-  private final CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage;
-  private final boolean async;
-  private EventHandler<R> failedAttemptHandler;
-
-  private Fallback() {
-    this(null, null, false);
-  }
-
-  /**
-   * Returns the {@code fallback} action to be executed if execution fails.
+   * Returns the {@code fallback} to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  private Fallback(CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback,
-    CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage, boolean async) {
-    this.fallback = fallback;
-    this.fallbackStage = fallbackStage;
-    this.async = async;
+  static <R> FallbackBuilder<R> builder(CheckedRunnable fallback) {
+    return new FallbackBuilder<>(toFn(Assert.notNull(fallback, "fallback")), null);
   }
 
   /**
@@ -80,18 +52,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  public static <R> Fallback<R> of(CheckedRunnable fallback) {
-    return new Fallback<>(toFn(Assert.notNull(fallback, "fallback")), null, false);
-  }
-
-  /**
-   * Returns the {@code fallback} to be executed if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   */
-  @SuppressWarnings("unchecked")
-  public static <R> Fallback<R> of(CheckedSupplier<? extends R> fallback) {
-    return new Fallback<>(toFn((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")), null, false);
+  static <R> FallbackBuilder<R> builder(CheckedSupplier<? extends R> fallback) {
+    return new FallbackBuilder<>(toFn(Assert.notNull(fallback, "fallback")), null);
   }
 
   /**
@@ -101,8 +63,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> of(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
-    return new Fallback<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), null, false);
+  static <R> FallbackBuilder<R> builder(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
+    return new FallbackBuilder<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), null);
   }
 
   /**
@@ -112,8 +74,15 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> of(CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends R> fallback) {
-    return new Fallback<>(Assert.notNull((CheckedFunction) fallback, "fallback"), null, false);
+  static <R> FallbackBuilder<R> builder(CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends R> fallback) {
+    return new FallbackBuilder<>(Assert.notNull((CheckedFunction) fallback, "fallback"), null);
+  }
+
+  /**
+   * Returns the {@code fallbackResult} to be provided if execution fails.
+   */
+  static <R> FallbackBuilder<R> builder(R fallbackResult) {
+    return new FallbackBuilder<>(toFn(fallbackResult), null);
   }
 
   /**
@@ -122,60 +91,12 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    *
    * @throws NullPointerException if {@code fallback} is null
    */
-  public static <R> Fallback<R> ofException(
+  static <R> FallbackBuilder<R> builderOfException(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends Exception> fallback) {
     Assert.notNull(fallback, "fallback");
-    return new Fallback<>(e -> {
+    return new FallbackBuilder<>(e -> {
       throw fallback.apply(e);
-    }, null, false);
-  }
-
-  /**
-   * Returns the {@code fallbackResult} to be provided if execution fails.
-   */
-  public static <R> Fallback<R> of(R fallbackResult) {
-    return new Fallback<>(toFn(fallbackResult), null, false);
-  }
-
-  /**
-   * Returns the {@code fallback} to be executed asynchronously if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   */
-  public static <R> Fallback<R> ofAsync(CheckedRunnable fallback) {
-    return new Fallback<>(toFn(Assert.notNull(fallback, "fallback")), null, true);
-  }
-
-  /**
-   * Returns the {@code fallback} to be executed asynchronously if execution fails.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   */
-  @SuppressWarnings("unchecked")
-  public static <R> Fallback<R> ofAsync(CheckedSupplier<? extends R> fallback) {
-    return new Fallback<>(toFn((CheckedSupplier<R>) Assert.notNull(fallback, "fallback")), null, true);
-  }
-
-  /**
-   * Returns the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} accepts an
-   * {@link ExecutionAttemptedEvent}.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> ofAsync(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
-    return new Fallback<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), null, true);
-  }
-
-  /**
-   * Returns the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} applies an
-   * {@link ExecutionAttemptedEvent}.
-   *
-   * @throws NullPointerException if {@code fallback} is null
-   */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> ofAsync(CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends R> fallback) {
-    return new Fallback<>(Assert.notNull((CheckedFunction) fallback, "fallback"), null, true);
+    }, null);
   }
 
   /**
@@ -184,8 +105,8 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> ofStage(CheckedSupplier<? extends CompletionStage<R>> fallback) {
-    return new Fallback<>(null, (CheckedFunction) toFn(Assert.notNull(fallback, "fallback")), false);
+  static <R> FallbackBuilder<R> builderOfStage(CheckedSupplier<? extends CompletionStage<R>> fallback) {
+    return new FallbackBuilder<>(null, (CheckedFunction) toFn(Assert.notNull(fallback, "fallback")));
   }
 
   /**
@@ -195,68 +116,103 @@ public class Fallback<R> extends FailurePolicy<Fallback<R>, R> {
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> ofStage(
+  static <R> FallbackBuilder<R> builderOfStage(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends CompletionStage<R>> fallback) {
-    return new Fallback<>(null, Assert.notNull((CheckedFunction) fallback, "fallback"), false);
+    return new FallbackBuilder<>(null, Assert.notNull((CheckedFunction) fallback, "fallback"));
   }
 
   /**
-   * Returns the {@code fallback} to be executed asynchronously if execution fails.
+   * Returns the {@code fallback} to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   */
+  static <R> Fallback<R> of(CheckedRunnable fallback) {
+    return new FallbackImpl<>(new FallbackConfig<>(toFn(Assert.notNull(fallback, "fallback")), null));
+  }
+
+  /**
+   * Returns the {@code fallback} to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   */
+  static <R> Fallback<R> of(CheckedSupplier<? extends R> fallback) {
+    return new FallbackImpl<>(new FallbackConfig<>(toFn(Assert.notNull(fallback, "fallback")), null));
+  }
+
+  /**
+   * Returns the {@code fallback} to be executed if execution fails. The {@code fallback} accepts an {@link
+   * ExecutionAttemptedEvent}.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> ofStageAsync(CheckedSupplier<? extends CompletionStage<R>> fallback) {
-    return new Fallback<>(null, (CheckedFunction) toFn(Assert.notNull(fallback, "fallback")), true);
+  static <R> Fallback<R> of(CheckedConsumer<ExecutionAttemptedEvent<? extends R>> fallback) {
+    return new FallbackImpl<>(new FallbackConfig<>(toFn(Assert.notNull((CheckedConsumer) fallback, "fallback")), null));
   }
 
   /**
-   * Returns the {@code fallback} to be executed asynchronously if execution fails. The {@code fallback} accepts an
-   * {@link ExecutionAttemptedEvent}.
+   * Returns the {@code fallback} to be executed if execution fails. The {@code fallback} applies an {@link
+   * ExecutionAttemptedEvent}.
    *
    * @throws NullPointerException if {@code fallback} is null
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <R> Fallback<R> ofStageAsync(
+  static <R> Fallback<R> of(CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends R> fallback) {
+    return new FallbackImpl<>(new FallbackConfig<>(Assert.notNull((CheckedFunction) fallback, "fallback"), null));
+  }
+
+  /**
+   * Returns the {@code fallback} to be executed if execution fails and allows an alternative exception to be supplied
+   * instead. The {@code fallback} applies an {@link ExecutionAttemptedEvent} and must return an exception.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   */
+  static <R> Fallback<R> ofException(
+    CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends Exception> fallback) {
+    Assert.notNull(fallback, "fallback");
+    return new FallbackImpl<>(new FallbackConfig<>(e -> {
+      throw fallback.apply(e);
+    }, null));
+  }
+
+  /**
+   * Returns the {@code fallbackResult} to be provided if execution fails.
+   */
+  static <R> Fallback<R> of(R fallbackResult) {
+    return new FallbackImpl<>(new FallbackConfig<>(toFn(fallbackResult), null));
+  }
+
+  /**
+   * Returns the {@code fallback} to be executed if execution fails.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  static <R> Fallback<R> ofStage(CheckedSupplier<? extends CompletionStage<R>> fallback) {
+    return new FallbackImpl<>(new FallbackConfig<>(null, (CheckedFunction) toFn(Assert.notNull(fallback, "fallback"))));
+  }
+
+  /**
+   * Returns the {@code fallback} to be executed if execution fails. The {@code fallback} accepts an {@link
+   * ExecutionAttemptedEvent}.
+   *
+   * @throws NullPointerException if {@code fallback} is null
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  static <R> Fallback<R> ofStage(
     CheckedFunction<ExecutionAttemptedEvent<? extends R>, ? extends CompletionStage<R>> fallback) {
-    return new Fallback<>(null, Assert.notNull((CheckedFunction) fallback, "fallback"), true);
+    return new FallbackImpl<>(new FallbackConfig<>(null, Assert.notNull((CheckedFunction) fallback, "fallback")));
   }
 
   /**
-   * Returns whether the Fallback is configured to handle execution results asynchronously, separate from execution.
+   * Returns a fallback that will return a null if execution fails.
    */
-  public boolean isAsync() {
-    return async;
+  static Fallback<Void> none() {
+    return FallbackImpl.NONE;
   }
 
   /**
-   * Registers the {@code listener} to be called when the last execution attempt prior to the fallback failed. You can
-   * also use {@link #onFailure(CheckedConsumer) onFailure} to determine when the fallback attempt also fails.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   * Returns the {@link FallbackConfig} that the Fallback was built with.
    */
-  public Fallback<R> onFailedAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
-    failedAttemptHandler = EventHandler.ofAttempt(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  /**
-   * Returns the applied fallback result.
-   */
-  R apply(R result, Throwable failure, ExecutionContext<R> context) throws Throwable {
-    ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
-    return fallback != null ? fallback.apply(event) : fallbackStage.apply(event).get();
-  }
-
-  /**
-   * Returns a future applied fallback result.
-   */
-  CompletableFuture<R> applyStage(R result, Throwable failure, ExecutionContext<R> context) throws Throwable {
-    ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
-    return fallback != null ? CompletableFuture.completedFuture(fallback.apply(event)) : fallbackStage.apply(event);
-  }
-
-  @Override
-  public PolicyExecutor<R, ? extends Policy<R>> toExecutor(int policyIndex) {
-    return new FallbackExecutor<>(this, policyIndex, failurePolicyInternal, policyHandlers, failedAttemptHandler);
-  }
+  FallbackConfig<R> getConfig();
 }

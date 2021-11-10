@@ -20,6 +20,7 @@ import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 
 import static org.testng.Assert.*;
 
@@ -32,9 +33,11 @@ public class PolicyCompositionTest extends Testing {
    * RetryPolicy -> CircuitBreaker
    */
   public void testRetryPolicyCircuitBreaker() {
-    RetryPolicy<Boolean> rp = new RetryPolicy<Boolean>().withMaxRetries(-1);
-    CircuitBreaker<Boolean> cb = new CircuitBreaker<Boolean>().withFailureThreshold(3)
-      .withDelay(Duration.ofMinutes(10));
+    RetryPolicy<Boolean> rp = RetryPolicy.<Boolean>builder().withMaxRetries(-1).build();
+    CircuitBreaker<Boolean> cb = CircuitBreaker.<Boolean>builder()
+      .withFailureThreshold(3)
+      .withDelay(Duration.ofMinutes(10))
+      .build();
     Service service = mockService(2, true);
 
     testGetSuccess(() -> {
@@ -57,8 +60,8 @@ public class PolicyCompositionTest extends Testing {
    */
   public void testRetryPolicyCircuitBreakerWithOpenBreaker() {
     // Given
-    RetryPolicy<Object> retryPolicy = Testing.withLogs(new RetryPolicy<>());
-    CircuitBreaker<Object> cb = Testing.withLogs(new CircuitBreaker<>());
+    RetryPolicy<Object> retryPolicy = Testing.withLogs(RetryPolicy.builder()).build();
+    CircuitBreaker<Object> cb = Testing.withLogs(CircuitBreaker.builder()).build();
 
     // When / Then
     testRunFailure(() -> {
@@ -74,8 +77,8 @@ public class PolicyCompositionTest extends Testing {
    * CircuitBreaker -> RetryPolicy
    */
   public void testCircuitBreakerRetryPolicy() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
+    RetryPolicy<Object> rp = RetryPolicy.ofDefaults();
+    CircuitBreaker<Object> cb = CircuitBreaker.builder().withFailureThreshold(5).build();
 
     testRunFailure(() -> {
       resetBreaker(cb);
@@ -93,9 +96,9 @@ public class PolicyCompositionTest extends Testing {
    * Fallback -> RetryPolicy -> CircuitBreaker
    */
   public void testFallbackRetryPolicyCircuitBreaker() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
-    Fallback<Object> fb = Fallback.ofAsync(() -> "test");
+    RetryPolicy<Object> rp = RetryPolicy.ofDefaults();
+    CircuitBreaker<Object> cb = CircuitBreaker.builder().withFailureThreshold(5).build();
+    Fallback<Object> fb = Fallback.<Object>builder(() -> "test").withAsync().build();
 
     testRunSuccess(() -> {
       resetBreaker(cb);
@@ -117,7 +120,7 @@ public class PolicyCompositionTest extends Testing {
       assertTrue(e.getLastFailure() instanceof IllegalStateException);
       return "test";
     });
-    RetryPolicy<Object> rp = new RetryPolicy<>();
+    RetryPolicy<Object> rp = RetryPolicy.ofDefaults();
 
     testRunSuccess(Failsafe.with(fb).compose(rp), ctx -> {
       throw new IllegalStateException();
@@ -131,7 +134,7 @@ public class PolicyCompositionTest extends Testing {
    */
   public void testRetryPolicyFallback() {
     // Given
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
+    RetryPolicy<Object> rp = RetryPolicy.ofDefaults();
     Fallback<Object> fb = Fallback.of("test");
 
     // When / Then
@@ -154,7 +157,7 @@ public class PolicyCompositionTest extends Testing {
       assertTrue(e.getLastFailure() instanceof IllegalStateException);
       return false;
     });
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
 
     // When / Then
     testGetSuccess(() -> {
@@ -176,7 +179,7 @@ public class PolicyCompositionTest extends Testing {
       assertTrue(e.getLastFailure() instanceof CircuitBreakerOpenException);
       return false;
     });
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>().withSuccessThreshold(3);
+    CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
 
     // When / Then with open breaker
     testGetSuccess(() -> {
@@ -193,15 +196,14 @@ public class PolicyCompositionTest extends Testing {
    */
   public void testRetryPolicyTimeout() {
     // Given
-    RetryPolicy<Object> rp = new RetryPolicy<>().onFailedAttempt(e -> {
+    RetryPolicy<Object> rp = RetryPolicy.builder().onFailedAttempt(e -> {
       assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
-    });
+    }).build();
     Stats timeoutStats = new Stats();
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), timeoutStats);
     Recorder recorder = new Recorder();
 
     // When / Then
-    Runnable test = () -> testGetSuccess(false, () -> {
+    Consumer<Timeout<Object>> test = timeout -> testGetSuccess(false, () -> {
       recorder.reset();
       timeoutStats.reset();
     }, Failsafe.with(rp, timeout), ctx -> {
@@ -221,11 +223,12 @@ public class PolicyCompositionTest extends Testing {
     }, "success");
 
     // Without interrupt
-    test.run();
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)), timeoutStats).build();
+    test.accept(timeout);
 
-    // With interrupt
-    timeout.withInterrupt(true);
-    test.run();
+    // Test with interrupt
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt(), timeoutStats).build();
+    test.accept(timeout);
   }
 
   /**
@@ -234,7 +237,7 @@ public class PolicyCompositionTest extends Testing {
   public void testCircuitBreakerTimeout() {
     // Given
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(50));
-    CircuitBreaker<Object> breaker = new CircuitBreaker<>();
+    CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
     assertTrue(breaker.isClosed());
 
     // When / Then

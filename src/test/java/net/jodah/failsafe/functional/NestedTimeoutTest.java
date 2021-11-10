@@ -5,6 +5,7 @@ import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.function.BiConsumer;
 
 import static org.testng.Assert.*;
 
@@ -23,11 +24,9 @@ public class NestedTimeoutTest extends Testing {
     Stats innerTimeoutStats = new Stats();
     Stats retryStats = new Stats();
     Stats outerTimeoutStats = new Stats();
-    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), innerTimeoutStats);
-    RetryPolicy<Object> retryPolicy = withStatsAndLogs(new RetryPolicy<>().withMaxRetries(10), retryStats);
-    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(500)), outerTimeoutStats);
+    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder().withMaxRetries(10), retryStats).build();
 
-    Runnable test = () -> testRunFailure(false, () -> {
+    BiConsumer<Timeout<Object>, Timeout<Object>> test = (innerTimeout, outerTimeout) -> testRunFailure(false, () -> {
       innerTimeoutStats.reset();
       retryStats.reset();
       outerTimeoutStats.reset();
@@ -44,12 +43,14 @@ public class NestedTimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    test.run();
+    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), innerTimeoutStats).build();
+    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(500)), outerTimeoutStats).build();
+    test.accept(innerTimeout, outerTimeout);
 
     // Test with interrupt
-    innerTimeout.withInterrupt(true);
-    outerTimeout.withInterrupt(true);
-    test.run();
+    innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), innerTimeoutStats).build();
+    outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(500)).withInterrupt(), outerTimeoutStats).build();
+    test.accept(innerTimeout, outerTimeout);
   }
 
   /**
@@ -60,12 +61,10 @@ public class NestedTimeoutTest extends Testing {
   public void testFallbackRetryPolicyTimeoutTimeout() {
     Stats innerTimeoutStats = new Stats();
     Stats outerTimeoutStats = new Stats();
-    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), innerTimeoutStats);
-    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), outerTimeoutStats);
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().withMaxRetries(2);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.ofDefaults();
     Fallback<Object> fallback = Fallback.of(true);
 
-    Runnable test = () -> testRunSuccess(false, () -> {
+    BiConsumer<Timeout<Object>, Timeout<Object>> test = (innerTimeout, outerTimeout) -> testRunSuccess(false, () -> {
       innerTimeoutStats.reset();
       outerTimeoutStats.reset();
     }, Failsafe.with(fallback, retryPolicy, outerTimeout, innerTimeout), ctx -> {
@@ -77,12 +76,15 @@ public class NestedTimeoutTest extends Testing {
     }, true);
 
     // Test without interrupt
-    test.run();
+    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), innerTimeoutStats).build();
+    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)), outerTimeoutStats).build();
+    test.accept(innerTimeout, outerTimeout);
 
     // Test with interrupt
-    outerTimeout.withInterrupt(true);
-    innerTimeout.withInterrupt(true);
-    test.run();
+    innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), innerTimeoutStats).build();
+    outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt(), outerTimeoutStats).build();
+    test.accept(innerTimeout, outerTimeout);
+    test.accept(innerTimeout, outerTimeout);
   }
 
   /**
@@ -92,9 +94,9 @@ public class NestedTimeoutTest extends Testing {
    */
   public void shouldCancelNestedTimeoutsWithInterrupt() {
     // Given
-    RetryPolicy<Boolean> rp = new RetryPolicy<>();
+    RetryPolicy<Boolean> rp = RetryPolicy.ofDefaults();
     Timeout<Boolean> outerTimeout = Timeout.of(Duration.ofMillis(1000));
-    Timeout<Boolean> innerTimeout = Timeout.<Boolean>of(Duration.ofMillis(200)).withInterrupt(true);
+    Timeout<Boolean> innerTimeout = Timeout.<Boolean>builder(Duration.ofMillis(200)).withInterrupt().build();
 
     // When / Then
     testGetFailure(false, Failsafe.with(rp, innerTimeout, outerTimeout), ctx -> {

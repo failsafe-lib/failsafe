@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe;
+package net.jodah.failsafe.internal;
 
+import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.FailsafeException;
+import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.RetryPolicyConfig;
 import net.jodah.failsafe.spi.*;
 
 import java.time.Duration;
@@ -34,7 +38,10 @@ import static net.jodah.failsafe.internal.util.RandomDelay.randomDelayInRange;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
+public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
+  private final RetryPolicyImpl<R> retryPolicy;
+  private final RetryPolicyConfig<R> config;
+
   // Mutable state
   private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
@@ -48,15 +55,15 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   private final EventHandler<R> retryHandler;
   private final EventHandler<R> retryScheduledHandler;
 
-  RetryPolicyExecutor(RetryPolicy<R> retryPolicy, int policyIndex, FailurePolicyInternal<R> failurePolicy,
-    PolicyHandlers<R> policyHandlers, EventHandler<R> abortHandler, EventHandler<R> failedAttemptHandler,
-    EventHandler<R> retriesExceededHandler, EventHandler<R> retryHandler, EventHandler<R> retryScheduledHandler) {
-    super(retryPolicy, policyIndex, failurePolicy, policyHandlers);
-    this.abortHandler = abortHandler;
-    this.failedAttemptHandler = failedAttemptHandler;
-    this.retriesExceededHandler = retriesExceededHandler;
-    this.retryHandler = retryHandler;
-    this.retryScheduledHandler = retryScheduledHandler;
+  public RetryPolicyExecutor(RetryPolicyImpl<R> retryPolicy, int policyIndex) {
+    super(retryPolicy, policyIndex);
+    this.retryPolicy = retryPolicy;
+    this.config = retryPolicy.getConfig();
+    this.abortHandler = EventHandler.ofExecutionCompleted(config.getAbortListener());
+    this.failedAttemptHandler = EventHandler.ofExecutionAttempted(config.getFailedAttemptListener());
+    this.retriesExceededHandler = EventHandler.ofExecutionCompleted(config.getRetriesExceededListener());
+    this.retryHandler = EventHandler.ofExecutionAttempted(config.getRetryListener());
+    this.retryScheduledHandler = EventHandler.ofExecutionScheduled(config.getRetryScheduledListener());
   }
 
   @Override
@@ -209,7 +216,7 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     long delayNanos = lastDelayNanos;
 
     // Determine the computed delay
-    Duration computedDelay = policy.computeDelay(context);
+    Duration computedDelay = retryPolicy.computeDelay(context);
     if (computedDelay != null) {
       delayNanos = computedDelay.toNanos();
     } else {
@@ -224,11 +231,11 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
     delayNanos = adjustForMaxDuration(delayNanos, elapsedNanos);
 
     // Calculate result
-    boolean maxRetriesExceeded = policy.getMaxRetries() != -1 && failedAttempts > policy.getMaxRetries();
-    boolean maxDurationExceeded = policy.getMaxDuration() != null && elapsedNanos > policy.getMaxDuration().toNanos();
+    boolean maxRetriesExceeded = config.getMaxRetries() != -1 && failedAttempts > config.getMaxRetries();
+    boolean maxDurationExceeded = config.getMaxDuration() != null && elapsedNanos > config.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean isAbortable = policy.isAbortable((R) result.getResult(), result.getFailure());
-    boolean shouldRetry = !result.isSuccess() && !isAbortable && !retriesExceeded && policy.allowsRetries();
+    boolean isAbortable = retryPolicy.isAbortable(result.getResult(), result.getFailure());
+    boolean shouldRetry = !result.isSuccess() && !isAbortable && !retriesExceeded && config.allowsRetries();
     boolean completed = isAbortable || !shouldRetry;
     boolean success = completed && result.isSuccess() && !isAbortable;
 
@@ -252,9 +259,9 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   }
 
   private long getFixedOrRandomDelayNanos(long delayNanos) {
-    Duration delay = policy.getDelay();
-    Duration delayMin = policy.getDelayMin();
-    Duration delayMax = policy.getDelayMax();
+    Duration delay = config.getDelay();
+    Duration delayMin = config.getDelayMin();
+    Duration delayMax = config.getDelayMax();
 
     if (delayNanos == 0 && delay != null && !delay.equals(Duration.ZERO))
       delayNanos = delay.toNanos();
@@ -264,22 +271,22 @@ class RetryPolicyExecutor<R> extends PolicyExecutor<R, RetryPolicy<R>> {
   }
 
   private long adjustForBackoff(ExecutionContext<R> context, long delayNanos) {
-    if (context.getAttemptCount() != 1 && policy.getMaxDelay() != null)
-      delayNanos = (long) Math.min(delayNanos * policy.getDelayFactor(), policy.getMaxDelay().toNanos());
+    if (context.getAttemptCount() != 1 && config.getMaxDelay() != null)
+      delayNanos = (long) Math.min(delayNanos * config.getDelayFactor(), config.getMaxDelay().toNanos());
     return delayNanos;
   }
 
   private long adjustForJitter(long delayNanos) {
-    if (policy.getJitter() != null)
-      delayNanos = randomDelay(delayNanos, policy.getJitter().toNanos(), Math.random());
-    else if (policy.getJitterFactor() > 0.0)
-      delayNanos = randomDelay(delayNanos, policy.getJitterFactor(), Math.random());
+    if (config.getJitter() != null)
+      delayNanos = randomDelay(delayNanos, config.getJitter().toNanos(), Math.random());
+    else if (config.getJitterFactor() > 0.0)
+      delayNanos = randomDelay(delayNanos, config.getJitterFactor(), Math.random());
     return delayNanos;
   }
 
   private long adjustForMaxDuration(long delayNanos, long elapsedNanos) {
-    if (policy.getMaxDuration() != null) {
-      long maxRemainingDelay = policy.getMaxDuration().toNanos() - elapsedNanos;
+    if (config.getMaxDuration() != null) {
+      long maxRemainingDelay = config.getMaxDuration().toNanos() - elapsedNanos;
       delayNanos = Math.min(delayNanos, maxRemainingDelay < 0 ? 0 : maxRemainingDelay);
       if (delayNanos < 0)
         delayNanos = 0;

@@ -36,7 +36,7 @@ public class ExecutionTest {
 
   public void testRetryForResult() {
     // Given rpRetry for null
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().handleResult(null));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder().handleResult(null).build());
 
     // When / Then
     exec.recordResult(null);
@@ -54,7 +54,7 @@ public class ExecutionTest {
     assertNull(exec.getLastFailure());
 
     // Given 2 max retries
-    exec = Execution.of(new RetryPolicy<>().handleResult(null).withMaxRetries(2));
+    exec = Execution.of(RetryPolicy.builder().handleResult(null).build());
 
     // When / Then
     exec.recordResult(null);
@@ -74,7 +74,7 @@ public class ExecutionTest {
 
   public void testRetryForThrowable() {
     // Given rpRetry on IllegalArgumentException
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().handle(IllegalArgumentException.class));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder().handle(IllegalArgumentException.class).build());
 
     // When / Then
     exec.recordFailure(new IllegalArgumentException());
@@ -90,7 +90,7 @@ public class ExecutionTest {
     assertEquals(exec.getLastFailure(), e);
 
     // Given 2 max retries
-    exec = Execution.of(new RetryPolicy<>().withMaxRetries(2));
+    exec = Execution.of(RetryPolicy.ofDefaults());
 
     // When / Then
     exec.recordFailure(e);
@@ -110,7 +110,7 @@ public class ExecutionTest {
 
   public void testRetryForResultAndThrowable() {
     // Given rpRetry for null
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().withMaxAttempts(10).handleResult(null));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder().withMaxAttempts(10).handleResult(null).build());
 
     // When / Then
     exec.recordResult(null);
@@ -128,7 +128,7 @@ public class ExecutionTest {
     assertTrue(exec.isComplete());
 
     // Given 2 max retries
-    exec = Execution.of(new RetryPolicy<>().handleResult(null).withMaxRetries(2));
+    exec = Execution.of(RetryPolicy.builder().handleResult(null).build());
 
     // When / Then
     exec.recordResult(null);
@@ -145,7 +145,7 @@ public class ExecutionTest {
   }
 
   public void testGetAttemptCount() {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>());
+    Execution<Object> exec = Execution.of(RetryPolicy.ofDefaults());
     exec.recordFailure(e);
     exec.recordFailure(e);
     assertEquals(exec.getAttemptCount(), 2);
@@ -153,7 +153,7 @@ public class ExecutionTest {
   }
 
   public void testGetElapsedMillis() throws Throwable {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>());
+    Execution<Object> exec = Execution.of(RetryPolicy.ofDefaults());
     assertTrue(exec.getElapsedTime().toMillis() < 100);
     Thread.sleep(150);
     assertTrue(exec.getElapsedTime().toMillis() > 100);
@@ -164,7 +164,7 @@ public class ExecutionTest {
     List<Object> list = mock(List.class);
     when(list.size()).thenThrow(failures(2, new IllegalStateException())).thenReturn(5);
 
-    RetryPolicy<Object> retryPolicy = new RetryPolicy<>().handle(IllegalStateException.class);
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().handle(IllegalStateException.class).build();
     Execution<Object> exec = Execution.of(retryPolicy);
 
     while (!exec.isComplete()) {
@@ -182,7 +182,7 @@ public class ExecutionTest {
 
   public void shouldAdjustDelayForBackoff() {
     Execution<Object> exec = Execution.of(
-      new RetryPolicy<>().withMaxAttempts(10).withBackoff(Duration.ofNanos(1), Duration.ofNanos(10)));
+      RetryPolicy.builder().withMaxAttempts(10).withBackoff(Duration.ofNanos(1), Duration.ofNanos(10)).build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getDelay().toNanos(), 1);
@@ -199,8 +199,10 @@ public class ExecutionTest {
   }
 
   public void shouldAdjustDelayForComputedDelay() {
-    Execution<Object> exec = Execution.of(
-      new RetryPolicy<>().withMaxAttempts(10).withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() * 2)));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder()
+      .withMaxAttempts(10)
+      .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() * 2))
+      .build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getDelay().toNanos(), 2);
@@ -213,9 +215,11 @@ public class ExecutionTest {
   }
 
   public void shouldFallbackDelayFromComputedToFixedDelay() {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().withMaxAttempts(10)
+    Execution<Object> exec = Execution.of(RetryPolicy.builder()
+      .withMaxAttempts(10)
       .withDelay(Duration.ofNanos(5))
-      .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
+      .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
+      .build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getDelay().toNanos(), 5);
@@ -232,9 +236,11 @@ public class ExecutionTest {
   }
 
   public void shouldFallbackDelayFromComputedToBackoffDelay() {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().withMaxAttempts(10)
+    Execution<Object> exec = Execution.of(RetryPolicy.builder()
+      .withMaxAttempts(10)
       .withBackoff(Duration.ofNanos(1), Duration.ofNanos(10))
-      .withDelay((r, f, ctx) -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1)));
+      .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
+      .build());
     assertEquals(exec.getDelay().toNanos(), 0);
     exec.recordFailure(e);
     assertEquals(exec.getDelay().toNanos(), 1);
@@ -254,7 +260,7 @@ public class ExecutionTest {
 
   public void shouldAdjustDelayForMaxDuration() throws Throwable {
     Execution<Object> exec = Execution.of(
-      new RetryPolicy<>().withDelay(Duration.ofMillis(49)).withMaxDuration(Duration.ofMillis(50)));
+      RetryPolicy.builder().withDelay(Duration.ofMillis(49)).withMaxDuration(Duration.ofMillis(50)).build());
     Thread.sleep(10);
     exec.recordFailure(e);
     assertFalse(exec.isComplete());
@@ -262,7 +268,7 @@ public class ExecutionTest {
   }
 
   public void shouldSupportMaxDuration() throws Exception {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().withMaxDuration(Duration.ofMillis(100)));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder().withMaxDuration(Duration.ofMillis(100)).build());
     exec.recordFailure(e);
     assertFalse(exec.isComplete());
     exec.recordFailure(e);
@@ -273,7 +279,7 @@ public class ExecutionTest {
   }
 
   public void shouldSupportMaxRetries() {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>().withMaxRetries(3));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder().withMaxRetries(3).build());
     exec.recordFailure(e);
     assertFalse(exec.isComplete());
     exec.recordFailure(e);
@@ -285,8 +291,11 @@ public class ExecutionTest {
   }
 
   public void shouldGetDelayMillis() throws Throwable {
-    Execution<Object> exec = Execution.of(
-      new RetryPolicy<>().withDelay(Duration.ofMillis(100)).withMaxDuration(Duration.ofMillis(101)).handleResult(null));
+    Execution<Object> exec = Execution.of(RetryPolicy.builder()
+      .withDelay(Duration.ofMillis(100))
+      .withMaxDuration(Duration.ofMillis(101))
+      .handleResult(null)
+      .build());
     assertEquals(exec.getDelay().toMillis(), 0);
     exec.recordResult(null);
     assertTrue(exec.getDelay().toMillis() <= 100);
@@ -298,14 +307,14 @@ public class ExecutionTest {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnMultipleCompletes() {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>());
+    Execution<Object> exec = Execution.of(RetryPolicy.ofDefaults());
     exec.complete();
     exec.complete();
   }
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void shouldThrowOnCanRetryWhenAlreadyComplete() {
-    Execution<Object> exec = Execution.of(new RetryPolicy<>());
+    Execution<Object> exec = Execution.of(RetryPolicy.ofDefaults());
     exec.complete();
     exec.recordFailure(e);
   }

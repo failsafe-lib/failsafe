@@ -4,7 +4,7 @@ import net.jodah.concurrentunit.Waiter;
 import net.jodah.failsafe.*;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.ContextualSupplier;
-import net.jodah.failsafe.spi.Policy;
+import net.jodah.failsafe.Policy;
 import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -75,9 +75,9 @@ public class FailsafeFutureCancellationTest extends Testing {
     // Given
     Stats outerRetryStats = new Stats();
     Stats innerRetryStats = new Stats();
-    RetryPolicy<Object> outerRetryPolicy = withStatsAndLogs(new RetryPolicy<>().withMaxRetries(2), outerRetryStats);
+    RetryPolicy<Object> outerRetryPolicy = withStatsAndLogs(RetryPolicy.builder(), outerRetryStats).build();
     RetryPolicy<Object> innerRetryPolicy = withStatsAndLogs(
-      new RetryPolicy<>().withMaxRetries(3).withDelay(Duration.ofMillis(100)), innerRetryStats);
+      RetryPolicy.builder().withMaxRetries(3).withDelay(Duration.ofMillis(100)), innerRetryStats).build();
     AtomicReference<Future<Void>> futureRef = new AtomicReference<>();
     AtomicReference<ExecutionCompletedEvent<Object>> completedRef = new AtomicReference<>();
     Waiter waiter = new Waiter();
@@ -107,7 +107,7 @@ public class FailsafeFutureCancellationTest extends Testing {
    */
   public void shouldPropagateCancellationToStage() {
     // Given
-    Policy<String> retryPolicy = new RetryPolicy<>();
+    Policy<String> retryPolicy = RetryPolicy.ofDefaults();
 
     // When
     CompletableFuture<String> promise = new CompletableFuture<>();
@@ -121,29 +121,11 @@ public class FailsafeFutureCancellationTest extends Testing {
   }
 
   /**
-   * Asserts that FailsafeFuture cancellations are propagated to a CompletionStage in an async integration execution.
-   */
-  public void shouldPropagateCancellationToStageAsyncExecution() {
-    // Given
-    Policy<String> retryPolicy = new RetryPolicy<>();
-
-    // When
-    CompletableFuture<String> promise = new CompletableFuture<>();
-    CompletableFuture<String> future = Failsafe.with(retryPolicy).getStageAsyncExecution(exec -> promise);
-    sleep(200);
-    future.cancel(false);
-
-    // Then
-    assertThrows(() -> future.get(1, TimeUnit.SECONDS), CancellationException.class);
-    assertThrows(() -> promise.get(1, TimeUnit.SECONDS), CancellationException.class);
-  }
-
-  /**
    * Asserts that FailsafeFuture cancellations are propagated to the most recent ExecutionContext.
    */
   public void shouldPropagateCancellationToExecutionContext() throws Throwable {
     // Given
-    Policy<Void> retryPolicy = withLogs(new RetryPolicy<>());
+    Policy<Void> retryPolicy = withLogs(RetryPolicy.<Void>builder()).build();
     AtomicReference<ExecutionContext<Void>> ctxRef = new AtomicReference<>();
     Waiter waiter = new Waiter();
 

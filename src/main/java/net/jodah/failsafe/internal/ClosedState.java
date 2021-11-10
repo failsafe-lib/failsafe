@@ -20,11 +20,8 @@ import net.jodah.failsafe.CircuitBreaker.State;
 import net.jodah.failsafe.ExecutionContext;
 
 public class ClosedState<R> extends CircuitState<R> {
-  private final CircuitBreakerInternal<R> internal;
-
-  public ClosedState(CircuitBreaker<R> breaker, CircuitBreakerInternal<R> internal) {
+  public ClosedState(CircuitBreakerImpl<R> breaker) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), true, null));
-    this.internal = internal;
   }
 
   @Override
@@ -48,11 +45,11 @@ public class ClosedState<R> extends CircuitState<R> {
   @Override
   synchronized void checkThreshold(ExecutionContext<R> context) {
     // Execution threshold will only be set for time based thresholding
-    if (stats.getExecutionCount() >= breaker.getFailureExecutionThreshold()) {
-      double failureRateThreshold = breaker.getFailureRateThreshold();
+    if (stats.getExecutionCount() >= config.getFailureExecutionThreshold()) {
+      double failureRateThreshold = config.getFailureRateThreshold();
       if ((failureRateThreshold != 0 && stats.getFailureRate() >= failureRateThreshold) || (failureRateThreshold == 0
-        && stats.getFailureCount() >= breaker.getFailureThreshold()))
-        internal.open(context);
+        && stats.getFailureCount() >= config.getFailureThreshold()))
+        breaker.open(context);
     }
   }
 
@@ -60,9 +57,9 @@ public class ClosedState<R> extends CircuitState<R> {
    * Returns the capacity of the breaker in the closed state.
    */
   private static int capacityFor(CircuitBreaker<?> breaker) {
-    if (breaker.getFailureExecutionThreshold() != 0)
-      return breaker.getFailureExecutionThreshold();
+    if (breaker.getConfig().getFailureExecutionThreshold() != 0)
+      return breaker.getConfig().getFailureExecutionThreshold();
     else
-      return breaker.getFailureThresholdingCapacity();
+      return breaker.getConfig().getFailureThresholdingCapacity();
   }
 }

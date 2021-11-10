@@ -29,8 +29,8 @@ import static org.testng.Assert.assertTrue;
 @Test
 public class PolicyCompositionExecutionTest {
   public void testRetryPolicyCircuitBreaker() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(2);
-    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
+    RetryPolicy<Object> rp = RetryPolicy.ofDefaults();
+    CircuitBreaker<Object> cb = CircuitBreaker.builder().withFailureThreshold(5).build();
 
     Execution<Object> execution = Execution.of(rp, cb);
     execution.recordFailure(new Exception());
@@ -43,8 +43,8 @@ public class PolicyCompositionExecutionTest {
   }
 
   public void testCircuitBreakerRetryPolicy() {
-    RetryPolicy<Object> rp = new RetryPolicy<>().withMaxRetries(1);
-    CircuitBreaker<Object> cb = new CircuitBreaker<>().withFailureThreshold(5);
+    RetryPolicy<Object> rp = RetryPolicy.builder().withMaxRetries(1).build();
+    CircuitBreaker<Object> cb = CircuitBreaker.builder().withFailureThreshold(5).build();
 
     Execution<Object> execution = Execution.of(cb, rp);
     execution.recordFailure(new Exception());
