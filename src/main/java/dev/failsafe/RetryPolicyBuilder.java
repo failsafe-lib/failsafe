@@ -17,10 +17,10 @@ package dev.failsafe;
 
 import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionAttemptedEvent;
-import dev.failsafe.internal.util.Assert;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.event.ExecutionScheduledEvent;
 import dev.failsafe.internal.RetryPolicyImpl;
+import dev.failsafe.internal.util.Assert;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -59,7 +59,7 @@ import java.util.function.Predicate;
  * @see RetryPolicyConfig
  */
 public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBuilder<R>, RetryPolicyConfig<R>, R>
-  implements RetryPolicyListeners<RetryPolicyBuilder<R>, R> {
+  implements PolicyListeners<RetryPolicyBuilder<R>, R> {
 
   private static final int DEFAULT_MAX_RETRIES = 2;
 
@@ -159,31 +159,63 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
     return this;
   }
 
-  @Override
+  /**
+   * Registers the {@code listener} to be called when an execution is aborted.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
+   */
   public RetryPolicyBuilder<R> onAbort(EventListener<ExecutionCompletedEvent<R>> listener) {
     config.abortListener = Assert.notNull(listener, "listener");
     return this;
   }
 
-  @Override
+  /**
+   * Registers the {@code listener} to be called when an execution attempt fails. You can also use {@link
+   * #onFailure(EventListener) onFailure} to determine when the execution attempt fails <i>and</i> and all retries have
+   * failed.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
+   */
   public RetryPolicyBuilder<R> onFailedAttempt(EventListener<ExecutionAttemptedEvent<R>> listener) {
     config.failedAttemptListener = Assert.notNull(listener, "listener");
     return this;
   }
 
-  @Override
+  /**
+   * Registers the {@code listener} to be called when an execution fails and the {@link
+   * RetryPolicyConfig#getMaxRetries() max retry attempts} or {@link RetryPolicyConfig#getMaxDuration() max duration}
+   * are exceeded.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
+   */
   public RetryPolicyBuilder<R> onRetriesExceeded(EventListener<ExecutionCompletedEvent<R>> listener) {
     config.retriesExceededListener = Assert.notNull(listener, "listener");
     return this;
   }
 
-  @Override
+  /**
+   * Registers the {@code listener} to be called when a retry is about to be attempted.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @see #onRetryScheduled(EventListener)
+   */
   public RetryPolicyBuilder<R> onRetry(EventListener<ExecutionAttemptedEvent<R>> listener) {
     config.retryListener = Assert.notNull(listener, "listener");
     return this;
   }
 
-  @Override
+  /**
+   * Registers the {@code listener} to be called when a retry for an async call is about to be scheduled. This method
+   * differs from {@link #onRetry(EventListener)} since it is called when a retry is initially scheduled but before any
+   * configured delay, whereas {@link #onRetry(EventListener) onRetry} is called after a delay, just before the retry
+   * attempt takes place.
+   * <p>
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
+   * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @see #onRetry(EventListener)
+   */
   public RetryPolicyBuilder<R> onRetryScheduled(EventListener<ExecutionScheduledEvent<R>> listener) {
     config.retryScheduledListener = Assert.notNull(listener, "listener");
     return this;

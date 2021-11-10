@@ -15,10 +15,10 @@
  */
 package dev.failsafe;
 
+import dev.failsafe.event.CircuitBreakerStateChangedEvent;
 import dev.failsafe.event.EventListener;
 import dev.failsafe.internal.CircuitBreakerImpl;
 import dev.failsafe.internal.util.Assert;
-import dev.failsafe.event.CircuitBreakerStateChangedEvent;
 
 import java.time.Duration;
 import java.util.function.BiPredicate;
@@ -51,7 +51,7 @@ import java.util.function.Predicate;
  */
 public class CircuitBreakerBuilder<R>
   extends DelayablePolicyBuilder<CircuitBreakerBuilder<R>, CircuitBreakerConfig<R>, R>
-  implements CircuitBreakerListeners<CircuitBreakerBuilder<R>, R> {
+  implements PolicyListeners<CircuitBreakerBuilder<R>, R> {
 
   CircuitBreakerBuilder() {
     super(new CircuitBreakerConfig<>());
@@ -67,19 +67,34 @@ public class CircuitBreakerBuilder<R>
     return new CircuitBreakerImpl<>(new CircuitBreakerConfig<>(config));
   }
 
-  @Override
+  /**
+   * Calls the {@code listener} when the circuit is closed.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
+   */
   public CircuitBreakerBuilder<R> onClose(EventListener<CircuitBreakerStateChangedEvent> listener) {
     config.closeListener = Assert.notNull(listener, "runnable");
     return this;
   }
 
-  @Override
+  /**
+   * Calls the {@code listener} when the circuit is half-opened.
+   * <p>Note: Any exceptions that are thrown within the {@code listener} are ignored.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
+   */
   public CircuitBreakerBuilder<R> onHalfOpen(EventListener<CircuitBreakerStateChangedEvent> listener) {
     config.halfOpenListener = Assert.notNull(listener, "runnable");
     return this;
   }
 
-  @Override
+  /**
+   * Calls the {@code listener} when the circuit is opened.
+   * <p>Note: Any exceptions that are thrown within the {@code listener} are ignored.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
+   */
   public CircuitBreakerBuilder<R> onOpen(EventListener<CircuitBreakerStateChangedEvent> listener) {
     config.openListener = Assert.notNull(listener, "listener");
     return this;

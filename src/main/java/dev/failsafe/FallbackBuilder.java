@@ -49,7 +49,7 @@ import java.util.function.Predicate;
  * @see FallbackConfig
  */
 public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>, FallbackConfig<R>, R>
-  implements FallbackListeners<FallbackBuilder<R>, R> {
+  implements PolicyListeners<FallbackBuilder<R>, R> {
 
   FallbackBuilder(CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback,
     CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage) {
@@ -65,7 +65,11 @@ public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>,
     return new FallbackImpl<>(new FallbackConfig<>(config));
   }
 
-  @Override
+  /**
+   * Registers the {@code listener} to be called when the last execution attempt prior to the fallback failed. You can
+   * also use {@link #onFailure(EventListener) onFailure} to determine when the fallback attempt also fails.
+   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   */
   public FallbackBuilder<R> onFailedAttempt(EventListener<ExecutionAttemptedEvent<R>> listener) {
     config.failedAttemptListener = Assert.notNull(listener, "listener");
     return this;
