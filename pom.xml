@@ -8,7 +8,7 @@
     <version>7</version>
   </parent>
 
-  <groupId>net.jodah</groupId>
+  <groupId>dev.failsafe</groupId>
   <artifactId>failsafe</artifactId>
   <version>2.4.5-SNAPSHOT</version>
   <name>Failsafe</name>
@@ -97,7 +97,7 @@
           <properties>
             <property>
               <name>listener</name>
-              <value>net.jodah.failsafe.testing.TestCaseLogger</value>
+              <value>dev.failsafe.testing.TestCaseLogger</value>
             </property>
           </properties>
         </configuration>
@@ -141,9 +141,9 @@
             <Implementation-Title>${project.description}</Implementation-Title>
             <Implementation-Version>${project.version}</Implementation-Version>
             <Bundle-Name>Failsafe</Bundle-Name>
-            <Bundle-SymbolicName>net.jodah.failsafe</Bundle-SymbolicName>
-            <Automatic-Module-Name>net.jodah.failsafe</Automatic-Module-Name>
-            <Export-Package>net.jodah.failsafe*;version=1.0</Export-Package>
+            <Bundle-SymbolicName>dev.failsafe</Bundle-SymbolicName>
+            <Automatic-Module-Name>dev.failsafe</Automatic-Module-Name>
+            <Export-Package>dev.failsafe*;version=1.0</Export-Package>
             <Import-Package>*</Import-Package>
           </instructions>
         </configuration>

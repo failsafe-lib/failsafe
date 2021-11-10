@@ -1,0 +1,35 @@
+package dev.failsafe.issues;
+
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
+import org.testng.annotations.Test;
+
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.testng.Assert.assertEquals;
+
+/**
+ * Tests https://github.com/jhalterman/failsafe/issues/146
+ */
+@Test
+public class Issue146Test {
+  public void shouldRespectFailureCondition() {
+    AtomicInteger successCounter = new AtomicInteger();
+    AtomicInteger failureCounter = new AtomicInteger();
+    AtomicInteger failedAttemptCounter = new AtomicInteger();
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
+      .handleResultIf(Objects::isNull)
+      .withMaxRetries(2)
+      .onSuccess(e -> successCounter.incrementAndGet())
+      .onFailure(e -> failureCounter.incrementAndGet())
+      .onFailedAttempt(e -> failedAttemptCounter.incrementAndGet())
+      .build();
+
+    Failsafe.with(retryPolicy).get(() -> null);
+
+    assertEquals(3, failedAttemptCounter.get());
+    assertEquals(0, successCounter.get());
+    assertEquals(1, failureCounter.get());
+  }
+}
