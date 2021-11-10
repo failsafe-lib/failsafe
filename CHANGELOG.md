@@ -1,10 +1,6 @@
 # 3.0
 
 
-### Bug Fixes
-
-- Improved the reliability of async executions, cancellations, and Timeouts.
-
 ### API Changes
 
 This release introduces breaking changes to the API:
@@ -42,6 +38,7 @@ This release introduces breaking changes to the API:
 
 #### CircuitBreaker
 
+- `onOpen`, `onClose`, and `onHalfOpen` methods now accept a `CircuitBreakerStateChangedEvent` argument.
 - `allowsExecution()` was removed in favor of `acquirePermit()` and `tryAcquirePermit()`, which are meant to be used with standalone CircuitBreaker usage.
 
 ### SPI Changes
@@ -54,6 +51,10 @@ The following changes effect the SPI classes, for users who are extending Failsa
 - Several new classes were added to the `spi` package to contain internal execution APIs including `ExecutionInternal`, `SyncExecutionInternal`, and `AsyncExecutionInternal`.
 - `FailsafeFuture` was moved to the SPI package and some method signatures changed.
 
+### Bug Fixes
+
+- Improved the reliability of async executions, cancellations, and Timeouts.
+
 ### Improvements
 
 - Issue #292 - Created an extensible Policy SPI.
@@ -61,7 +62,6 @@ The following changes effect the SPI classes, for users who are extending Failsa
 - Issue #293 - Added `RetryPolicyBuilder.withBackoff(Duration, Duration)` and `.withDelay(Duration, Duration)`.
 - Issue #221 - `Executor` instances configured via `FailsafeExecutor.with(Executor)` are now used on all executions, including sync executions, and can be used in conjunction with a separately configured `ExecutorService` or `Scheduler` for async executions.
 - Issue #47 - Thread safety is now clearly documented in the policy, policy builder, and policy config classes. Policy and policy config classes are threadsafe. Policy builder classes are not threadsafe.
-- Added a type parameter to `ExecutionContext`.
 - Added `FailsafeExecutor.getPolicies()`.
 
 # 2.4.4
