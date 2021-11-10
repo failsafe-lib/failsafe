@@ -1,5 +1,8 @@
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.CircuitBreakerStateChangedEvent;
+import net.jodah.failsafe.event.EventListener;
+
 import java.time.Duration;
 
 /**
@@ -23,6 +26,11 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   int successThreshold;
   int successThresholdingCapacity;
 
+  // Listeners
+  volatile EventListener<CircuitBreakerStateChangedEvent> openListener;
+  volatile EventListener<CircuitBreakerStateChangedEvent> halfOpenListener;
+  volatile EventListener<CircuitBreakerStateChangedEvent> closeListener;
+
   CircuitBreakerConfig() {
   }
 
@@ -35,6 +43,9 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
     failureThresholdingPeriod = config.failureThresholdingPeriod;
     successThreshold = config.successThreshold;
     successThresholdingCapacity = config.successThresholdingCapacity;
+    openListener = config.openListener;
+    halfOpenListener = config.halfOpenListener;
+    closeListener = config.closeListener;
   }
 
   /**
@@ -129,5 +140,32 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
    */
   public int getSuccessThresholdingCapacity() {
     return successThresholdingCapacity;
+  }
+
+  /**
+   * Returns the open event listener.
+   *
+   * @see CircuitBreakerListeners#onOpen(EventListener)
+   */
+  public EventListener<CircuitBreakerStateChangedEvent> getOpenListener() {
+    return openListener;
+  }
+
+  /**
+   * Returns the half-open event listener.
+   *
+   * @see CircuitBreakerListeners#onHalfOpen(EventListener)
+   */
+  public EventListener<CircuitBreakerStateChangedEvent> getHalfOpenListener() {
+    return halfOpenListener;
+  }
+
+  /**
+   * Returns the close event listener.
+   *
+   * @see CircuitBreakerListeners#onClose(EventListener)
+   */
+  public EventListener<CircuitBreakerStateChangedEvent> getCloseListener() {
+    return closeListener;
   }
 }

@@ -19,7 +19,6 @@ import net.jodah.failsafe.ExecutionContext;
 import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.RetryPolicyConfig;
-import net.jodah.failsafe.spi.EventHandler;
 import net.jodah.failsafe.spi.*;
 
 import java.time.Duration;
@@ -56,17 +55,15 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
   private final EventHandler<R> retryHandler;
   private final EventHandler<R> retryScheduledHandler;
 
-  public RetryPolicyExecutor(RetryPolicyImpl<R> retryPolicy, int policyIndex, EventHandler<R> successHandler,
-    EventHandler<R> failureHandler, EventHandler<R> abortHandler, EventHandler<R> failedAttemptHandler,
-    EventHandler<R> retriesExceededHandler, EventHandler<R> retryHandler, EventHandler<R> retryScheduledHandler) {
-    super(policyIndex, retryPolicy, successHandler, failureHandler);
+  public RetryPolicyExecutor(RetryPolicyImpl<R> retryPolicy, int policyIndex) {
+    super(retryPolicy, policyIndex);
     this.retryPolicy = retryPolicy;
     this.config = retryPolicy.getConfig();
-    this.abortHandler = abortHandler;
-    this.failedAttemptHandler = failedAttemptHandler;
-    this.retriesExceededHandler = retriesExceededHandler;
-    this.retryHandler = retryHandler;
-    this.retryScheduledHandler = retryScheduledHandler;
+    this.abortHandler = EventHandler.ofExecutionCompleted(config.getAbortListener());
+    this.failedAttemptHandler = EventHandler.ofExecutionAttempted(config.getFailedAttemptListener());
+    this.retriesExceededHandler = EventHandler.ofExecutionCompleted(config.getRetriesExceededListener());
+    this.retryHandler = EventHandler.ofExecutionAttempted(config.getRetryListener());
+    this.retryScheduledHandler = EventHandler.ofExecutionScheduled(config.getRetryScheduledListener());
   }
 
   @Override

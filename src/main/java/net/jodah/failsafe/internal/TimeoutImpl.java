@@ -4,7 +4,6 @@ import net.jodah.failsafe.Timeout;
 import net.jodah.failsafe.TimeoutBuilder;
 import net.jodah.failsafe.TimeoutConfig;
 import net.jodah.failsafe.TimeoutExceededException;
-import net.jodah.failsafe.spi.AbstractPolicy;
 import net.jodah.failsafe.spi.PolicyExecutor;
 
 /**
@@ -15,21 +14,21 @@ import net.jodah.failsafe.spi.PolicyExecutor;
  * @see TimeoutBuilder
  * @see TimeoutExceededException
  */
-public class TimeoutImpl<R> extends AbstractPolicy<Timeout<R>, R> implements Timeout<R> {
-  private final TimeoutConfig config;
+public class TimeoutImpl<R> implements Timeout<R> {
+  private final TimeoutConfig<R> config;
 
-  public TimeoutImpl(TimeoutConfig config) {
+  public TimeoutImpl(TimeoutConfig<R> config) {
     this.config = config;
   }
 
   @Override
-  public TimeoutConfig getConfig() {
+  public TimeoutConfig<R> getConfig() {
     return config;
   }
 
   @Override
   public PolicyExecutor<R> toExecutor(int policyIndex) {
-    return new TimeoutExecutor<>(this, policyIndex, successHandler, failureHandler);
+    return new TimeoutExecutor<>(this, policyIndex);
   }
 
   @Override

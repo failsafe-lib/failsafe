@@ -21,7 +21,7 @@ import static org.testng.Assert.assertTrue;
 public class ExecutorConfigurationTest extends Testing {
   AtomicBoolean executorCalled;
   AtomicBoolean executionCalled;
-  RetryPolicy<String> retryPolicy = withLogs(RetryPolicy.ofDefaults());
+  RetryPolicy<String> retryPolicy = withLogs(RetryPolicy.<String>builder()).build();
 
   Executor executor = execution -> {
     executorCalled.set(true);

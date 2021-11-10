@@ -75,9 +75,9 @@ public class FailsafeFutureCancellationTest extends Testing {
     // Given
     Stats outerRetryStats = new Stats();
     Stats innerRetryStats = new Stats();
-    RetryPolicy<Object> outerRetryPolicy = withStatsAndLogs(RetryPolicy.ofDefaults(), outerRetryStats);
+    RetryPolicy<Object> outerRetryPolicy = withStatsAndLogs(RetryPolicy.builder(), outerRetryStats).build();
     RetryPolicy<Object> innerRetryPolicy = withStatsAndLogs(
-      RetryPolicy.builder().withMaxRetries(3).withDelay(Duration.ofMillis(100)).build(), innerRetryStats);
+      RetryPolicy.builder().withMaxRetries(3).withDelay(Duration.ofMillis(100)), innerRetryStats).build();
     AtomicReference<Future<Void>> futureRef = new AtomicReference<>();
     AtomicReference<ExecutionCompletedEvent<Object>> completedRef = new AtomicReference<>();
     Waiter waiter = new Waiter();
@@ -125,7 +125,7 @@ public class FailsafeFutureCancellationTest extends Testing {
    */
   public void shouldPropagateCancellationToExecutionContext() throws Throwable {
     // Given
-    Policy<Void> retryPolicy = withLogs(RetryPolicy.ofDefaults());
+    Policy<Void> retryPolicy = withLogs(RetryPolicy.<Void>builder()).build();
     AtomicReference<ExecutionContext<Void>> ctxRef = new AtomicReference<>();
     Waiter waiter = new Waiter();
 

@@ -8,15 +8,22 @@ import java.time.Duration;
  * This class is threadsafe.
  * </p>
  *
+ * @param <R> result type
  * @author Jonathan Halterman
  */
-public class TimeoutConfig {
+public class TimeoutConfig<R> extends PolicyConfig<R> {
   Duration timeout;
   boolean canInterrupt;
 
   TimeoutConfig(Duration timeout, boolean canInterrupt) {
     this.timeout = timeout;
     this.canInterrupt = canInterrupt;
+  }
+
+  TimeoutConfig(TimeoutConfig<R> config) {
+    super(config);
+    timeout = config.timeout;
+    canInterrupt = config.canInterrupt;
   }
 
   /**

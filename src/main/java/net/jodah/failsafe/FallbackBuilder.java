@@ -15,9 +15,11 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.function.CheckedFunction;
 import net.jodah.failsafe.internal.FallbackImpl;
+import net.jodah.failsafe.internal.util.Assert;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
@@ -45,7 +47,9 @@ import java.util.function.Predicate;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>, FallbackConfig<R>, R> {
+public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>, FallbackConfig<R>, R>
+  implements FallbackListeners<FallbackBuilder<R>, R> {
+
   FallbackBuilder(CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback,
     CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage) {
     super(new FallbackConfig<>());
@@ -58,6 +62,12 @@ public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>,
    */
   public Fallback<R> build() {
     return new FallbackImpl<>(new FallbackConfig<>(config));
+  }
+
+  @Override
+  public FallbackBuilder<R> onFailedAttempt(EventListener<ExecutionAttemptedEvent<R>> listener) {
+    config.failedAttemptListener = Assert.notNull(listener, "listener");
+    return this;
   }
 
   /**

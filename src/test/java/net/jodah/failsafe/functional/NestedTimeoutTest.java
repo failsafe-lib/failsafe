@@ -24,7 +24,7 @@ public class NestedTimeoutTest extends Testing {
     Stats innerTimeoutStats = new Stats();
     Stats retryStats = new Stats();
     Stats outerTimeoutStats = new Stats();
-    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder().withMaxRetries(10).build(), retryStats);
+    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder().withMaxRetries(10), retryStats).build();
 
     BiConsumer<Timeout<Object>, Timeout<Object>> test = (innerTimeout, outerTimeout) -> testRunFailure(false, () -> {
       innerTimeoutStats.reset();
@@ -43,15 +43,13 @@ public class NestedTimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), innerTimeoutStats);
-    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(500)), outerTimeoutStats);
+    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), innerTimeoutStats).build();
+    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(500)), outerTimeoutStats).build();
     test.accept(innerTimeout, outerTimeout);
 
     // Test with interrupt
-    innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt().build(),
-      innerTimeoutStats);
-    outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(500)).withInterrupt().build(),
-      outerTimeoutStats);
+    innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), innerTimeoutStats).build();
+    outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(500)).withInterrupt(), outerTimeoutStats).build();
     test.accept(innerTimeout, outerTimeout);
   }
 
@@ -78,15 +76,13 @@ public class NestedTimeoutTest extends Testing {
     }, true);
 
     // Test without interrupt
-    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), innerTimeoutStats);
-    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), outerTimeoutStats);
+    Timeout<Object> innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), innerTimeoutStats).build();
+    Timeout<Object> outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)), outerTimeoutStats).build();
     test.accept(innerTimeout, outerTimeout);
 
     // Test with interrupt
-    innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt().build(),
-      innerTimeoutStats);
-    outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt().build(),
-      outerTimeoutStats);
+    innerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), innerTimeoutStats).build();
+    outerTimeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt(), outerTimeoutStats).build();
     test.accept(innerTimeout, outerTimeout);
     test.accept(innerTimeout, outerTimeout);
   }

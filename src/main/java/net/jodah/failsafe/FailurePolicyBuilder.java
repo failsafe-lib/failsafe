@@ -41,11 +41,9 @@ import java.util.function.Predicate;
  * @author Jonathan Halterman
  */
 @SuppressWarnings("unchecked")
-public abstract class FailurePolicyBuilder<S, C extends FailurePolicyConfig<R>, R> {
-  protected C config;
-
+public abstract class FailurePolicyBuilder<S, C extends FailurePolicyConfig<R>, R> extends PolicyBuilder<S, C, R> {
   protected FailurePolicyBuilder(C config) {
-    this.config = config;
+    super(config);
   }
 
   /**

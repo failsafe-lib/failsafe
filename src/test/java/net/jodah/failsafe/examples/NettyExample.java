@@ -34,9 +34,9 @@ public class NettyExample {
     Bootstrap bootstrap = createBootstrap(group);
     RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
       .withDelay(Duration.ofSeconds(1))
-      .build()
       .onSuccess(e -> System.out.println("Success!"))
-      .onFailure(e -> System.out.println("Connection attempts failed"));
+      .onFailure(e -> System.out.println("Connection attempts failed"))
+      .build();
 
     Failsafe.with(retryPolicy)
       .with(group)

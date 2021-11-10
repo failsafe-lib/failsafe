@@ -35,10 +35,10 @@ public class VertxExample {
     .handleIf((ReplyException failure) -> ReplyFailure.RECIPIENT_FAILURE.equals(failure.failureType())
       || ReplyFailure.TIMEOUT.equals(failure.failureType()))
     .withDelay(Duration.ofSeconds(1))
-    .build()
     .onRetry(e -> System.out.println("Received failed reply. Retrying."))
     .onSuccess(e -> System.out.println("Received reply " + e.getResult().body()))
-    .onFailure(e -> System.out.println("Execution and retries failed"));
+    .onFailure(e -> System.out.println("Execution and retries failed"))
+    .build();
 
   /** Adapt Vert.x timer to a Failsafe Scheduler */
   static Scheduler scheduler = (callable, delay, unit) -> {

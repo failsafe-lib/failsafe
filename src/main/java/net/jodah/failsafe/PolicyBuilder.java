@@ -13,35 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package net.jodah.failsafe.spi;
+package net.jodah.failsafe;
 
-import net.jodah.failsafe.ExecutionListeners;
-import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.util.Assert;
 
 /**
- * Abstract policy implementation that implements {@link ExecutionListeners}.
+ * Builds policies.
  *
  * @param <S> self type
+ * @param <C> config type
  * @param <R> result type
  * @author Jonathan Halterman
  */
 @SuppressWarnings("unchecked")
-public abstract class AbstractPolicy<S extends Policy<R>, R> implements Policy<R>, ExecutionListeners<S, R> {
-  protected volatile EventHandler<R> failureHandler;
-  protected volatile EventHandler<R> successHandler;
+public abstract class PolicyBuilder<S, C extends PolicyConfig<R>, R> implements PolicyListeners<S, R> {
+  protected C config;
 
-  @Override
-  public S onFailure(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    failureHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
+  protected PolicyBuilder(C config) {
+    this.config = config;
+  }
+
+  public S onFailure(EventListener<ExecutionCompletedEvent<R>> listener) {
+    config.failureListener = Assert.notNull(listener, "listener");
     return (S) this;
   }
 
   @Override
-  public S onSuccess(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    successHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
+  public S onSuccess(EventListener<ExecutionCompletedEvent<R>> listener) {
+    config.successListener = Assert.notNull(listener, "listener");
     return (S) this;
   }
 }

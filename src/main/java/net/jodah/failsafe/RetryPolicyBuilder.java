@@ -15,6 +15,10 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventListener;
+import net.jodah.failsafe.event.ExecutionAttemptedEvent;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.event.ExecutionScheduledEvent;
 import net.jodah.failsafe.internal.RetryPolicyImpl;
 import net.jodah.failsafe.internal.util.Assert;
 
@@ -54,7 +58,9 @@ import java.util.function.Predicate;
  * @author Jonathan Halterman
  * @see RetryPolicy
  */
-public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBuilder<R>, RetryPolicyConfig<R>, R> {
+public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBuilder<R>, RetryPolicyConfig<R>, R>
+  implements RetryPolicyListeners<RetryPolicyBuilder<R>, R> {
+
   private static final int DEFAULT_MAX_RETRIES = 2;
 
   RetryPolicyBuilder() {
@@ -150,6 +156,36 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    */
   public RetryPolicyBuilder<R> abortWhen(R result) {
     config.abortConditions.add(resultPredicateFor(result));
+    return this;
+  }
+
+  @Override
+  public RetryPolicyBuilder<R> onAbort(EventListener<ExecutionCompletedEvent<R>> listener) {
+    config.abortListener = Assert.notNull(listener, "listener");
+    return this;
+  }
+
+  @Override
+  public RetryPolicyBuilder<R> onFailedAttempt(EventListener<ExecutionAttemptedEvent<R>> listener) {
+    config.failedAttemptListener = Assert.notNull(listener, "listener");
+    return this;
+  }
+
+  @Override
+  public RetryPolicyBuilder<R> onRetriesExceeded(EventListener<ExecutionCompletedEvent<R>> listener) {
+    config.retriesExceededListener = Assert.notNull(listener, "listener");
+    return this;
+  }
+
+  @Override
+  public RetryPolicyBuilder<R> onRetry(EventListener<ExecutionAttemptedEvent<R>> listener) {
+    config.retryListener = Assert.notNull(listener, "listener");
+    return this;
+  }
+
+  @Override
+  public RetryPolicyBuilder<R> onRetryScheduled(EventListener<ExecutionScheduledEvent<R>> listener) {
+    config.retryScheduledListener = Assert.notNull(listener, "listener");
     return this;
   }
 

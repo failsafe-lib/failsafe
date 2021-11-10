@@ -18,13 +18,9 @@ package net.jodah.failsafe.internal;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.RetryPolicyBuilder;
 import net.jodah.failsafe.RetryPolicyConfig;
-import net.jodah.failsafe.spi.EventHandler;
-import net.jodah.failsafe.event.ExecutionAttemptedEvent;
-import net.jodah.failsafe.event.ExecutionCompletedEvent;
-import net.jodah.failsafe.event.ExecutionScheduledEvent;
-import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.*;
+import net.jodah.failsafe.spi.DelayablePolicy;
+import net.jodah.failsafe.spi.FailurePolicy;
+import net.jodah.failsafe.spi.PolicyExecutor;
 
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -38,16 +34,8 @@ import java.util.function.Predicate;
  * @see RetryPolicyBuilder
  */
 @SuppressWarnings("WeakerAccess")
-public class RetryPolicyImpl<R> extends AbstractPolicy<RetryPolicy<R>, R>
-  implements RetryPolicy<R>, FailurePolicy<R>, DelayablePolicy<R> {
-  
+public class RetryPolicyImpl<R> implements RetryPolicy<R>, FailurePolicy<R>, DelayablePolicy<R> {
   private final RetryPolicyConfig<R> config;
-
-  private volatile EventHandler<R> abortHandler;
-  private volatile EventHandler<R> failedAttemptHandler;
-  private volatile EventHandler<R> retriesExceededHandler;
-  private volatile EventHandler<R> retryHandler;
-  private volatile EventHandler<R> retryScheduledHandler;
 
   public RetryPolicyImpl(RetryPolicyConfig<R> config) {
     this.config = config;
@@ -80,38 +68,7 @@ public class RetryPolicyImpl<R> extends AbstractPolicy<RetryPolicy<R>, R>
   }
 
   @Override
-  public RetryPolicyImpl<R> onAbort(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    abortHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  @Override
-  public RetryPolicyImpl<R> onFailedAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
-    failedAttemptHandler = EventHandler.ofAttempted(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  @Override
-  public RetryPolicyImpl<R> onRetriesExceeded(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    retriesExceededHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  @Override
-  public RetryPolicyImpl<R> onRetry(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
-    retryHandler = EventHandler.ofAttempted(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  @Override
-  public RetryPolicyImpl<R> onRetryScheduled(CheckedConsumer<ExecutionScheduledEvent<R>> listener) {
-    retryScheduledHandler = EventHandler.ofScheduled(Assert.notNull(listener, "listener"));
-    return this;
-  }
-
-  @Override
   public PolicyExecutor<R> toExecutor(int policyIndex) {
-    return new RetryPolicyExecutor<>(this, policyIndex, successHandler, failureHandler, abortHandler,
-      failedAttemptHandler, retriesExceededHandler, retryHandler, retryScheduledHandler);
+    return new RetryPolicyExecutor<>(this, policyIndex);
   }
 }

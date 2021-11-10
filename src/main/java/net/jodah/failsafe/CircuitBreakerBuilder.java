@@ -15,6 +15,8 @@
  */
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.CircuitBreakerStateChangedEvent;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.internal.CircuitBreakerImpl;
 import net.jodah.failsafe.internal.util.Assert;
 
@@ -47,7 +49,8 @@ import java.util.function.Predicate;
  * @see CircuitBreakerOpenException
  */
 public class CircuitBreakerBuilder<R>
-  extends DelayablePolicyBuilder<CircuitBreakerBuilder<R>, CircuitBreakerConfig<R>, R> {
+  extends DelayablePolicyBuilder<CircuitBreakerBuilder<R>, CircuitBreakerConfig<R>, R>
+  implements CircuitBreakerListeners<CircuitBreakerBuilder<R>, R> {
 
   CircuitBreakerBuilder() {
     super(new CircuitBreakerConfig<>());
@@ -61,6 +64,24 @@ public class CircuitBreakerBuilder<R>
    */
   public CircuitBreaker<R> build() {
     return new CircuitBreakerImpl<>(new CircuitBreakerConfig<>(config));
+  }
+
+  @Override
+  public CircuitBreakerBuilder<R> onClose(EventListener<CircuitBreakerStateChangedEvent> listener) {
+    config.closeListener = Assert.notNull(listener, "runnable");
+    return this;
+  }
+
+  @Override
+  public CircuitBreakerBuilder<R> onHalfOpen(EventListener<CircuitBreakerStateChangedEvent> listener) {
+    config.halfOpenListener = Assert.notNull(listener, "runnable");
+    return this;
+  }
+
+  @Override
+  public CircuitBreakerBuilder<R> onOpen(EventListener<CircuitBreakerStateChangedEvent> listener) {
+    config.openListener = Assert.notNull(listener, "listener");
+    return this;
   }
 
   /**

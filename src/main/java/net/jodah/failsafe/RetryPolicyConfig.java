@@ -1,5 +1,10 @@
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventListener;
+import net.jodah.failsafe.event.ExecutionAttemptedEvent;
+import net.jodah.failsafe.event.ExecutionCompletedEvent;
+import net.jodah.failsafe.event.ExecutionScheduledEvent;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -27,6 +32,13 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   int maxRetries;
   List<BiPredicate<R, Throwable>> abortConditions;
 
+  // Listeners
+  volatile EventListener<ExecutionCompletedEvent<R>> abortListener;
+  volatile EventListener<ExecutionAttemptedEvent<R>> failedAttemptListener;
+  volatile EventListener<ExecutionCompletedEvent<R>> retriesExceededListener;
+  volatile EventListener<ExecutionAttemptedEvent<R>> retryListener;
+  volatile EventListener<ExecutionScheduledEvent<R>> retryScheduledListener;
+
   RetryPolicyConfig() {
   }
 
@@ -41,6 +53,11 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
     maxDuration = config.maxDuration;
     maxRetries = config.maxRetries;
     abortConditions = new ArrayList<>(config.abortConditions);
+    abortListener = config.abortListener;
+    failedAttemptListener = config.failedAttemptListener;
+    retriesExceededListener = config.retriesExceededListener;
+    retryListener = config.retryListener;
+    retryScheduledListener = config.retryScheduledListener;
   }
 
   /**
@@ -172,5 +189,50 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
    */
   public int getMaxRetries() {
     return maxRetries;
+  }
+
+  /**
+   * Returns the abort event listener.
+   *
+   * @see RetryPolicyListeners#onAbort(EventListener)
+   */
+  public EventListener<ExecutionCompletedEvent<R>> getAbortListener() {
+    return abortListener;
+  }
+
+  /**
+   * Returns the failed attempt event listener.
+   *
+   * @see RetryPolicyListeners#onFailedAttempt(EventListener)
+   */
+  public EventListener<ExecutionAttemptedEvent<R>> getFailedAttemptListener() {
+    return failedAttemptListener;
+  }
+
+  /**
+   * Returns the retries exceeded event listener.
+   *
+   * @see RetryPolicyListeners#onRetriesExceeded(EventListener)
+   */
+  public EventListener<ExecutionCompletedEvent<R>> getRetriesExceededListener() {
+    return retriesExceededListener;
+  }
+
+  /**
+   * Returns the retry event listener.
+   *
+   * @see RetryPolicyListeners#onRetry(EventListener)
+   */
+  public EventListener<ExecutionAttemptedEvent<R>> getRetryListener() {
+    return retryListener;
+  }
+
+  /**
+   * Returns the retry scheduled event listener.
+   *
+   * @see RetryPolicyListeners#onRetryScheduled(EventListener)
+   */
+  public EventListener<ExecutionScheduledEvent<R>> getRetryScheduledListener() {
+    return retryScheduledListener;
   }
 }

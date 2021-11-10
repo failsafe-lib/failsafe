@@ -18,7 +18,6 @@ package net.jodah.failsafe.internal;
 import net.jodah.failsafe.Timeout;
 import net.jodah.failsafe.TimeoutConfig;
 import net.jodah.failsafe.TimeoutExceededException;
-import net.jodah.failsafe.spi.EventHandler;
 import net.jodah.failsafe.spi.*;
 
 import java.util.concurrent.CompletableFuture;
@@ -38,11 +37,10 @@ import java.util.function.Function;
  */
 public class TimeoutExecutor<R> extends PolicyExecutor<R> {
   private final Timeout<R> policy;
-  private final TimeoutConfig config;
+  private final TimeoutConfig<R> config;
 
-  public TimeoutExecutor(TimeoutImpl<R> timeout, int policyIndex, EventHandler<R> successHandler,
-    EventHandler<R> failureHandler) {
-    super(policyIndex, null, successHandler, failureHandler);
+  public TimeoutExecutor(TimeoutImpl<R> timeout, int policyIndex) {
+    super(timeout, policyIndex);
     policy = timeout;
     config = timeout.getConfig();
   }

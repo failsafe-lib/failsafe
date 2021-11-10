@@ -20,6 +20,7 @@ import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.FailsafeExecutor;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
 import net.jodah.failsafe.internal.CircuitBreakerImpl;
@@ -313,7 +314,7 @@ public class Testing extends Logging {
     AtomicReference<CompletableFuture<T>> futureRef = new AtomicReference<>();
     AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
     Waiter completionListenerWaiter = new Waiter();
-    CheckedConsumer<ExecutionCompletedEvent<T>> setCompletedEventFn = e -> {
+    EventListener<ExecutionCompletedEvent<T>> setCompletedEventFn = e -> {
       completedEventRef.set(e);
       completionListenerWaiter.resume();
     };

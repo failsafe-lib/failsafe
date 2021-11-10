@@ -108,8 +108,8 @@ public class CircuitBreakerTest extends Testing {
   public void testRejectedWithRetries() {
     Stats rpStats = new Stats();
     Stats cbStats = new Stats();
-    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7).build(), rpStats);
-    CircuitBreaker<Object> cb = withStatsAndLogs(CircuitBreaker.builder().withFailureThreshold(3).build(), cbStats);
+    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
+    CircuitBreaker<Object> cb = withStatsAndLogs(CircuitBreaker.builder().withFailureThreshold(3), cbStats).build();
 
     testRunFailure(() -> {
       rpStats.reset();
@@ -173,8 +173,7 @@ public class CircuitBreakerTest extends Testing {
     CircuitBreaker<Boolean> circuitBreaker = withStatsAndLogs(CircuitBreaker.<Boolean>builder()
       .withFailureRateThreshold(50, 3, Duration.ofMillis(200))
       .withDelay(Duration.ofMillis(0))
-      .handleResult(false)
-      .build(), cbStats);
+      .handleResult(false), cbStats).build();
     FailsafeExecutor<Boolean> executor = Failsafe.with(circuitBreaker);
 
     // When / Then

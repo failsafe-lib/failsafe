@@ -16,6 +16,8 @@
 package net.jodah.failsafe.spi;
 
 import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.Policy;
+import net.jodah.failsafe.internal.EventHandler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -37,12 +39,11 @@ public abstract class PolicyExecutor<R> {
   private final EventHandler<R> successHandler;
   private final EventHandler<R> failureHandler;
 
-  protected PolicyExecutor(int policyIndex, FailurePolicy<R> failurePolicy, EventHandler<R> successHandler,
-    EventHandler<R> failureHandler) {
+  protected PolicyExecutor(Policy<R> policy, int policyIndex) {
     this.policyIndex = policyIndex;
-    this.failurePolicy = failurePolicy;
-    this.successHandler = successHandler;
-    this.failureHandler = failureHandler;
+    this.failurePolicy = policy instanceof FailurePolicy ? (FailurePolicy<R>) policy : null;
+    this.successHandler = EventHandler.ofExecutionCompleted(policy.getConfig().getSuccessListener());
+    this.failureHandler = EventHandler.ofExecutionCompleted(policy.getConfig().getFailureListener());
   }
 
   /**

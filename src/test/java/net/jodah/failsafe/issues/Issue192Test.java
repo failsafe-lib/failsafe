@@ -47,18 +47,18 @@ public class Issue192Test {
     RetryPolicy<Object> policyA = RetryPolicy.builder()
       .handle(ExceptionA.class)
       .withMaxRetries(5)
-      .build()
-      .onRetry(evt -> exceptionA.incrementAndGet());
+      .onRetry(evt -> exceptionA.incrementAndGet())
+      .build();
     RetryPolicy<Object> policyB = RetryPolicy.builder()
       .handle(ExceptionB.class)
       .withMaxRetries(3)
-      .build()
-      .onRetry(evt -> exceptionB.incrementAndGet());
+      .onRetry(evt -> exceptionB.incrementAndGet())
+      .build();
     RetryPolicy<Object> policyC = RetryPolicy.builder()
       .handle(ExceptionC.class)
       .withMaxRetries(2)
-      .build()
-      .onRetry(evt -> exceptionC.incrementAndGet());
+      .onRetry(evt -> exceptionC.incrementAndGet())
+      .build();
 
     Asserts.assertThrows(() -> Failsafe.with(policyA, policyB, policyC)
       .getAsyncExecution(

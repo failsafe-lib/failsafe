@@ -18,7 +18,6 @@ package net.jodah.failsafe.internal;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.CircuitBreakerOpenException;
 import net.jodah.failsafe.ExecutionContext;
-import net.jodah.failsafe.spi.EventHandler;
 import net.jodah.failsafe.spi.ExecutionResult;
 import net.jodah.failsafe.spi.PolicyExecutor;
 
@@ -31,9 +30,8 @@ import net.jodah.failsafe.spi.PolicyExecutor;
 public class CircuitBreakerExecutor<R> extends PolicyExecutor<R> {
   private final CircuitBreakerImpl<R> circuitBreaker;
 
-  public CircuitBreakerExecutor(CircuitBreakerImpl<R> circuitBreaker, int policyIndex, EventHandler<R> successHandler,
-    EventHandler<R> failureHandler) {
-    super(policyIndex, circuitBreaker, successHandler, failureHandler);
+  public CircuitBreakerExecutor(CircuitBreakerImpl<R> circuitBreaker, int policyIndex) {
+    super(circuitBreaker, policyIndex);
     this.circuitBreaker = circuitBreaker;
   }
 

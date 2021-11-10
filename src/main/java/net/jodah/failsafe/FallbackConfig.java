@@ -1,5 +1,6 @@
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
 import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.function.CheckedFunction;
@@ -22,6 +23,9 @@ public class FallbackConfig<R> extends FailurePolicyConfig<R> {
   CheckedFunction<ExecutionAttemptedEvent<R>, CompletableFuture<R>> fallbackStage;
   boolean async;
 
+  // Listeners
+  volatile EventListener<ExecutionAttemptedEvent<R>> failedAttemptListener;
+
   FallbackConfig() {
   }
 
@@ -30,6 +34,7 @@ public class FallbackConfig<R> extends FailurePolicyConfig<R> {
     fallback = config.fallback;
     fallbackStage = config.fallbackStage;
     async = config.async;
+    failedAttemptListener = config.failedAttemptListener;
   }
 
   FallbackConfig(CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback,
@@ -77,5 +82,14 @@ public class FallbackConfig<R> extends FailurePolicyConfig<R> {
    */
   public boolean isAsync() {
     return async;
+  }
+
+  /**
+   * Returns the failed attempt event listener.
+   *
+   * @see FallbackListeners#onFailedAttempt(CheckedConsumer)
+   */
+  public EventListener<ExecutionAttemptedEvent<R>> getFailedAttemptListener() {
+    return failedAttemptListener;
   }
 }

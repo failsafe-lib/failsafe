@@ -16,19 +16,16 @@ import java.time.Duration;
  * @see Timeout
  * @see TimeoutExceededException
  */
-public class TimeoutBuilder<R> {
-  final Duration timeout;
-  boolean canInterrupt;
-
+public class TimeoutBuilder<R> extends PolicyBuilder<TimeoutBuilder<R>, TimeoutConfig<R>, R> {
   TimeoutBuilder(Duration timeout) {
-    this.timeout = timeout;
+    super(new TimeoutConfig<>(timeout, false));
   }
 
   /**
    * Builds a new {@link Timeout} using the builder's configuration.
    */
   public Timeout<R> build() {
-    return new TimeoutImpl<>(new TimeoutConfig(timeout, canInterrupt));
+    return new TimeoutImpl<>(new TimeoutConfig<>(config));
   }
 
   /**
@@ -45,7 +42,7 @@ public class TimeoutBuilder<R> {
    * Failsafe.</p>
    */
   public TimeoutBuilder<R> withInterrupt() {
-    canInterrupt = true;
+    config.canInterrupt = true;
     return this;
   }
 }

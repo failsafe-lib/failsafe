@@ -50,7 +50,7 @@ public class RetryPolicyTest extends Testing {
   public void shouldCompleteWhenMaxDurationExceeded() {
     Stats stats = new Stats();
     RetryPolicy<Boolean> retryPolicy = withStats(
-      RetryPolicy.<Boolean>builder().handleResult(false).withMaxDuration(Duration.ofMillis(100)).build(), stats);
+      RetryPolicy.<Boolean>builder().handleResult(false).withMaxDuration(Duration.ofMillis(100)), stats).build();
 
     testGetSuccess(() -> {
       stats.reset();
@@ -69,10 +69,10 @@ public class RetryPolicyTest extends Testing {
   public void assertScheduledRetryDelay() throws Throwable {
     // Given
     Waiter waiter = new Waiter();
-    RetryPolicy<Object> rp = RetryPolicy.builder().withDelay(Duration.ofMillis(10)).build().onRetryScheduled(e -> {
+    RetryPolicy<Object> rp = RetryPolicy.builder().withDelay(Duration.ofMillis(10)).onRetryScheduled(e -> {
       waiter.assertEquals(e.getDelay().toMillis(), 10L);
       waiter.resume();
-    });
+    }).build();
 
     // Sync when / then
     ignoreExceptions(() -> Failsafe.with(rp).run(() -> {

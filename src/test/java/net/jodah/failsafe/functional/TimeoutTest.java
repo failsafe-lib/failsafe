@@ -57,7 +57,7 @@ public class TimeoutTest extends Testing {
   public void testRetryTimeoutWithBlockedSupplier() {
     Stats timeoutStats = new Stats();
     Stats rpStats = new Stats();
-    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.ofDefaults(), rpStats);
+    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder(), rpStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testGetSuccess(false, () -> {
       timeoutStats.reset();
@@ -74,11 +74,11 @@ public class TimeoutTest extends Testing {
     }, false);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -89,7 +89,7 @@ public class TimeoutTest extends Testing {
   public void testRetryTimeoutWithPendingRetry() {
     AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
-    RetryPolicy<Object> retryPolicy = withLogs(RetryPolicy.builder().withDelay(Duration.ofMillis(100)).build());
+    RetryPolicy<Object> retryPolicy = withLogs(RetryPolicy.builder().withDelay(Duration.ofMillis(100))).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(() -> {
       executionCounter.set(0);
@@ -106,11 +106,11 @@ public class TimeoutTest extends Testing {
     }, IllegalStateException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -123,9 +123,9 @@ public class TimeoutTest extends Testing {
   public void testTimeoutRetryWithBlockedSupplier() {
     AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
-    RetryPolicy<Object> retryPolicy = RetryPolicy.ofDefaults().onRetry(e -> {
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().onRetry(e -> {
       System.out.println("Retrying");
-    });
+    }).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
       executionCounter.set(0);
@@ -143,11 +143,11 @@ public class TimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -162,8 +162,8 @@ public class TimeoutTest extends Testing {
     AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
     Stats rpStats = new Stats();
-    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder().withDelay(Duration.ofMillis(1000)).build(),
-      rpStats);
+    RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder().withDelay(Duration.ofMillis(1000)),
+      rpStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
       executionCounter.set(0);
@@ -182,11 +182,11 @@ public class TimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -196,10 +196,10 @@ public class TimeoutTest extends Testing {
   public void testFallbackTimeoutWithBlockedSupplier() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
-    Fallback<Object> fallback = withStatsAndLogs(Fallback.of(() -> {
+    Fallback<Object> fallback = withStatsAndLogs(Fallback.builder(() -> {
       System.out.println("Falling back");
       throw new IllegalStateException();
-    }), fbStats);
+    }), fbStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
       timeoutStats.reset();
@@ -216,11 +216,11 @@ public class TimeoutTest extends Testing {
     }, IllegalStateException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -231,10 +231,10 @@ public class TimeoutTest extends Testing {
   public void testFallbackTimeout() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
-    Fallback<Object> fallback = withStatsAndLogs(Fallback.of(() -> {
+    Fallback<Object> fallback = withStatsAndLogs(Fallback.builder(() -> {
       System.out.println("Falling back");
       throw new IllegalStateException();
-    }), fbStats);
+    }), fbStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(() -> {
       timeoutStats.reset();
@@ -250,11 +250,11 @@ public class TimeoutTest extends Testing {
     }, IllegalStateException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -264,10 +264,10 @@ public class TimeoutTest extends Testing {
   public void testTimeoutFallbackWithBlockedSupplier() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
-    Fallback<Object> fallback = withStatsAndLogs(Fallback.of(() -> {
+    Fallback<Object> fallback = withStatsAndLogs(Fallback.builder(() -> {
       System.out.println("Falling back");
       throw new IllegalStateException();
-    }), fbStats);
+    }), fbStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
       timeoutStats.reset();
@@ -284,11 +284,11 @@ public class TimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(1)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -298,11 +298,11 @@ public class TimeoutTest extends Testing {
   public void testTimeoutFallbackWithBlockedFallback() {
     Stats timeoutStats = new Stats();
     Stats fbStats = new Stats();
-    Fallback<Object> fallback = withStatsAndLogs(Fallback.of(() -> {
+    Fallback<Object> fallback = withStatsAndLogs(Fallback.builder(() -> {
       System.out.println("Falling back");
       Thread.sleep(200);
       throw new IllegalStateException();
-    }), fbStats);
+    }), fbStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
       timeoutStats.reset();
@@ -318,11 +318,11 @@ public class TimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(100)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 }

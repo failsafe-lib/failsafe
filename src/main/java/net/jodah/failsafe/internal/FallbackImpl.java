@@ -20,10 +20,6 @@ import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.FallbackBuilder;
 import net.jodah.failsafe.FallbackConfig;
 import net.jodah.failsafe.event.ExecutionAttemptedEvent;
-import net.jodah.failsafe.function.CheckedConsumer;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.AbstractPolicy;
-import net.jodah.failsafe.spi.EventHandler;
 import net.jodah.failsafe.spi.FailurePolicy;
 import net.jodah.failsafe.spi.PolicyExecutor;
 
@@ -36,14 +32,13 @@ import java.util.concurrent.CompletableFuture;
  * @author Jonathan Halterman
  * @see FallbackBuilder
  */
-public class FallbackImpl<R> extends AbstractPolicy<Fallback<R>, R> implements Fallback<R>, FailurePolicy<R> {
+public class FallbackImpl<R> implements Fallback<R>, FailurePolicy<R> {
   /**
    * A fallback that will return null if execution fails.
    */
   public static Fallback<Void> NONE = Fallback.<Void>builder(() -> null).build();
 
   private final FallbackConfig<R> config;
-  private volatile EventHandler<R> failedAttemptHandler;
 
   public FallbackImpl(FallbackConfig<R> config) {
     this.config = config;
@@ -52,17 +47,6 @@ public class FallbackImpl<R> extends AbstractPolicy<Fallback<R>, R> implements F
   @Override
   public FallbackConfig<R> getConfig() {
     return config;
-  }
-
-  /**
-   * Registers the {@code listener} to be called when the last execution attempt prior to the fallback failed. You can
-   * also use {@link #onFailure(CheckedConsumer) onFailure} to determine when the fallback attempt also fails.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
-   */
-  @Override
-  public FallbackImpl<R> onFailedAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> listener) {
-    failedAttemptHandler = EventHandler.ofAttempted(Assert.notNull(listener, "listener"));
-    return this;
   }
 
   /**
@@ -87,6 +71,6 @@ public class FallbackImpl<R> extends AbstractPolicy<Fallback<R>, R> implements F
 
   @Override
   public PolicyExecutor<R> toExecutor(int policyIndex) {
-    return new FallbackExecutor<>(this, policyIndex, successHandler, failureHandler, failedAttemptHandler);
+    return new FallbackExecutor<>(this, policyIndex);
   }
 }

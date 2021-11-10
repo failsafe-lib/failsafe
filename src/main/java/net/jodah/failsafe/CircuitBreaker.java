@@ -15,8 +15,6 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.function.CheckedRunnable;
-
 import java.time.Duration;
 
 /**
@@ -55,7 +53,7 @@ import java.time.Duration;
  * @see CircuitBreakerBuilder
  * @see CircuitBreakerOpenException
  */
-public interface CircuitBreaker<R> extends Policy<R>, ExecutionListeners<CircuitBreaker<R>, R> {
+public interface CircuitBreaker<R> extends Policy<R> {
   /**
    * Creates a CircuitBreakerBuilder that by default will build a count based circuit breaker that opens after a {@link
    * CircuitBreakerBuilder#withFailureThreshold(int) single failure}, closes after a {@link
@@ -182,30 +180,6 @@ public interface CircuitBreaker<R> extends Policy<R>, ExecutionListeners<Circuit
    * Returns whether the circuit is open.
    */
   boolean isOpen();
-
-  /**
-   * Calls the {@code runnable} when the circuit is closed.
-   * <p>Note: Any exceptions that are thrown from within the {@code runnable} are ignored.</p>
-   *
-   * @throws NullPointerException if {@code runnable} is null
-   */
-  CircuitBreaker<R> onClose(CheckedRunnable runnable);
-
-  /**
-   * Calls the {@code runnable} when the circuit is half-opened.
-   * <p>Note: Any exceptions that are thrown within the {@code runnable} are ignored.</p>
-   *
-   * @throws NullPointerException if {@code runnable} is null
-   */
-  CircuitBreaker<R> onHalfOpen(CheckedRunnable runnable);
-
-  /**
-   * Calls the {@code runnable} when the circuit is opened.
-   * <p>Note: Any exceptions that are thrown within the {@code runnable} are ignored.</p>
-   *
-   * @throws NullPointerException if {@code runnable} is null
-   */
-  CircuitBreaker<R> onOpen(CheckedRunnable runnable);
 
   /**
    * Opens the circuit.

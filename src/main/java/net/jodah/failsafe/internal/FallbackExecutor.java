@@ -17,7 +17,6 @@ package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.FallbackConfig;
-import net.jodah.failsafe.spi.EventHandler;
 import net.jodah.failsafe.spi.*;
 
 import java.util.concurrent.*;
@@ -33,12 +32,11 @@ public class FallbackExecutor<R> extends PolicyExecutor<R> {
   private final FallbackConfig<R> config;
   private final EventHandler<R> failedAttemptHandler;
 
-  public FallbackExecutor(FallbackImpl<R> fallback, int policyIndex, EventHandler<R> successHandler,
-    EventHandler<R> failureHandler, EventHandler<R> failedAttemptHandler) {
-    super(policyIndex, fallback, successHandler, failureHandler);
+  public FallbackExecutor(FallbackImpl<R> fallback, int policyIndex) {
+    super(fallback, policyIndex);
     this.fallback = fallback;
     this.config = fallback.getConfig();
-    this.failedAttemptHandler = failedAttemptHandler;
+    this.failedAttemptHandler = EventHandler.ofExecutionAttempted(config.getFailedAttemptListener());
   }
 
   /**

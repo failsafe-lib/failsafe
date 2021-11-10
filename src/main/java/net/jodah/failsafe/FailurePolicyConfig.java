@@ -26,7 +26,7 @@ import java.util.function.Predicate;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public abstract class FailurePolicyConfig<R> {
+public abstract class FailurePolicyConfig<R> extends PolicyConfig<R> {
   /** Indicates whether failures are checked by a configured failure condition */
   boolean failuresChecked;
   /** Conditions that determine whether an execution is a failure */
@@ -37,6 +37,7 @@ public abstract class FailurePolicyConfig<R> {
   }
 
   protected FailurePolicyConfig(FailurePolicyConfig<R> config) {
+    super(config);
     failuresChecked = config.failuresChecked;
     failureConditions = new ArrayList<>(config.failureConditions);
   }

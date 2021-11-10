@@ -25,6 +25,11 @@ import net.jodah.failsafe.spi.PolicyExecutor;
  */
 public interface Policy<R> {
   /**
+   * Returns the policy config.
+   */
+  PolicyConfig<R> getConfig();
+
+  /**
    * Returns a {@link PolicyExecutor} capable of handling an execution for the Policy.
    */
   PolicyExecutor<R> toExecutor(int policyIndex);

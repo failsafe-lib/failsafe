@@ -21,10 +21,10 @@ public class Issue146Test {
     RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
       .handleResultIf(Objects::isNull)
       .withMaxRetries(2)
-      .build()
       .onSuccess(e -> successCounter.incrementAndGet())
       .onFailure(e -> failureCounter.incrementAndGet())
-      .onFailedAttempt(e -> failedAttemptCounter.incrementAndGet());
+      .onFailedAttempt(e -> failedAttemptCounter.incrementAndGet())
+      .build();
 
     Failsafe.with(retryPolicy).get(() -> null);
 

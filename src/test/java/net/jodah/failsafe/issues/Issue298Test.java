@@ -15,9 +15,10 @@ public class Issue298Test {
   AtomicBoolean failedAttemptCalled = new AtomicBoolean();
   AtomicBoolean failureCalled = new AtomicBoolean();
 
-  Fallback<String> fallback = Fallback.<String>of(e -> "success")
+  Fallback<String> fallback = Fallback.<String>builder(e -> "success")
     .onFailedAttempt(e -> failedAttemptCalled.set(true))
-    .onFailure(e -> failureCalled.set(true));
+    .onFailure(e -> failureCalled.set(true))
+    .build();
 
   @BeforeMethod
   protected void beforeMethod() {

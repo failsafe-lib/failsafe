@@ -1,7 +1,7 @@
 package net.jodah.failsafe;
 
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.function.AsyncRunnable;
-import net.jodah.failsafe.function.CheckedConsumer;
 import net.jodah.failsafe.internal.TimeoutImpl;
 import net.jodah.failsafe.internal.util.Assert;
 
@@ -16,8 +16,8 @@ import java.time.Duration;
  * <p>
  * This policy uses a separate thread on the configured scheduler or the common pool to perform timeouts checks.
  * <p>
- * The {@link Timeout#onFailure(CheckedConsumer)} and {@link Timeout#onSuccess(CheckedConsumer)} event handlers can be
- * used to handle a timeout being exceeded or not.
+ * The {@link TimeoutBuilder#onFailure(EventListener)} and {@link TimeoutBuilder#onSuccess(EventListener)} event
+ * handlers can be used to handle a timeout being exceeded or not.
  * </p>
  * <p>Note: {@link TimeoutBuilder#withInterrupt() interruption} will have no effect when performing an {@link
  * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unkown to Failsafe.</p>
@@ -30,7 +30,7 @@ import java.time.Duration;
  * @see TimeoutBuilder
  * @see TimeoutExceededException
  */
-public interface Timeout<R> extends Policy<R>, ExecutionListeners<Timeout<R>, R> {
+public interface Timeout<R> extends Policy<R> {
   /**
    * Returns a {@link TimeoutBuilder} that builds {@link Timeout} instances with the given {@code timeout}.
    *
@@ -44,11 +44,6 @@ public interface Timeout<R> extends Policy<R>, ExecutionListeners<Timeout<R>, R>
     Assert.isTrue(timeout.toNanos() > 0, "timeout must be > 0");
     return new TimeoutBuilder<>(timeout);
   }
-
-  /**
-   * Returns the {@link TimeoutConfig} that the Timeout was built with.
-   */
-  TimeoutConfig getConfig();
 
   /**
    * Alias for:
@@ -66,6 +61,11 @@ public interface Timeout<R> extends Policy<R>, ExecutionListeners<Timeout<R>, R>
    * @throws IllegalArgumentException If {@code timeout} is <= 0
    */
   static <R> Timeout<R> of(Duration timeout) {
-    return new TimeoutImpl<>(new TimeoutConfig(timeout, false));
+    return new TimeoutImpl<>(new TimeoutConfig<>(timeout, false));
   }
+
+  /**
+   * Returns the {@link TimeoutConfig} that the Timeout was built with.
+   */
+  TimeoutConfig<R> getConfig();
 }

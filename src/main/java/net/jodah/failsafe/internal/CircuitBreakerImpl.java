@@ -16,9 +16,8 @@
 package net.jodah.failsafe.internal;
 
 import net.jodah.failsafe.*;
-import net.jodah.failsafe.function.CheckedRunnable;
-import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.AbstractPolicy;
+import net.jodah.failsafe.event.CircuitBreakerStateChangedEvent;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.spi.DelayablePolicy;
 import net.jodah.failsafe.spi.FailurePolicy;
 import net.jodah.failsafe.spi.PolicyExecutor;
@@ -35,18 +34,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * @see CircuitBreakerBuilder
  * @see CircuitBreakerOpenException
  */
-public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
-  implements CircuitBreaker<R>, FailurePolicy<R>, DelayablePolicy<R> {
-
+public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R>, DelayablePolicy<R> {
   private final CircuitBreakerConfig<R> config;
 
   /** Writes guarded by "this" */
   protected final AtomicReference<CircuitState<R>> state = new AtomicReference<>();
   protected final AtomicInteger currentExecutions = new AtomicInteger();
-
-  private volatile CheckedRunnable onOpen;
-  private volatile CheckedRunnable onHalfOpen;
-  private volatile CheckedRunnable onClose;
 
   public CircuitBreakerImpl(CircuitBreakerConfig<R> config) {
     this.config = config;
@@ -65,7 +58,7 @@ public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
 
   @Override
   public void close() {
-    transitionTo(State.CLOSED, onClose, null);
+    transitionTo(State.CLOSED, config.getCloseListener(), null);
   }
 
   @Override
@@ -105,7 +98,7 @@ public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
 
   @Override
   public void halfOpen() {
-    transitionTo(State.HALF_OPEN, onHalfOpen, null);
+    transitionTo(State.HALF_OPEN, config.getHalfOpenListener(), null);
   }
 
   @Override
@@ -124,26 +117,8 @@ public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
   }
 
   @Override
-  public CircuitBreakerImpl<R> onClose(CheckedRunnable runnable) {
-    onClose = Assert.notNull(runnable, "runnable");
-    return this;
-  }
-
-  @Override
-  public CircuitBreakerImpl<R> onHalfOpen(CheckedRunnable runnable) {
-    onHalfOpen = Assert.notNull(runnable, "runnable");
-    return this;
-  }
-
-  @Override
-  public CircuitBreakerImpl<R> onOpen(CheckedRunnable runnable) {
-    onOpen = Assert.notNull(runnable, "runnable");
-    return this;
-  }
-
-  @Override
   public void open() {
-    transitionTo(State.OPEN, onOpen, null);
+    transitionTo(State.OPEN, config.getOpenListener(), null);
   }
 
   @Override
@@ -194,9 +169,13 @@ public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
   /**
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
-  protected void transitionTo(State newState, CheckedRunnable listener, ExecutionContext<R> context) {
+  protected void transitionTo(State newState, EventListener<CircuitBreakerStateChangedEvent> listener,
+    ExecutionContext<R> context) {
     boolean transitioned = false;
+    State currentState;
+
     synchronized (this) {
+      currentState = getState();
       if (!getState().equals(newState)) {
         switch (newState) {
           case CLOSED:
@@ -216,7 +195,7 @@ public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
 
     if (transitioned && listener != null) {
       try {
-        listener.run();
+        listener.accept(new CircuitBreakerStateChangedEvent(currentState));
       } catch (Throwable ignore) {
       }
     }
@@ -238,11 +217,11 @@ public class CircuitBreakerImpl<R> extends AbstractPolicy<CircuitBreaker<R>, R>
    * will transition to half open.
    */
   protected void open(ExecutionContext<R> context) {
-    transitionTo(State.OPEN, onOpen, context);
+    transitionTo(State.OPEN, config.getOpenListener(), context);
   }
 
   @Override
   public PolicyExecutor<R> toExecutor(int policyIndex) {
-    return new CircuitBreakerExecutor<>(this, policyIndex, successHandler, failureHandler);
+    return new CircuitBreakerExecutor<>(this, policyIndex);
   }
 }

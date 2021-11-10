@@ -17,6 +17,7 @@ package net.jodah.failsafe.issues;
 
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import net.jodah.failsafe.RetryPolicyBuilder;
 import net.jodah.failsafe.testing.Testing;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -31,11 +32,10 @@ import static org.testng.Assert.fail;
  */
 @Test
 public class Issue36Test {
-  RetryPolicy<Boolean> retryPolicy = RetryPolicy.<Boolean>builder()
+  RetryPolicyBuilder<Boolean> rpBuilder = RetryPolicy.<Boolean>builder()
     .handleResultIf(r -> r == null || !r)
     .handle(Exception.class)
-    .withMaxRetries(3)
-    .build();
+    .withMaxRetries(3);
   AtomicInteger calls;
   AtomicInteger failedAttempts;
   AtomicInteger retries;
@@ -49,12 +49,12 @@ public class Issue36Test {
 
   public void test() {
     try {
-      Failsafe.with(
-          retryPolicy.onFailedAttempt(e -> failedAttempts.incrementAndGet()).onRetry(e -> retries.incrementAndGet()))
-        .get(() -> {
-          calls.incrementAndGet();
-          throw new Exception();
-        });
+      Failsafe.with(rpBuilder.onFailedAttempt(e -> failedAttempts.incrementAndGet())
+        .onRetry(e -> retries.incrementAndGet())
+        .build()).get(() -> {
+        calls.incrementAndGet();
+        throw new Exception();
+      });
       fail();
     } catch (Exception expected) {
     }
@@ -71,52 +71,55 @@ public class Issue36Test {
 
   @Test
   public void failedAttemptListener_WithFailedResponses_ShouldBeCalled() {
+    AtomicInteger listenerCallbacks = new AtomicInteger();
     RetryPolicy<Boolean> policy = RetryPolicy.<Boolean>builder()
       .handleResultIf(response -> response != null && !response)
       .handle(Exception.class)
       .withMaxRetries(3)
+      .onFailedAttempt(e -> listenerCallbacks.incrementAndGet())
       .build();
-    AtomicInteger listenerCallbacks = new AtomicInteger();
-    Failsafe.with(policy.onFailedAttempt(e -> listenerCallbacks.incrementAndGet())).get(() -> false);
+    Failsafe.with(policy).get(() -> false);
     assertEquals(listenerCallbacks.get(), 4);
   }
 
   @Test
   public void retryListener_WithFailedResponses_ShouldBeCalled() {
+    AtomicInteger listenerCallbacks = new AtomicInteger();
     RetryPolicy<Boolean> policy = RetryPolicy.<Boolean>builder()
       .handleResultIf(response -> response != null && !response)
       .handle(Exception.class)
       .withMaxRetries(3)
+      .onRetry(e -> listenerCallbacks.incrementAndGet())
       .build();
-    AtomicInteger listenerCallbacks = new AtomicInteger();
-    Failsafe.with(policy.onRetry(e -> listenerCallbacks.incrementAndGet())).get(() -> false);
+    Failsafe.with(policy).get(() -> false);
     assertEquals(listenerCallbacks.get(), 3);
   }
 
   @Test
   public void failedAttemptListener_WithExceptions_ShouldBeCalled() {
+    AtomicInteger listenerCallbacks = new AtomicInteger();
     RetryPolicy<Boolean> policy = RetryPolicy.<Boolean>builder()
       .handleResultIf(response -> response != null && !response)
       .handle(Exception.class)
       .withMaxRetries(3)
+      .onFailedAttempt(e -> listenerCallbacks.incrementAndGet())
       .build();
-    AtomicInteger listenerCallbacks = new AtomicInteger();
-    Testing.ignoreExceptions(
-      () -> Failsafe.with(policy.onFailedAttempt(e -> listenerCallbacks.incrementAndGet())).get(() -> {
-        throw new RuntimeException();
-      }));
+    Testing.ignoreExceptions(() -> Failsafe.with(policy).get(() -> {
+      throw new RuntimeException();
+    }));
     assertEquals(listenerCallbacks.get(), 4);
   }
 
   @Test
   public void retryListener_WithExceptions_ShouldBeCalled() {
+    AtomicInteger listenerCallbacks = new AtomicInteger();
     RetryPolicy<Boolean> policy = RetryPolicy.<Boolean>builder()
       .handleResultIf(response -> response != null && !response)
       .handle(Exception.class)
       .withMaxRetries(3)
+      .onRetry(e -> listenerCallbacks.incrementAndGet())
       .build();
-    AtomicInteger listenerCallbacks = new AtomicInteger();
-    Testing.ignoreExceptions(() -> Failsafe.with(policy.onRetry(e -> listenerCallbacks.incrementAndGet())).get(() -> {
+    Testing.ignoreExceptions(() -> Failsafe.with(policy).get(() -> {
       throw new RuntimeException();
     }));
     assertEquals(listenerCallbacks.get(), 3);

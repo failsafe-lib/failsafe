@@ -79,7 +79,7 @@ public class AsyncFailsafeTest extends Testing {
    */
   public void testComplete() {
     Stats rpStats = new Stats();
-    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxRetries(3).build(), rpStats);
+    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxRetries(3), rpStats).build();
     // Passthrough policy that should allow async execution results through
     Fallback<Object> fb = Fallback.<Object>builder("test").handleIf((r, f) -> false).build();
     Timeout<Object> timeout = Timeout.of(Duration.ofMinutes(1));

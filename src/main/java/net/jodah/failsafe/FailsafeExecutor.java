@@ -15,11 +15,15 @@
  */
 package net.jodah.failsafe;
 
-import net.jodah.failsafe.spi.EventHandler;
+import net.jodah.failsafe.event.EventListener;
 import net.jodah.failsafe.event.ExecutionCompletedEvent;
 import net.jodah.failsafe.function.*;
+import net.jodah.failsafe.internal.EventHandler;
 import net.jodah.failsafe.internal.util.Assert;
-import net.jodah.failsafe.spi.*;
+import net.jodah.failsafe.spi.AsyncExecutionInternal;
+import net.jodah.failsafe.spi.ExecutionResult;
+import net.jodah.failsafe.spi.FailsafeFuture;
+import net.jodah.failsafe.spi.Scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -321,8 +325,8 @@ public class FailsafeExecutor<R> {
    * successful according to all policies, or all policies have been exceeded.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  public FailsafeExecutor<R> onComplete(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    completeHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
+  public FailsafeExecutor<R> onComplete(EventListener<ExecutionCompletedEvent<R>> listener) {
+    completeHandler = EventHandler.ofExecutionCompleted(Assert.notNull(listener, "listener"));
     return this;
   }
 
@@ -332,19 +336,19 @@ public class FailsafeExecutor<R> {
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    */
-  public FailsafeExecutor<R> onFailure(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    failureHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
+  public FailsafeExecutor<R> onFailure(EventListener<ExecutionCompletedEvent<R>> listener) {
+    failureHandler = EventHandler.ofExecutionCompleted(Assert.notNull(listener, "listener"));
     return this;
   }
 
   /**
    * Registers the {@code listener} to be called when an execution is successful. If multiple policies, are configured,
    * this handler is called when execution is complete and <i>all</i> policies succeed. If <i>all</i> policies do not
-   * succeed, then the {@link #onFailure(CheckedConsumer)} registered listener is called instead.
+   * succeed, then the {@link #onFailure(EventListener)} registered listener is called instead.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
    */
-  public FailsafeExecutor<R> onSuccess(CheckedConsumer<ExecutionCompletedEvent<R>> listener) {
-    successHandler = EventHandler.ofCompleted(Assert.notNull(listener, "listener"));
+  public FailsafeExecutor<R> onSuccess(EventListener<ExecutionCompletedEvent<R>> listener) {
+    successHandler = EventHandler.ofExecutionCompleted(Assert.notNull(listener, "listener"));
     return this;
   }
 

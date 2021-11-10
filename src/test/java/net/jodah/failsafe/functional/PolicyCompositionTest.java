@@ -60,8 +60,8 @@ public class PolicyCompositionTest extends Testing {
    */
   public void testRetryPolicyCircuitBreakerWithOpenBreaker() {
     // Given
-    RetryPolicy<Object> retryPolicy = Testing.withLogs(RetryPolicy.ofDefaults());
-    CircuitBreaker<Object> cb = Testing.withLogs(CircuitBreaker.ofDefaults());
+    RetryPolicy<Object> retryPolicy = Testing.withLogs(RetryPolicy.builder()).build();
+    CircuitBreaker<Object> cb = Testing.withLogs(CircuitBreaker.builder()).build();
 
     // When / Then
     testRunFailure(() -> {
@@ -196,9 +196,9 @@ public class PolicyCompositionTest extends Testing {
    */
   public void testRetryPolicyTimeout() {
     // Given
-    RetryPolicy<Object> rp = RetryPolicy.ofDefaults().onFailedAttempt(e -> {
+    RetryPolicy<Object> rp = RetryPolicy.builder().onFailedAttempt(e -> {
       assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
-    });
+    }).build();
     Stats timeoutStats = new Stats();
     Recorder recorder = new Recorder();
 
@@ -223,11 +223,11 @@ public class PolicyCompositionTest extends Testing {
     }, "success");
 
     // Without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.of(Duration.ofMillis(50)), timeoutStats);
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt().build(), timeoutStats);
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(50)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 

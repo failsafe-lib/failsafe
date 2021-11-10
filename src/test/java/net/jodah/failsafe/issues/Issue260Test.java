@@ -19,11 +19,12 @@ public class Issue260Test {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(300))
       .withInterrupt()
-      .build()
-      .onFailure(e -> System.out.println("Interrupted"));
-    RetryPolicy<Object> rp = RetryPolicy.ofDefaults()
+      .onFailure(e -> System.out.println("Interrupted"))
+      .build();
+    RetryPolicy<Object> rp = RetryPolicy.builder()
       .onRetry(e -> System.out.println("Retrying"))
-      .onSuccess(e -> System.out.println("Success"));
+      .onSuccess(e -> System.out.println("Success"))
+      .build();
 
     Function<Integer, ContextualRunnable> task = (taskId) -> ctx -> {
       System.out.println("Starting execution of task " + taskId);

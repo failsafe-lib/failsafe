@@ -20,10 +20,10 @@ public class Issue284Test {
   Fallback<String> fallback;
   RetryPolicy<String> retryPolicy = RetryPolicy.<String>builder()
     .handleResult(null)
-    .build()
     .onFailedAttempt(e -> failedAttempt.incrementAndGet())
     .onSuccess(e -> success.set(true))
-    .onFailure(e -> failure.set(true));
+    .onFailure(e -> failure.set(true))
+    .build();
 
   @BeforeMethod
   protected void beforeMethod() {
@@ -36,10 +36,10 @@ public class Issue284Test {
   private Fallback<String> fallbackFor(String result) {
     return Fallback.builder(result)
       .handleResult(null)
-      .build()
       .onFailedAttempt(e -> failedAttempt.incrementAndGet())
       .onSuccess(e -> success.set(true))
-      .onFailure(e -> failure.set(true));
+      .onFailure(e -> failure.set(true))
+      .build();
   }
 
   public void testFallbackSuccess() {

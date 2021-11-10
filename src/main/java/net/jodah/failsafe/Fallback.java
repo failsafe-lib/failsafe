@@ -37,7 +37,7 @@ import static net.jodah.failsafe.Functions.toFn;
  * @author Jonathan Halterman
  * @see FallbackBuilder
  */
-public interface Fallback<R> extends Policy<R>, ExecutionListeners<Fallback<R>, R> {
+public interface Fallback<R> extends Policy<R> {
   /**
    * Returns the {@code fallback} to be executed if execution fails.
    *
@@ -215,11 +215,4 @@ public interface Fallback<R> extends Policy<R>, ExecutionListeners<Fallback<R>, 
    * Returns the {@link FallbackConfig} that the Fallback was built with.
    */
   FallbackConfig<R> getConfig();
-
-  /**
-   * Registers the {@code listener} to be called when the last execution attempt prior to the fallback failed. You can
-   * also use {@link #onFailure(CheckedConsumer) onFailure} to determine when the fallback attempt also fails.
-   * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
-   */
-  Fallback<R> onFailedAttempt(CheckedConsumer<ExecutionAttemptedEvent<R>> listener);
 }

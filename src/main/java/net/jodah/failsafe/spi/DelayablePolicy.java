@@ -2,6 +2,7 @@ package net.jodah.failsafe.spi;
 
 import net.jodah.failsafe.DelayablePolicyConfig;
 import net.jodah.failsafe.ExecutionContext;
+import net.jodah.failsafe.Policy;
 
 import java.time.Duration;
 
@@ -11,7 +12,7 @@ import java.time.Duration;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public interface DelayablePolicy<R> {
+public interface DelayablePolicy<R> extends Policy<R> {
   DelayablePolicyConfig<R> getConfig();
 
   /**

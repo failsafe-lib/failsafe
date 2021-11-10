@@ -2,6 +2,7 @@ package net.jodah.failsafe.spi;
 
 import net.jodah.failsafe.FailurePolicyBuilder;
 import net.jodah.failsafe.FailurePolicyConfig;
+import net.jodah.failsafe.Policy;
 
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -13,7 +14,7 @@ import java.util.function.Predicate;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public interface FailurePolicy<R> {
+public interface FailurePolicy<R> extends Policy<R> {
   FailurePolicyConfig<R> getConfig();
 
   /**
