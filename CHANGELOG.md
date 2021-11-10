@@ -16,9 +16,9 @@ This release introduces breaking changes to the API:
 #### Policies
 
 - All policies are now threadsafe and use a builder API. The configuration methods available in the builder are mostly the same as previously with the 2.x policies. Some notes:
-  - A policy builder can be created via `.builder()`.
-  - `RetryPolicy` and `CircuitBreaker` can be constructed with default values using `.ofDefaults()`.
-  - Policy configuration is accessible via a `.getConfig()`.
+  - A policy builder can be created via `builder()`.
+  - `RetryPolicy` and `CircuitBreaker` can be constructed with default values using `ofDefaults()`.
+  - Policy configuration is accessible via a `getConfig()`.
   - Policies that have required arguments, such as `Fallback` and `Timeout`, have additional factory methods for creating a policy without using a builder, ex: `Fallback.of(this::connectToBackup)` and `Timeout.of(Duration.ofSeconds(10))`. Optional arguments must be specified through a builder, ex: `Timeout.builder(duration).withInterrupt().build()`
 
 #### Execution and AsyncExecution
@@ -39,6 +39,10 @@ This release introduces breaking changes to the API:
   - `withDelayOn` has been renamed to `withDelayFnOn`.
   - `withDelayWhen` has been renamed to `withDelayFnWhen`.
   - The above method signatures have also been changed to accept a `ContextualSupplier` instead of a `DelayFunction`, since it provides access to the same information.
+
+#### CircuitBreaker
+
+- `allowsExecution()` was removed in favor of `acquirePermit()` and `tryAcquirePermit()`, which are meant to be used with standalone CircuitBreaker usage.
 
 ### SPI Changes
 

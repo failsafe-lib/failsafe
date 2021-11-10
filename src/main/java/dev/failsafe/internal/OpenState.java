@@ -29,10 +29,10 @@ public class OpenState<R> extends CircuitState<R> {
   }
 
   @Override
-  public boolean allowsExecution() {
+  public boolean tryAcquirePermit() {
     if (System.nanoTime() - startTime >= delayNanos) {
       breaker.halfOpen();
-      return true;
+      return breaker.tryAcquirePermit();
     }
 
     return false;

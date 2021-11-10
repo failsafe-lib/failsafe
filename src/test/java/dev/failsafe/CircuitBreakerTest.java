@@ -26,7 +26,7 @@ import static org.testng.Assert.assertTrue;
 @Test
 public class CircuitBreakerTest {
   public void shouldRequireValidDelay() {
-    assertThrows(() -> CircuitBreaker.builder().withDelay((Duration) null).build(), NullPointerException.class);
+    assertThrows(() -> CircuitBreaker.builder().withDelay(null).build(), NullPointerException.class);
     assertThrows(() -> CircuitBreaker.builder().withDelay(Duration.ofMillis(-1)).build(),
       IllegalArgumentException.class);
   }
@@ -55,7 +55,6 @@ public class CircuitBreakerTest {
     CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
     breaker.recordFailure();
     Thread.sleep(100);
-    breaker.allowsExecution();
     assertTrue(breaker.isOpen());
   }
 

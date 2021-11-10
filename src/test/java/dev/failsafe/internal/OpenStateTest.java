@@ -25,7 +25,7 @@ import static org.testng.Assert.*;
 
 @Test
 public class OpenStateTest {
-  public void testAllowsExecution() throws Throwable {
+  public void testTryAcquirePermit() throws Throwable {
     // Given
     CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
       .withDelay(Duration.ofMillis(100))
@@ -33,13 +33,13 @@ public class OpenStateTest {
     breaker.open();
     OpenState<Object> state = new OpenState<>(breaker, new ClosedState<>(breaker), breaker.getConfig().getDelay());
     assertTrue(breaker.isOpen());
-    assertFalse(state.allowsExecution());
+    assertFalse(state.tryAcquirePermit());
 
     // When
     Thread.sleep(110);
 
     // Then
-    assertTrue(state.allowsExecution());
+    assertTrue(state.tryAcquirePermit());
     assertEquals(breaker.getState(), State.HALF_OPEN);
   }
 

@@ -25,7 +25,7 @@ public class ClosedState<R> extends CircuitState<R> {
   }
 
   @Override
-  public boolean allowsExecution() {
+  public boolean tryAcquirePermit() {
     return true;
   }
 

@@ -19,17 +19,24 @@ import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreaker.State;
 import dev.failsafe.ExecutionContext;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class HalfOpenState<R> extends CircuitState<R> {
+  protected final AtomicInteger permittedExecutions = new AtomicInteger();
+
   public HalfOpenState(CircuitBreakerImpl<R> breaker) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), false, null));
+    permittedExecutions.set(capacityFor(breaker));
   }
 
-  /**
-   * Ensures that the current executions are less than the thresholding capacity.
-   */
   @Override
-  public boolean allowsExecution() {
-    return breaker.currentExecutions.get() < capacityFor(breaker);
+  public boolean tryAcquirePermit() {
+    return permittedExecutions.getAndUpdate(permits -> permits == 0 ? 0 : permits - 1) > 0;
+  }
+
+  @Override
+  public void releasePermit() {
+    permittedExecutions.incrementAndGet();
   }
 
   @Override

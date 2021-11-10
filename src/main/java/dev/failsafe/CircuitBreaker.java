@@ -92,14 +92,32 @@ public interface CircuitBreaker<R> extends Policy<R> {
   CircuitBreakerConfig<R> getConfig();
 
   /**
-   * Returns whether the circuit allows execution and triggers a state transition if a threshold has been exceeded.
+   * Attempts to acquire a permit for the circuit breaker and throws {@link CircuitBreakerOpenException} if a permit
+   * could not be acquired.
+   *
+   * @throws CircuitBreakerOpenException
    */
-  boolean allowsExecution();
+  void acquirePermit();
+
+  /**
+   * Attempts to acquire a permit to use the circuit breaker and returns whether a permit was acquired.
+   */
+  boolean tryAcquirePermit();
+
+  /**
+   * Opens the circuit.
+   */
+  void open();
 
   /**
    * Closes the circuit.
    */
   void close();
+
+  /**
+   * Half-opens the circuit.
+   */
+  void halfOpen();
 
   /**
    * Gets the state of the circuit.
@@ -163,11 +181,6 @@ public interface CircuitBreaker<R> extends Policy<R> {
   int getSuccessRate();
 
   /**
-   * Half-opens the circuit.
-   */
-  void halfOpen();
-
-  /**
    * Returns whether the circuit is closed.
    */
   boolean isClosed();
@@ -181,17 +194,6 @@ public interface CircuitBreaker<R> extends Policy<R> {
    * Returns whether the circuit is open.
    */
   boolean isOpen();
-
-  /**
-   * Opens the circuit.
-   */
-  void open();
-
-  /**
-   * Records an execution that is about to take place by incrementing the internal executions count. Required for
-   * standalone CircuitBreaker usage.
-   */
-  void preExecute();
 
   /**
    * Records an execution failure.

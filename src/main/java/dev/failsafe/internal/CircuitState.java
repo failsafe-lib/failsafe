@@ -17,6 +17,7 @@ package dev.failsafe.internal;
 
 import dev.failsafe.CircuitBreaker.State;
 import dev.failsafe.CircuitBreakerConfig;
+import dev.failsafe.CircuitBreakerOpenException;
 import dev.failsafe.ExecutionContext;
 
 import java.time.Duration;
@@ -38,8 +39,6 @@ public abstract class CircuitState<R> {
     this.stats = stats;
   }
 
-  public abstract boolean allowsExecution();
-
   public Duration getRemainingDelay() {
     return Duration.ZERO;
   }
@@ -53,16 +52,28 @@ public abstract class CircuitState<R> {
   public synchronized void recordFailure(ExecutionContext<R> context) {
     stats.recordFailure();
     checkThreshold(context);
+    releasePermit();
   }
 
   public synchronized void recordSuccess() {
     stats.recordSuccess();
     checkThreshold(null);
+    releasePermit();
   }
 
   public void handleConfigChange() {
   }
 
   void checkThreshold(ExecutionContext<R> context) {
+  }
+
+  void acquirePermit() {
+    if (!tryAcquirePermit())
+      throw new CircuitBreakerOpenException(breaker);
+  }
+
+  abstract boolean tryAcquirePermit();
+
+  void releasePermit() {
   }
 }

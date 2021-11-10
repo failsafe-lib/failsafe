@@ -16,15 +16,13 @@
 package dev.failsafe.internal;
 
 import dev.failsafe.*;
+import dev.failsafe.event.CircuitBreakerStateChangedEvent;
 import dev.failsafe.event.EventListener;
 import dev.failsafe.spi.DelayablePolicy;
 import dev.failsafe.spi.FailurePolicy;
-import dev.failsafe.*;
-import dev.failsafe.event.CircuitBreakerStateChangedEvent;
 import dev.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -40,7 +38,6 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
 
   /** Writes guarded by "this" */
   protected final AtomicReference<CircuitState<R>> state = new AtomicReference<>();
-  protected final AtomicInteger currentExecutions = new AtomicInteger();
 
   public CircuitBreakerImpl(CircuitBreakerConfig<R> config) {
     this.config = config;
@@ -53,8 +50,13 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   }
 
   @Override
-  public boolean allowsExecution() {
-    return state.get().allowsExecution();
+  public boolean tryAcquirePermit() {
+    return state.get().tryAcquirePermit();
+  }
+
+  @Override
+  public void acquirePermit() {
+    state.get().acquirePermit();
   }
 
   @Override
@@ -123,11 +125,6 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   }
 
   @Override
-  public void preExecute() {
-    currentExecutions.incrementAndGet();
-  }
-
-  @Override
   public void recordFailure() {
     recordExecutionFailure(null);
   }
@@ -144,11 +141,7 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
 
   @Override
   public void recordSuccess() {
-    try {
-      state.get().recordSuccess();
-    } finally {
-      currentExecutions.decrementAndGet();
-    }
+    state.get().recordSuccess();
   }
 
   @Override
@@ -157,14 +150,10 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   }
 
   protected void recordResult(R result, Throwable failure) {
-    try {
-      if (isFailure(result, failure))
-        state.get().recordFailure(null);
-      else
-        state.get().recordSuccess();
-    } finally {
-      currentExecutions.decrementAndGet();
-    }
+    if (isFailure(result, failure))
+      state.get().recordFailure(null);
+    else
+      state.get().recordSuccess();
   }
 
   /**
@@ -206,11 +195,7 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
    * Records an execution failure.
    */
   protected void recordExecutionFailure(ExecutionContext<R> context) {
-    try {
-      state.get().recordFailure(context);
-    } finally {
-      currentExecutions.decrementAndGet();
-    }
+    state.get().recordFailure(context);
   }
 
   /**
