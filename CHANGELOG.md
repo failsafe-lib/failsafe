@@ -1,22 +1,29 @@
-# 2.5.0
+# 3.0
 
 
 ### Bug Fixes
 
 - Improved the reliability of async executions, cancellations, and Timeouts.
 
-### Improvements
-
-- Issue #292 - Created an extensible Policy SPI (API changes described below).
-- Issue #254 - Added an explicit `compose` method to `FailsafeExecutor`.
-- Issue #293 - Added `RetryPolicy.withBackoff(Duration, Duration)` and `.withDelay(Duration, Duration)`.
-- Issue #221 - `Executor` instances configured via `FailsafeExecutor.with(Executor)` are now used on all executions, including sync executions, and can be used in conjunction with a separately configured `ExecutorService` or `Scheduler` for async executions.
-
 ### API Changes
 
-This release contains some breaking API changes for users of the standalone `Execution` class and also async executions created via `FailsafeExecutor.runAsyncExecution`, `getAsyncExecution`, or `getStageAsyncExecution`.
+This release introduces breaking changes to the API:
 
-- The `Execution` and `AsyncExecution` methods for recording a result or completing an execution have changed to:
+#### General
+
+- All files have been moved to the `dev.failsafe` package. Be sure to update your imports.
+
+#### Policies
+
+- All policies are now threadsafe and use a builder API. The configuration methods available in the builder are mostly the same as previously with the 2.x policies. Some notes:
+  - A policy builder can be created via `.builder()`.
+  - `RetryPolicy` and `CircuitBreaker` can be constructed with default values using `.ofDefaults()`.
+  - Policy configuration is accessible via a `.getConfig()`.
+  - Policies that have required arguments, such as `Fallback` and `Timeout`, have additional factory methods for creating a policy without using a builder, ex: `Fallback.of(this::connectToBackup)` and `Timeout.of(Duration.ofSeconds(10))`. Optional arguments must be specified through a builder, ex: `Timeout.builder(duration).withInterrupt().build()`
+
+#### Execution and AsyncExecution
+
+- The standalone `Execution` API, and the `AsyncExecution` API created via `FailsafeExecutor.runAsyncExecution`, `getAsyncExecution`, and `getStageAsyncExecution` methods, have been unified to include:
   - `record(R, Throwable)`
   - `recordResult(R)`
   - `recordFailure(Throwable)`
@@ -24,7 +31,14 @@ This release contains some breaking API changes for users of the standalone `Exe
 - The previously supported `Execution` and `AsyncExecution` methods for recording a result have been removed. The methods for performing a retry have also been removed. For `Execution`, `isComplete` will indicate whether the execution is complete else is retries can be performed. For `AsyncExecution` retries will automatically be performed, if possible, immediately after a result or failure is recorded.
 - The `Execution` constructor is no longer visible. `Execution` instances must now be constructed via `Execution.of(policies)`.
 - `Execution.getWaitTime()` was renamed to `getDelay()`.
-- Added a type parameter to `ExecutionContext`.
+
+#### RetryPolicy and CircuitBreaker
+
+- In `RetryPolicyBuilder` and `CircuitBreakerBuilder`: 
+  - `withDelay` has been renamed to `withDelayFn`.
+  - `withDelayOn` has been renamed to `withDelayFnOn`.
+  - `withDelayWhen` has been renamed to `withDelayFnWhen`.
+  - The above method signatures have also been changed to accept a `ContextualSupplier` instead of a `DelayFunction`, since it provides access to the same information.
 
 ### SPI Changes
 
@@ -35,6 +49,16 @@ The following changes effect the SPI classes, for users who are extending Failsa
 - `ExecutionResult` was moved to the `spi` package and made generic.
 - Several new classes were added to the `spi` package to contain internal execution APIs including `ExecutionInternal`, `SyncExecutionInternal`, and `AsyncExecutionInternal`.
 - `FailsafeFuture` was moved to the SPI package and some method signatures changed.
+
+### Improvements
+
+- Issue #292 - Created an extensible Policy SPI.
+- Issue #254 - Added an explicit `compose` method to `FailsafeExecutor`.
+- Issue #293 - Added `RetryPolicyBuilder.withBackoff(Duration, Duration)` and `.withDelay(Duration, Duration)`.
+- Issue #221 - `Executor` instances configured via `FailsafeExecutor.with(Executor)` are now used on all executions, including sync executions, and can be used in conjunction with a separately configured `ExecutorService` or `Scheduler` for async executions.
+- Issue #47 - Thread safety is now clearly documented in the policy, policy builder, and policy config classes. Policy and policy config classes are threadsafe. Policy builder classes are not threadsafe.
+- Added a type parameter to `ExecutionContext`.
+- Added `FailsafeExecutor.getPolicies()`.
 
 # 2.4.4
 
