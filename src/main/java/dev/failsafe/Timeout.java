@@ -42,6 +42,7 @@ import java.time.Duration;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see TimeoutConfig
  * @see TimeoutBuilder
  * @see TimeoutExceededException
  */

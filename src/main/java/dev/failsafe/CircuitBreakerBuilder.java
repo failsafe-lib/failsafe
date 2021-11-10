@@ -46,6 +46,7 @@ import java.util.function.Predicate;
  * @param <R> result type
  * @author Jonathan Halterman
  * @see CircuitBreaker
+ * @see CircuitBreakerConfig
  * @see CircuitBreakerOpenException
  */
 public class CircuitBreakerBuilder<R>

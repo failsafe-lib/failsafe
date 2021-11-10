@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see FallbackBuilder
  */
 public class FallbackConfig<R> extends FailurePolicyConfig<R> {
   CheckedFunction<ExecutionAttemptedEvent<R>, R> fallback;

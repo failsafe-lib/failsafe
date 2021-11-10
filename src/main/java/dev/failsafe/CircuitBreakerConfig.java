@@ -28,6 +28,7 @@ import java.time.Duration;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see CircuitBreakerBuilder
  */
 public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   // Failure config

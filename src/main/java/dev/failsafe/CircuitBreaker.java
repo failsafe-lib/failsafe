@@ -50,6 +50,7 @@ import java.time.Duration;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see CircuitBreakerConfig
  * @see CircuitBreakerBuilder
  * @see CircuitBreakerOpenException
  */

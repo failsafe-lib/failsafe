@@ -28,7 +28,7 @@ import java.time.Duration;
  *
  * @param <R> result type
  * @author Jonathan Halterman
- * @see Timeout
+ * @see TimeoutConfig
  * @see TimeoutExceededException
  */
 public class TimeoutBuilder<R> extends PolicyBuilder<TimeoutBuilder<R>, TimeoutConfig<R>, R> {

@@ -46,6 +46,7 @@ import java.util.function.Predicate;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see FallbackConfig
  */
 public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>, FallbackConfig<R>, R>
   implements FallbackListeners<FallbackBuilder<R>, R> {

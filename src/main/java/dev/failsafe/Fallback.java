@@ -35,6 +35,7 @@ import static dev.failsafe.Functions.toFn;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see TimeoutConfig
  * @see FallbackBuilder
  */
 public interface Fallback<R> extends Policy<R> {

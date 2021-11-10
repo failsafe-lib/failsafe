@@ -56,7 +56,7 @@ import java.util.function.Predicate;
  *
  * @param <R> result type
  * @author Jonathan Halterman
- * @see RetryPolicy
+ * @see RetryPolicyConfig
  */
 public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBuilder<R>, RetryPolicyConfig<R>, R>
   implements RetryPolicyListeners<RetryPolicyBuilder<R>, R> {

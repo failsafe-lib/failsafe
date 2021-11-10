@@ -25,6 +25,7 @@ import java.time.Duration;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see TimeoutBuilder
  */
 public class TimeoutConfig<R> extends PolicyConfig<R> {
   Duration timeout;

@@ -35,6 +35,7 @@ import java.util.function.Predicate;
  *
  * @param <R> result type
  * @author Jonathan Halterman
+ * @see RetryPolicyBuilder
  */
 public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   Duration delayMin;
