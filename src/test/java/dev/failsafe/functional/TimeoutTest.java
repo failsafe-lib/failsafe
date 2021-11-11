@@ -143,11 +143,11 @@ public class TimeoutTest extends Testing {
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)), timeoutStats).build();
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(10)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt(), timeoutStats).build();
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(10)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
