@@ -43,9 +43,9 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   int successThresholdingCapacity;
 
   // Listeners
-  volatile EventListener<CircuitBreakerStateChangedEvent> openListener;
-  volatile EventListener<CircuitBreakerStateChangedEvent> halfOpenListener;
-  volatile EventListener<CircuitBreakerStateChangedEvent> closeListener;
+  EventListener<CircuitBreakerStateChangedEvent> openListener;
+  EventListener<CircuitBreakerStateChangedEvent> halfOpenListener;
+  EventListener<CircuitBreakerStateChangedEvent> closeListener;
 
   CircuitBreakerConfig() {
   }
@@ -161,7 +161,7 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the open event listener.
    *
-   * @see CircuitBreakerListeners#onOpen(EventListener)
+   * @see CircuitBreakerBuilder#onOpen(EventListener)
    */
   public EventListener<CircuitBreakerStateChangedEvent> getOpenListener() {
     return openListener;
@@ -170,7 +170,7 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the half-open event listener.
    *
-   * @see CircuitBreakerListeners#onHalfOpen(EventListener)
+   * @see CircuitBreakerBuilder#onHalfOpen(EventListener)
    */
   public EventListener<CircuitBreakerStateChangedEvent> getHalfOpenListener() {
     return halfOpenListener;
@@ -179,7 +179,7 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the close event listener.
    *
-   * @see CircuitBreakerListeners#onClose(EventListener)
+   * @see CircuitBreakerBuilder#onClose(EventListener)
    */
   public EventListener<CircuitBreakerStateChangedEvent> getCloseListener() {
     return closeListener;

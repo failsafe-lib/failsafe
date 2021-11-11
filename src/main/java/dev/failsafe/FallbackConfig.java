@@ -40,7 +40,7 @@ public class FallbackConfig<R> extends FailurePolicyConfig<R> {
   boolean async;
 
   // Listeners
-  volatile EventListener<ExecutionAttemptedEvent<R>> failedAttemptListener;
+  EventListener<ExecutionAttemptedEvent<R>> failedAttemptListener;
 
   FallbackConfig() {
   }
@@ -103,7 +103,7 @@ public class FallbackConfig<R> extends FailurePolicyConfig<R> {
   /**
    * Returns the failed attempt event listener.
    *
-   * @see FallbackListeners#onFailedAttempt(CheckedConsumer)
+   * @see FallbackBuilder#onFailedAttempt(EventListener)
    */
   public EventListener<ExecutionAttemptedEvent<R>> getFailedAttemptListener() {
     return failedAttemptListener;

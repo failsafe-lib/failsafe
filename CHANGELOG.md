@@ -8,10 +8,11 @@ This release introduces breaking changes to the API:
 #### General
 
 - All files have been moved to the `dev.failsafe` package. Be sure to update your imports.
+- `Failsafe.with(P[] policies)` was removed.
 
 #### Policies
 
-- All policies are now threadsafe and use a builder API. The configuration methods available in the builder are mostly the same as previously with the 2.x policies. Some notes:
+- All policies now use a builder API. The configuration methods available in the builder are mostly the same as previously with the 2.x policies. Some notes:
   - A policy builder can be created via `builder()`.
   - `RetryPolicy` and `CircuitBreaker` can be constructed with default values using `ofDefaults()`.
   - Policy configuration is accessible via a `getConfig()`.
@@ -57,11 +58,12 @@ The following changes effect the SPI classes, for users who are extending Failsa
 
 ### Improvements
 
+- Issue #47 - All policies and policy config classes are now threadsafe. Policy builders are not threadsafe.
+- Issue #201 - Thread safety is clearly documented in policy, policy config, and policy builder classes.
 - Issue #292 - Created an extensible Policy SPI.
 - Issue #254 - Added an explicit `compose` method to `FailsafeExecutor`.
 - Issue #293 - Added `RetryPolicyBuilder.withBackoff(Duration, Duration)` and `.withDelay(Duration, Duration)`.
 - Issue #221 - `Executor` instances configured via `FailsafeExecutor.with(Executor)` are now used on all executions, including sync executions, and can be used in conjunction with a separately configured `ExecutorService` or `Scheduler` for async executions.
-- Issue #47 - Thread safety is now clearly documented in the policy, policy builder, and policy config classes. Policy and policy config classes are threadsafe. Policy builder classes are not threadsafe.
 - Added `FailsafeExecutor.getPolicies()`.
 
 # 2.4.4

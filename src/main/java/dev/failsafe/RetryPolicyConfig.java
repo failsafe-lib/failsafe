@@ -49,11 +49,11 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   List<BiPredicate<R, Throwable>> abortConditions;
 
   // Listeners
-  volatile EventListener<ExecutionCompletedEvent<R>> abortListener;
-  volatile EventListener<ExecutionAttemptedEvent<R>> failedAttemptListener;
-  volatile EventListener<ExecutionCompletedEvent<R>> retriesExceededListener;
-  volatile EventListener<ExecutionAttemptedEvent<R>> retryListener;
-  volatile EventListener<ExecutionScheduledEvent<R>> retryScheduledListener;
+  EventListener<ExecutionCompletedEvent<R>> abortListener;
+  EventListener<ExecutionAttemptedEvent<R>> failedAttemptListener;
+  EventListener<ExecutionCompletedEvent<R>> retriesExceededListener;
+  EventListener<ExecutionAttemptedEvent<R>> retryListener;
+  EventListener<ExecutionScheduledEvent<R>> retryScheduledListener;
 
   RetryPolicyConfig() {
   }
@@ -210,7 +210,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the abort event listener.
    *
-   * @see RetryPolicyListeners#onAbort(EventListener)
+   * @see RetryPolicyBuilder#onAbort(EventListener)
    */
   public EventListener<ExecutionCompletedEvent<R>> getAbortListener() {
     return abortListener;
@@ -219,7 +219,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the failed attempt event listener.
    *
-   * @see RetryPolicyListeners#onFailedAttempt(EventListener)
+   * @see RetryPolicyBuilder#onFailedAttempt(EventListener)
    */
   public EventListener<ExecutionAttemptedEvent<R>> getFailedAttemptListener() {
     return failedAttemptListener;
@@ -228,7 +228,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the retries exceeded event listener.
    *
-   * @see RetryPolicyListeners#onRetriesExceeded(EventListener)
+   * @see RetryPolicyBuilder#onRetriesExceeded(EventListener)
    */
   public EventListener<ExecutionCompletedEvent<R>> getRetriesExceededListener() {
     return retriesExceededListener;
@@ -237,7 +237,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the retry event listener.
    *
-   * @see RetryPolicyListeners#onRetry(EventListener)
+   * @see RetryPolicyBuilder#onRetry(EventListener)
    */
   public EventListener<ExecutionAttemptedEvent<R>> getRetryListener() {
     return retryListener;
@@ -246,7 +246,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   /**
    * Returns the retry scheduled event listener.
    *
-   * @see RetryPolicyListeners#onRetryScheduled(EventListener)
+   * @see RetryPolicyBuilder#onRetryScheduled(EventListener)
    */
   public EventListener<ExecutionScheduledEvent<R>> getRetryScheduledListener() {
     return retryScheduledListener;

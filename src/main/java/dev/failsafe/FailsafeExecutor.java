@@ -24,7 +24,6 @@ import dev.failsafe.spi.AsyncExecutionInternal;
 import dev.failsafe.spi.ExecutionResult;
 import dev.failsafe.spi.FailsafeFuture;
 import dev.failsafe.spi.Scheduler;
-import dev.failsafe.function.*;
 
 import java.util.ArrayList;
 import java.util.List;
