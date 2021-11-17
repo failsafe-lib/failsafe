@@ -3,31 +3,20 @@
 
 ### API Changes
 
-This release introduces breaking changes to the API:
+This release introduces some breaking changes to the API:
 
 #### General
 
+- The maven group id for Failsafe has changed to `dev.failsafe`. Be sure to update your build config.
 - All files have been moved to the `dev.failsafe` package. Be sure to update your imports.
-- `Failsafe.with(P[] policies)` was removed in favor of `Failsafe.with(P, P...)`.
 
 #### Policies
 
-- All policies now use a builder API. The configuration methods available in the builder are mostly the same as previously with the 2.x policies. Some notes:
-  - A policy builder can be created via `builder()`.
-  - `RetryPolicy` and `CircuitBreaker` can be constructed with default values using `ofDefaults()`.
-  - Policy configuration is accessible via a `getConfig()`.
-  - Policies that have required arguments, such as `Fallback` and `Timeout`, have additional factory methods for creating a policy without using a builder, ex: `Fallback.of(this::connectToBackup)` and `Timeout.of(Duration.ofSeconds(10))`. Optional arguments must be specified through a builder, ex: `Timeout.builder(duration).withInterrupt().build()`
-
-#### Execution and AsyncExecution
-
-- The standalone `Execution` API, and the `AsyncExecution` API created via `FailsafeExecutor.runAsyncExecution`, `getAsyncExecution`, and `getStageAsyncExecution` methods, have been unified to include:
-  - `record(R, Throwable)`
-  - `recordResult(R)`
-  - `recordFailure(Throwable)`
-  - `complete()`
-- The previously supported `Execution` and `AsyncExecution` methods for recording a result have been removed. The methods for performing a retry have also been removed. For `Execution`, `isComplete` will indicate whether the execution is complete else is retries can be performed. For `AsyncExecution` retries will automatically be performed, if possible, immediately after a result or failure is recorded.
-- The `Execution` constructor is no longer visible. `Execution` instances must now be constructed via `Execution.of(policies)`.
-- `Execution.getWaitTime()` was renamed to `getDelay()`.
+- All policies now use a builder API. Using the builder API mostly requires inserting `builder()` and `build()` methods into the call chain for constructing a policy since the actual `with` configuration methods are mostly the same as in 2.x policies, with a few changes described below. Some notes:
+  - A policy builder can be created via `builder()`, ex: `RetryPolicy.builder()`.
+  - `RetryPolicy` and `CircuitBreaker` can also be constructed with default values using `ofDefaults()`.
+  - `Fallback` and `Timeout` offer additional factory methods for creating a a policy with only their required arguments, without using a builder, ex: `Timeout.of(Duration.ofSeconds(10))`. Optional arguments must be specified through a builder, ex: `Timeout.builder(duration).withInterrupt().build()`.
+  - Policy configuration is now accessible via a `policy.getConfig()`.
 
 #### RetryPolicy and CircuitBreaker
 
@@ -40,7 +29,30 @@ This release introduces breaking changes to the API:
 #### CircuitBreaker
 
 - `onOpen`, `onClose`, and `onHalfOpen` methods now accept a `CircuitBreakerStateChangedEvent` argument.
-- `allowsExecution()` was removed in favor of `acquirePermit()` and `tryAcquirePermit()`, which are meant to be used with standalone CircuitBreaker usage.
+- `allowsExecution()` was removed in favor of `acquirePermit()` and `tryAcquirePermit()`, which are meant for standalone CircuitBreaker usage.
+
+#### Fallback
+
+- The `Fallback` async factory methods have been removed in favor of a `FallbackBuilder.withAsync()` option.
+
+#### Timeout
+
+- `Timeout.withInterrupt(boolean)` is now `TimeoutBuilder.withInterrupt()`.
+
+#### Execution and AsyncExecution
+
+- The standalone `Execution` API, and the `AsyncExecution` API created via `FailsafeExecutor.runAsyncExecution`, `getAsyncExecution`, and `getStageAsyncExecution` methods, have been unified to include:
+  - `record(R, Throwable)`
+  - `recordResult(R)`
+  - `recordFailure(Throwable)`
+  - `complete()`
+- The previously supported `Execution` and `AsyncExecution` methods for recording a result have been removed. The methods for performing a retry have also been removed. For `Execution`, `isComplete` will indicate whether the execution is complete else if retries can be performed. For `AsyncExecution` retries will automatically be performed, if possible, immediately after a result or failure is recorded.
+- The `Execution` constructor is no longer visible. `Execution` instances must now be constructed via `Execution.of(policies)`.
+- `Execution.getWaitTime()` was renamed to `getDelay()`.
+
+#### Failsafe class
+
+- `Failsafe.with(P[] policies)` was removed in favor of `Failsafe.with(P, P...)`. This should only affect users who were explicitly passing an array to `Failsafe.with`.
 
 ### SPI Changes
 
