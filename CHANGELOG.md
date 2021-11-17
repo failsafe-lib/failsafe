@@ -8,7 +8,7 @@ This release introduces breaking changes to the API:
 #### General
 
 - All files have been moved to the `dev.failsafe` package. Be sure to update your imports.
-- `Failsafe.with(P[] policies)` was removed.
+- `Failsafe.with(P[] policies)` was removed in favor of `Failsafe.with(P, P...)`.
 
 #### Policies
 
@@ -65,6 +65,7 @@ The following changes effect the SPI classes, for users who are extending Failsa
 - Issue #293 - Added `RetryPolicyBuilder.withBackoff(Duration, Duration)` and `.withDelay(Duration, Duration)`.
 - Issue #221 - `Executor` instances configured via `FailsafeExecutor.with(Executor)` are now used on all executions, including sync executions, and can be used in conjunction with a separately configured `ExecutorService` or `Scheduler` for async executions.
 - Added `FailsafeExecutor.getPolicies()`.
+- Added `isFirstAttempt()` and `isRetry()` to `ExecutionAttempt`, which is available via a few event listeners.
 
 # 2.4.4
 

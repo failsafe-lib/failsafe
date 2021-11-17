@@ -28,9 +28,11 @@ import org.testng.annotations.Test;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.Mockito.*;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -529,5 +531,39 @@ public class ListenersTest extends Testing {
     // Failsafe.onComplete
     rp = RetryPolicy.builder().handleResult(null).withMaxRetries(0).build();
     Failsafe.with(rp).onComplete(completedError).get(noop);
+  }
+
+  public void testRetryPolicyOnScheduled() {
+    Recorder recorder = new Recorder();
+    AtomicInteger executions = new AtomicInteger();
+
+    RetryPolicy<Object> rp = RetryPolicy.builder().handleResult(null).withMaxRetries(1).onFailedAttempt(e -> {
+      if (executions.get() == 1) {
+        recorder.assertTrue(e.isFirstAttempt());
+        recorder.assertFalse(e.isRetry());
+      } else {
+        recorder.assertFalse(e.isFirstAttempt());
+        recorder.assertTrue(e.isRetry());
+      }
+    }).onRetry(e -> {
+      recorder.assertFalse(e.isFirstAttempt());
+      recorder.assertTrue(e.isRetry());
+    }).onRetryScheduled(e -> {
+      if (executions.get() == 1) {
+        recorder.assertTrue(e.isFirstAttempt());
+        recorder.assertFalse(e.isRetry());
+      } else {
+        recorder.assertFalse(e.isFirstAttempt());
+        recorder.assertTrue(e.isRetry());
+      }
+    }).onFailure(e -> {
+      recorder.assertFalse(e.isFirstAttempt());
+      recorder.assertTrue(e.isRetry());
+    }).build();
+    Failsafe.with(rp).get(() -> {
+      executions.incrementAndGet();
+      return null;
+    });
+    recorder.throwFailures();
   }
 }

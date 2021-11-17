@@ -219,12 +219,12 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
 
   @Override
   public boolean isFirstAttempt() {
-    return attempts.get() == 0;
+    return attempts.get() == (!attemptRecorded ? 0 : 1);
   }
 
   @Override
   public boolean isRetry() {
-    return attempts.get() > 0;
+    return attempts.get() > (!attemptRecorded ? 0 : 1);
   }
 
   @Override

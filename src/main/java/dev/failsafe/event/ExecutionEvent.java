@@ -70,4 +70,18 @@ public abstract class ExecutionEvent {
   public Duration getElapsedAttemptTime() {
     return context.getElapsedAttemptTime();
   }
+
+  /**
+   * Returns {@code true} when {@link #getAttemptCount()} is {@code 0} meaning this is the first execution attempt.
+   */
+  public boolean isFirstAttempt() {
+    return context.isFirstAttempt();
+  }
+
+  /**
+   * Returns {@code true} when {@link #getAttemptCount()} is {@code > 0} meaning the execution is being retried.
+   */
+  public boolean isRetry() {
+    return context.isRetry();
+  }
 }

@@ -17,10 +17,17 @@ package dev.failsafe.testing;
 
 import dev.failsafe.function.CheckedRunnable;
 import dev.failsafe.function.CheckedSupplier;
+import dev.failsafe.testing.Asserts.CompositeError;
+import io.vertx.core.eventbus.Message;
 import org.testng.Assert;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Formatter;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 import static org.testng.Assert.assertEquals;
@@ -29,14 +36,41 @@ import static org.testng.Assert.assertEquals;
  * Utilities to assist with performing assertions.
  */
 public class Asserts {
+  static class CompositeError extends Error {
+    private final List<? extends Error> errors;
+
+    CompositeError(List<? extends Error> errors) {
+      this.errors = errors;
+    }
+
+    @Override
+    public String getMessage() {
+      Formatter fmt = new Formatter().format("Errors encountered:%n%n");
+      int index = 1;
+      for (Error error : errors) {
+        StringWriter writer = new StringWriter();
+        error.printStackTrace(new PrintWriter(writer));
+        fmt.format("%s) %s%n", index++, writer.getBuffer());
+      }
+
+      if (errors.size() == 1) {
+        fmt.format("1 error");
+      } else {
+        fmt.format("%s errors", errors.size());
+      }
+
+      return fmt.toString();
+    }
+  }
+
   /**
    * Records assertions from any thread so that they can be re-thrown from a main test thread.
    */
   public static class Recorder {
-    private volatile AssertionError error;
+    private List<AssertionError> errors = new CopyOnWriteArrayList<>();
 
     public void reset() {
-      this.error = null;
+      errors.clear();
     }
 
     public void assertEquals(Object expected, Object actual) {
@@ -73,16 +107,17 @@ public class Asserts {
 
     public void fail(Throwable reason) {
       if (reason instanceof AssertionError)
-        error = (AssertionError) reason;
+        errors.add((AssertionError) reason);
       else {
-        error = new AssertionError();
+        AssertionError error = new AssertionError();
         error.initCause(reason);
+        errors.add(error);
       }
     }
 
-    public void throwFailure() {
-      if (error != null)
-        throw error;
+    public void throwFailures() {
+      if (!errors.isEmpty())
+        throw new CompositeError(errors);
     }
 
     private String format(Object expected, Object actual) {

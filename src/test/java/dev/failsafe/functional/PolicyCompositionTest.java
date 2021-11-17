@@ -215,7 +215,7 @@ public class PolicyCompositionTest extends Testing {
       }
       return "success";
     }, (f, e) -> {
-      recorder.throwFailure();
+      recorder.throwFailures();
       assertEquals(e.getAttemptCount(), 3);
       assertEquals(e.getExecutionCount(), 3);
       assertEquals(timeoutStats.failureCount, 2);
