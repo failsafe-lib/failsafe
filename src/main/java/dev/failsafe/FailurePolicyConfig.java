@@ -56,7 +56,7 @@ public abstract class FailurePolicyConfig<R> extends PolicyConfig<R> {
    * @see FailurePolicyBuilder#handle(List)
    * @see FailurePolicyBuilder#handleIf(BiPredicate)
    * @see FailurePolicyBuilder#handleIf(Predicate)
-   * @see FailurePolicyBuilder#handleResult(R)
+   * @see FailurePolicyBuilder#handleResult(Object) 
    * @see FailurePolicyBuilder#handleResultIf(Predicate)
    */
   public List<BiPredicate<R, Throwable>> getFailureConditions() {

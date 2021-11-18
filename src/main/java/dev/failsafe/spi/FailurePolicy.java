@@ -40,7 +40,7 @@ public interface FailurePolicy<R> extends Policy<R> {
    * @see FailurePolicyBuilder#handle(List)
    * @see FailurePolicyBuilder#handleIf(BiPredicate)
    * @see FailurePolicyBuilder#handleIf(Predicate)
-   * @see FailurePolicyBuilder#handleResult(R)
+   * @see FailurePolicyBuilder#handleResult(Object) 
    * @see FailurePolicyBuilder#handleResultIf(Predicate)
    */
   default boolean isFailure(R result, Throwable failure) {

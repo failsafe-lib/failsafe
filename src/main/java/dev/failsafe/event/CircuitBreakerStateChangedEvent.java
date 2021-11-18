@@ -20,7 +20,6 @@ import dev.failsafe.CircuitBreaker.State;
 /**
  * Indicates a circuit breaker's state changed.
  *
- * @param <R> result type
  * @author Jonathan Halterman
  */
 public class CircuitBreakerStateChangedEvent {

@@ -97,7 +97,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
    * @see RetryPolicyBuilder#abortOn(Predicate)
    * @see RetryPolicyBuilder#abortIf(BiPredicate)
    * @see RetryPolicyBuilder#abortIf(Predicate)
-   * @see RetryPolicyBuilder#abortWhen(R)
+   * @see RetryPolicyBuilder#abortWhen(Object) 
    */
   public List<BiPredicate<R, Throwable>> getAbortConditions() {
     return abortConditions;
