@@ -36,15 +36,14 @@ public interface ExecutionContext<R> {
 
   /**
    * Gets the number of execution attempts so far, including attempts that are blocked before being executed, such as
-   * when a {@link CircuitBreaker CircuitBreaker} is open. Will return {@code 0} when the first
-   * attempt is in progress or has yet to begin.
+   * when a {@link CircuitBreaker} is open. Will return {@code 0} when the first attempt is in progress or has yet to
+   * begin.
    */
   int getAttemptCount();
 
   /**
-   * Gets the number of completed executions so far. Executions that are blocked, such as when a {@link
-   * CircuitBreaker CircuitBreaker} is open, are not counted. Will return {@code 0} when the first
-   * attempt is in progress or has yet to begin.
+   * Gets the number of completed executions so far. Executions that are blocked, such as when a {@link CircuitBreaker}
+   * is open, are not counted. Will return {@code 0} when the first attempt is in progress or has yet to begin.
    */
   int getExecutionCount();
 
@@ -74,12 +73,13 @@ public interface ExecutionContext<R> {
   boolean isCancelled();
 
   /**
-   * Returns {@code true} when {@link #getAttemptCount()} is {@code 0} meaning this is the first execution attempt.
+   * Returns {@code true} when an execution result has not yet been recorded, meaning this is the first execution
+   * attempt.
    */
   boolean isFirstAttempt();
 
   /**
-   * Returns {@code true} when {@link #getAttemptCount()} is {@code > 0} meaning the execution is being retried.
+   * Returns {@code true} when an execution result has already been recorded, meaning the execution is being retried.
    */
   boolean isRetry();
 }
