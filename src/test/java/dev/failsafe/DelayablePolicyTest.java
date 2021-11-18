@@ -16,6 +16,7 @@
 package dev.failsafe;
 
 import dev.failsafe.function.ContextualSupplier;
+import dev.failsafe.spi.ExecutionResult;
 import dev.failsafe.testing.Mocking.FooPolicy;
 import org.testng.annotations.Test;
 
@@ -46,25 +47,33 @@ public class DelayablePolicyTest {
   public void shouldComputeDelay() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy<Object> policy = FooPolicy.builder().withDelayFn(ctx -> expected).build();
-    assertEquals(policy.computeDelay(ExecutionContext.ofResult(null)), expected);
+    assertEquals(policy.computeDelay(execOfResult(null)), expected);
   }
 
   public void shouldComputeDelayForResultValue() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy<Object> policy = FooPolicy.builder().withDelayFnWhen(delay5Millis, true).build();
-    assertEquals(policy.computeDelay(ExecutionContext.ofResult(true)), expected);
-    assertNull(policy.computeDelay(ExecutionContext.ofResult(false)));
+    assertEquals(policy.computeDelay(execOfResult(true)), expected);
+    assertNull(policy.computeDelay(execOfResult(false)));
   }
 
   public void shouldComputeDelayForNegativeValue() {
     FooPolicy<Object> policy = FooPolicy.builder().withDelayFn(ctx -> Duration.ofMillis(-1)).build();
-    assertNull(policy.computeDelay(ExecutionContext.ofResult(true)));
+    assertNull(policy.computeDelay(execOfResult(true)));
   }
 
   public void shouldComputeDelayForFailureType() {
     Duration expected = Duration.ofMillis(5);
     FooPolicy<Object> policy = FooPolicy.builder().withDelayFnOn(delay5Millis, IllegalStateException.class).build();
-    assertEquals(policy.computeDelay(ExecutionContext.ofFailure(new IllegalStateException())), expected);
-    assertNull(policy.computeDelay(ExecutionContext.ofFailure(new IllegalArgumentException())));
+    assertEquals(policy.computeDelay(execOfFailure(new IllegalStateException())), expected);
+    assertNull(policy.computeDelay(execOfFailure(new IllegalArgumentException())));
+  }
+
+  static <R> ExecutionContext<R> execOfResult(R result) {
+    return new ExecutionImpl<>(ExecutionResult.success(result));
+  }
+
+  static <R> ExecutionContext<R> execOfFailure(Throwable failure) {
+    return new ExecutionImpl<>(ExecutionResult.failure(failure));
   }
 }

@@ -15,8 +15,6 @@
  */
 package dev.failsafe;
 
-import dev.failsafe.spi.ExecutionResult;
-
 import java.time.Duration;
 
 /**
@@ -84,12 +82,4 @@ public interface ExecutionContext<R> {
    * Returns {@code true} when {@link #getAttemptCount()} is {@code > 0} meaning the execution is being retried.
    */
   boolean isRetry();
-
-  static <R> ExecutionContext<R> ofResult(R result) {
-    return new ExecutionImpl<>(ExecutionResult.success(result));
-  }
-
-  static <R> ExecutionContext<R> ofFailure(Throwable failure) {
-    return new ExecutionImpl<>(ExecutionResult.failure(failure));
-  }
 }
