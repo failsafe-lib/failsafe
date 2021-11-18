@@ -23,10 +23,10 @@ import dev.failsafe.internal.util.Assert;
 import java.time.Duration;
 
 /**
- * A policy that cancels and fails an excecution with a {@link TimeoutExceededException
- * TimeoutExceededException} if a timeout is exceeded. Execution {@link TimeoutBuilder#withInterrupt() interruption} is
- * optionally supported. Asynchronous executions are cancelled by calling {@link java.util.concurrent.Future#cancel(boolean)
- * cancel} on their underlying future. Executions can internally cooperate with cancellation by checking {@link
+ * A policy that cancels and fails an excecution with a {@link TimeoutExceededException TimeoutExceededException} if a
+ * timeout is exceeded. Execution {@link TimeoutBuilder#withInterrupt() interruption} is optionally supported.
+ * Asynchronous executions are cancelled by calling {@link java.util.concurrent.Future#cancel(boolean) cancel} on their
+ * underlying future. Executions can internally cooperate with cancellation by checking {@link
  * ExecutionContext#isCancelled()}.
  * <p>
  * This policy uses a separate thread on the configured scheduler or the common pool to perform timeouts checks.
@@ -62,13 +62,9 @@ public interface Timeout<R> extends Policy<R> {
   }
 
   /**
-   * Alias for:
-   * <pre>
-   *   Timeout.builder(timeout).build();
-   * </pre>
-   * Returns a {@link Timeout} that fails an execution with {@link TimeoutExceededException
-   * TimeoutExceededException} if it exceeds the {@code timeout}. To configure other options on a Timeout, use {@link
-   * #builder(Duration)} instead.
+   * Returns a {@link Timeout} that fails an execution with {@link TimeoutExceededException TimeoutExceededException} if
+   * it exceeds the {@code timeout}. Alias for {@code Timeout.builder(timeout).build()}. To configure other options on a
+   * Timeout, use {@link #builder(Duration)} instead.
    *
    * @param timeout the duration after which an execution is failed with {@link TimeoutExceededException
    * TimeoutExceededException}.
