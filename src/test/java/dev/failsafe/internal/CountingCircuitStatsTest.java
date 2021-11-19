@@ -1,7 +1,9 @@
 package dev.failsafe.internal;
 
+import dev.failsafe.internal.TimedCircuitStatsTest.TestClock;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 import static org.testng.Assert.assertEquals;
@@ -96,6 +98,17 @@ public class CountingCircuitStatsTest extends CircuitStatsTest {
     stats.currentIndex = 4;
     right = new CountingCircuitStats(6, stats);
     assertValues(right, false, true, true, false, false);
+  }
+
+  public void testCopyFromTimedStats() {
+    TestClock clock = new TestClock();
+    TimedCircuitStats timedStats = new TimedCircuitStats(4, Duration.ofSeconds(4), clock, null);
+    recordSuccesses(timedStats, 3);
+    clock.set(1200);
+    recordFailures(timedStats, 5);
+
+    stats = new CountingCircuitStats(10, timedStats);
+    assertValues(stats, true, true, true, false, false, false, false, false);
   }
 
   private static boolean[] valuesFor(CountingCircuitStats stats) {

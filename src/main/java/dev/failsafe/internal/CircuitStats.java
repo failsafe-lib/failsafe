@@ -38,7 +38,7 @@ public interface CircuitStats {
     for (int i = 0; i < oldStats.getSuccessCount(); i++)
       recordSuccess();
     for (int i = 0; i < oldStats.getFailureCount(); i++)
-      recordSuccess();
+      recordFailure();
   }
 
   int getFailureCount();
