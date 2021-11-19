@@ -215,5 +215,6 @@ public interface Fallback<R> extends Policy<R> {
   /**
    * Returns the {@link FallbackConfig} that the Fallback was built with.
    */
+  @Override
   FallbackConfig<R> getConfig();
 }

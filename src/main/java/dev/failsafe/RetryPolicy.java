@@ -45,5 +45,6 @@ public interface RetryPolicy<R> extends Policy<R> {
   /**
    * Returns the {@link RetryPolicyConfig} that the RetryPolicy was built with.
    */
+  @Override
   RetryPolicyConfig<R> getConfig();
 }

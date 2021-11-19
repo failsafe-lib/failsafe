@@ -79,5 +79,6 @@ public interface Timeout<R> extends Policy<R> {
   /**
    * Returns the {@link TimeoutConfig} that the Timeout was built with.
    */
+  @Override
   TimeoutConfig<R> getConfig();
 }

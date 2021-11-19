@@ -89,6 +89,7 @@ public interface CircuitBreaker<R> extends Policy<R> {
   /**
    * Returns the {@link CircuitBreakerConfig} that the CircuitBreaker was built with.
    */
+  @Override
   CircuitBreakerConfig<R> getConfig();
 
   /**
