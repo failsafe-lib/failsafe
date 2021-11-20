@@ -18,6 +18,7 @@ package dev.failsafe.spi;
 import dev.failsafe.DelayablePolicyConfig;
 import dev.failsafe.ExecutionContext;
 import dev.failsafe.Policy;
+import dev.failsafe.internal.util.Durations;
 
 import java.time.Duration;
 
@@ -48,7 +49,7 @@ public interface DelayablePolicy<R> extends Policy<R> {
         delayFailure == null || (exFailure != null && delayFailure.isAssignableFrom(exFailure.getClass()));
       if (delayResultMatched && delayFailureMatched) {
         try {
-          computed = config.getDelayFn().get(context);
+          computed = Durations.ofSafeNanos(config.getDelayFn().get(context));
         } catch (Throwable e) {
           if (e instanceof RuntimeException)
             throw (RuntimeException) e;

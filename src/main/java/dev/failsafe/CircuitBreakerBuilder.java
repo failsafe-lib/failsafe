@@ -19,6 +19,7 @@ import dev.failsafe.event.CircuitBreakerStateChangedEvent;
 import dev.failsafe.event.EventListener;
 import dev.failsafe.internal.CircuitBreakerImpl;
 import dev.failsafe.internal.util.Assert;
+import dev.failsafe.internal.util.Durations;
 
 import java.time.Duration;
 import java.util.function.BiPredicate;
@@ -112,6 +113,7 @@ public class CircuitBreakerBuilder<R>
    */
   public CircuitBreakerBuilder<R> withDelay(Duration delay) {
     Assert.notNull(delay, "delay");
+    delay = Durations.ofSafeNanos(delay);
     Assert.isTrue(delay.toNanos() >= 0, "delay must be >= 0");
     config.delay = delay;
     return this;

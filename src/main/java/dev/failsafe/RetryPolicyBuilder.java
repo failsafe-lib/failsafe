@@ -21,6 +21,7 @@ import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.event.ExecutionScheduledEvent;
 import dev.failsafe.internal.RetryPolicyImpl;
 import dev.failsafe.internal.util.Assert;
+import dev.failsafe.internal.util.Durations;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -290,6 +291,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   public RetryPolicyBuilder<R> withBackoff(Duration delay, Duration maxDelay, double delayFactor) {
     Assert.notNull(delay, "delay");
     Assert.notNull(maxDelay, "maxDelay");
+    delay = Durations.ofSafeNanos(delay);
+    maxDelay = Durations.ofSafeNanos(maxDelay);
     Assert.isTrue(!delay.isNegative() && !delay.isZero(), "The delay must be > 0");
     Assert.state(config.maxDuration == null || delay.toNanos() < config.maxDuration.toNanos(),
       "delay must be < the maxDuration");
@@ -319,6 +322,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   @Override
   public RetryPolicyBuilder<R> withDelay(Duration delay) {
     Assert.notNull(delay, "delay");
+    delay = Durations.ofSafeNanos(delay);
     Assert.state(config.maxDuration == null || delay.toNanos() < config.maxDuration.toNanos(),
       "delay must be < the maxDuration");
     Assert.state(config.jitter == null || delay.toNanos() >= config.jitter.toNanos(),
@@ -361,6 +365,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   public RetryPolicyBuilder<R> withDelay(Duration delayMin, Duration delayMax) {
     Assert.notNull(delayMin, "delayMin");
     Assert.notNull(delayMax, "delayMax");
+    delayMin = Durations.ofSafeNanos(delayMin);
+    delayMax = Durations.ofSafeNanos(delayMax);
     Assert.isTrue(!delayMin.isNegative() && !delayMin.isZero(), "delayMin must be > 0");
     Assert.isTrue(!delayMax.isNegative() && !delayMax.isZero(), "delayMax must be > 0");
     Assert.isTrue(delayMin.toNanos() < delayMax.toNanos(), "delayMin must be < delayMax");
@@ -415,6 +421,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    */
   public RetryPolicyBuilder<R> withJitter(Duration jitter) {
     Assert.notNull(jitter, "jitter");
+    jitter = Durations.ofSafeNanos(jitter);
     Assert.isTrue(jitter.toNanos() > 0, "jitter must be > 0");
     boolean validJitter = config.delayMin != null ?
       jitter.toNanos() <= config.delayMin.toNanos() :
@@ -459,6 +466,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    */
   public RetryPolicyBuilder<R> withMaxDuration(Duration maxDuration) {
     Assert.notNull(maxDuration, "maxDuration");
+    maxDuration = Durations.ofSafeNanos(maxDuration);
     Assert.state(maxDuration.toNanos() > config.delay.toNanos(), "maxDuration must be > the delay");
     Assert.state(config.delayMax == null || maxDuration.toNanos() > config.delayMax.toNanos(),
       "maxDuration must be > the max random delay");
