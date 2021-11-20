@@ -60,6 +60,10 @@ public class CircuitBreakerBuilder<R>
     config.failureThresholdingCapacity = 1;
   }
 
+  CircuitBreakerBuilder(CircuitBreakerConfig<R> config) {
+    super(new CircuitBreakerConfig<>(config));
+  }
+
   /**
    * Builds a new {@link CircuitBreaker} using the builder's configuration.
    */
@@ -108,7 +112,7 @@ public class CircuitBreakerBuilder<R>
    */
   public CircuitBreakerBuilder<R> withDelay(Duration delay) {
     Assert.notNull(delay, "delay");
-    Assert.isTrue(delay.toNanos() >= 0, "delay must be positive");
+    Assert.isTrue(delay.toNanos() >= 0, "delay must be >= 0");
     config.delay = delay;
     return this;
   }

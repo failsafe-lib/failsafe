@@ -58,6 +58,10 @@ public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>,
     config.fallbackStage = fallbackStage;
   }
 
+  FallbackBuilder(FallbackConfig<R> config) {
+    super(new FallbackConfig<>(config));
+  }
+
   /**
    * Builds a new {@link Fallback} using the builder's configuration.
    */
@@ -69,6 +73,8 @@ public class FallbackBuilder<R> extends FailurePolicyBuilder<FallbackBuilder<R>,
    * Registers the {@code listener} to be called when the last execution attempt prior to the fallback failed. You can
    * also use {@link #onFailure(EventListener) onFailure} to determine when the fallback attempt also fails.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
    */
   public FallbackBuilder<R> onFailedAttempt(EventListener<ExecutionAttemptedEvent<R>> listener) {
     config.failedAttemptListener = Assert.notNull(listener, "listener");

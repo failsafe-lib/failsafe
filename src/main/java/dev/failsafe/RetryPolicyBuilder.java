@@ -70,6 +70,10 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
     config.abortConditions = new ArrayList<>();
   }
 
+  RetryPolicyBuilder(RetryPolicyConfig<R> config) {
+    super(new RetryPolicyConfig<>(config));
+  }
+
   /**
    * Builds a new {@link RetryPolicy} using the builder's configuration.
    */
@@ -163,6 +167,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * Registers the {@code listener} to be called when an execution is aborted.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
    */
   public RetryPolicyBuilder<R> onAbort(EventListener<ExecutionCompletedEvent<R>> listener) {
     config.abortListener = Assert.notNull(listener, "listener");
@@ -175,6 +181,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * failed.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
    */
   public RetryPolicyBuilder<R> onFailedAttempt(EventListener<ExecutionAttemptedEvent<R>> listener) {
     config.failedAttemptListener = Assert.notNull(listener, "listener");
@@ -187,6 +195,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * are exceeded.
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
+   *
+   * @throws NullPointerException if {@code listener} is null
    */
   public RetryPolicyBuilder<R> onRetriesExceeded(EventListener<ExecutionCompletedEvent<R>> listener) {
     config.retriesExceededListener = Assert.notNull(listener, "listener");
@@ -198,6 +208,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    *
+   * @throws NullPointerException if {@code listener} is null
    * @see #onRetryScheduled(EventListener)
    */
   public RetryPolicyBuilder<R> onRetry(EventListener<ExecutionAttemptedEvent<R>> listener) {
@@ -214,6 +225,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * <p>Note: Any exceptions that are thrown from within the {@code listener} are ignored. To provide an alternative
    * result for a failed execution, use a {@link Fallback}.</p>
    *
+   * @throws NullPointerException if {@code listener} is null
    * @see #onRetry(EventListener)
    */
   public RetryPolicyBuilder<R> onRetryScheduled(EventListener<ExecutionScheduledEvent<R>> listener) {
@@ -223,12 +235,13 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by a factor of 2.
+   * successive delays by a factor of 2. Replaces any previously configured {@link #withDelay(Duration) fixed} or {@link
+   * #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
-   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if delays have already been set, or if random delays have already been set
+   * @throws IllegalStateException if {@code delay} is >= the {@link #withMaxDuration(Duration) maxDuration} or {@code
+   * delay} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   public RetryPolicyBuilder<R> withBackoff(Duration delay, Duration maxDelay) {
     return withBackoff(delay, maxDelay, 2);
@@ -236,12 +249,13 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by a factor of 2.
+   * successive delays by a factor of 2. Replaces any previously configured {@link #withDelay(Duration) fixed} or {@link
+   * #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code chronoUnit} is null
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
-   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if delays have already been set, or if random delays have already been set
+   * @throws IllegalStateException if {@code delay} is >= the {@link #withMaxDuration(Duration) maxDuration} or {@code
+   * delay} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   public RetryPolicyBuilder<R> withBackoff(long delay, long maxDelay, ChronoUnit chronoUnit) {
     return withBackoff(delay, maxDelay, chronoUnit, 2);
@@ -249,13 +263,14 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by the {@code delayFactor}.
+   * successive delays by the {@code delayFactor}. Replaces any previously configured {@link #withDelay(Duration) fixed}
+   * or {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code chronoUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the {@code
    * delayFactor} is <= 1
-   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if delays have already been set, or if random delays have already been set
+   * @throws IllegalStateException if {@code delay} is >= the {@link #withMaxDuration(Duration) maxDuration} or {@code
+   * delay} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   public RetryPolicyBuilder<R> withBackoff(long delay, long maxDelay, ChronoUnit chronoUnit, double delayFactor) {
     return withBackoff(Duration.of(delay, chronoUnit), Duration.of(maxDelay, chronoUnit), delayFactor);
@@ -263,56 +278,70 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by the {@code delayFactor}.
+   * successive delays by the {@code delayFactor}. Replaces any previously configured {@link #withDelay(Duration) fixed}
+   * or {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
    * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the {@code
    * delayFactor} is <= 1
-   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if delays have already been set, or if random delays have already been set
+   * @throws IllegalStateException if {@code delay} is >= the {@link #withMaxDuration(Duration) maxDuration} or {@code
+   * delay} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   public RetryPolicyBuilder<R> withBackoff(Duration delay, Duration maxDelay, double delayFactor) {
     Assert.notNull(delay, "delay");
     Assert.notNull(maxDelay, "maxDelay");
-    Assert.isTrue(!delay.isNegative() && !delay.isZero(), "The delay must be greater than 0");
+    Assert.isTrue(!delay.isNegative() && !delay.isZero(), "The delay must be > 0");
     Assert.state(config.maxDuration == null || delay.toNanos() < config.maxDuration.toNanos(),
-      "delay must be less than the maxDuration");
-    Assert.isTrue(delay.toNanos() < maxDelay.toNanos(), "delay must be less than the maxDelay");
-    Assert.isTrue(delayFactor > 1, "delayFactor must be greater than 1");
-    Assert.state(config.delay == null || config.delay.equals(Duration.ZERO), "Delays have already been set");
-    Assert.state(config.delayMin == null, "Random delays have already been set");
+      "delay must be < the maxDuration");
+    Assert.state(config.jitter == null || delay.toNanos() >= config.jitter.toNanos(),
+      "delay must be >= the jitter duration");
+    Assert.isTrue(delay.toNanos() < maxDelay.toNanos(), "delay must be < the maxDelay");
+    Assert.isTrue(delayFactor > 1, "delayFactor must be > 1");
     config.delay = delay;
     config.maxDelay = maxDelay;
     config.delayFactor = delayFactor;
+
+    // CLear random delay
+    config.delayMin = null;
+    config.delayMax = null;
     return this;
   }
 
   /**
-   * Sets the {@code delay} to occur between retries.
+   * Sets the {@code delay} to occur between retries. Replaces any previously configured {@link #withBackoff(Duration,
+   * Duration) backoff} or {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code delay} is null
    * @throws IllegalArgumentException if {@code delay} <= 0
-   * @throws IllegalStateException if {@code delay} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if random delays have already been set, or if backoff delays have already been set
+   * @throws IllegalStateException if {@code delay} is >= the {@link #withMaxDuration(Duration) maxDuration} or {@code
+   * delay} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   @Override
   public RetryPolicyBuilder<R> withDelay(Duration delay) {
     Assert.notNull(delay, "delay");
     Assert.state(config.maxDuration == null || delay.toNanos() < config.maxDuration.toNanos(),
-      "delay must be less than the maxDuration");
-    Assert.state(config.delayMin == null, "Random delays have already been set");
-    Assert.state(config.maxDelay == null, "Backoff delays have already been set");
-    return super.withDelay(delay);
+      "delay must be < the maxDuration");
+    Assert.state(config.jitter == null || delay.toNanos() >= config.jitter.toNanos(),
+      "delay must be >= the jitter duration");
+    super.withDelay(delay);
+
+    // Clear backoff and random delays
+    config.maxDelay = null;
+    config.delayMin = null;
+    config.delayMax = null;
+    return this;
   }
 
   /**
    * Sets a random delay between the {@code delayMin} and {@code delayMax} (inclusive) to occur between retries.
+   * Replaces any previously configured {@link #withDelay(Duration) fixed} or {@link #withBackoff(Duration, Duration)
+   * backoff} delays.
    *
    * @throws NullPointerException if {@code chronoUnit} is null
    * @throws IllegalArgumentException if {@code delayMin} or {@code delayMax} are <= 0, or {@code delayMin} >= {@code
    * delayMax}
-   * @throws IllegalStateException if {@code delayMax} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if delays have already been set, if backoff delays have already been set
+   * @throws IllegalStateException if {@code delayMax} is >= the {@link #withMaxDuration(Duration) maxDuration} or
+   * {@code delayMin} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   public RetryPolicyBuilder<R> withDelay(long delayMin, long delayMax, ChronoUnit chronoUnit) {
     return withDelay(Duration.of(delayMin, chronoUnit), Duration.of(delayMax, chronoUnit));
@@ -320,25 +349,31 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets a random delay between the {@code delayMin} and {@code delayMax} (inclusive) to occur between retries.
+   * Replaces any previously configured {@link #withDelay(Duration) fixed} or {@link #withBackoff(Duration, Duration)
+   * backoff} delays.
    *
    * @throws NullPointerException if {@code delayMin} or {@code delayMax} are null
    * @throws IllegalArgumentException if {@code delayMin} or {@code delayMax} are <= 0, or {@code delayMin} >= {@code
    * delayMax}
    * @throws IllegalStateException if {@code delayMax} is >= the {@link RetryPolicyBuilder#withMaxDuration(Duration)
-   * maxDuration}, if delays have already been set, if backoff delays have already been set
+   * maxDuration} or {@code delay} is < a configured {@link #withJitter(Duration) jitter duration}
    */
   public RetryPolicyBuilder<R> withDelay(Duration delayMin, Duration delayMax) {
     Assert.notNull(delayMin, "delayMin");
     Assert.notNull(delayMax, "delayMax");
-    Assert.isTrue(!delayMin.isNegative() && !delayMin.isZero(), "delayMin must be greater than 0");
-    Assert.isTrue(!delayMax.isNegative() && !delayMax.isZero(), "delayMax must be greater than 0");
-    Assert.isTrue(delayMin.toNanos() < delayMax.toNanos(), "delayMin must be less than delayMax");
+    Assert.isTrue(!delayMin.isNegative() && !delayMin.isZero(), "delayMin must be > 0");
+    Assert.isTrue(!delayMax.isNegative() && !delayMax.isZero(), "delayMax must be > 0");
+    Assert.isTrue(delayMin.toNanos() < delayMax.toNanos(), "delayMin must be < delayMax");
     Assert.state(config.maxDuration == null || delayMax.toNanos() < config.maxDuration.toNanos(),
-      "delayMax must be less than the maxDuration");
-    Assert.state(config.delay == null || config.delay.equals(Duration.ZERO), "Delays have already been set");
-    Assert.state(config.maxDelay == null, "Backoff delays have already been set");
+      "delayMax must be < the maxDuration");
+    Assert.state(config.jitter == null || delayMin.toNanos() >= config.jitter.toNanos(),
+      "delayMin must be >= the jitter duration");
     config.delayMin = delayMin;
     config.delayMax = delayMax;
+
+    // Clear fixed and random delays
+    config.delay = Duration.ZERO;
+    config.maxDelay = null;
     return this;
   }
 
@@ -346,41 +381,49 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * Sets the {@code jitterFactor} to randomly vary retry delays by. For each retry delay, a random portion of the delay
    * multiplied by the {@code jitterFactor} will be added or subtracted to the delay. For example: a retry delay of
    * {@code 100} milliseconds and a {@code jitterFactor} of {@code .25} will result in a random retry delay between
-   * {@code 75} and {@code 125} milliseconds.
+   * {@code 75} and {@code 125} milliseconds. Replaces any previously configured {@link #withJitter(Duration) jitter
+   * duration}.
    * <p>
    * Jitter should be combined with {@link #withDelay(Duration) fixed}, {@link #withDelay(long, long, ChronoUnit)
-   * random} or {@link #withBackoff(long, long, ChronoUnit) exponential backoff} delays.
+   * random} or {@link #withBackoff(long, long, ChronoUnit) exponential backoff} delays. If no delays are configured,
+   * this setting is ignored.
    *
    * @throws IllegalArgumentException if {@code jitterFactor} is < 0 or > 1
-   * @throws IllegalStateException if {@link #withJitter(Duration)} has already been called
    */
   public RetryPolicyBuilder<R> withJitter(double jitterFactor) {
     Assert.isTrue(jitterFactor >= 0.0 && jitterFactor <= 1.0, "jitterFactor must be >= 0 and <= 1");
-    Assert.state(config.jitter == null, "withJitter(Duration) has already been called");
     config.jitterFactor = jitterFactor;
+
+    // Clear the jitter duration
+    config.jitter = null;
     return this;
   }
 
   /**
    * Sets the {@code jitter} to randomly vary retry delays by. For each retry delay, a random portion of the {@code
    * jitter} will be added or subtracted to the delay. For example: a {@code jitter} of {@code 100} milliseconds will
-   * randomly add between {@code -100} and {@code 100} milliseconds to each retry delay.
+   * randomly add between {@code -100} and {@code 100} milliseconds to each retry delay. Replaces any previously
+   * configured {@link #withJitter(double) jitter factor}.
    * <p>
    * Jitter should be combined with {@link #withDelay(Duration) fixed}, {@link #withDelay(long, long, ChronoUnit)
-   * random} or {@link #withBackoff(long, long, ChronoUnit) exponential backoff} delays.
+   * random} or {@link #withBackoff(long, long, ChronoUnit) exponential backoff} delays. If no delays are configured,
+   * this setting is ignored.
    *
    * @throws NullPointerException if {@code jitter} is null
    * @throws IllegalArgumentException if {@code jitter} is <= 0
-   * @throws IllegalStateException if {@link #withJitter(double)} has already been called or the jitter is greater than
-   * the min configured delay
+   * @throws IllegalStateException if the jitter is greater than the min configured delay
    */
   public RetryPolicyBuilder<R> withJitter(Duration jitter) {
     Assert.notNull(jitter, "jitter");
     Assert.isTrue(jitter.toNanos() > 0, "jitter must be > 0");
-    Assert.state(config.jitterFactor == 0.0, "withJitter(double) has already been called");
-    Assert.state(jitter.toNanos() <= (config.delayMin != null ? config.delayMin.toNanos() : config.delay.toNanos()),
-      "jitter must be less than the minimum configured delay");
+    boolean validJitter = config.delayMin != null ?
+      jitter.toNanos() <= config.delayMin.toNanos() :
+      config.delay == Duration.ZERO || jitter.toNanos() < config.delay.toNanos();
+    Assert.state(validJitter, "jitter must be < the minimum configured delay");
     config.jitter = jitter;
+
+    // Clear the jitter factor
+    config.jitterFactor = 0;
     return this;
   }
 
@@ -393,7 +436,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    */
   public RetryPolicyBuilder<R> withMaxAttempts(int maxAttempts) {
     Assert.isTrue(maxAttempts != 0, "maxAttempts cannot be 0");
-    Assert.isTrue(maxAttempts >= -1, "maxAttempts cannot be less than -1");
+    Assert.isTrue(maxAttempts >= -1, "maxAttempts must be >= -1");
     config.maxRetries = maxAttempts == -1 ? -1 : maxAttempts - 1;
     return this;
   }
@@ -404,19 +447,21 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * Notes:
    * <ul>
    *   <li>This setting will not cause long running executions to be interrupted. For that capability, use a
-   *   {@link Timeout} policy {@link TimeoutBuilder#withInterrupt() withInterrupt} set to {@code true}.</li>
+   *   {@link Timeout} policy {@link TimeoutBuilder#withInterrupt() withInterrupt} set.</li>
    *   <li>This setting will not disable {@link #withMaxRetries(int) max retries}, which are still {@code 2} by default.
    *   A max retries limit can be disabled via <code>withMaxRetries(-1)</code></li>
    * </ul>
    * </p>
    *
    * @throws NullPointerException if {@code maxDuration} is null
-   * @throws IllegalStateException if {@code maxDuration} is <= the {@link RetryPolicyBuilder#withDelay(Duration)
-   * delay}
+   * @throws IllegalStateException if {@code maxDuration} is <= the {@link #withDelay(Duration) delay} or {@code
+   * maxDuration} is <= the {@link #withDelay(Duration, Duration) max random delay}.
    */
   public RetryPolicyBuilder<R> withMaxDuration(Duration maxDuration) {
     Assert.notNull(maxDuration, "maxDuration");
-    Assert.state(maxDuration.toNanos() > config.delay.toNanos(), "maxDuration must be greater than the delay");
+    Assert.state(maxDuration.toNanos() > config.delay.toNanos(), "maxDuration must be > the delay");
+    Assert.state(config.delayMax == null || maxDuration.toNanos() > config.delayMax.toNanos(),
+      "maxDuration must be > the max random delay");
     config.maxDuration = maxDuration;
     return this;
   }
@@ -430,7 +475,7 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
    * @see #withMaxAttempts(int)
    */
   public RetryPolicyBuilder<R> withMaxRetries(int maxRetries) {
-    Assert.isTrue(maxRetries >= -1, "maxRetries must be greater than or equal to -1");
+    Assert.isTrue(maxRetries >= -1, "maxRetries must be >= to -1");
     config.maxRetries = maxRetries;
     return this;
   }

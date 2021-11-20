@@ -40,6 +40,13 @@ import static dev.failsafe.Functions.toFn;
  */
 public interface Fallback<R> extends Policy<R> {
   /**
+   * Creates a new FallbackBuilder that will be based on the {@code config}.
+   */
+  static <R> FallbackBuilder<R> builder(FallbackConfig<R> config) {
+    return new FallbackBuilder<>(config);
+  }
+
+  /**
    * Returns the {@code fallback} to be executed if execution fails.
    *
    * @throws NullPointerException if {@code fallback} is null

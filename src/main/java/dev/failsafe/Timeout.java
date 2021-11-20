@@ -62,6 +62,13 @@ public interface Timeout<R> extends Policy<R> {
   }
 
   /**
+   * Creates a new TimeoutBuilder that will be based on the {@code config}.
+   */
+  static <R> TimeoutBuilder<R> builder(TimeoutConfig<R> config) {
+    return new TimeoutBuilder<>(config);
+  }
+
+  /**
    * Returns a {@link Timeout} that fails an execution with {@link TimeoutExceededException TimeoutExceededException} if
    * it exceeds the {@code timeout}. Alias for {@code Timeout.builder(timeout).build()}. To configure other options on a
    * Timeout, use {@link #builder(Duration)} instead.

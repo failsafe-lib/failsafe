@@ -226,7 +226,8 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
       lastDelayNanos = delayNanos;
     }
 
-    delayNanos = adjustForJitter(delayNanos);
+    if (delayNanos != 0)
+      delayNanos = adjustForJitter(delayNanos);
     long elapsedNanos = context.getElapsedTime().toNanos();
     delayNanos = adjustForMaxDuration(delayNanos, elapsedNanos);
 

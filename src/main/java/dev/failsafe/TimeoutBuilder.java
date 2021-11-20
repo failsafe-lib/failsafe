@@ -36,6 +36,10 @@ public class TimeoutBuilder<R> extends PolicyBuilder<TimeoutBuilder<R>, TimeoutC
     super(new TimeoutConfig<>(timeout, false));
   }
 
+  TimeoutBuilder(TimeoutConfig<R> config) {
+    super(new TimeoutConfig<>(config));
+  }
+
   /**
    * Builds a new {@link Timeout} using the builder's configuration.
    */

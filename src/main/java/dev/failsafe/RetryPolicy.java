@@ -36,6 +36,13 @@ public interface RetryPolicy<R> extends Policy<R> {
   }
 
   /**
+   * Creates a new RetryPolicyBuilder that will be based on the {@code config}.
+   */
+  static <R> RetryPolicyBuilder<R> builder(RetryPolicyConfig<R> config) {
+    return new RetryPolicyBuilder<>(config);
+  }
+
+  /**
    * Creates a RetryPolicy that allows 3 execution attempts max with no delay.
    */
   static <R> RetryPolicy<R> ofDefaults() {

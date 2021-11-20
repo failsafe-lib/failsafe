@@ -18,9 +18,4 @@ public class Issue115Test {
       .withJitter(Duration.ofMillis(200))
       .build();
   }
-
-  @Test(expectedExceptions = IllegalStateException.class)
-  public void shouldFailWithJitterWithNoDelay() {
-    RetryPolicy.builder().handle(IllegalArgumentException.class).withJitter(Duration.ofMillis(200)).build();
-  }
 }

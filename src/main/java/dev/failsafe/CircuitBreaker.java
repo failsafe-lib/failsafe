@@ -66,6 +66,13 @@ public interface CircuitBreaker<R> extends Policy<R> {
   }
 
   /**
+   * Creates a new CircuitBreakerBuilder that will be based on the {@code config}.
+   */
+  static <R> CircuitBreakerBuilder<R> builder(CircuitBreakerConfig<R> config) {
+    return new CircuitBreakerBuilder<>(config);
+  }
+
+  /**
    * Creates a count based CircuitBreaker that opens after a {@link CircuitBreakerBuilder#withFailureThreshold(int)
    * single failure}, closes after a {@link CircuitBreakerBuilder#withSuccessThreshold(int) single success}, and has a 1
    * minute {@link CircuitBreakerBuilder#withDelay(Duration) delay} by default.

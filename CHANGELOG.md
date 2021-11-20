@@ -1,3 +1,10 @@
+# 3.0.1
+
+### Improvements
+
+- Issue #310 - Added `.builder(PolicyConfig)` methods to each of the policy interfaces, to allow new policies to be built from existing config.
+- Issue #251 - Relaxed the illegal state validation in `RetryPolicyBuilder` to allow different types of delays to be configured, replacing previous configuration. Also removed the requirement that a jitter duration be configured after a delay.
+
 # 3.0
 
 
