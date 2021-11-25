@@ -34,6 +34,24 @@ class TimedCircuitStats implements CircuitStats {
   private final Stat summary;
   volatile int currentIndex;
 
+  public TimedCircuitStats(int bucketCount, Duration thresholdingPeriod, Clock clock, CircuitStats oldStats) {
+    this.clock = clock;
+    this.buckets = new Bucket[bucketCount];
+    bucketSizeMillis = thresholdingPeriod.toMillis() / buckets.length;
+    windowSizeMillis = bucketSizeMillis * buckets.length;
+    for (int i = 0; i < buckets.length; i++)
+      buckets[i] = new Bucket();
+    this.summary = new Stat();
+
+    if (oldStats == null) {
+      buckets[0].startTimeMillis = clock.currentTimeMillis();
+    } else {
+      synchronized (oldStats) {
+        copyStats(oldStats);
+      }
+    }
+  }
+
   static class Clock {
     long currentTimeMillis() {
       return System.currentTimeMillis();
@@ -82,24 +100,6 @@ class TimedCircuitStats implements CircuitStats {
     @Override
     public String toString() {
       return "[startTime=" + startTimeMillis + ", s=" + successes + ", f=" + failures + ']';
-    }
-  }
-
-  public TimedCircuitStats(int bucketCount, Duration thresholdingPeriod, Clock clock, CircuitStats oldStats) {
-    this.clock = clock;
-    this.buckets = new Bucket[bucketCount];
-    bucketSizeMillis = thresholdingPeriod.toMillis() / buckets.length;
-    windowSizeMillis = bucketSizeMillis * buckets.length;
-    for (int i = 0; i < buckets.length; i++)
-      buckets[i] = new Bucket();
-    this.summary = new Stat();
-
-    if (oldStats == null) {
-      buckets[0].startTimeMillis = clock.currentTimeMillis();
-    } else {
-      synchronized (oldStats) {
-        copyStats(oldStats);
-      }
     }
   }
 
