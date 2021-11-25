@@ -385,9 +385,14 @@ public class FailsafeExecutor<R> {
   }
 
   /**
-   * Configures the {@code executor} to use as a wrapper around executions. The {@code executor} is responsible for
-   * propagating executions. Executions that normally return a result, such as {@link #get(CheckedSupplier)} will return
-   * {@code null} since the {@link Executor} interface does not support results.
+   * Configures the {@code executor} to use as a wrapper around executions. If the {@code executor} is actually an
+   * instance of {@link ExecutorService}, then the {@code executor} will be configured via {@link
+   * #with(ExecutorService)} instead.
+   * <p>
+   * The {@code executor} is responsible for propagating executions. Executions that normally return a result, such as
+   * {@link #get(CheckedSupplier)} will return {@code null} since the {@link Executor} interface does not support
+   * results.
+   * </p>
    * <p>The {@code executor} will not be used for {@link #getStageAsync(CheckedSupplier) getStageAsync} calls since
    * those require a returned result.
    * </p>
@@ -395,7 +400,11 @@ public class FailsafeExecutor<R> {
    * @throws NullPointerException if {@code executor} is null
    */
   public FailsafeExecutor<R> with(Executor executor) {
-    this.executor = Assert.notNull(executor, "executor");
+    Assert.notNull(executor, "executor");
+    if (executor instanceof ExecutorService)
+      with((ExecutorService) executor);
+    else
+      this.executor = executor;
     return this;
   }
 

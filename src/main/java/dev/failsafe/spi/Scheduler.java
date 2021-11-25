@@ -48,6 +48,8 @@ public interface Scheduler {
    * Returns a Scheduler adapted from the {@code executorService}.
    */
   static Scheduler of(ExecutorService executorService) {
-    return new DelegatingScheduler(executorService);
+    return executorService instanceof ScheduledExecutorService ?
+      of((ScheduledExecutorService) executorService) :
+      new DelegatingScheduler(executorService);
   }
 }

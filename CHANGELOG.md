@@ -1,3 +1,9 @@
+# 3.0.2
+
+### Bug Fixes
+
+- Issue #311 - `with(Executor)` not working as expected in some cases.
+
 # 3.0.1
 
 ### Improvements
