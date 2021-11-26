@@ -55,11 +55,6 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   }
 
   @Override
-  public void acquirePermit() {
-    state.get().acquirePermit();
-  }
-
-  @Override
   public void close() {
     transitionTo(State.CLOSED, config.getCloseListener(), null);
   }

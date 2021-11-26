@@ -110,7 +110,10 @@ public interface CircuitBreaker<R> extends Policy<R> {
    * @see #recordSuccess()
    * @see #recordFailure()
    */
-  void acquirePermit();
+  default void acquirePermit() {
+    if (!tryAcquirePermit())
+      throw new CircuitBreakerOpenException(this);
+  }
 
   /**
    * Attempts to acquire a permit to use the circuit breaker and returns whether a permit was acquired. Permission will

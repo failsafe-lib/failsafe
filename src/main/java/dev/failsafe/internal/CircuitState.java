@@ -67,11 +67,6 @@ public abstract class CircuitState<R> {
   void checkThreshold(ExecutionContext<R> context) {
   }
 
-  void acquirePermit() {
-    if (!tryAcquirePermit())
-      throw new CircuitBreakerOpenException(breaker);
-  }
-
   abstract boolean tryAcquirePermit();
 
   void releasePermit() {
