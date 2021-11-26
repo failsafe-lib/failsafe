@@ -10,7 +10,7 @@
 
   <groupId>dev.failsafe</groupId>
   <artifactId>failsafe</artifactId>
-  <version>3.0.2-SNAPSHOT</version>
+  <version>3.0.2</version>
   <name>Failsafe</name>
   <url>https://failsafe.dev</url>
 
