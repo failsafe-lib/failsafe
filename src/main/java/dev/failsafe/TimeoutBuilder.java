@@ -23,7 +23,7 @@ import java.time.Duration;
 /**
  * Builds {@link Timeout} instances.
  * <p>
- * This class is threadsafe.
+ * This class is <i>not</i> threadsafe.
  * </p>
  *
  * @param <R> result type
