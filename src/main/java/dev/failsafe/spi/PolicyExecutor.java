@@ -105,11 +105,13 @@ public abstract class PolicyExecutor<R> {
     FailsafeFuture<R> future) {
 
     return execution -> {
-      ExecutionResult<R> result = preExecute();
-      if (result != null) {
-        // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
-        execution.preExecute();
-        return CompletableFuture.completedFuture(result);
+      if (!execution.isRecorded()) {
+        ExecutionResult<R> result = preExecute();
+        if (result != null) {
+          // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
+          execution.preExecute();
+          return CompletableFuture.completedFuture(result);
+        }
       }
 
       return innerFn.apply(execution).thenCompose(r -> {
