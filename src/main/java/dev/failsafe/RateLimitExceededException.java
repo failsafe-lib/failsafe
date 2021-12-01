@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,21 @@
 package dev.failsafe;
 
 /**
- * Thrown when a synchronous Failsafe execution fails with an {@link Exception}, wrapping the underlying exception. Use
- * {@link Throwable#getCause()} to learn the cause of the failure.
+ * Thrown when an execution exceeds or would exceed a {@link RateLimiter}.
  *
  * @author Jonathan Halterman
  */
-public class FailsafeException extends RuntimeException {
+public class RateLimitExceededException extends FailsafeException {
   private static final long serialVersionUID = 1L;
 
-  public FailsafeException() {
+  private final RateLimiter<?> rateLimiter;
+
+  public RateLimitExceededException(RateLimiter<?> rateLimiter) {
+    this.rateLimiter = rateLimiter;
   }
 
-  public FailsafeException(Throwable t) {
-    super(t);
+  /** Returns the {@link RateLimiter} that caused the exception. */
+  public RateLimiter<?> getRateLimiter() {
+    return rateLimiter;
   }
 }

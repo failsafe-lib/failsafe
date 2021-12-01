@@ -1,3 +1,9 @@
+# 3.1
+
+### Improvements
+
+- Issue #308 - Introduce a `RateLimiter` policy.
+
 # 3.0.2
 
 ### Bug Fixes
@@ -16,7 +22,6 @@
 - Issue #215 - Added overflow checking for large user-provided `Duration` values.
 
 # 3.0
-
 
 ### API Changes
 

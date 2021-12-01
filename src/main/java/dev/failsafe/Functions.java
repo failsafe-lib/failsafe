@@ -54,11 +54,11 @@ final class Functions {
       synchronized (execution.getInitial()) {
         execution.setInterruptable(false);
         if (execution.isInterrupted()) {
-          // Clear interrupt flag if interruption was intended
+          // Clear interrupt flag if interruption was performed by Failsafe
           Thread.interrupted();
           return execution.getResult();
         } else if (throwable instanceof InterruptedException)
-          // Set interrupt flag if interrupt occurred but was not intended
+          // Set interrupt flag if interruption was not performed by Failsafe
           Thread.currentThread().interrupt();
       }
 

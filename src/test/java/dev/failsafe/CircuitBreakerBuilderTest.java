@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 
 import java.time.Duration;
 
+import static dev.failsafe.testing.Asserts.assertThrows;
 import static org.testng.Assert.*;
 
 @Test
@@ -37,5 +38,30 @@ public class CircuitBreakerBuilderTest {
     assertEquals(newConfig.successThreshold, 20);
     assertEquals(newConfig.successThresholdingCapacity, 30);
     assertNotNull(newConfig.closeListener);
+  }
+
+  public void shouldRequireValidDelay() {
+    assertThrows(() -> CircuitBreaker.builder().withDelay(null), NullPointerException.class);
+    assertThrows(() -> CircuitBreaker.builder().withDelay(Duration.ofMillis(-1)), IllegalArgumentException.class);
+  }
+
+  public void shouldRequireValidFailureThreshold() {
+    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(0), IllegalArgumentException.class);
+  }
+
+  public void shouldRequireValidFailureThresholdRatio() {
+    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(0, 2), IllegalArgumentException.class);
+    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(2, 0), IllegalArgumentException.class);
+    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(2, 1), IllegalArgumentException.class);
+  }
+
+  public void shouldRequireValidSuccessThreshold() {
+    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(0).build(), IllegalArgumentException.class);
+  }
+
+  public void shouldRequireValidSuccessThresholdRatio() {
+    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(0, 2), IllegalArgumentException.class);
+    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(2, 0), IllegalArgumentException.class);
+    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(2, 1), IllegalArgumentException.class);
   }
 }

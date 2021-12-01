@@ -89,10 +89,10 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
           execution.setInterruptable(true);
           Thread.sleep(TimeUnit.NANOSECONDS.toMillis(result.getDelay()));
         } catch (InterruptedException e) {
-          // Set interrupt flag if interrupt was not intended
+          // Set interrupt flag if interruption was not performed by Failsafe
           if (!execution.isInterrupted())
             Thread.currentThread().interrupt();
-          return ExecutionResult.failure(new FailsafeException(e));
+          return ExecutionResult.failure(e);
         } finally {
           execution.setInterruptable(false);
         }
