@@ -15,18 +15,15 @@
  */
 package dev.failsafe.testing;
 
-import dev.failsafe.CircuitBreaker;
 import dev.failsafe.FailsafeException;
 import dev.failsafe.FailsafeExecutor;
 import dev.failsafe.RetryPolicy;
 import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.function.*;
-import dev.failsafe.internal.CircuitBreakerImpl;
-import dev.failsafe.internal.CircuitState;
+import dev.failsafe.internal.InternalTesting;
 import net.jodah.concurrentunit.Waiter;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -97,22 +94,13 @@ public class Testing extends Logging {
     });
   }
 
-  @SuppressWarnings("unchecked")
-  public static <T extends CircuitState> T stateFor(CircuitBreaker breaker) {
-    Field stateField;
+  public static long timed(CheckedRunnable runnable) {
+    long startTime = System.currentTimeMillis();
     try {
-      stateField = CircuitBreakerImpl.class.getDeclaredField("state");
-      stateField.setAccessible(true);
-      return ((AtomicReference<T>) stateField.get(breaker)).get();
-    } catch (Exception e) {
-      throw new IllegalStateException("Could not get circuit breaker state");
+      runnable.run();
+    } catch (Throwable ignore) {
     }
-  }
-
-  public static void resetBreaker(CircuitBreaker<?> breaker) {
-    breaker.close();
-    CircuitState state = stateFor(breaker);
-    state.getStats().reset();
+    return System.currentTimeMillis() - startTime;
   }
 
   /**
@@ -184,12 +172,12 @@ public class Testing extends Logging {
     testRunSuccess(null, failsafe, when, then, expectedResult);
   }
 
-  public static <T> void testRunSuccess(Runnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
+  public static <T> void testRunSuccess(CheckedRunnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Then<T> then, T expectedResult) {
     testRunSuccess(true, given, failsafe, when, then, expectedResult);
   }
 
-  public static <T> void testRunSuccess(boolean runAsyncExecutions, Runnable given, FailsafeExecutor<T> failsafe,
+  public static <T> void testRunSuccess(boolean runAsyncExecutions, CheckedRunnable given, FailsafeExecutor<T> failsafe,
     ContextualRunnable<T> when, Then<T> then, T expectedResult) {
     ContextualSupplier<T, T> whenSupplier = ctx -> {
       when.run(ctx);
@@ -212,17 +200,17 @@ public class Testing extends Logging {
     testGetInternal(true, null, failsafe, when, then, expectedResult, null);
   }
 
-  public static <T> void testGetSuccess(Runnable given, FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
-    T expectedResult) {
+  public static <T> void testGetSuccess(CheckedRunnable given, FailsafeExecutor<T> failsafe,
+    ContextualSupplier<T, T> when, T expectedResult) {
     testGetInternal(true, given, failsafe, when, null, expectedResult, null);
   }
 
-  public static <T> void testGetSuccess(Runnable given, FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
-    Then<T> then, T expectedResult) {
+  public static <T> void testGetSuccess(CheckedRunnable given, FailsafeExecutor<T> failsafe,
+    ContextualSupplier<T, T> when, Then<T> then, T expectedResult) {
     testGetInternal(true, given, failsafe, when, then, expectedResult, null);
   }
 
-  public static <T> void testGetSuccess(boolean runAsyncExecutions, Runnable given, FailsafeExecutor<T> failsafe,
+  public static <T> void testGetSuccess(boolean runAsyncExecutions, CheckedRunnable given, FailsafeExecutor<T> failsafe,
     ContextualSupplier<T, T> when, Then<T> then, T expectedResult) {
     testGetInternal(runAsyncExecutions, given, failsafe, when, then, expectedResult, null);
   }
@@ -246,19 +234,19 @@ public class Testing extends Logging {
   }
 
   @SafeVarargs
-  public static <T> void testRunFailure(Runnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
+  public static <T> void testRunFailure(CheckedRunnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Class<? extends Throwable>... expectedExceptions) {
     testRunFailure(true, given, failsafe, when, null, expectedExceptions);
   }
 
   @SafeVarargs
-  public static <T> void testRunFailure(Runnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
+  public static <T> void testRunFailure(CheckedRunnable given, FailsafeExecutor<T> failsafe, ContextualRunnable<T> when,
     Then<T> then, Class<? extends Throwable>... expectedExceptions) {
     testRunFailure(true, given, failsafe, when, then, expectedExceptions);
   }
 
   @SafeVarargs
-  public static <T> void testRunFailure(boolean runAsyncExecutions, Runnable given, FailsafeExecutor<T> failsafe,
+  public static <T> void testRunFailure(boolean runAsyncExecutions, CheckedRunnable given, FailsafeExecutor<T> failsafe,
     ContextualRunnable<T> when, Then<T> then, Class<? extends Throwable>... expectedExceptions) {
     ContextualSupplier<T, T> whenSupplier = ctx -> {
       when.run(ctx);
@@ -286,8 +274,8 @@ public class Testing extends Logging {
   }
 
   @SafeVarargs
-  public static <T> void testGetFailure(Runnable given, FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when,
-    Then<T> then, Class<? extends Throwable>... expectedExceptions) {
+  public static <T> void testGetFailure(CheckedRunnable given, FailsafeExecutor<T> failsafe,
+    ContextualSupplier<T, T> when, Then<T> then, Class<? extends Throwable>... expectedExceptions) {
     testGetInternal(true, given, failsafe, when, then, null, expectedExceptions);
   }
 
@@ -308,8 +296,9 @@ public class Testing extends Logging {
    * may be skipped for tests that involve timeouts, which don't work reliably against AsyncExecutions, since those may
    * return immediately.
    */
-  private static <T> void testGetInternal(boolean runAsyncExecutions, Runnable given, FailsafeExecutor<T> failsafe,
-    ContextualSupplier<T, T> when, Then<T> then, T expectedResult, Class<? extends Throwable>[] expectedExceptions) {
+  private static <T> void testGetInternal(boolean runAsyncExecutions, CheckedRunnable given,
+    FailsafeExecutor<T> failsafe, ContextualSupplier<T, T> when, Then<T> then, T expectedResult,
+    Class<? extends Throwable>[] expectedExceptions) {
 
     AtomicReference<CompletableFuture<T>> futureRef = new AtomicReference<>();
     AtomicReference<ExecutionCompletedEvent<T>> completedEventRef = new AtomicReference<>();
@@ -347,7 +336,7 @@ public class Testing extends Logging {
     // Run sync test
     System.out.println("\nRunning sync test");
     if (given != null)
-      given.run();
+      uncheck(given).run();
     if (expectedExInner.length == 0) {
       resultAssertion.accept(unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn).get(when)));
     } else {
@@ -361,7 +350,7 @@ public class Testing extends Logging {
     // Create async tester
     Consumer<Function<FailsafeExecutor<T>, CompletableFuture<T>>> asyncTester = test -> {
       if (given != null)
-        given.run();
+        uncheck(given).run();
       if (expectedExInner.length == 0) {
         CompletableFuture<T> future = test.apply(failsafe.onComplete(setCompletedEventFn));
         futureRef.set(future);

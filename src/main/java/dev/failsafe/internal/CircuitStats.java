@@ -21,7 +21,7 @@ import dev.failsafe.internal.TimedCircuitStats.Clock;
 /**
  * Stats for a circuit breaker.
  */
-public interface CircuitStats {
+interface CircuitStats {
   static CircuitStats create(CircuitBreaker<?> breaker, int capacity, boolean supportsTimeBased,
     CircuitStats oldStats) {
     if (supportsTimeBased && breaker.getConfig().getFailureThresholdingPeriod() != null)

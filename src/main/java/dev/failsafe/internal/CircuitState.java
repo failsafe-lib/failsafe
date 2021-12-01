@@ -28,7 +28,7 @@ import java.time.Duration;
  * @param <R> result type
  * @author Jonathan Halterman
  */
-public abstract class CircuitState<R> {
+abstract class CircuitState<R> {
   final CircuitBreakerImpl<R> breaker;
   final CircuitBreakerConfig<R> config;
   volatile CircuitStats stats;

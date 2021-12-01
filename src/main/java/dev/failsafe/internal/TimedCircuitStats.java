@@ -19,7 +19,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 /**
- * A CircuitBreakerStats implementation that counts execution results within a time period, and buckets results to
+ * A CircuitStats implementation that counts execution results within a time period, and buckets results to
  * minimize overhead.
  */
 class TimedCircuitStats implements CircuitStats {

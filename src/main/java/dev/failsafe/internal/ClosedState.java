@@ -19,7 +19,7 @@ import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreaker.State;
 import dev.failsafe.ExecutionContext;
 
-public class ClosedState<R> extends CircuitState<R> {
+class ClosedState<R> extends CircuitState<R> {
   public ClosedState(CircuitBreakerImpl<R> breaker) {
     super(breaker, CircuitStats.create(breaker, capacityFor(breaker), true, null));
   }

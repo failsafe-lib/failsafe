@@ -33,7 +33,6 @@ import java.util.function.Predicate;
  * @author Jonathan Halterman
  * @see RetryPolicyBuilder
  */
-@SuppressWarnings("WeakerAccess")
 public class RetryPolicyImpl<R> implements RetryPolicy<R>, FailurePolicy<R>, DelayablePolicy<R> {
   private final RetryPolicyConfig<R> config;
 

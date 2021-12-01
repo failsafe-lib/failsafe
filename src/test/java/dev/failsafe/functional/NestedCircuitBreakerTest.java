@@ -21,6 +21,7 @@ import dev.failsafe.CircuitBreaker;
 import dev.failsafe.Failsafe;
 import org.testng.annotations.Test;
 
+import static dev.failsafe.internal.InternalTesting.resetBreaker;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 

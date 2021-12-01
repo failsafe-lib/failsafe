@@ -21,7 +21,7 @@ import dev.failsafe.ExecutionContext;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class HalfOpenState<R> extends CircuitState<R> {
+class HalfOpenState<R> extends CircuitState<R> {
   protected final AtomicInteger permittedExecutions = new AtomicInteger();
 
   public HalfOpenState(CircuitBreakerImpl<R> breaker) {

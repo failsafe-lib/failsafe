@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+import static dev.failsafe.internal.InternalTesting.resetBreaker;
 import static org.testng.Assert.*;
 
 /**

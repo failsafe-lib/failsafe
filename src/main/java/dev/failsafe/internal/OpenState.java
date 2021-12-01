@@ -19,7 +19,7 @@ import dev.failsafe.CircuitBreaker.State;
 
 import java.time.Duration;
 
-public class OpenState<R> extends CircuitState<R> {
+class OpenState<R> extends CircuitState<R> {
   private final long startTime = System.nanoTime();
   private final long delayNanos;
 

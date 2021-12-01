@@ -18,7 +18,7 @@ package dev.failsafe.internal;
 import java.util.BitSet;
 
 /**
- * A CircuitBreakerStats implementation that counts execution results using a BitSet.
+ * A CircuitStats implementation that counts execution results using a BitSet.
  */
 class CountingCircuitStats implements CircuitStats {
   final BitSet bitSet;
