@@ -60,11 +60,12 @@ import java.time.Duration;
 public interface RateLimiter<R> extends Policy<R> {
   /**
    * Returns a smooth {@link RateLimiterBuilder} for the {@code executionRate}, which controls how frequently an
-   * execution is permitted. For example, a executionRate of {@code Duration.ofMillis(10)} would allow one execution
-   * every 10 milliseconds.
+   * execution is permitted. For example, an {@code executionRate} of {@code Duration.ofMillis(10)} would allow one
+   * execution every 10 milliseconds.
    * <p>
-   * Executions are permitted with a delay between executions equal to the {@code executionRate}. If too many executions
-   * are being requested, the delay may be greater.
+   * Executions are performed with no delay until they exceed the {@code executionRate}, after which executions are
+   * either rejected, or if a {@link RateLimiterBuilder#withTimeout(Duration) timeout is configured}, will block until
+   * execution is permitted or the timeout is exceeded.
    *
    * @param executionRate at which executions should be permitted
    */
@@ -79,7 +80,7 @@ public interface RateLimiter<R> extends Policy<R> {
    * <p>
    * Executions are performed with no delay up until the {@code maxExecutions} are reached for the current period, after
    * which executions are either rejected, or if a {@link RateLimiterBuilder#withTimeout(Duration) timeout is
-   * configured}, they will block until a permit is free or the timeout is exceeded.
+   * configured}, will block until execution is permitted or the timeout is exceeded.
    *
    * @param maxExecutions The max number of permitted executions per {@code period}
    * @param period The period after which permitted executions are reset to the {@code maxExecutions}
