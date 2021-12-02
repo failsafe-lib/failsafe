@@ -45,6 +45,23 @@ public class RateLimiterTest extends Testing {
   }
 
   /**
+   * Asserts that an exceeded timeout causes RateLimitExceededException.
+   */
+  public void testTimeoutExceeded() {
+    // Given
+    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofMillis(10)).withTimeout(Duration.ofMillis(20)).build();
+
+    // When / Then
+    testRunFailure(() -> {
+      resetLimiter(limiter);
+      runInThread(() -> {
+        limiter.tryAcquirePermits(5, Duration.ofSeconds(1)); // limiter should now be 4 permits over its max
+      });
+    }, Failsafe.with(limiter), ctx -> {
+    }, RateLimitExceededException.class);
+  }
+
+  /**
    * Tests a scenario where RateLimiter rejects some retried executions, which prevents the user's Supplier from being
    * called.
    */
