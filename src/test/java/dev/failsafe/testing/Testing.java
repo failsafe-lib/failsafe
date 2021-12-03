@@ -125,6 +125,7 @@ public class Testing extends Logging {
     try {
       Thread.sleep(duration);
     } catch (InterruptedException ignore) {
+          Thread.currentThread().interrupt();
     }
   }
 
