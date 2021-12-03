@@ -45,21 +45,20 @@ public class Asserts {
 
     @Override
     public String getMessage() {
-      Formatter fmt = new Formatter().format("Errors encountered:%n%n");
-      int index = 1;
-      for (Error error : errors) {
-        StringWriter writer = new StringWriter();
-        error.printStackTrace(new PrintWriter(writer));
-        fmt.format("%s) %s%n", index++, writer.getBuffer());
+      try (Formatter fmt = new Formatter().format("Errors encountered:%n%n")) {
+        int index = 1;
+        for (Error error : errors) {
+          StringWriter writer = new StringWriter();
+          error.printStackTrace(new PrintWriter(writer));
+          fmt.format("%s) %s%n", index++, writer.getBuffer());
+        }
+        if (errors.size() == 1) {
+          fmt.format("1 error");
+        } else {
+          fmt.format("%s errors", errors.size());
+        }
+        return fmt.toString();
       }
-
-      if (errors.size() == 1) {
-        fmt.format("1 error");
-      } else {
-        fmt.format("%s errors", errors.size());
-      }
-
-      return fmt.toString();
     }
   }
 
