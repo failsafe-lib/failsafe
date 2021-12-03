@@ -61,11 +61,12 @@ public interface RateLimiter<R> extends Policy<R> {
   /**
    * Returns a smooth {@link RateLimiterBuilder} for the {@code executionRate}, which controls how frequently an
    * execution is permitted. For example, an {@code executionRate} of {@code Duration.ofMillis(10)} would allow one
-   * execution every 10 milliseconds.
+   * execution every 10 milliseconds. By default, the returned {@link RateLimiterBuilder} will have a {@link
+   * RateLimiterBuilder#withMaxWaitTime max wait time} of {@code 0}.
    * <p>
    * Executions are performed with no delay until they exceed the {@code executionRate}, after which executions are
-   * either rejected, or if a {@link RateLimiterBuilder#withTimeout(Duration) timeout is configured}, will block until
-   * execution is permitted or the timeout is exceeded.
+   * either rejected or will block and wait until the {@link RateLimiterBuilder#withMaxWaitTime(Duration) max wait time}
+   * is exceeded.
    *
    * @param executionRate at which executions should be permitted
    */
@@ -76,11 +77,12 @@ public interface RateLimiter<R> extends Policy<R> {
   /**
    * Returns a bursty {@link RateLimiterBuilder} for the {@code maxExecutions} per {@code period}. For example, a {@code
    * maxExecutions} value of {@code 100} with a {@code period} of {@code Duration.ofSeconds(1)} would allow up to 100
-   * executions every 1 second.
+   * executions every 1 second. By default, the returned {@link RateLimiterBuilder} will have a {@link
+   * RateLimiterBuilder#withMaxWaitTime max wait time} of {@code 0}.
    * <p>
-   * Executions are performed with no delay up until the {@code maxExecutions} are reached for the current period, after
-   * which executions are either rejected, or if a {@link RateLimiterBuilder#withTimeout(Duration) timeout is
-   * configured}, will block until execution is permitted or the timeout is exceeded.
+   * Executions are performed with no delay up until the {@code maxExecutions} are reached for the current {@code
+   * period}, after which executions are either rejected or will block and wait until the {@link
+   * RateLimiterBuilder#withMaxWaitTime(Duration) max wait time} is exceeded.
    *
    * @param maxExecutions The max number of permitted executions per {@code period}
    * @param period The period after which permitted executions are reset to the {@code maxExecutions}
@@ -124,34 +126,32 @@ public interface RateLimiter<R> extends Policy<R> {
   void acquirePermits(int permits) throws InterruptedException;
 
   /**
-   * Attempts to acquire a permit to perform an execution against the rate limiter, waiting up to the {@code time
-   * timeout} until one is available, else throwing {@link RateLimitExceededException} if a permit will not be available
-   * in time.
+   * Attempts to acquire a permit to perform an execution against the rate limiter, waiting up to the {@code
+   * maxWaitTime} until one is available, else throwing {@link RateLimitExceededException} if a permit will not be
+   * available in time.
    *
-   * @throws NullPointerException if {@code timeout} is null
-   * @throws RateLimitExceededException if the rate limiter cannot acquire a permit before the {@code timeout} sicne it
-   * is exceeded
+   * @throws NullPointerException if {@code maxWaitTime} is null
+   * @throws RateLimitExceededException if the rate limiter cannot acquire a permit within the {@code maxWaitTime}
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire a permit
    * @see #tryAcquirePermit(Duration)
    */
-  default void acquirePermit(Duration timeout) throws InterruptedException {
-    acquirePermits(1, timeout);
+  default void acquirePermit(Duration maxWaitTime) throws InterruptedException {
+    acquirePermits(1, maxWaitTime);
   }
 
   /**
    * Attempts to acquire the requested {@code permits} to perform executions against the rate limiter, waiting up to the
-   * {@code time timeout} until they are available, else throwing {@link RateLimitExceededException} if the permits will
+   * {@code maxWaitTime} until they are available, else throwing {@link RateLimitExceededException} if the permits will
    * not be available in time.
    *
    * @throws IllegalArgumentException if {@code permits} is < 1
-   * @throws NullPointerException if {@code timeout} is null
-   * @throws RateLimitExceededException if the rate limiter cannot acquire the {@code permits} before the {@code
-   * timeout} sicne it is exceeded
+   * @throws NullPointerException if {@code maxWaitTime} is null
+   * @throws RateLimitExceededException if the rate limiter cannot acquire a permit within the {@code maxWaitTime}
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire the {@code permits}
    * @see #tryAcquirePermits(int, Duration)
    */
-  default void acquirePermits(int permits, Duration timeout) throws InterruptedException {
-    if (!tryAcquirePermits(permits, timeout))
+  default void acquirePermits(int permits, Duration maxWaitTime) throws InterruptedException {
+    if (!tryAcquirePermits(permits, maxWaitTime))
       throw new RateLimitExceededException(this);
   }
 
@@ -192,25 +192,25 @@ public interface RateLimiter<R> extends Policy<R> {
   boolean tryAcquirePermits(int permits);
 
   /**
-   * Tries to acquire a permit to perform an execution against the rate limiter, waiting up to the {@code timeout} until
-   * they are available.
+   * Tries to acquire a permit to perform an execution against the rate limiter, waiting up to the {@code maxWaitTime}
+   * until they are available.
    *
    * @return whether a permit is successfully acquired
-   * @throws NullPointerException if {@code timeout} is null
+   * @throws NullPointerException if {@code maxWaitTime} is null
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire a permit
    */
-  default boolean tryAcquirePermit(Duration timeout) throws InterruptedException {
-    return tryAcquirePermits(1, timeout);
+  default boolean tryAcquirePermit(Duration maxWaitTime) throws InterruptedException {
+    return tryAcquirePermits(1, maxWaitTime);
   }
 
   /**
    * Tries to acquire the requested {@code permits} to perform executions against the rate limiter, waiting up to the
-   * {@code timeout} until they are available.
+   * {@code maxWaitTime} until they are available.
    *
    * @return whether the requested {@code permits} are successfully acquired or not
    * @throws IllegalArgumentException if {@code permits} is < 1
-   * @throws NullPointerException if {@code timeout} is null
+   * @throws NullPointerException if {@code maxWaitTime} is null
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire the {@code permits}
    */
-  boolean tryAcquirePermits(int permits, Duration timeout) throws InterruptedException;
+  boolean tryAcquirePermits(int permits, Duration maxWaitTime) throws InterruptedException;
 }

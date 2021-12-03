@@ -51,11 +51,11 @@ public class RateLimiterBuilder<R> extends PolicyBuilder<RateLimiterBuilder<R>, 
   }
 
   /**
-   * Configures the {@code timeout} to wait for permits to be available. If permits cannot be acquired before the {@code
-   * timeout} is exceeded, then the rate limiter will throw {@link RateLimitExceededException}.
+   * Configures the {@code maxWaitTime} to wait for permits to be available. If permits cannot be acquired before the
+   * {@code maxWaitTime} is exceeded, then the rate limiter will throw {@link RateLimitExceededException}.
    */
-  public RateLimiterBuilder<R> withTimeout(Duration timeout) {
-    config.timeout = timeout;
+  public RateLimiterBuilder<R> withMaxWaitTime(Duration maxWaitTime) {
+    config.maxWaitTime = maxWaitTime;
     return this;
   }
 }

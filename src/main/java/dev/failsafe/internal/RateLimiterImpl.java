@@ -65,10 +65,10 @@ public class RateLimiterImpl<R> implements RateLimiter<R> {
   }
 
   @Override
-  public boolean tryAcquirePermits(int permits, Duration timeout) throws InterruptedException {
+  public boolean tryAcquirePermits(int permits, Duration maxWaitTime) throws InterruptedException {
     Assert.isTrue(permits > 0, "permits must be > 0");
-    Assert.notNull(timeout, "timeout");
-    long waitNanos = stats.acquirePermits(permits, timeout);
+    Assert.notNull(maxWaitTime, "maxWaitTime");
+    long waitNanos = stats.acquirePermits(permits, maxWaitTime);
     if (waitNanos == -1)
       return false;
     if (waitNanos > 0)

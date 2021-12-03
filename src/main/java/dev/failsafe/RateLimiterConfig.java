@@ -26,7 +26,7 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
   Duration period;
 
   // Common
-  Duration timeout;
+  Duration maxWaitTime;
 
   RateLimiterConfig(Duration executionRate) {
     this.executionRate = executionRate;
@@ -42,7 +42,7 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
     executionRate = config.executionRate;
     maxPermits = config.maxPermits;
     period = config.period;
-    timeout = config.timeout;
+    maxWaitTime = config.maxWaitTime;
   }
 
   /**
@@ -76,12 +76,12 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
   }
 
   /**
-   * Returns the timeout to wait for permits to be available. If permits cannot be acquired before the timeout is
+   * Returns the max time to wait for permits to be available. If permits cannot be acquired before the max wait time is
    * exceeded, then the rate limiter will throw {@link RateLimitExceededException}.
    *
-   * @see RateLimiterBuilder#withTimeout(Duration)
+   * @see RateLimiterBuilder#withMaxWaitTime(Duration)
    */
-  public Duration getTimeout() {
-    return timeout;
+  public Duration getMaxWaitTime() {
+    return maxWaitTime;
   }
 }

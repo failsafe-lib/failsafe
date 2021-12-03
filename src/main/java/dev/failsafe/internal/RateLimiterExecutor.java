@@ -30,18 +30,19 @@ import java.time.Duration;
  */
 public class RateLimiterExecutor<R> extends PolicyExecutor<R> {
   private final RateLimiterImpl<R> rateLimiter;
-  private final Duration timeout;
+  private final Duration maxWaitTime;
 
   public RateLimiterExecutor(RateLimiterImpl<R> rateLimiter, int policyIndex) {
     super(rateLimiter, policyIndex);
     this.rateLimiter = rateLimiter;
-    timeout = rateLimiter.getConfig().getTimeout();
+    maxWaitTime = rateLimiter.getConfig().getMaxWaitTime();
   }
 
   @Override
   protected ExecutionResult<R> preExecute() {
     try {
-      boolean acquired = timeout == null ? rateLimiter.tryAcquirePermit() : rateLimiter.tryAcquirePermit(timeout);
+      boolean acquired =
+        maxWaitTime == null ? rateLimiter.tryAcquirePermit() : rateLimiter.tryAcquirePermit(maxWaitTime);
       return acquired ? null : ExecutionResult.failure(new RateLimitExceededException(rateLimiter));
     } catch (InterruptedException e) {
       // Set interrupt flag

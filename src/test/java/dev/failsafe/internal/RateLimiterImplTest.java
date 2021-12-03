@@ -76,7 +76,7 @@ public class RateLimiterImplTest extends Testing {
     assertTrue(elapsed < 1000);
   }
 
-  public void testAcquireWithTimeout() throws Throwable {
+  public void testAcquireWithMaxWaitTime() throws Throwable {
     RateLimiterImpl<Object> limiter = new RateLimiterImpl<>(
       RateLimiter.builder(Duration.ofMillis(100)).build().getConfig(), stopwatch);
 
@@ -103,7 +103,7 @@ public class RateLimiterImplTest extends Testing {
     assertFalse(limiter.tryAcquirePermit());
   }
 
-  public void testTryAcquirePermitWithTimeout() throws Throwable {
+  public void testTryAcquirePermitWithMaxWaitTime() throws Throwable {
     RateLimiterImpl<Object> limiter = new RateLimiterImpl<>(
       RateLimiter.builder(Duration.ofMillis(100)).build().getConfig(), stopwatch);
 
@@ -119,7 +119,7 @@ public class RateLimiterImplTest extends Testing {
     assertTrue(elapsed >= 100 && elapsed < 200);
   }
 
-  public void testTryAcquirePermitsWithTimeout() throws Throwable {
+  public void testTryAcquirePermitsWithMaxWaitTime() throws Throwable {
     RateLimiterImpl<Object> limiter = new RateLimiterImpl<>(
       RateLimiter.builder(Duration.ofMillis(100)).build().getConfig(), stopwatch);
 

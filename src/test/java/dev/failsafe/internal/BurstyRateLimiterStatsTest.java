@@ -20,7 +20,6 @@ import dev.failsafe.RateLimiterConfig;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.assertEquals;
 

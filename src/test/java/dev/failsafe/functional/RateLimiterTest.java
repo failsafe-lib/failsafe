@@ -16,13 +16,11 @@
 package dev.failsafe.functional;
 
 import dev.failsafe.*;
-import dev.failsafe.internal.RateLimiterImpl;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
 
-import static dev.failsafe.internal.InternalTesting.resetBreaker;
 import static dev.failsafe.internal.InternalTesting.resetLimiter;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -45,18 +43,21 @@ public class RateLimiterTest extends Testing {
   }
 
   /**
-   * Asserts that an exceeded timeout causes RateLimitExceededException.
+   * Asserts that an exceeded maxWaitTime causes RateLimitExceededException.
    */
-  public void testTimeoutExceeded() {
+  public void testMaxWaitTimeExceeded() {
     // Given
-    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofMillis(10)).withTimeout(Duration.ofMillis(20)).build();
+    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofMillis(10))
+      .withMaxWaitTime(Duration.ofMillis(20))
+      .build();
 
     // When / Then
     testRunFailure(() -> {
       resetLimiter(limiter);
-      runInThread(() -> {
-        limiter.tryAcquirePermits(5, Duration.ofSeconds(1)); // limiter should now be 4 permits over its max
+      runAsync(() -> {
+        limiter.tryAcquirePermits(50, Duration.ofMinutes(1)); // limiter should now be well over its max permits
       });
+      Thread.sleep(100);
     }, Failsafe.with(limiter), ctx -> {
     }, RateLimitExceededException.class);
   }
@@ -90,7 +91,9 @@ public class RateLimiterTest extends Testing {
    * Asserts that a rate limiter propagates an InterruptedException.
    */
   public void testAcquirePermitWithInterrupt() {
-    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofSeconds(1)).withTimeout(Duration.ofSeconds(5)).build();
+    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofSeconds(1))
+      .withMaxWaitTime(Duration.ofSeconds(5))
+      .build();
 
     testRunFailure(() -> {
       resetLimiter(limiter);

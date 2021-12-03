@@ -26,12 +26,12 @@ import static org.testng.Assert.assertNotNull;
 public class RateLimiterBuilderTest {
   public void shouldCreateBuilderFromExistingConfig() {
     RateLimiterConfig<Object> initialConfig = RateLimiter.builder(Duration.ofMillis(10))
-      .withTimeout(Duration.ofSeconds(10))
+      .withMaxWaitTime(Duration.ofSeconds(10))
       .onSuccess(e -> {
       }).config;
     RateLimiterConfig<Object> newConfig = RateLimiter.builder(initialConfig).config;
     assertEquals(newConfig.executionRate, Duration.ofMillis(10));
-    assertEquals(newConfig.timeout, Duration.ofSeconds(10));
+    assertEquals(newConfig.maxWaitTime, Duration.ofSeconds(10));
     assertNotNull(newConfig.successListener);
   }
 }

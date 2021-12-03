@@ -22,7 +22,6 @@ import org.testng.annotations.Test;
 import java.time.Duration;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 @Test
 public class SmoothRateLimiterStatsTest extends RateLimiterStatsTest<SmoothRateLimiterStats> {
