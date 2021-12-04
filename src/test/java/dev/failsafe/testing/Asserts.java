@@ -17,18 +17,15 @@ package dev.failsafe.testing;
 
 import dev.failsafe.function.CheckedRunnable;
 import dev.failsafe.function.CheckedSupplier;
-import dev.failsafe.testing.Asserts.CompositeError;
-import io.vertx.core.eventbus.Message;
 import org.testng.Assert;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.testng.Assert.assertEquals;
 
@@ -157,34 +154,26 @@ public class Asserts {
   }
 
   @SafeVarargs
-  public static void assertThrows(CheckedRunnable runnable, Class<? extends Throwable>... throwableHierarchy) {
-    assertThrows(runnable, t -> {
-    }, Arrays.asList(throwableHierarchy));
+  public static void assertThrows(CheckedRunnable runnable, Class<? extends Throwable>... expectedExceptions) {
+    assertThrows(runnable, t -> Arrays.asList(expectedExceptions));
   }
 
-  public static void assertThrows(CheckedRunnable runnable, List<Class<? extends Throwable>> throwableHierarchy) {
-    assertThrows(runnable, t -> {
-    }, throwableHierarchy);
-  }
-
-  public static void assertThrows(CheckedRunnable runnable, Consumer<Throwable> exceptionConsumer,
-    List<Class<? extends Throwable>> throwableHierarchy) {
-    boolean fail = false;
-    try {
-      runnable.run();
-      fail = true;
-    } catch (Throwable t) {
-      assertMatches(t, throwableHierarchy);
-      exceptionConsumer.accept(t);
-    }
-
-    if (fail)
-      Assert.fail("No exception was thrown. Expected: " + throwableHierarchy);
+  public static void assertThrows(CheckedRunnable runnable, List<Class<? extends Throwable>> expectedExceptions) {
+    assertThrows(runnable, t -> expectedExceptions);
   }
 
   public static <T> void assertThrowsSup(CheckedSupplier<T> supplier,
-    List<Class<? extends Throwable>> throwableHierarchy) {
-    assertThrows(supplier::get, t -> {
-    }, throwableHierarchy);
+    List<Class<? extends Throwable>> expectedExceptions) {
+    assertThrows(supplier::get, t -> expectedExceptions);
+  }
+
+  public static void assertThrows(CheckedRunnable runnable,
+    Function<Throwable, List<Class<? extends Throwable>>> expectedExceptionsFn) {
+    try {
+      runnable.run();
+      Assert.fail("No exception was thrown. Expected: " + expectedExceptionsFn.apply(null));
+    } catch (Throwable t) {
+      assertMatches(t, expectedExceptionsFn.apply(t));
+    }
   }
 }

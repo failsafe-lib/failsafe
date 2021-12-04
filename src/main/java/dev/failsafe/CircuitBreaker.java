@@ -107,8 +107,8 @@ public interface CircuitBreaker<R> extends Policy<R> {
    * Attempts to acquire a permit for the circuit breaker and throws {@link CircuitBreakerOpenException} if a permit
    * could not be acquired. Permission will be automatically released when a result or failure is recorded.
    *
-   * @throws CircuitBreakerOpenException Thrown when the circuit breaker is in a half-open state and no permits remain
-   * according to the configured success or failure thresholding capacity.
+   * @throws CircuitBreakerOpenException if the circuit breaker is in a half-open state and no permits remain according
+   * to the configured success or failure thresholding capacity.
    * @see #tryAcquirePermit()
    * @see #recordResult(Object)
    * @see #recordFailure(Throwable)

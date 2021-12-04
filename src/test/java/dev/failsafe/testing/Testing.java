@@ -22,6 +22,7 @@ import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.function.*;
 import dev.failsafe.internal.InternalTesting;
+import dev.failsafe.internal.util.Lists;
 import net.jodah.concurrentunit.Waiter;
 
 import java.util.Arrays;
@@ -340,7 +341,13 @@ public class Testing extends Logging {
     if (expectedExInner.length == 0) {
       resultAssertion.accept(unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn).get(when)));
     } else {
-      assertThrows(() -> failsafe.onComplete(setCompletedEventFn).get(when), expectedExInner);
+      assertThrows(() -> failsafe.onComplete(setCompletedEventFn).get(when), t -> {
+        // Insert FailsafeException into expected exceptions if needed
+        if (t instanceof FailsafeException && !FailsafeException.class.equals(expected.get(0))
+          && !RuntimeException.class.isAssignableFrom(expected.get(0)))
+          return Lists.of(FailsafeException.class, expectedExInner);
+        return expected;
+      });
     }
     postTestFn.run();
 

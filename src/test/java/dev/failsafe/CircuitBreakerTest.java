@@ -25,32 +25,6 @@ import static org.testng.Assert.assertTrue;
 
 @Test
 public class CircuitBreakerTest {
-  public void shouldRequireValidDelay() {
-    assertThrows(() -> CircuitBreaker.builder().withDelay(null).build(), NullPointerException.class);
-    assertThrows(() -> CircuitBreaker.builder().withDelay(Duration.ofMillis(-1)).build(),
-      IllegalArgumentException.class);
-  }
-
-  public void shouldRequireValidFailureThreshold() {
-    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(0).build(), IllegalArgumentException.class);
-  }
-
-  public void shouldRequireValidFailureThresholdRatio() {
-    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(0, 2).build(), IllegalArgumentException.class);
-    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(2, 0).build(), IllegalArgumentException.class);
-    assertThrows(() -> CircuitBreaker.builder().withFailureThreshold(2, 1).build(), IllegalArgumentException.class);
-  }
-
-  public void shouldRequireValidSuccessThreshold() {
-    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(0).build(), IllegalArgumentException.class);
-  }
-
-  public void shouldRequireValidSuccessThresholdRatio() {
-    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(0, 2).build(), IllegalArgumentException.class);
-    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(2, 0).build(), IllegalArgumentException.class);
-    assertThrows(() -> CircuitBreaker.builder().withSuccessThreshold(2, 1).build(), IllegalArgumentException.class);
-  }
-
   public void shouldDefaultDelay() throws Throwable {
     CircuitBreaker<Object> breaker = CircuitBreaker.ofDefaults();
     breaker.recordFailure();

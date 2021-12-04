@@ -1,6 +1,7 @@
 package dev.failsafe.internal;
 
 import dev.failsafe.CircuitBreaker;
+import dev.failsafe.RateLimiter;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,5 +26,17 @@ public final class InternalTesting {
     breaker.close();
     CircuitState<?> state = stateFor(breaker);
     state.getStats().reset();
+  }
+
+  public static void resetLimiter(RateLimiter<?> limiter) {
+    try {
+      RateLimiterImpl<?> impl = (RateLimiterImpl<?>) limiter;
+      Field statsField = RateLimiterImpl.class.getDeclaredField("stats");
+      statsField.setAccessible(true);
+      RateLimiterStats stats = (RateLimiterStats) statsField.get(impl);
+      stats.reset();
+    } catch (Exception e) {
+      throw new IllegalStateException("Could not reset rate limiter");
+    }
   }
 }
