@@ -17,6 +17,12 @@ package dev.failsafe;
 
 import java.time.Duration;
 
+/**
+ * Configuration for a {@link RateLimiter}.
+ *
+ * @param <R> result type
+ * @author Jonathan Halterman
+ */
 public class RateLimiterConfig<R> extends PolicyConfig<R> {
   // Smoothing
   Duration maxRate;

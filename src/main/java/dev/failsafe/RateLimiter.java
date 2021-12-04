@@ -36,6 +36,8 @@ import java.time.Duration;
  *   <li>{@link #tryAcquirePermit(Duration)}</li>
  *   <li>{@link #tryAcquirePermits(int, Duration)}</li>
  * </ul>
+ * </p>
+ * <p>
  * The methods that return immediately include:
  * <ul>
  *   <li>{@link #tryAcquirePermit()}</li>
