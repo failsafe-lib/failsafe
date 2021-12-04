@@ -77,7 +77,8 @@ public interface CircuitBreaker<R> extends Policy<R> {
   /**
    * Creates a count based CircuitBreaker that opens after a {@link CircuitBreakerBuilder#withFailureThreshold(int)
    * single failure}, closes after a {@link CircuitBreakerBuilder#withSuccessThreshold(int) single success}, and has a 1
-   * minute {@link CircuitBreakerBuilder#withDelay(Duration) delay} by default.
+   * minute {@link CircuitBreakerBuilder#withDelay(Duration) delay} by default. To configure additional options on a
+   * CircuitBreaker, use {@link #builder()} instead.
    *
    * @see #builder()
    */
@@ -121,8 +122,8 @@ public interface CircuitBreaker<R> extends Policy<R> {
   }
 
   /**
-   * Tries to acquire a permit to use the circuit breaker and returns whether a permit was acquired. Permission will
-   * be automatically released when a result or failure is recorded.
+   * Tries to acquire a permit to use the circuit breaker and returns whether a permit was acquired. Permission will be
+   * automatically released when a result or failure is recorded.
    *
    * @see #recordResult(Object)
    * @see #recordFailure(Throwable)

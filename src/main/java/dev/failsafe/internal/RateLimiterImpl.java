@@ -19,6 +19,7 @@ import dev.failsafe.RateLimiter;
 import dev.failsafe.RateLimiterConfig;
 import dev.failsafe.internal.RateLimiterStats.Stopwatch;
 import dev.failsafe.internal.util.Assert;
+import dev.failsafe.internal.util.Durations;
 import dev.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
@@ -68,7 +69,7 @@ public class RateLimiterImpl<R> implements RateLimiter<R> {
   public boolean tryAcquirePermits(int permits, Duration maxWaitTime) throws InterruptedException {
     Assert.isTrue(permits > 0, "permits must be > 0");
     Assert.notNull(maxWaitTime, "maxWaitTime");
-    long waitNanos = stats.acquirePermits(permits, maxWaitTime);
+    long waitNanos = stats.acquirePermits(permits, Durations.ofSafeNanos(maxWaitTime));
     if (waitNanos == -1)
       return false;
     if (waitNanos > 0)

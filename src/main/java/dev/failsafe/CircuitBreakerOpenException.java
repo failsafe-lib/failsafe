@@ -16,7 +16,7 @@
 package dev.failsafe;
 
 /**
- * Thrown when an execution is attempted while a configured {@link CircuitBreaker} is open.
+ * Thrown when an execution is attempted against a {@link CircuitBreaker} that is open.
  *
  * @author Jonathan Halterman
  */

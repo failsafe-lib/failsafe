@@ -70,14 +70,16 @@ public interface Timeout<R> extends Policy<R> {
 
   /**
    * Returns a {@link Timeout} that fails an execution with {@link TimeoutExceededException TimeoutExceededException} if
-   * it exceeds the {@code timeout}. Alias for {@code Timeout.builder(timeout).build()}. To configure other options on a
-   * Timeout, use {@link #builder(Duration)} instead.
+   * it exceeds the {@code timeout}. Alias for {@code Timeout.builder(timeout).build()}. To configure additional options
+   * on a Timeout, use {@link #builder(Duration)} instead.
    *
    * @param timeout the duration after which an execution is failed with {@link TimeoutExceededException
    * TimeoutExceededException}.
    * @param <R> result type
    * @throws NullPointerException If {@code timeout} is null
    * @throws IllegalArgumentException If {@code timeout} is <= 0
+   *
+   * @see #builder(Duration)
    */
   static <R> Timeout<R> of(Duration timeout) {
     return new TimeoutImpl<>(new TimeoutConfig<>(timeout, false));

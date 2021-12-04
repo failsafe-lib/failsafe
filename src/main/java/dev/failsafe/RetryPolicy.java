@@ -45,9 +45,10 @@ public interface RetryPolicy<R> extends Policy<R> {
   }
 
   /**
-   * Creates a RetryPolicy that allows 3 execution attempts max with no delay.
+   * Creates a RetryPolicy that allows 3 execution attempts max with no delay. To configure additional options on a
+   * RetryPolicy, use {@link #builder()} instead.
    *
-   * @see #builder() 
+   * @see #builder()
    */
   static <R> RetryPolicy<R> ofDefaults() {
     return RetryPolicy.<R>builder().build();
