@@ -1,8 +1,14 @@
-# 3.1
+# 3.2.0
 
 ### Improvements
 
-- Issue #308 - Introduce a `RateLimiter` policy.
+- Issue #309 - Introduced a `Bulkhead` policy.
+
+# 3.1.0
+
+### Improvements
+
+- Issue #308 - Introduced a `RateLimiter` policy.
 
 # 3.0.2
 
