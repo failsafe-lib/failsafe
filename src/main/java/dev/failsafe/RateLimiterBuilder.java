@@ -16,8 +16,10 @@
 package dev.failsafe;
 
 import dev.failsafe.internal.RateLimiterImpl;
+import dev.failsafe.internal.util.Assert;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Builds {@link RateLimiter} instances.
@@ -33,10 +35,12 @@ import java.time.Duration;
 public class RateLimiterBuilder<R> extends PolicyBuilder<RateLimiterBuilder<R>, RateLimiterConfig<R>, R> {
   RateLimiterBuilder(Duration executionRate) {
     super(new RateLimiterConfig<>(executionRate));
+    config.maxWaitTime = Duration.ZERO;
   }
 
   RateLimiterBuilder(long maxPermits, Duration period) {
     super(new RateLimiterConfig<>(maxPermits, period));
+    config.maxWaitTime = Duration.ZERO;
   }
 
   RateLimiterBuilder(RateLimiterConfig<R> config) {
@@ -53,9 +57,11 @@ public class RateLimiterBuilder<R> extends PolicyBuilder<RateLimiterBuilder<R>, 
   /**
    * Configures the {@code maxWaitTime} to wait for permits to be available. If permits cannot be acquired before the
    * {@code maxWaitTime} is exceeded, then the rate limiter will throw {@link RateLimitExceededException}.
+   *
+   * @throws NullPointerException if {@code maxWaitTime} is null
    */
   public RateLimiterBuilder<R> withMaxWaitTime(Duration maxWaitTime) {
-    config.maxWaitTime = maxWaitTime;
+    config.maxWaitTime = Assert.notNull(maxWaitTime, "maxWaitTime");
     return this;
   }
 }

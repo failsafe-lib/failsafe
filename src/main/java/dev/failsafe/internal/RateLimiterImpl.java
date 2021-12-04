@@ -39,7 +39,7 @@ public class RateLimiterImpl<R> implements RateLimiter<R> {
 
   RateLimiterImpl(RateLimiterConfig<R> config, Stopwatch stopwatch) {
     this.config = config;
-    stats = config.getExecutionRate() != null ?
+    stats = config.getMaxRate() != null ?
       new SmoothRateLimiterStats(config, stopwatch) :
       new BurstyRateLimiterStats(config, stopwatch);
   }

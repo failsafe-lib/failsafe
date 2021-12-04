@@ -25,13 +25,26 @@ import static org.testng.Assert.assertNotNull;
 @Test
 public class RateLimiterBuilderTest {
   public void shouldCreateBuilderFromExistingConfig() {
-    RateLimiterConfig<Object> initialConfig = RateLimiter.builder(Duration.ofMillis(10))
+    RateLimiterConfig<Object> initialConfig = RateLimiter.smoothBuilder(Duration.ofMillis(10))
       .withMaxWaitTime(Duration.ofSeconds(10))
       .onSuccess(e -> {
       }).config;
     RateLimiterConfig<Object> newConfig = RateLimiter.builder(initialConfig).config;
-    assertEquals(newConfig.executionRate, Duration.ofMillis(10));
+    assertEquals(newConfig.maxRate, Duration.ofMillis(10));
     assertEquals(newConfig.maxWaitTime, Duration.ofSeconds(10));
     assertNotNull(newConfig.successListener);
+  }
+
+  /**
+   * Asserts that the smooth rate limiter factory methods are equal.
+   */
+  public void shouldBuildEqualSmoothLimiters() {
+    Duration maxRate1 = RateLimiter.smoothBuilder(100, Duration.ofSeconds(1)).config.getMaxRate();
+    Duration maxRate2 = RateLimiter.smoothBuilder(Duration.ofMillis(10)).config.getMaxRate();
+    assertEquals(maxRate1, maxRate2);
+
+    maxRate1 = RateLimiter.smoothBuilder(20, Duration.ofMillis(300)).config.getMaxRate();
+    maxRate2 = RateLimiter.smoothBuilder(Duration.ofMillis(15)).config.getMaxRate();
+    assertEquals(maxRate1, maxRate2);
   }
 }

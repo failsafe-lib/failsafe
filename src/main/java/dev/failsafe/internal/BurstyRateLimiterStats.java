@@ -42,11 +42,8 @@ class BurstyRateLimiterStats extends RateLimiterStats {
     availablePermits = periodPermits;
   }
 
-  /**
-   * Must be externally guarded.
-   */
   @Override
-  public synchronized long acquirePermits(long requestedPermits, Duration timeout) {
+  public synchronized long acquirePermits(long requestedPermits, Duration maxWaitTime) {
     long currentNanos = stopwatch.elapsedNanos();
     long newCurrentPeriod = currentNanos / periodNanos;
 
@@ -73,7 +70,7 @@ class BurstyRateLimiterStats extends RateLimiterStats {
       // The nanos to wait until the beginning of the next period that will have free permits
       waitNanos = nanosToNextPeriod + (additionalPeriods * periodNanos);
 
-      if (exceedsTimeout(waitNanos, timeout))
+      if (exceedsMaxWaitTime(waitNanos, maxWaitTime))
         return -1;
     }
 

@@ -27,12 +27,12 @@ import static org.testng.Assert.assertEquals;
 public class BurstyRateLimiterStatsTest extends RateLimiterStatsTest<BurstyRateLimiterStats> {
   @Override
   BurstyRateLimiterStats createStats() {
-    RateLimiterConfig<Object> config = RateLimiter.builder(2, Duration.ofSeconds(1)).build().getConfig();
+    RateLimiterConfig<Object> config = RateLimiter.burstyBuilder(2, Duration.ofSeconds(1)).build().getConfig();
     return new BurstyRateLimiterStats(config, stopwatch);
   }
 
   BurstyRateLimiterStats createStats(long maxPermits, Duration period) {
-    RateLimiterConfig<Object> config = RateLimiter.builder(maxPermits, period).build().getConfig();
+    RateLimiterConfig<Object> config = RateLimiter.burstyBuilder(maxPermits, period).build().getConfig();
     return new BurstyRateLimiterStats(config, stopwatch);
   }
 

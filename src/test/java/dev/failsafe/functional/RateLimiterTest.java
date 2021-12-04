@@ -15,7 +15,10 @@
  */
 package dev.failsafe.functional;
 
-import dev.failsafe.*;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RateLimitExceededException;
+import dev.failsafe.RateLimiter;
+import dev.failsafe.RetryPolicy;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
@@ -23,7 +26,6 @@ import java.time.Duration;
 
 import static dev.failsafe.internal.InternalTesting.resetLimiter;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 /**
  * Tests various RateLimiter scenarios.
@@ -32,7 +34,7 @@ import static org.testng.Assert.assertTrue;
 public class RateLimiterTest extends Testing {
   public void shouldThrowRateLimitExceededExceptionAfterPermitsExceeded() {
     // Given
-    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofMillis(100)).build();
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(100)).build();
 
     // When / Then
     testRunFailure(() -> {
@@ -47,7 +49,7 @@ public class RateLimiterTest extends Testing {
    */
   public void testMaxWaitTimeExceeded() {
     // Given
-    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofMillis(10))
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(10))
       .withMaxWaitTime(Duration.ofMillis(20))
       .build();
 
@@ -70,7 +72,7 @@ public class RateLimiterTest extends Testing {
     Stats rpStats = new Stats();
     Stats rlStats = new Stats();
     RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
-    RateLimiter<Object> rl = withStatsAndLogs(RateLimiter.builder(3, Duration.ofSeconds(1)), rlStats).build();
+    RateLimiter<Object> rl = withStatsAndLogs(RateLimiter.burstyBuilder(3, Duration.ofSeconds(1)), rlStats).build();
 
     testRunFailure(() -> {
       rpStats.reset();
@@ -91,7 +93,7 @@ public class RateLimiterTest extends Testing {
    * Asserts that a rate limiter propagates an InterruptedException.
    */
   public void testAcquirePermitWithInterrupt() {
-    RateLimiter<Object> limiter = RateLimiter.builder(Duration.ofSeconds(1))
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofSeconds(1))
       .withMaxWaitTime(Duration.ofSeconds(5))
       .build();
 

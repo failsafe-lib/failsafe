@@ -19,7 +19,7 @@ import java.time.Duration;
 
 public class RateLimiterConfig<R> extends PolicyConfig<R> {
   // Smoothing
-  Duration executionRate;
+  Duration maxRate;
 
   // Bursting
   long maxPermits;
@@ -28,8 +28,8 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
   // Common
   Duration maxWaitTime;
 
-  RateLimiterConfig(Duration executionRate) {
-    this.executionRate = executionRate;
+  RateLimiterConfig(Duration maxRate) {
+    this.maxRate = maxRate;
   }
 
   RateLimiterConfig(long maxPermits, Duration period) {
@@ -39,27 +39,28 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
 
   RateLimiterConfig(RateLimiterConfig<R> config) {
     super(config);
-    executionRate = config.executionRate;
+    maxRate = config.maxRate;
     maxPermits = config.maxPermits;
     period = config.period;
     maxWaitTime = config.maxWaitTime;
   }
 
   /**
-   * For smooth rate limiters, returns the rate at which executions are permitted, else {@code null} if the rate limiter
-   * is not smooth.
+   * For smooth rate limiters, returns the max rate at which individual executions are permitted, else {@code null} if
+   * the rate limiter is not smooth.
    *
-   * @see RateLimiter#builder(Duration)
+   * @see RateLimiter#smoothBuilder(long, Duration)
+   * @see RateLimiter#smoothBuilder(Duration)
    */
-  public Duration getExecutionRate() {
-    return executionRate;
+  public Duration getMaxRate() {
+    return maxRate;
   }
 
   /**
    * For bursty rate limiters, returns the max permitted executions per {@link #getPeriod() period}, else {@code null}
    * if the rate limiter is not bursty.
    *
-   * @see RateLimiter#builder(long, Duration)
+   * @see RateLimiter#burstyBuilder(long, Duration)
    */
   public long getMaxPermits() {
     return maxPermits;
@@ -69,7 +70,7 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
    * For bursty rate limiters, returns the period after which permits are reset to {@link #getMaxPermits() maxPermits},
    * else {@code null} if the rate limiter is not bursty.
    *
-   * @see RateLimiter#builder(long, Duration)
+   * @see RateLimiter#burstyBuilder(long, Duration)
    */
   public Duration getPeriod() {
     return period;

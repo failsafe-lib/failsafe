@@ -34,11 +34,11 @@ class SmoothRateLimiterStats extends RateLimiterStats {
 
   SmoothRateLimiterStats(RateLimiterConfig<?> config, Stopwatch stopwatch) {
     super(stopwatch);
-    intervalNanos = config.getExecutionRate().toNanos();
+    intervalNanos = config.getMaxRate().toNanos();
   }
 
   @Override
-  public synchronized long acquirePermits(long requestedPermits, Duration timeout) {
+  public synchronized long acquirePermits(long requestedPermits, Duration maxWaitTime) {
     long currentNanos = stopwatch.elapsedNanos();
     long requestedPermitNanos = requestedPermits * intervalNanos;
     long waitNanos;
@@ -55,7 +55,7 @@ class SmoothRateLimiterStats extends RateLimiterStats {
 
     waitNanos = Math.max(newNextFreePermitNanos - currentNanos - intervalNanos, 0);
 
-    if (exceedsTimeout(waitNanos, timeout))
+    if (exceedsMaxWaitTime(waitNanos, maxWaitTime))
       return -1;
 
     nextFreePermitNanos = newNextFreePermitNanos;

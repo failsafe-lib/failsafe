@@ -38,19 +38,19 @@ abstract class RateLimiterStats {
 
   /**
    * Eagerly acquires permits and returns the time in nanos that must be waited in order to use the permits, else
-   * returns {@code -1} if the wait time would exceed the {@code timeout}.
+   * returns {@code -1} if the wait time would exceed the {@code maxWaitTime}.
    *
    * @param permits the number of requested permits
-   * @param timeout the max time to wait for the requested permits, else {@code null} to wait indefinitely
+   * @param maxWaitTime the max time to wait for the requested permits, else {@code null} to wait indefinitely
    */
-  abstract long acquirePermits(long permits, Duration timeout);
+  abstract long acquirePermits(long permits, Duration maxWaitTime);
 
   /**
-   * Returns whether the {@code waitNanos} would exceed the {@code timeout}, else {@code false} if {@code timeout} is
-   * null.
+   * Returns whether the {@code waitNanos} would exceed the {@code maxWaitTime}, else {@code false} if {@code
+   * maxWaitTime} is null.
    */
-  boolean exceedsTimeout(long waitNanos, Duration timeout) {
-    return timeout != null && waitNanos > timeout.toNanos();
+  boolean exceedsMaxWaitTime(long waitNanos, Duration maxWaitTime) {
+    return maxWaitTime != null && waitNanos > maxWaitTime.toNanos();
   }
 
   /**

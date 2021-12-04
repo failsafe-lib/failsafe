@@ -27,12 +27,12 @@ import static org.testng.Assert.assertEquals;
 public class SmoothRateLimiterStatsTest extends RateLimiterStatsTest<SmoothRateLimiterStats> {
   @Override
   SmoothRateLimiterStats createStats() {
-    RateLimiterConfig<Object> config = RateLimiter.builder(Duration.ofMillis(500)).build().getConfig();
+    RateLimiterConfig<Object> config = RateLimiter.smoothBuilder(Duration.ofMillis(500)).build().getConfig();
     return new SmoothRateLimiterStats(config, stopwatch);
   }
 
   SmoothRateLimiterStats createStats(Duration rate) {
-    RateLimiterConfig<Object> config = RateLimiter.builder(rate).build().getConfig();
+    RateLimiterConfig<Object> config = RateLimiter.smoothBuilder(rate).build().getConfig();
     return new SmoothRateLimiterStats(config, stopwatch);
   }
 

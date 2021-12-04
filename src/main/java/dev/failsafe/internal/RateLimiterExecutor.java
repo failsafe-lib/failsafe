@@ -41,9 +41,9 @@ public class RateLimiterExecutor<R> extends PolicyExecutor<R> {
   @Override
   protected ExecutionResult<R> preExecute() {
     try {
-      boolean acquired =
-        maxWaitTime == null ? rateLimiter.tryAcquirePermit() : rateLimiter.tryAcquirePermit(maxWaitTime);
-      return acquired ? null : ExecutionResult.failure(new RateLimitExceededException(rateLimiter));
+      return rateLimiter.tryAcquirePermit(maxWaitTime) ?
+        null :
+        ExecutionResult.failure(new RateLimitExceededException(rateLimiter));
     } catch (InterruptedException e) {
       // Set interrupt flag
       Thread.currentThread().interrupt();

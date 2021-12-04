@@ -59,26 +59,46 @@ import java.time.Duration;
  */
 public interface RateLimiter<R> extends Policy<R> {
   /**
-   * Returns a smooth {@link RateLimiterBuilder} for the {@code executionRate}, which controls how frequently an
-   * execution is permitted. For example, an {@code executionRate} of {@code Duration.ofMillis(10)} would allow one
-   * execution every 10 milliseconds. By default, the returned {@link RateLimiterBuilder} will have a {@link
-   * RateLimiterBuilder#withMaxWaitTime max wait time} of {@code 0}.
+   * Returns a smooth {@link RateLimiterBuilder} for the {@code maxExecutions} and {@code period}, which control how
+   * frequently an execution is permitted. The individual execution rate is computed as {@code period / maxExecutions}.
+   * For example, with {@code maxExecutions} of {@code 100} and a {@code period} of {@code 1000 millis}, individual
+   * executions will be permitted at a max rate of one every 10 millis.
+   * <p>By default, the returned {@link RateLimiterBuilder} will have a {@link RateLimiterBuilder#withMaxWaitTime max
+   * wait time} of {@code 0}.
    * <p>
-   * Executions are performed with no delay until they exceed the {@code executionRate}, after which executions are
-   * either rejected or will block and wait until the {@link RateLimiterBuilder#withMaxWaitTime(Duration) max wait time}
-   * is exceeded.
+   * Executions are performed with no delay until they exceed the max rate, after which executions are either rejected
+   * or will block and wait until the {@link RateLimiterBuilder#withMaxWaitTime(Duration) max wait time} is exceeded.
    *
-   * @param executionRate at which executions should be permitted
+   * @param maxExecutions The max number of permitted executions per {@code period}
+   * @param period The period after which permitted executions are reset to the {@code maxExecutions}
    */
-  static <R> RateLimiterBuilder<R> builder(Duration executionRate) {
-    return new RateLimiterBuilder<>(executionRate);
+  static <R> RateLimiterBuilder<R> smoothBuilder(long maxExecutions, Duration period) {
+    return new RateLimiterBuilder<>(period.dividedBy(maxExecutions));
+  }
+
+  /**
+   * Returns a smooth {@link RateLimiterBuilder} for the {@code maxRate}, which controls how frequently an execution is
+   * permitted. For example, a {@code maxRate} of {@code Duration.ofMillis(10)} would allow up to one execution every 10
+   * milliseconds.
+   * <p>By default, the returned {@link RateLimiterBuilder} will have a {@link RateLimiterBuilder#withMaxWaitTime max
+   * wait time} of {@code 0}.
+   * <p>
+   * Executions are performed with no delay until they exceed the {@code maxRate}, after which executions are either
+   * rejected or will block and wait until the {@link RateLimiterBuilder#withMaxWaitTime(Duration) max wait time} is
+   * exceeded.
+   *
+   * @param maxRate at which individual executions should be permitted
+   */
+  static <R> RateLimiterBuilder<R> smoothBuilder(Duration maxRate) {
+    return new RateLimiterBuilder<>(maxRate);
   }
 
   /**
    * Returns a bursty {@link RateLimiterBuilder} for the {@code maxExecutions} per {@code period}. For example, a {@code
    * maxExecutions} value of {@code 100} with a {@code period} of {@code Duration.ofSeconds(1)} would allow up to 100
-   * executions every 1 second. By default, the returned {@link RateLimiterBuilder} will have a {@link
-   * RateLimiterBuilder#withMaxWaitTime max wait time} of {@code 0}.
+   * executions every 1 second.
+   * <p>By default, the returned {@link RateLimiterBuilder} will have a {@link RateLimiterBuilder#withMaxWaitTime max
+   * wait time} of {@code 0}.
    * <p>
    * Executions are performed with no delay up until the {@code maxExecutions} are reached for the current {@code
    * period}, after which executions are either rejected or will block and wait until the {@link
@@ -87,7 +107,7 @@ public interface RateLimiter<R> extends Policy<R> {
    * @param maxExecutions The max number of permitted executions per {@code period}
    * @param period The period after which permitted executions are reset to the {@code maxExecutions}
    */
-  static <R> RateLimiterBuilder<R> builder(long maxExecutions, Duration period) {
+  static <R> RateLimiterBuilder<R> burstyBuilder(long maxExecutions, Duration period) {
     return new RateLimiterBuilder<>(maxExecutions, period);
   }
 
@@ -158,16 +178,17 @@ public interface RateLimiter<R> extends Policy<R> {
   /**
    * Returns whether the rate limiter is smooth.
    *
-   * @see #builder(Duration)
+   * @see #smoothBuilder(long, Duration)
+   * @see #smoothBuilder(Duration)
    */
   default boolean isSmooth() {
-    return getConfig().getExecutionRate() != null;
+    return getConfig().getMaxRate() != null;
   }
 
   /**
    * Returns whether the rate limiter is bursty.
    *
-   * @see #builder(long, Duration)
+   * @see #burstyBuilder(long, Duration)
    */
   default boolean isBursty() {
     return getConfig().getPeriod() != null;
