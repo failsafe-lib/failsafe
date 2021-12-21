@@ -4,7 +4,7 @@
 name: build
 
 on: [push, pull_request]
- 
+
 jobs:
   compile:
     runs-on: ubuntu-latest
@@ -24,13 +24,7 @@ jobs:
           distribution: 'adopt'
           java-package: jdk
           java-version: ${{ matrix.java }}
-
-      - name: Cache Maven packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          cache: 'maven'
 
       - name: Build with maven
         run: mvn -B test
