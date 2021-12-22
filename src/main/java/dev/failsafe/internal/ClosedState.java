@@ -44,8 +44,9 @@ class ClosedState<R> extends CircuitState<R> {
    */
   @Override
   synchronized void checkThreshold(ExecutionContext<R> context) {
-    // Execution threshold will only be set for time based thresholding
+    // Execution threshold can only be set for time based thresholding
     if (stats.getExecutionCount() >= config.getFailureExecutionThreshold()) {
+      // Failure rate threshold can only be set for time based thresholding
       double failureRateThreshold = config.getFailureRateThreshold();
       if ((failureRateThreshold != 0 && stats.getFailureRate() >= failureRateThreshold) || (failureRateThreshold == 0
         && stats.getFailureCount() >= config.getFailureThreshold()))

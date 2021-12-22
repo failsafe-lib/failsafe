@@ -68,8 +68,10 @@ class HalfOpenState<R> extends CircuitState<R> {
       successesExceeded = stats.getSuccessCount() >= successThreshold;
       failuresExceeded = stats.getFailureCount() > successThresholdingCapacity - successThreshold;
     } else {
+      // Failure rate threshold can only be set for time based thresholding
       int failureRateThreshold = config.getFailureRateThreshold();
       if (failureRateThreshold != 0) {
+        // Execution threshold can only be set for time based thresholding
         boolean executionThresholdExceeded = stats.getExecutionCount() >= config.getFailureExecutionThreshold();
         failuresExceeded = executionThresholdExceeded && stats.getFailureRate() >= failureRateThreshold;
         successesExceeded = executionThresholdExceeded && stats.getSuccessRate() > 100 - failureRateThreshold;
