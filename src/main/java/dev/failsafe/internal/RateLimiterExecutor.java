@@ -50,9 +50,4 @@ public class RateLimiterExecutor<R> extends PolicyExecutor<R> {
       return ExecutionResult.failure(e);
     }
   }
-
-  @Override
-  public boolean isFailure(ExecutionResult<R> result) {
-    return !result.isNonResult() && result.getFailure() instanceof RateLimitExceededException;
-  }
 }
