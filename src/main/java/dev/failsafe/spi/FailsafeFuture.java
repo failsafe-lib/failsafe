@@ -157,9 +157,7 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
    */
   public synchronized void setCancelFn(PolicyExecutor<R> policyExecutor,
     BiConsumer<Boolean, ExecutionResult<R>> cancelFn) {
-    if (cancelFunctions == null)
-      cancelFunctions = new TreeMap<>(Collections.reverseOrder());
-    cancelFunctions.put(policyExecutor.getPolicyIndex(), cancelFn);
+    setCancelFn(policyExecutor.getPolicyIndex(), cancelFn);
   }
 
   /**
