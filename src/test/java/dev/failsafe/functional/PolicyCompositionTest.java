@@ -15,6 +15,7 @@
  */
 package dev.failsafe.functional;
 
+import com.sun.net.httpserver.Authenticator.Retry;
 import dev.failsafe.*;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
@@ -267,5 +268,21 @@ public class PolicyCompositionTest extends Testing {
       Thread.sleep(100);
       return true;
     }, false);
+  }
+
+  /**
+   * RetryPolicy -> Bulkhead
+   */
+  public void testRetryPolicyBulkhead() {
+    // Given
+    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().abortOn(BulkheadFullException.class).build();
+    Bulkhead<Object> bulkhead = Bulkhead.of(2);
+    bulkhead.tryAcquirePermit();
+    bulkhead.tryAcquirePermit();  // bulkhead should be full
+
+    // When / Then
+    testRunFailure(Failsafe.with(retryPolicy, bulkhead), ctx -> {
+      System.out.println("Executing");
+    }, BulkheadFullException.class);
   }
 }

@@ -1,9 +1,11 @@
 package dev.failsafe.internal;
 
+import dev.failsafe.Bulkhead;
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.RateLimiter;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class InternalTesting {
@@ -35,6 +37,19 @@ public final class InternalTesting {
       statsField.setAccessible(true);
       RateLimiterStats stats = (RateLimiterStats) statsField.get(impl);
       stats.reset();
+    } catch (Exception e) {
+      throw new IllegalStateException("Could not reset rate limiter");
+    }
+  }
+
+  public static void resetBulkhead(Bulkhead<?> bulkhead) {
+    try {
+      BulkheadImpl<?> impl = (BulkheadImpl<?>) bulkhead;
+      Field semaphoreField = BulkheadImpl.class.getDeclaredField("semaphore");
+      semaphoreField.setAccessible(true);
+      Semaphore semaphore = (Semaphore) semaphoreField.get(impl);
+      int totalPermits = impl.getConfig().getMaxConcurrency();
+      semaphore.release(totalPermits - semaphore.availablePermits());
     } catch (Exception e) {
       throw new IllegalStateException("Could not reset rate limiter");
     }
