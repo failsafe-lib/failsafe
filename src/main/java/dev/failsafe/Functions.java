@@ -125,26 +125,33 @@ final class Functions {
    */
   @SuppressWarnings("unchecked")
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> getPromiseOfStage(
-    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future) {
+    ContextualSupplier<R, ? extends CompletionStage<? extends R>> supplier, FailsafeFuture<R> future,
+    Executor executor) {
 
     Assert.notNull(supplier, "supplier");
     return execution -> {
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       try {
         execution.preExecute();
-        CompletionStage<? extends R> stage = supplier.get(execution);
+        CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
 
-        // Propagate outer cancellations to the stage
-        if (stage instanceof Future)
-          future.propagateCancellation((Future<R>) stage);
-
-        stage.whenComplete((result, failure) -> {
-          if (failure instanceof CompletionException)
-            failure = failure.getCause();
-          ExecutionResult<R> r = failure == null ? ExecutionResult.success(result) : ExecutionResult.failure(failure);
+        if (stage == null) {
+          ExecutionResult<R> r = ExecutionResult.success(null);
           execution.record(r);
           promise.complete(r);
-        });
+        } else {
+          // Propagate outer cancellations to the stage
+          if (stage instanceof Future)
+            future.propagateCancellation((Future<R>) stage);
+
+          stage.whenComplete((result, failure) -> {
+            if (failure instanceof CompletionException)
+              failure = failure.getCause();
+            ExecutionResult<R> r = failure == null ? ExecutionResult.success(result) : ExecutionResult.failure(failure);
+            execution.record(r);
+            promise.complete(r);
+          });
+        }
       } catch (Throwable t) {
         ExecutionResult<R> result = ExecutionResult.failure(t);
         execution.record(result);

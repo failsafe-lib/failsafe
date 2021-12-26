@@ -210,7 +210,7 @@ public class FailsafeExecutor<R> {
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getStageAsync(CheckedSupplier<? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future), false);
+    return callAsync(future -> getPromiseOfStage(toCtxSupplier(supplier), future, executor), false);
   }
 
   /**
@@ -219,6 +219,7 @@ public class FailsafeExecutor<R> {
    * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
    * CompletionStage} if it's a {@link Future}.</p>
    * <ul>
+   *   <li>If the {@code supplier} returns {@code null}, the execution attempt will record a {@code null} result.</li>
    *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
    *   with {@link TimeoutExceededException}.</li>
    *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
@@ -232,7 +233,7 @@ public class FailsafeExecutor<R> {
    */
   public <T extends R> CompletableFuture<T> getStageAsync(
     ContextualSupplier<T, ? extends CompletionStage<T>> supplier) {
-    return callAsync(future -> getPromiseOfStage(supplier, future), false);
+    return callAsync(future -> getPromiseOfStage(supplier, future, executor), false);
   }
 
   /**
