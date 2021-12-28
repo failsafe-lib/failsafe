@@ -28,9 +28,9 @@ import java.util.List;
  */
 public class Failsafe {
   /**
-   * Creates and returns a new {@link FailsafeExecutor} instance that will handle failures according to the given
-   * policies. The policies are composed around an execution and will handle execution results in reverse, with the last
-   * policy being applied first. For example, consider:
+   * Creates and returns a new {@link FailsafeExecutor} instance that will handle failures according to the given {@code
+   * outerPolicy} and {@code policies}. The policies are composed around an execution and will handle execution results
+   * in reverse, with the last policy being applied first. For example, consider:
    * <p>
    * <pre>
    *   Failsafe.with(fallback, retryPolicy, circuitBreaker).get(supplier);
