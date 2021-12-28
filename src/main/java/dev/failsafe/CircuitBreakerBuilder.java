@@ -137,9 +137,9 @@ public class CircuitBreakerBuilder<R>
   }
 
   /**
-   * Configures count based failure thresholding by setting the ratio of successive failures to executions that must
-   * occur when in a CLOSED state in order to open the circuit. For example: 5, 10 would open the circuit if 5 out of
-   * the last 10 executions result in a failure.
+   * Configures count based failure thresholding by setting the ratio of failures to executions that must occur when in
+   * a CLOSED state in order to open the circuit. For example: 5, 10 would open the circuit if 5 out of the last 10
+   * executions result in a failure.
    * <p>
    * If a {@link #withSuccessThreshold(int) success threshold} is not configured, the {@code failureThreshold} and
    * {@code failureThresholdingCapacity} will also be used when the circuit breaker is in a HALF_OPEN state to determine
@@ -281,9 +281,9 @@ public class CircuitBreakerBuilder<R>
   }
 
   /**
-   * Configures count based success thresholding by setting the ratio of successive successful executions that must
-   * occur when in a HALF_OPEN state in order to close the circuit. For example: 5, 10 would close the circuit if 5 out
-   * of the last 10 executions were successful.
+   * Configures count based success thresholding by setting the ratio of successful executions that must occur when in a
+   * HALF_OPEN state in order to close the circuit. For example: 5, 10 would close the circuit if 5 out of the last 10
+   * executions were successful.
    *
    * @param successThreshold The number of successful executions that must occur in order to open the circuit
    * @param successThresholdingCapacity The capacity for storing execution results when performing success thresholding

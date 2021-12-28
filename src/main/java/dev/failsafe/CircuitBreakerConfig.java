@@ -75,7 +75,7 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   }
 
   /**
-   * Gets the number of successive failures that must occur within the {@link #getFailureThresholdingCapacity() failure
+   * Gets the number of failures that must occur within the {@link #getFailureThresholdingCapacity() failure
    * thresholding capacity} when in a CLOSED or HALF_OPEN state in order to open the circuit. Returns {@code 1} by
    * default.
    *
@@ -136,7 +136,7 @@ public class CircuitBreakerConfig<R> extends DelayablePolicyConfig<R> {
   }
 
   /**
-   * Gets the number of successive successes that must occur within the {@link #getSuccessThresholdingCapacity() success
+   * Gets the number of successes that must occur within the {@link #getSuccessThresholdingCapacity() success
    * thresholding capacity} when in a HALF_OPEN state in order to open the circuit. Returns {@code 0} by default, in
    * which case the {@link #getFailureThreshold() failure threshold} is used instead.
    *

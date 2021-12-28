@@ -236,8 +236,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by a factor of 2. Replaces any previously configured {@link #withDelay(Duration) fixed} or {@link
-   * #withDelay(Duration, Duration) random} delays.
+   * consecutive delays by a factor of 2. Replaces any previously configured {@link #withDelay(Duration) fixed} or
+   * {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
@@ -250,8 +250,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by a factor of 2. Replaces any previously configured {@link #withDelay(Duration) fixed} or {@link
-   * #withDelay(Duration, Duration) random} delays.
+   * consecutive delays by a factor of 2. Replaces any previously configured {@link #withDelay(Duration) fixed} or
+   * {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code chronoUnit} is null
    * @throws IllegalArgumentException if {@code delay} is <= 0 or {@code delay} is >= {@code maxDelay}
@@ -264,8 +264,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by the {@code delayFactor}. Replaces any previously configured {@link #withDelay(Duration) fixed}
-   * or {@link #withDelay(Duration, Duration) random} delays.
+   * consecutive delays by the {@code delayFactor}. Replaces any previously configured {@link #withDelay(Duration)
+   * fixed} or {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code chronoUnit} is null
    * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the {@code
@@ -279,8 +279,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
 
   /**
    * Sets the {@code delay} between retries, exponentially backing off to the {@code maxDelay} and multiplying
-   * successive delays by the {@code delayFactor}. Replaces any previously configured {@link #withDelay(Duration) fixed}
-   * or {@link #withDelay(Duration, Duration) random} delays.
+   * consecutive delays by the {@code delayFactor}. Replaces any previously configured {@link #withDelay(Duration)
+   * fixed} or {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code delay} or {@code maxDelay} are null
    * @throws IllegalArgumentException if {@code delay} <= 0, {@code delay} is >= {@code maxDelay}, or the {@code

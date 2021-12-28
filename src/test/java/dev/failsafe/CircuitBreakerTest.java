@@ -17,9 +17,6 @@ package dev.failsafe;
 
 import org.testng.annotations.Test;
 
-import java.time.Duration;
-
-import static dev.failsafe.testing.Asserts.assertThrows;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
