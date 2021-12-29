@@ -17,7 +17,6 @@ package dev.failsafe;
 
 import dev.failsafe.internal.util.Assert;
 import dev.failsafe.spi.*;
-import dev.failsafe.spi.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
