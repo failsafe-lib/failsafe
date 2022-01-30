@@ -36,7 +36,7 @@ public class BulkheadImpl<R> implements Bulkhead<R> {
 
   public BulkheadImpl(BulkheadConfig<R> config) {
     this.config = config;
-    semaphore = new Semaphore(config.getMaxConcurrency(), config.isFair());
+    semaphore = new Semaphore(config.getMaxConcurrency(), true);
   }
 
   @Override

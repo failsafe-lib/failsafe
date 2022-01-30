@@ -34,7 +34,7 @@ import java.time.Duration;
 public interface Bulkhead<R> extends Policy<R> {
   /**
    * Returns a Bulkhead for the {@code maxConcurrency} that has {@link BulkheadBuilder#withMaxWaitTime(Duration) zero
-   * wait} and is {@link BulkheadBuilder#withFairness() not fair} by default.
+   * wait}.
    *
    * @param maxConcurrency controls the max concurrent executions that are permitted within the bulkhead
    */
@@ -43,8 +43,7 @@ public interface Bulkhead<R> extends Policy<R> {
   }
 
   /**
-   * Creates a new BulkheadBuilder that will be based on the {@code config}. The built bulkhead is {@link
-   * BulkheadBuilder#withFairness() not fair} by default.
+   * Creates a new BulkheadBuilder that will be based on the {@code config}.
    */
   static <R> BulkheadBuilder<R> builder(BulkheadConfig<R> config) {
     return new BulkheadBuilder<>(config);
@@ -52,9 +51,8 @@ public interface Bulkhead<R> extends Policy<R> {
 
   /**
    * Returns a Bulkhead for the {@code maxConcurrency} that has {@link BulkheadBuilder#withMaxWaitTime(Duration) zero
-   * wait} and is {@link BulkheadBuilder#withFairness() not fair} by default. Alias for {@code
-   * Bulkhead.builder(maxConcurrency).build()}. To configure additional options on a Bulkhead, use {@link #builder(int)}
-   * instead.
+   * wait}. Alias for {@code Bulkhead.builder(maxConcurrency).build()}. To configure additional options on a Bulkhead,
+   * use {@link #builder(int)} instead.
    *
    * @param maxConcurrency controls the max concurrent executions that are permitted within the bulkhead
    * @see #builder(int)

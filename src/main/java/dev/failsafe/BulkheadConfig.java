@@ -26,7 +26,6 @@ import java.time.Duration;
 public class BulkheadConfig<R> extends PolicyConfig<R> {
   int maxConcurrency;
   Duration maxWaitTime;
-  boolean fair;
 
   BulkheadConfig(int maxConcurrency) {
     this.maxConcurrency = maxConcurrency;
@@ -37,7 +36,6 @@ public class BulkheadConfig<R> extends PolicyConfig<R> {
     super(config);
     maxConcurrency = config.maxConcurrency;
     maxWaitTime = config.maxWaitTime;
-    fair = config.fair;
   }
 
   /**
@@ -57,14 +55,5 @@ public class BulkheadConfig<R> extends PolicyConfig<R> {
    */
   public Duration getMaxWaitTime() {
     return maxWaitTime;
-  }
-
-  /**
-   * Returns whether the Bulkhead is fair in permitting waiting executions in order.
-   *
-   * @see BulkheadBuilder#withFairness()
-   */
-  public boolean isFair() {
-    return fair;
   }
 }

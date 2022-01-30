@@ -57,12 +57,4 @@ public class BulkheadBuilder<R> extends PolicyBuilder<BulkheadBuilder<R>, Bulkhe
     config.maxWaitTime = Assert.notNull(maxWaitTime, "maxWaitTime");
     return this;
   }
-
-  /**
-   * Configures the bulkhead to be fair in permitting waiting execution in order.
-   */
-  public BulkheadBuilder<R> withFairness() {
-    config.fair = true;
-    return this;
-  }
 }

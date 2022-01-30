@@ -26,13 +26,11 @@ public class BulkheadBuilderTest {
   public void shouldCreateBuilderFromExistingConfig() {
     BulkheadConfig<Object> initialConfig = Bulkhead.builder(5)
       .withMaxWaitTime(Duration.ofSeconds(10))
-      .withFairness()
       .onSuccess(e -> {
       }).config;
     BulkheadConfig<Object> newConfig = Bulkhead.builder(initialConfig).config;
     assertEquals(newConfig.maxConcurrency, 5);
     assertEquals(newConfig.maxWaitTime, Duration.ofSeconds(10));
-    assertTrue(newConfig.fair);
     assertNotNull(newConfig.successListener);
   }
 }
