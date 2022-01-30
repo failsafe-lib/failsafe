@@ -16,6 +16,7 @@
 package dev.failsafe.functional;
 
 import dev.failsafe.*;
+import dev.failsafe.function.ContextualRunnable;
 import dev.failsafe.testing.Testing;
 import net.jodah.concurrentunit.Waiter;
 import dev.failsafe.event.ExecutionCompletedEvent;
@@ -41,13 +42,13 @@ public class FailsafeFutureCancellationTest extends Testing {
     waiter = new Waiter();
   }
 
-  private <R> void assertCancel(FailsafeExecutor<R> executor, ContextualSupplier<R, R> supplier) throws Throwable {
+  private void assertCancel(FailsafeExecutor<Void> executor, ContextualRunnable<Void> runnable) throws Throwable {
     // Given
-    CompletableFuture<R> future = executor.onComplete(e -> {
+    CompletableFuture<Void> future = executor.onComplete(e -> {
       waiter.assertNull(e.getResult());
       waiter.assertTrue(e.getFailure() instanceof CancellationException);
       waiter.resume();
-    }).getAsync(supplier);
+    }).runAsync(runnable);
 
     Testing.sleep(300);
 
@@ -62,8 +63,15 @@ public class FailsafeFutureCancellationTest extends Testing {
     assertThrows(future::get, CancellationException.class);
   }
 
-  public void shouldCancelOnGetAsyncWithRetries() throws Throwable {
-    assertCancel(Failsafe.with(retryAlways), ctx -> {
+  public void shouldCancelAsyncRetriesWithPendingDelay() throws Throwable {
+    RetryPolicy<Void> retryPolicy = RetryPolicy.<Void>builder().withDelay(Duration.ofMinutes(1)).build();
+    assertCancel(Failsafe.with(retryPolicy), ctx -> {
+      throw new IllegalStateException();
+    });
+  }
+
+  public void shouldCancelAsyncRetriesWithBlockedExecution() throws Throwable {
+    assertCancel(Failsafe.with(RetryPolicy.ofDefaults()), ctx -> {
       try {
         waiter.assertFalse(ctx.isCancelled());
         Thread.sleep(1000);
@@ -71,14 +79,29 @@ public class FailsafeFutureCancellationTest extends Testing {
         waiter.assertTrue(ctx.isCancelled());
         throw e;
       }
-      return false;
     });
   }
 
-  public void shouldCancelOnGetAsyncWithTimeout() throws Throwable {
+  public void shouldCancelAsyncTimeoutWithBlockedExecution() throws Throwable {
     assertCancel(Failsafe.with(Timeout.of(Duration.ofMinutes(1))), ctx -> {
-      Thread.sleep(1000);
-      return "test";
+      try {
+        waiter.assertFalse(ctx.isCancelled());
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        waiter.assertTrue(ctx.isCancelled());
+        throw e;
+      }
+    });
+  }
+
+  public void shouldCancelAsyncRateLimiterWaitingOnPermit() throws Throwable {
+    RateLimiter<Void> limiter = RateLimiter.<Void>smoothBuilder(1, Duration.ofSeconds(1))
+      .withMaxWaitTime(Duration.ofMinutes(1))
+      .build();
+    limiter.tryAcquirePermit(); // All permits should be used now
+
+    assertCancel(Failsafe.with(limiter), ctx -> {
+      fail("Execution should be cancelled during preExecute");
     });
   }
 

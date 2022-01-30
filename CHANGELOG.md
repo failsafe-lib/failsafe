@@ -3,6 +3,11 @@
 ### Improvements
 
 - Issue #309 - Introduced a `Bulkhead` policy.
+- Issue #318 - Add non-blocking async waiting for rate limiters.
+
+### SPI Changes
+
+- `PolicyExecutor.preExecuteAsync` was introduced to support async pre-execution. This is backwards compatible with `preExecute`.
 
 # 3.1.0
 

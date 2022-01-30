@@ -15,9 +15,9 @@
  */
 package dev.failsafe.spi;
 
-import dev.failsafe.internal.EventHandler;
 import dev.failsafe.ExecutionContext;
 import dev.failsafe.Policy;
+import dev.failsafe.internal.EventHandler;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -62,6 +62,17 @@ public abstract class PolicyExecutor<R> {
   }
 
   /**
+   * Called before an async execution to return an alternative result or failure such as if execution is not allowed or
+   * needed. Returns {@code null} if pre execution is not performed. If the resulting future is completed with a {@link
+   * ExecutionResult#isNonResult() non-result}, then execution and post-execution should still be performed. If the
+   * resulting future is completed with {@code null}, then the execution is assumed to have been cancelled.
+   */
+  protected CompletableFuture<ExecutionResult<R>> preExecuteAsync(Scheduler scheduler, FailsafeFuture<R> future) {
+    ExecutionResult<R> result = preExecute();
+    return result == null ? null : CompletableFuture.completedFuture(result);
+  }
+
+  /**
    * Performs an execution by calling pre-execute else calling the supplier and doing a post-execute.
    */
   public Function<SyncExecutionInternal<R>, ExecutionResult<R>> apply(
@@ -69,12 +80,64 @@ public abstract class PolicyExecutor<R> {
     return execution -> {
       ExecutionResult<R> result = preExecute();
       if (result != null) {
-        // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
+        // Still need to preExecute when short-circuiting an execution with an alternative result
         execution.preExecute();
         return result;
       }
 
       return postExecute(execution, innerFn.apply(execution));
+    };
+  }
+
+  /**
+   * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute. Implementors
+   * must handle a null result from a supplier, which indicates that an async execution has occurred, that a result will
+   * be recorded separately, and that postExecute handling should not be performed.
+   */
+  public Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> applyAsync(
+    Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> innerFn, Scheduler scheduler,
+    FailsafeFuture<R> future) {
+
+    return execution -> {
+      CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
+      Runnable runnable = () -> innerFn.apply(execution)
+        .thenCompose(r -> r == null ? ExecutionResult.nullFuture() : postExecuteAsync(execution, r, scheduler, future))
+        .whenComplete((postResult, postError) -> {
+          if (postError != null)
+            promise.completeExceptionally(postError);
+          else
+            promise.complete(postResult);
+        });
+
+      if (!execution.isRecorded()) {
+        CompletableFuture<ExecutionResult<R>> preResult = preExecuteAsync(scheduler, future);
+        if (preResult != null) {
+          preResult.whenComplete((result, error) -> {
+            if (error != null)
+              promise.completeExceptionally(error);
+            else if (result != null) {
+              // Check for non-result, which occurs after a rate limiter preExecute delay
+              if (result.isNonResult()) {
+                // Execute and post-execute
+                runnable.run();
+              } else {
+                // Still need to preExecute when short-circuiting an execution with an alternative result
+                execution.preExecute();
+                promise.complete(result);
+              }
+            } else {
+              // If result is null, the execution is assumed to have been cancelled
+              promise.complete(null);
+            }
+          });
+
+          return promise;
+        }
+      }
+
+      // Execute and post-execute
+      runnable.run();
+      return promise;
     };
   }
 
@@ -93,31 +156,6 @@ public abstract class PolicyExecutor<R> {
     }
 
     return result;
-  }
-
-  /**
-   * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute. Implementors
-   * must handle a null result from a supplier, which indicates that an async execution has occurred, that a result will
-   * be recorded separately, and that postExecute handling should not be performed.
-   */
-  public Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> applyAsync(
-    Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> innerFn, Scheduler scheduler,
-    FailsafeFuture<R> future) {
-
-    return execution -> {
-      if (!execution.isRecorded()) {
-        ExecutionResult<R> result = preExecute();
-        if (result != null) {
-          // Still need to preExecute when returning an alternative result before making it to the terminal Supplier
-          execution.preExecute();
-          return CompletableFuture.completedFuture(result);
-        }
-      }
-
-      return innerFn.apply(execution).thenCompose(r -> {
-        return r == null ? ExecutionResult.nullFuture() : postExecuteAsync(execution, r, scheduler, future);
-      });
-    };
   }
 
   /**

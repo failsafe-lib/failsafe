@@ -18,9 +18,14 @@ package dev.failsafe.internal;
 import dev.failsafe.RateLimitExceededException;
 import dev.failsafe.RateLimiter;
 import dev.failsafe.spi.ExecutionResult;
+import dev.failsafe.spi.FailsafeFuture;
 import dev.failsafe.spi.PolicyExecutor;
+import dev.failsafe.spi.Scheduler;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link RateLimiter}.
@@ -49,5 +54,32 @@ public class RateLimiterExecutor<R> extends PolicyExecutor<R> {
       Thread.currentThread().interrupt();
       return ExecutionResult.failure(e);
     }
+  }
+
+  @Override
+  protected CompletableFuture<ExecutionResult<R>> preExecuteAsync(Scheduler scheduler, FailsafeFuture<R> future) {
+    CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
+    long waitNanos = rateLimiter.acquirePermitWaitNanos(maxWaitTime);
+    if (waitNanos == -1)
+      promise.complete(ExecutionResult.failure(new RateLimitExceededException(rateLimiter)));
+    else {
+      try {
+        Future<?> scheduledWait = scheduler.schedule(() -> {
+          // Signal for execution and post-execution to proceed with a non-result
+          return promise.complete(ExecutionResult.none());
+        }, waitNanos, TimeUnit.NANOSECONDS);
+
+        // Propagate outer cancellations to the RateLimiter future and its promise
+        future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
+          scheduledWait.cancel(mayInterrupt);
+          promise.complete(cancelResult);
+        });
+      } catch (Throwable t) {
+        // Hard scheduling failure
+        promise.completeExceptionally(t);
+      }
+    }
+
+    return promise;
   }
 }

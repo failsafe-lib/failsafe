@@ -15,10 +15,7 @@
  */
 package dev.failsafe.functional;
 
-import dev.failsafe.Failsafe;
-import dev.failsafe.RateLimitExceededException;
-import dev.failsafe.RateLimiter;
-import dev.failsafe.RetryPolicy;
+import dev.failsafe.*;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
@@ -49,9 +46,7 @@ public class RateLimiterTest extends Testing {
    */
   public void testMaxWaitTimeExceeded() {
     // Given
-    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(10))
-      .withMaxWaitTime(Duration.ofMillis(20))
-      .build();
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(10)).build();
 
     // When / Then
     testRunFailure(() -> {
@@ -90,24 +85,25 @@ public class RateLimiterTest extends Testing {
   }
 
   /**
-   * Asserts that a rate limiter propagates an InterruptedException.
+   * Asserts that a rate limiter propagates a sync InterruptedException.
    */
   public void testAcquirePermitWithInterrupt() {
     RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofSeconds(1))
       .withMaxWaitTime(Duration.ofSeconds(5))
       .build();
+    limiter.tryAcquirePermit();
 
-    testRunFailure(() -> {
-      resetLimiter(limiter);
-      limiter.tryAcquirePermit();
-      Thread thread = Thread.currentThread();
-      runInThread(() -> {
-        Thread.sleep(100);
-        thread.interrupt();
-      });
-    }, Failsafe.with(limiter), ctx -> {
+    Thread thread = Thread.currentThread();
+    runInThread(() -> {
+      Thread.sleep(100);
+      thread.interrupt();
+    });
+    assertThrows(() -> Failsafe.with(limiter).run(() -> {
       System.out.println("Executing");
       throw new Exception();
-    }, InterruptedException.class);
+    }), FailsafeException.class, InterruptedException.class);
+
+    // Reset interrupt flag
+    Thread.interrupted();
   }
 }

@@ -21,8 +21,10 @@ import dev.failsafe.internal.RateLimiterStats.Stopwatch;
 import dev.failsafe.internal.util.Assert;
 import dev.failsafe.internal.util.Durations;
 import dev.failsafe.spi.PolicyExecutor;
+import dev.failsafe.spi.Scheduler;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -80,5 +82,13 @@ public class RateLimiterImpl<R> implements RateLimiter<R> {
   @Override
   public PolicyExecutor<R> toExecutor(int policyIndex) {
     return new RateLimiterExecutor<>(this, policyIndex);
+  }
+
+  /**
+   * Returns the wait nanos for an acquired permit which can be used to externally wait.
+   */
+  long acquirePermitWaitNanos(Duration maxWaitTime) {
+    Assert.notNull(maxWaitTime, "maxWaitTime");
+    return stats.acquirePermits(1, Durations.ofSafeNanos(maxWaitTime));
   }
 }
