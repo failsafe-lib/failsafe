@@ -98,5 +98,8 @@ public class BulkheadTest extends Testing {
       System.out.println("Executing");
       throw new Exception();
     }, InterruptedException.class);
+
+    // Reset interrupt flag
+    Thread.interrupted();
   }
 }
