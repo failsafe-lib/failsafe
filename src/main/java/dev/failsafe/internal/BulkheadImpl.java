@@ -17,26 +17,31 @@ package dev.failsafe.internal;
 
 import dev.failsafe.Bulkhead;
 import dev.failsafe.BulkheadConfig;
-import dev.failsafe.internal.util.Durations;
+import dev.failsafe.internal.util.FutureLinkedList;
 import dev.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
- * A Bulkhead implementation.
+ * A Bulkhead implementation that supports sync and async waiting.
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
 public class BulkheadImpl<R> implements Bulkhead<R> {
+  private static final CompletableFuture<Void> NULL_FUTURE = CompletableFuture.completedFuture(null);
   private final BulkheadConfig<R> config;
-  private final Semaphore semaphore;
+  private final int maxPermits;
+
+  // Mutable state
+  private int permits;
+  private final FutureLinkedList futures = new FutureLinkedList();
 
   public BulkheadImpl(BulkheadConfig<R> config) {
     this.config = config;
-    semaphore = new Semaphore(config.getMaxConcurrency(), true);
+    maxPermits = config.getMaxConcurrency();
+    permits = maxPermits;
   }
 
   @Override
@@ -46,22 +51,57 @@ public class BulkheadImpl<R> implements Bulkhead<R> {
 
   @Override
   public void acquirePermit() throws InterruptedException {
-    semaphore.acquire();
+    try {
+      acquirePermitAsync().get();
+    } catch (CancellationException | ExecutionException ignore) {
+      // Not possible since the future will always be completed with null
+    }
   }
 
   @Override
-  public boolean tryAcquirePermit() {
-    return semaphore.tryAcquire();
+  public synchronized boolean tryAcquirePermit() {
+    if (permits > 0) {
+      permits -= 1;
+      return true;
+    }
+    return false;
   }
 
   @Override
   public boolean tryAcquirePermit(Duration maxWaitTime) throws InterruptedException {
-    return semaphore.tryAcquire(Durations.ofSafeNanos(maxWaitTime).toNanos(), TimeUnit.NANOSECONDS);
+    CompletableFuture<Void> future = acquirePermitAsync();
+    if (future == NULL_FUTURE)
+      return true;
+
+    try {
+      future.get(maxWaitTime.toNanos(), TimeUnit.NANOSECONDS);
+      return true;
+    } catch (CancellationException | ExecutionException | TimeoutException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns a CompletableFuture that is completed when a permit is acquired. Externally completing this future will
+   * remove the waiter from the bulkhead's internal queue.
+   */
+  synchronized CompletableFuture<Void> acquirePermitAsync() {
+    if (permits > 0) {
+      permits -= 1;
+      return NULL_FUTURE;
+    } else {
+      return futures.add();
+    }
   }
 
   @Override
-  public void releasePermit() {
-    semaphore.release();
+  public synchronized void releasePermit() {
+    if (permits < maxPermits) {
+      permits += 1;
+      CompletableFuture<Void> future = futures.pollFirst();
+      if (future != null)
+        future.complete(null);
+    }
   }
 
   @Override

@@ -20,9 +20,14 @@ import dev.failsafe.BulkheadFullException;
 import dev.failsafe.ExecutionContext;
 import dev.failsafe.RateLimitExceededException;
 import dev.failsafe.spi.ExecutionResult;
+import dev.failsafe.spi.FailsafeFuture;
 import dev.failsafe.spi.PolicyExecutor;
+import dev.failsafe.spi.Scheduler;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A PolicyExecutor that handles failures according to a {@link Bulkhead}.
@@ -51,6 +56,39 @@ public class BulkheadExecutor<R> extends PolicyExecutor<R> {
       Thread.currentThread().interrupt();
       return ExecutionResult.failure(e);
     }
+  }
+
+  @Override
+  protected CompletableFuture<ExecutionResult<R>> preExecuteAsync(Scheduler scheduler, FailsafeFuture<R> future) {
+    CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
+    CompletableFuture<Void> acquireFuture = bulkhead.acquirePermitAsync();
+    acquireFuture.whenComplete((result, error) -> {
+      // Signal for execution to proceed
+      promise.complete(ExecutionResult.none());
+    });
+
+    if (!promise.isDone()) {
+      try {
+        // Schedule bulkhead permit timeout
+        Future<?> timeoutFuture = scheduler.schedule(() -> {
+          promise.complete(ExecutionResult.failure(new BulkheadFullException(bulkhead)));
+          acquireFuture.cancel(true);
+          return null;
+        }, maxWaitTime.toNanos(), TimeUnit.NANOSECONDS);
+
+        // Propagate outer cancellations to the promise, bulkhead acquire future, and timeout future
+        future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
+          promise.complete(cancelResult);
+          acquireFuture.cancel(mayInterrupt);
+          timeoutFuture.cancel(mayInterrupt);
+        });
+      } catch (Throwable t) {
+        // Hard scheduling failure
+        promise.completeExceptionally(t);
+      }
+    }
+
+    return promise;
   }
 
   @Override

@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A RateLimiter implementation.
+ * A RateLimiter implementation that supports smooth and bursty rate limiting.
  *
  * @param <R> result type
  */

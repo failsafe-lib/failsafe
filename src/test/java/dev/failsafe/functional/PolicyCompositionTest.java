@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.function.Consumer;
 
 import static dev.failsafe.internal.InternalTesting.resetBreaker;
+import static dev.failsafe.internal.InternalTesting.resetLimiter;
 import static org.testng.Assert.*;
 
 /**
@@ -271,18 +272,51 @@ public class PolicyCompositionTest extends Testing {
   }
 
   /**
+   * RetryPolicy -> RateLimiter
+   */
+  public void testRetryPolicyRateLimiter() {
+    Stats rpStats = new Stats();
+    Stats rlStats = new Stats();
+    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
+    RateLimiter<Object> rl = withStatsAndLogs(RateLimiter.burstyBuilder(3, Duration.ofSeconds(1)), rlStats).build();
+
+    testRunFailure(() -> {
+      rpStats.reset();
+      rlStats.reset();
+      resetLimiter(rl);
+    }, Failsafe.with(rp, rl), ctx -> {
+      System.out.println("Executing");
+      throw new Exception();
+    }, (f, e) -> {
+      assertEquals(e.getAttemptCount(), 7);
+      assertEquals(e.getExecutionCount(), 3);
+      assertEquals(rpStats.failedAttemptCount, 7);
+      assertEquals(rpStats.retryCount, 6);
+    }, RateLimitExceededException.class);
+  }
+
+  /**
    * RetryPolicy -> Bulkhead
    */
   public void testRetryPolicyBulkhead() {
-    // Given
-    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().abortOn(BulkheadFullException.class).build();
-    Bulkhead<Object> bulkhead = Bulkhead.of(2);
-    bulkhead.tryAcquirePermit();
-    bulkhead.tryAcquirePermit();  // bulkhead should be full
+    Stats rpStats = new Stats();
+    Stats rlStats = new Stats();
+    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
+    Bulkhead<Object> bh = withStatsAndLogs(Bulkhead.builder(2), rlStats).build();
+    bh.tryAcquirePermit();
+    bh.tryAcquirePermit(); // bulkhead should be full
 
-    // When / Then
-    testRunFailure(Failsafe.with(retryPolicy, bulkhead), ctx -> {
+    testRunFailure(() -> {
+      rpStats.reset();
+      rlStats.reset();
+    }, Failsafe.with(rp, bh), ctx -> {
       System.out.println("Executing");
+      throw new Exception();
+    }, (f, e) -> {
+      assertEquals(e.getAttemptCount(), 7);
+      assertEquals(e.getExecutionCount(), 0);
+      assertEquals(rpStats.failedAttemptCount, 7);
+      assertEquals(rpStats.retryCount, 6);
     }, BulkheadFullException.class);
   }
 }

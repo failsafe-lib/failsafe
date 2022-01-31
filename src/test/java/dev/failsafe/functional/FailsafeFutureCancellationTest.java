@@ -105,6 +105,16 @@ public class FailsafeFutureCancellationTest extends Testing {
     });
   }
 
+  public void shouldCancelBulkheadWaitingOnPermit() throws Throwable {
+    Bulkhead<Void> bulkhead = Bulkhead.<Void>builder(2).withMaxWaitTime(Duration.ofSeconds(1)).build();
+    bulkhead.tryAcquirePermit();
+    bulkhead.tryAcquirePermit(); // bulkhead should be full
+
+    assertCancel(Failsafe.with(bulkhead), ctx -> {
+      fail("Execution should be cancelled during preExecute");
+    });
+  }
+
   /**
    * Asserts that cancelling a FailsafeFuture causes both retry policies to stop.
    */

@@ -15,21 +15,37 @@
  */
 package dev.failsafe.functional;
 
-import dev.failsafe.*;
+import dev.failsafe.Bulkhead;
+import dev.failsafe.BulkheadFullException;
+import dev.failsafe.Failsafe;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-
-import static dev.failsafe.internal.InternalTesting.resetBulkhead;
-import static dev.failsafe.internal.InternalTesting.resetLimiter;
-import static org.testng.Assert.assertEquals;
 
 /**
  * Tests various Bulkhead scenarios.
  */
 @Test
 public class BulkheadTest extends Testing {
+  public void testPermitAcquiredAfterWait() {
+    // Given
+    Bulkhead<Object> bulkhead = Bulkhead.builder(2).withMaxWaitTime(Duration.ofSeconds(1)).build();
+
+    // When / Then
+    testGetSuccess(() -> {
+      bulkhead.tryAcquirePermit();
+      bulkhead.tryAcquirePermit(); // bulkhead should be full
+
+      runInThread(() -> {
+        Thread.sleep(200);
+        bulkhead.releasePermit(); // bulkhead should not be full
+      });
+    }, Failsafe.with(bulkhead), ctx -> {
+      return "test";
+    }, "test");
+  }
+
   public void shouldThrowBulkheadFullExceptionAfterPermitsExceeded() {
     // Given
     Bulkhead<Object> bulkhead = Bulkhead.of(2);
@@ -53,53 +69,5 @@ public class BulkheadTest extends Testing {
     // When / Then
     testRunFailure(Failsafe.with(bulkhead), ctx -> {
     }, BulkheadFullException.class);
-  }
-
-  /**
-   * Tests a scenario where Bulkhead rejects some retried executions, which prevents the user's Supplier from being
-   * called.
-   */
-  public void testRejectedWithRetries() {
-    Stats rpStats = new Stats();
-    Stats rlStats = new Stats();
-    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
-    Bulkhead<Object> bh = withStatsAndLogs(Bulkhead.builder(2), rlStats).build();
-    bh.tryAcquirePermit();
-    bh.tryAcquirePermit(); // bulkhead should be full
-
-    testRunFailure(() -> {
-      rpStats.reset();
-      rlStats.reset();
-    }, Failsafe.with(rp, bh), ctx -> {
-      System.out.println("Executing");
-      throw new Exception();
-    }, (f, e) -> {
-      assertEquals(e.getAttemptCount(), 7);
-      assertEquals(e.getExecutionCount(), 0);
-      assertEquals(rpStats.failedAttemptCount, 7);
-      assertEquals(rpStats.retryCount, 6);
-    }, BulkheadFullException.class);
-  }
-
-  /**
-   * Asserts that a bulkhead propagates an InterruptedException.
-   */
-  public void testAcquirePermitWithInterrupt() {
-    Bulkhead<Object> bulkhead = Bulkhead.builder(1).withMaxWaitTime(Duration.ofSeconds(5)).build();
-    bulkhead.tryAcquirePermit(); // Bulkhead should be full
-
-    testRunFailure(() -> {
-      Thread thread = Thread.currentThread();
-      runInThread(() -> {
-        Thread.sleep(100);
-        thread.interrupt();
-      });
-    }, Failsafe.with(bulkhead), ctx -> {
-      System.out.println("Executing");
-      throw new Exception();
-    }, InterruptedException.class);
-
-    // Reset interrupt flag
-    Thread.interrupted();
   }
 }

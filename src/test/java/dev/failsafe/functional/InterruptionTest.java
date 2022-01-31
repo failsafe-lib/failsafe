@@ -18,11 +18,9 @@ package dev.failsafe.functional;
 import dev.failsafe.*;
 import dev.failsafe.testing.Asserts;
 import dev.failsafe.testing.Testing;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 
 import static org.testng.Assert.*;
 
@@ -32,25 +30,13 @@ import static org.testng.Assert.*;
 @Test
 public class InterruptionTest extends Testing {
   /**
-   * Asserts that Failsafe throws when interrupted while blocked in an execution.
+   * Asserts that a blocked execution can be interrupted.
    */
-  public void shouldThrowWhenInterruptedDuringSynchronousExecution() {
-    Thread main = Thread.currentThread();
-    CompletableFuture.runAsync(() -> {
-      try {
-        Thread.sleep(100);
-        main.interrupt();
-      } catch (InterruptedException e) {
-      }
-    });
+  public void testInterruptSyncExecution() {
+    scheduleInterrupt(100);
 
-    Asserts.assertThrows(() -> Failsafe.with(RetryPolicy.builder().withMaxRetries(0).build()).run(() -> {
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw e;
-      }
+    Asserts.assertThrows(() -> Failsafe.with(retryNever).run(() -> {
+      Thread.sleep(1000);
       fail("Expected interruption");
     }), FailsafeException.class, InterruptedException.class);
     // Clear interrupt flag
@@ -58,81 +44,58 @@ public class InterruptionTest extends Testing {
   }
 
   /**
-   * Asserts that the thread's interrupt flag is set after interrupting a sync RetryPolicy delay.
+   * Asserts that a blocked retry policy delay can be interrupted.
    */
-  public void shouldThrowWhenInterruptedDuringRetryPolicyDelay() {
+  public void testInterruptSyncRetryPolicyDelay() {
     RetryPolicy<Object> rp = RetryPolicy.builder().withDelay(Duration.ofMillis(500)).build();
-    Thread main = Thread.currentThread();
-    CompletableFuture.runAsync(() -> {
-      try {
-        Thread.sleep(100);
-        main.interrupt();
-      } catch (InterruptedException e) {
-      }
-    });
+    scheduleInterrupt(100);
 
     Asserts.assertThrows(() -> Failsafe.with(rp).run(() -> {
       throw new Exception();
     }), FailsafeException.class, InterruptedException.class);
     // Clear interrupt flag
-    Assert.assertTrue(Thread.interrupted());
+    assertTrue(Thread.interrupted());
   }
 
   /**
-   * Asserts that Failsafe throws when interrupting while blocked between executions.
+   * Asserts that a blocked rate limiter acquirePermit can be interrupted.
    */
-  public void shouldThrowWhenInterruptedDuringSynchronousDelay() {
-    Thread mainThread = Thread.currentThread();
-    new Thread(() -> {
-      try {
-        Thread.sleep(100);
-        mainThread.interrupt();
-      } catch (Exception e) {
-      }
-    }).start();
+  public void testInterruptRateLimiterAcquirePermit() {
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofSeconds(1))
+      .withMaxWaitTime(Duration.ofSeconds(5))
+      .build();
+    limiter.tryAcquirePermit(); // Rate limiter should be full
+    scheduleInterrupt(100);
 
-    try {
-      Failsafe.with(RetryPolicy.builder().withDelay(Duration.ofSeconds(5)).build()).run(() -> {
-        throw new Exception();
-      });
-    } catch (Exception e) {
-      assertTrue(e instanceof FailsafeException);
-      assertTrue(e.getCause() instanceof InterruptedException);
-      // Clear interrupt flag
-      assertTrue(Thread.interrupted());
-      return;
-    }
-    fail("Exception expected");
-  }
-
-  /**
-   * Asserts that the interrrupt flag is reset when a sync execution is interrupted.
-   */
-  public void shouldResetInterruptFlag() {
-    // Given
-    Thread t = Thread.currentThread();
-    new Thread(() -> {
-      try {
-        Thread.sleep(100);
-        t.interrupt();
-      } catch (InterruptedException e) {
-      }
-    }).start();
-
-    // Then
-    assertThrows(() -> Failsafe.with(retryNever).run(() -> {
-      Thread.sleep(1000);
+    assertThrows(() -> Failsafe.with(limiter).run(() -> {
+      System.out.println("Executing");
+      throw new Exception();
     }), FailsafeException.class, InterruptedException.class);
-    t.interrupt();
+    // Clear interrupt flag
+    assertTrue(Thread.interrupted());
+  }
 
-    // Then
+  /**
+   * Asserts that a blocked bulkhead acquirePermit can be interrupted.
+   */
+  public void testInterruptBulkheadAcquirePermit() {
+    Bulkhead<Object> bulkhead = Bulkhead.builder(1).withMaxWaitTime(Duration.ofSeconds(5)).build();
+    bulkhead.tryAcquirePermit(); // Bulkhead should be full
+    scheduleInterrupt(100);
+
+    assertThrows(() -> Failsafe.with(bulkhead).run(() -> {
+      System.out.println("Executing");
+      throw new Exception();
+    }), FailsafeException.class, InterruptedException.class);
+
+    // Clear interrupt flag
     assertTrue(Thread.interrupted());
   }
 
   /**
    * Ensures that an internally interrupted execution should always have the interrupt flag cleared afterwards.
    */
-  public void shouldResetInterruptFlagAfterInterruption() throws Throwable {
+  public void shouldResetInterruptFlagAfterInterruption() {
     // Given
     Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(1)).withInterrupt().build();
 
@@ -146,5 +109,16 @@ public class InterruptionTest extends Testing {
     }, (f, e) -> {
       assertFalse(Thread.currentThread().isInterrupted(), "Interrupt flag should be cleared after Failsafe handling");
     }, TimeoutExceededException.class);
+  }
+
+  /**
+   * Schedules an interrupt of the calling thread.
+   */
+  private void scheduleInterrupt(long millis) {
+    Thread thread = Thread.currentThread();
+    runInThread(() -> {
+      Thread.sleep(millis);
+      thread.interrupt();
+    });
   }
 }

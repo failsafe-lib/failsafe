@@ -15,20 +15,36 @@
  */
 package dev.failsafe.functional;
 
-import dev.failsafe.*;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RateLimitExceededException;
+import dev.failsafe.RateLimiter;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
 
 import static dev.failsafe.internal.InternalTesting.resetLimiter;
-import static org.testng.Assert.assertEquals;
 
 /**
  * Tests various RateLimiter scenarios.
  */
 @Test
 public class RateLimiterTest extends Testing {
+  public void testPermitAcquiredAfterWait() {
+    // Given
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(50))
+      .withMaxWaitTime(Duration.ofSeconds(1))
+      .build();
+
+    // When / Then
+    testGetSuccess(() -> {
+      resetLimiter(limiter);
+      limiter.tryAcquirePermit(); // limiter should now be out of permits
+    }, Failsafe.with(limiter), ctx -> {
+      return "test";
+    }, "test");
+  }
+
   public void shouldThrowRateLimitExceededExceptionAfterPermitsExceeded() {
     // Given
     RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(100)).build();
@@ -57,53 +73,5 @@ public class RateLimiterTest extends Testing {
       Thread.sleep(100);
     }, Failsafe.with(limiter), ctx -> {
     }, RateLimitExceededException.class);
-  }
-
-  /**
-   * Tests a scenario where RateLimiter rejects some retried executions, which prevents the user's Supplier from being
-   * called.
-   */
-  public void testRejectedWithRetries() {
-    Stats rpStats = new Stats();
-    Stats rlStats = new Stats();
-    RetryPolicy<Object> rp = withStatsAndLogs(RetryPolicy.builder().withMaxAttempts(7), rpStats).build();
-    RateLimiter<Object> rl = withStatsAndLogs(RateLimiter.burstyBuilder(3, Duration.ofSeconds(1)), rlStats).build();
-
-    testRunFailure(() -> {
-      rpStats.reset();
-      rlStats.reset();
-      resetLimiter(rl);
-    }, Failsafe.with(rp, rl), ctx -> {
-      System.out.println("Executing");
-      throw new Exception();
-    }, (f, e) -> {
-      assertEquals(e.getAttemptCount(), 7);
-      assertEquals(e.getExecutionCount(), 3);
-      assertEquals(rpStats.failedAttemptCount, 7);
-      assertEquals(rpStats.retryCount, 6);
-    }, RateLimitExceededException.class);
-  }
-
-  /**
-   * Asserts that a rate limiter propagates a sync InterruptedException.
-   */
-  public void testAcquirePermitWithInterrupt() {
-    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofSeconds(1))
-      .withMaxWaitTime(Duration.ofSeconds(5))
-      .build();
-    limiter.tryAcquirePermit();
-
-    Thread thread = Thread.currentThread();
-    runInThread(() -> {
-      Thread.sleep(100);
-      thread.interrupt();
-    });
-    assertThrows(() -> Failsafe.with(limiter).run(() -> {
-      System.out.println("Executing");
-      throw new Exception();
-    }), FailsafeException.class, InterruptedException.class);
-
-    // Reset interrupt flag
-    Thread.interrupted();
   }
 }

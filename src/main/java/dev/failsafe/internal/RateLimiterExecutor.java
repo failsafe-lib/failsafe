@@ -64,15 +64,17 @@ public class RateLimiterExecutor<R> extends PolicyExecutor<R> {
       promise.complete(ExecutionResult.failure(new RateLimitExceededException(rateLimiter)));
     else {
       try {
-        Future<?> scheduledWait = scheduler.schedule(() -> {
-          // Signal for execution and post-execution to proceed with a non-result
-          return promise.complete(ExecutionResult.none());
+        // Wait for the permit
+        Future<?> permitWaitFuture = scheduler.schedule(() -> {
+          // Signal for execution to proceed
+          promise.complete(ExecutionResult.none());
+          return null;
         }, waitNanos, TimeUnit.NANOSECONDS);
 
-        // Propagate outer cancellations to the RateLimiter future and its promise
+        // Propagate outer cancellations to the promise and permit wait future
         future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
-          scheduledWait.cancel(mayInterrupt);
           promise.complete(cancelResult);
+          permitWaitFuture.cancel(mayInterrupt);
         });
       } catch (Throwable t) {
         // Hard scheduling failure
