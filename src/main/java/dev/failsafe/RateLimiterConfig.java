@@ -85,6 +85,10 @@ public class RateLimiterConfig<R> extends PolicyConfig<R> {
   /**
    * Returns the max time to wait for permits to be available. If permits cannot be acquired before the max wait time is
    * exceeded, then the rate limiter will throw {@link RateLimitExceededException}.
+   * <p>
+   * This setting only applies when the RateLimiter is used with the {@link Failsafe} class. It does not apply when the
+   * RateLimiter is used in a standalone way.
+   * </p>
    *
    * @see RateLimiterBuilder#withMaxWaitTime(Duration)
    */

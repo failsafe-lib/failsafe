@@ -24,12 +24,36 @@ import org.testng.annotations.Test;
 import java.time.Duration;
 
 import static dev.failsafe.internal.InternalTesting.resetLimiter;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests various RateLimiter scenarios.
  */
 @Test
 public class RateLimiterTest extends Testing {
+  public void testReservePermit() {
+    // Given
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(100)).build();
+
+    // When / Then
+    assertEquals(limiter.reservePermit(), Duration.ZERO);
+    assertTrue(limiter.reservePermit().toMillis() > 0);
+    assertTrue(limiter.reservePermit().toMillis() > 100);
+  }
+
+  public void testTryReservePermit() {
+    // Given
+    RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(100)).build();
+
+    // When / Then
+    assertEquals(limiter.tryReservePermit(Duration.ofMillis(1)), Duration.ZERO);
+    assertEquals(limiter.tryReservePermit(Duration.ofMillis(10)), Duration.ofNanos(-1));
+    assertTrue(limiter.tryReservePermit(Duration.ofMillis(100)).toMillis() > 0);
+    assertTrue(limiter.tryReservePermit(Duration.ofMillis(200)).toMillis() > 100);
+    assertEquals(limiter.tryReservePermit(Duration.ofMillis(100)), Duration.ofNanos(-1));
+  }
+
   public void testPermitAcquiredAfterWait() {
     // Given
     RateLimiter<Object> limiter = RateLimiter.smoothBuilder(Duration.ofMillis(50))

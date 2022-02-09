@@ -42,12 +42,20 @@ import java.time.Duration;
  * <ul>
  *   <li>{@link #tryAcquirePermit()}</li>
  *   <li>{@link #tryAcquirePermits(int)}</li>
+ *   <li>{@link #reservePermit()}</li>
+ *   <li>{@link #reservePermits(int)}</li>
+ *   <li>{@link #tryReservePermit(Duration)}</li>
+ *   <li>{@link #tryReservePermits(int, Duration)}</li>
  * </ul>
  * </p>
  * <p>
  * This class also provides methods that throw {@link RateLimitExceededException} when permits cannot be acquired, and
  * also methods that return a boolean. The {@code acquire} methods all throw {@link RateLimitExceededException} when
  * permits cannot be acquired, and the {@code tryAcquire} methods return a boolean.
+ * </p>
+ * <p>
+ * The {@code reserve} methods attempt to reserve permits and return an expected wait time before the permit can be
+ * used. This helps integrate with scenarios where you need to wait externally
  * </p>
  * <p>
  * This class is threadsafe.
@@ -132,6 +140,7 @@ public interface RateLimiter<R> extends Policy<R> {
    *
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire a permit
    * @see #tryAcquirePermit()
+   * @see #reservePermit()
    */
   default void acquirePermit() throws InterruptedException {
     acquirePermits(1);
@@ -144,6 +153,7 @@ public interface RateLimiter<R> extends Policy<R> {
    * @throws IllegalArgumentException if {@code permits} is < 1
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire the {@code permits}
    * @see #tryAcquirePermits(int)
+   * @see #reservePermits(int)
    */
   void acquirePermits(int permits) throws InterruptedException;
 
@@ -197,9 +207,67 @@ public interface RateLimiter<R> extends Policy<R> {
   }
 
   /**
+   * Reserves a permit to perform an execution against the rate limiter, and returns the time that the caller is
+   * expected to wait before acting on the permit. Returns {@code 0} if the permit is immediately available and no
+   * waiting is needed.
+   *
+   * @see #acquirePermit()
+   * @see #tryAcquirePermit()
+   */
+  default Duration reservePermit() {
+    return reservePermits(1);
+  }
+
+  /**
+   * Reserves the {@code permits} to perform executions against the rate limiter, and returns the time that the caller
+   * is expected to wait before acting on the permits. Returns {@code 0} if the permits are immediately available and no
+   * waiting is needed.
+   *
+   * @throws IllegalArgumentException if {@code permits} is < 1
+   * @see #acquirePermits(int)
+   * @see #tryAcquirePermits(int)
+   */
+  Duration reservePermits(int permits);
+
+  /**
+   * Tries to reserve a permit to perform an execution against the rate limiter, and returns the time that the caller is
+   * expected to wait before acting on the permit, as long as it's less than the {@code maxWaitTime}.
+   * <ul>
+   *   <li>Returns the expected wait time for the permit if it was successfully reserved.</li>
+   *   <li>Returns {@code 0} if the permit was successfully reserved and no waiting is needed.</li>
+   *   <li>Returns {@code -1 nanoseconds} if the permit was not reserved because the wait time would be greater than the {@code maxWaitTime}.</li>
+   * </ul>
+   *
+   * @throws NullPointerException if {@code maxWaitTime} is null
+   * @see #acquirePermit(Duration)
+   * @see #tryAcquirePermit(Duration)
+   */
+  default Duration tryReservePermit(Duration maxWaitTime) {
+    return tryReservePermits(1, maxWaitTime);
+  }
+
+  /**
+   * Tries to reserve the {@code permits} to perform executions against the rate limiter, and returns the time that the
+   * caller is expected to wait before acting on the permits, as long as it's less than the {@code maxWaitTime}.
+   * <ul>
+   *   <li>Returns the expected wait time for the permits if they were successfully reserved.</li>
+   *   <li>Returns {@code 0} if the permits were successfully reserved and no waiting is needed.</li>
+   *   <li>Returns {@code -1 nanoseconds} if the permits were not reserved because the wait time would be greater than the {@code maxWaitTime}.</li>
+   * </ul>
+   *
+   * @throws IllegalArgumentException if {@code permits} is < 1
+   * @throws NullPointerException if {@code maxWaitTime} is null
+   * @see #acquirePermit(Duration)
+   * @see #tryAcquirePermit(Duration)
+   */
+  Duration tryReservePermits(int permits, Duration maxWaitTime);
+
+  /**
    * Tries to acquire a permit to perform an execution against the rate limiter, returning immediately without waiting.
    *
    * @return whether the requested {@code permits} are successfully acquired or not
+   * @see #acquirePermit()
+   * @see #reservePermits(int)
    */
   default boolean tryAcquirePermit() {
     return tryAcquirePermits(1);
@@ -211,6 +279,7 @@ public interface RateLimiter<R> extends Policy<R> {
    *
    * @return whether the requested {@code permits} are successfully acquired or not
    * @throws IllegalArgumentException if {@code permits} is < 1
+   * @see #acquirePermits(int)
    */
   boolean tryAcquirePermits(int permits);
 
@@ -221,6 +290,7 @@ public interface RateLimiter<R> extends Policy<R> {
    * @return whether a permit is successfully acquired
    * @throws NullPointerException if {@code maxWaitTime} is null
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire a permit
+   * @see #acquirePermit(Duration)
    */
   default boolean tryAcquirePermit(Duration maxWaitTime) throws InterruptedException {
     return tryAcquirePermits(1, maxWaitTime);
@@ -234,6 +304,7 @@ public interface RateLimiter<R> extends Policy<R> {
    * @throws IllegalArgumentException if {@code permits} is < 1
    * @throws NullPointerException if {@code maxWaitTime} is null
    * @throws InterruptedException if the current thread is interrupted while waiting to acquire the {@code permits}
+   * @see #acquirePermits(int, Duration)
    */
   boolean tryAcquirePermits(int permits, Duration maxWaitTime) throws InterruptedException;
 }

@@ -21,10 +21,8 @@ import dev.failsafe.internal.RateLimiterStats.Stopwatch;
 import dev.failsafe.internal.util.Assert;
 import dev.failsafe.internal.util.Durations;
 import dev.failsafe.spi.PolicyExecutor;
-import dev.failsafe.spi.Scheduler;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,24 +52,25 @@ public class RateLimiterImpl<R> implements RateLimiter<R> {
 
   @Override
   public void acquirePermits(int permits) throws InterruptedException {
-    Assert.isTrue(permits > 0, "permits must be > 0");
-    long waitNanos = stats.acquirePermits(permits, null);
+    long waitNanos = reservePermits(permits).toNanos();
     if (waitNanos > 0)
       TimeUnit.NANOSECONDS.sleep(waitNanos);
   }
 
   @Override
-  public boolean tryAcquirePermits(int permits) {
+  public Duration reservePermits(int permits) {
     Assert.isTrue(permits > 0, "permits must be > 0");
-    long waitNanos = stats.acquirePermits(permits, Duration.ZERO);
-    return waitNanos == 0;
+    return Duration.ofNanos(stats.acquirePermits(permits, null));
+  }
+
+  @Override
+  public boolean tryAcquirePermits(int permits) {
+    return reservePermits(permits, Duration.ZERO) == 0;
   }
 
   @Override
   public boolean tryAcquirePermits(int permits, Duration maxWaitTime) throws InterruptedException {
-    Assert.isTrue(permits > 0, "permits must be > 0");
-    Assert.notNull(maxWaitTime, "maxWaitTime");
-    long waitNanos = stats.acquirePermits(permits, Durations.ofSafeNanos(maxWaitTime));
+    long waitNanos = reservePermits(permits, maxWaitTime);
     if (waitNanos == -1)
       return false;
     if (waitNanos > 0)
@@ -80,15 +79,18 @@ public class RateLimiterImpl<R> implements RateLimiter<R> {
   }
 
   @Override
+  public Duration tryReservePermits(int permits, Duration maxWaitTime) {
+    return Duration.ofNanos(reservePermits(permits, maxWaitTime));
+  }
+
+  @Override
   public PolicyExecutor<R> toExecutor(int policyIndex) {
     return new RateLimiterExecutor<>(this, policyIndex);
   }
 
-  /**
-   * Returns the wait nanos for an acquired permit which can be used to externally wait.
-   */
-  long acquirePermitWaitNanos(Duration maxWaitTime) {
+  long reservePermits(int permits, Duration maxWaitTime) {
+    Assert.isTrue(permits > 0, "permits must be > 0");
     Assert.notNull(maxWaitTime, "maxWaitTime");
-    return stats.acquirePermits(1, Durations.ofSafeNanos(maxWaitTime));
+    return stats.acquirePermits(permits, Durations.ofSafeNanos(maxWaitTime));
   }
 }

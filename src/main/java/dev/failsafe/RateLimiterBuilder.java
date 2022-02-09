@@ -19,7 +19,6 @@ import dev.failsafe.internal.RateLimiterImpl;
 import dev.failsafe.internal.util.Assert;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 /**
  * Builds {@link RateLimiter} instances.
@@ -57,6 +56,10 @@ public class RateLimiterBuilder<R> extends PolicyBuilder<RateLimiterBuilder<R>, 
   /**
    * Configures the {@code maxWaitTime} to wait for permits to be available. If permits cannot be acquired before the
    * {@code maxWaitTime} is exceeded, then the rate limiter will throw {@link RateLimitExceededException}.
+   * <p>
+   * This setting only applies when the resulting RateLimiter is used with the {@link Failsafe} class. It does not apply
+   * when the RateLimiter is used in a standalone way.
+   * </p>
    *
    * @throws NullPointerException if {@code maxWaitTime} is null
    */

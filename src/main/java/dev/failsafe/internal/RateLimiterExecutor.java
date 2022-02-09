@@ -48,20 +48,20 @@ public class RateLimiterExecutor<R> extends PolicyExecutor<R> {
     try {
       return rateLimiter.tryAcquirePermit(maxWaitTime) ?
         null :
-        ExecutionResult.failure(new RateLimitExceededException(rateLimiter));
+        ExecutionResult.exception(new RateLimitExceededException(rateLimiter));
     } catch (InterruptedException e) {
       // Set interrupt flag
       Thread.currentThread().interrupt();
-      return ExecutionResult.failure(e);
+      return ExecutionResult.exception(e);
     }
   }
 
   @Override
   protected CompletableFuture<ExecutionResult<R>> preExecuteAsync(Scheduler scheduler, FailsafeFuture<R> future) {
     CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
-    long waitNanos = rateLimiter.acquirePermitWaitNanos(maxWaitTime);
+    long waitNanos = rateLimiter.reservePermits(1, maxWaitTime);
     if (waitNanos == -1)
-      promise.complete(ExecutionResult.failure(new RateLimitExceededException(rateLimiter)));
+      promise.complete(ExecutionResult.exception(new RateLimitExceededException(rateLimiter)));
     else {
       try {
         // Wait for the permit
