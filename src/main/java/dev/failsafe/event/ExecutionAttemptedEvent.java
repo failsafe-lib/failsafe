@@ -25,19 +25,27 @@ import dev.failsafe.ExecutionContext;
  */
 public class ExecutionAttemptedEvent<R> extends ExecutionEvent {
   private final R result;
-  private final Throwable failure;
+  private final Throwable exception;
 
-  public ExecutionAttemptedEvent(R result, Throwable failure, ExecutionContext<R> context) {
+  public ExecutionAttemptedEvent(R result, Throwable exception, ExecutionContext<R> context) {
     super(context);
     this.result = result;
-    this.failure = failure;
+    this.exception = exception;
   }
 
   /**
    * Returns the failure that preceded the event, else {@code null} if there was none.
    */
+  public Throwable getLastException() {
+    return exception;
+  }
+
+  /**
+   * @deprecated Use {@link #getLastException()} instead
+   */
+  @Deprecated
   public Throwable getLastFailure() {
-    return failure;
+    return exception;
   }
 
   /**
@@ -49,6 +57,6 @@ public class ExecutionAttemptedEvent<R> extends ExecutionEvent {
 
   @Override
   public String toString() {
-    return "ExecutionAttemptedEvent[" + "result=" + result + ", failure=" + failure + ']';
+    return "ExecutionAttemptedEvent[" + "result=" + result + ", exception=" + exception + ']';
   }
 }

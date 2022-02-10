@@ -85,7 +85,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
   }
 
   @Override
-  public void record(R result, Throwable failure) {
+  public void record(R result, Throwable exception) {
     Assert.state(!recorded, "The most recent execution has already been recorded or completed");
     recorded = true;
 
@@ -93,7 +93,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
     synchronized (future) {
       if (!attemptRecorded) {
         Assert.state(!completed, "Execution has already been completed");
-        record(new ExecutionResult<>(result, failure));
+        record(new ExecutionResult<>(result, exception));
       }
 
       // Proceed with handling the recorded result
@@ -107,8 +107,14 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
   }
 
   @Override
+  public void recordException(Throwable exception) {
+    record(null, exception);
+  }
+
+  @Override
+  @Deprecated
   public void recordFailure(Throwable failure) {
-    record(null, failure);
+    recordException(failure);
   }
 
   @Override
@@ -154,7 +160,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
       else {
         if (error instanceof CompletionException)
           error = error.getCause();
-        future.completeResult(ExecutionResult.failure(error));
+        future.completeResult(ExecutionResult.exception(error));
       }
     }
   }

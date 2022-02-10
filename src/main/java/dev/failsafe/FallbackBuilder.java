@@ -17,22 +17,22 @@ package dev.failsafe;
 
 import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionAttemptedEvent;
+import dev.failsafe.function.CheckedBiPredicate;
 import dev.failsafe.function.CheckedFunction;
+import dev.failsafe.function.CheckedPredicate;
 import dev.failsafe.internal.FallbackImpl;
 import dev.failsafe.internal.util.Assert;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 /**
  * Builds {@link Fallback} instances.
  * <ul>
  *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
  *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
- *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
+ *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(CheckedBiPredicate)}.
  *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
- *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
+ *   {@link #handleResultIf(CheckedPredicate)} will not replace the default exception handling condition.</li>
  *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
  *   will trigger policy handling.</li>
  * </ul>

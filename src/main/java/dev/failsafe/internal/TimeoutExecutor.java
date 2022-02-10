@@ -47,7 +47,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
 
   @Override
   public boolean isFailure(ExecutionResult<R> result) {
-    return !result.isNonResult() && result.getFailure() instanceof TimeoutExceededException;
+    return !result.isNonResult() && result.getException() instanceof TimeoutExceededException;
   }
 
   /**
@@ -71,7 +71,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
         // Schedule timeout check
         timeoutFuture = Scheduler.DEFAULT.schedule(() -> {
           // Guard against race with execution completion
-          ExecutionResult<R> cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
+          ExecutionResult<R> cancelResult = ExecutionResult.exception(new TimeoutExceededException(policy));
           if (result.compareAndSet(null, cancelResult)) {
             // Cancel and interrupt
             execution.record(cancelResult);
@@ -90,7 +90,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
         }, config.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
       } catch (Throwable t) {
         // Hard scheduling failure
-        return postExecute(execution, ExecutionResult.failure(t));
+        return postExecute(execution, ExecutionResult.exception(t));
       }
 
       // Propagate execution, cancel timeout future if not done, and postExecute result
@@ -126,7 +126,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
           try {
             Future<R> timeoutFuture = (Future<R>) Scheduler.DEFAULT.schedule(() -> {
               // Guard against race with execution completion
-              ExecutionResult<R> cancelResult = ExecutionResult.failure(new TimeoutExceededException(policy));
+              ExecutionResult<R> cancelResult = ExecutionResult.exception(new TimeoutExceededException(policy));
               if (resultRef.compareAndSet(null, cancelResult)) {
                 // Cancel and interrupt
                 execution.record(cancelResult);

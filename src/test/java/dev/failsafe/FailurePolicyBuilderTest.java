@@ -15,16 +15,18 @@
  */
 package dev.failsafe;
 
-import org.testng.Assert;
+import dev.failsafe.function.CheckedBiPredicate;
 import org.testng.annotations.Test;
 
-import java.util.function.BiPredicate;
+import static dev.failsafe.testing.Testing.unwrapExceptions;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 
 @Test
 public class FailurePolicyBuilderTest {
   public void testResultPredicateOnlyHandlesResults() {
-    BiPredicate<Object, Throwable> resultPredicate = FailurePolicyBuilder.resultPredicateFor(result -> true);
-    Assert.assertTrue(resultPredicate.test("result", null));
-    Assert.assertFalse(resultPredicate.test(null, new RuntimeException()));
+    CheckedBiPredicate<Object, Throwable> resultPredicate = FailurePolicyBuilder.resultPredicateFor(result -> true);
+    assertEquals(unwrapExceptions(() -> resultPredicate.test("result", null)), Boolean.TRUE);
+    assertNotEquals(unwrapExceptions(() -> resultPredicate.test(null, new RuntimeException())), Boolean.TRUE);
   }
 }

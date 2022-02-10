@@ -120,7 +120,7 @@ public class PolicyCompositionTest extends Testing {
   public void testFallbackRetryPolicy() {
     Fallback<Object> fb = Fallback.of(e -> {
       assertNull(e.getLastResult());
-      assertTrue(e.getLastFailure() instanceof IllegalStateException);
+      assertTrue(e.getLastException() instanceof IllegalStateException);
       return "test";
     });
     RetryPolicy<Object> rp = RetryPolicy.ofDefaults();
@@ -157,7 +157,7 @@ public class PolicyCompositionTest extends Testing {
     // Given
     Fallback<Object> fallback = Fallback.of(e -> {
       assertNull(e.getLastResult());
-      assertTrue(e.getLastFailure() instanceof IllegalStateException);
+      assertTrue(e.getLastException() instanceof IllegalStateException);
       return false;
     });
     CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
@@ -179,7 +179,7 @@ public class PolicyCompositionTest extends Testing {
     // Given
     Fallback<Object> fallback = Fallback.of(e -> {
       assertNull(e.getLastResult());
-      assertTrue(e.getLastFailure() instanceof CircuitBreakerOpenException);
+      assertTrue(e.getLastException() instanceof CircuitBreakerOpenException);
       return false;
     });
     CircuitBreaker<Object> breaker = CircuitBreaker.builder().withSuccessThreshold(3).build();
@@ -200,7 +200,7 @@ public class PolicyCompositionTest extends Testing {
   public void testRetryPolicyTimeout() {
     // Given
     RetryPolicy<Object> rp = RetryPolicy.builder().onFailedAttempt(e -> {
-      assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
+      assertTrue(e.getLastException() instanceof TimeoutExceededException);
     }).build();
     Stats timeoutStats = new Stats();
     Recorder recorder = new Recorder();
@@ -259,7 +259,7 @@ public class PolicyCompositionTest extends Testing {
   public void testFallbackTimeout() {
     // Given
     Fallback<Object> fallback = Fallback.of(e -> {
-      assertTrue(e.getLastFailure() instanceof TimeoutExceededException);
+      assertTrue(e.getLastException() instanceof TimeoutExceededException);
       return false;
     });
     Timeout<Object> timeout = Timeout.of(Duration.ofMillis(10));

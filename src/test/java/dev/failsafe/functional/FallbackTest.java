@@ -83,7 +83,7 @@ public class FallbackTest extends Testing {
    */
   public void shouldFallbackOfException() {
     // Given
-    Fallback<Object> fallback = Fallback.ofException(e -> new IllegalStateException(e.getLastFailure()));
+    Fallback<Object> fallback = Fallback.ofException(e -> new IllegalStateException(e.getLastException()));
 
     // When / Then
     testRunFailure(Failsafe.with(fallback), ctx -> {

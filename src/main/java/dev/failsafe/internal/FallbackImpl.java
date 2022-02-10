@@ -52,8 +52,8 @@ public class FallbackImpl<R> implements Fallback<R>, FailurePolicy<R> {
   /**
    * Returns the applied fallback result.
    */
-  protected R apply(R result, Throwable failure, ExecutionContext<R> context) throws Throwable {
-    ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
+  protected R apply(R result, Throwable exception, ExecutionContext<R> context) throws Throwable {
+    ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, exception, context);
     return config.getFallback() != null ?
       config.getFallback().apply(event) :
       config.getFallbackStage().apply(event).get();
@@ -62,8 +62,8 @@ public class FallbackImpl<R> implements Fallback<R>, FailurePolicy<R> {
   /**
    * Returns a future applied fallback result.
    */
-  protected CompletableFuture<R> applyStage(R result, Throwable failure, ExecutionContext<R> context) throws Throwable {
-    ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, failure, context);
+  protected CompletableFuture<R> applyStage(R result, Throwable exception, ExecutionContext<R> context) throws Throwable {
+    ExecutionAttemptedEvent<R> event = new ExecutionAttemptedEvent<>(result, exception, context);
     return config.getFallback() != null ?
       CompletableFuture.completedFuture(config.getFallback().apply(event)) :
       config.getFallbackStage().apply(event);

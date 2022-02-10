@@ -43,7 +43,7 @@ public class FailsafeFutureTest {
     Waiter waiter = new Waiter();
     CompletableFuture<String> future = Failsafe.with(RetryPolicy.ofDefaults()).with(executor).onComplete(e -> {
       waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof CancellationException);
+      waiter.assertTrue(e.getException() instanceof CancellationException);
       waiter.resume();
     }).getAsync(() -> {
       Thread.sleep(1000);

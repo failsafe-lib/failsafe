@@ -39,15 +39,15 @@ public interface DelayablePolicy<R> extends Policy<R> {
     DelayablePolicyConfig<R> config = getConfig();
     Duration computed = null;
     if (context != null && config.getDelayFn() != null) {
-      R exResult = context.getLastResult();
-      Throwable exFailure = context.getLastFailure();
+      R result = context.getLastResult();
+      Throwable exception = context.getLastException();
 
       R delayResult = config.getDelayResult();
-      Class<? extends Throwable> delayFailure = config.getDelayFailure();
-      boolean delayResultMatched = delayResult == null || delayResult.equals(exResult);
-      boolean delayFailureMatched =
-        delayFailure == null || (exFailure != null && delayFailure.isAssignableFrom(exFailure.getClass()));
-      if (delayResultMatched && delayFailureMatched) {
+      Class<? extends Throwable> delayFailure = config.getDelayException();
+      boolean delayResultMatched = delayResult == null || delayResult.equals(result);
+      boolean delayExceptionMatched =
+        delayFailure == null || (exception != null && delayFailure.isAssignableFrom(exception.getClass()));
+      if (delayResultMatched && delayExceptionMatched) {
         try {
           computed = Durations.ofSafeNanos(config.getDelayFn().get(context));
         } catch (Throwable e) {

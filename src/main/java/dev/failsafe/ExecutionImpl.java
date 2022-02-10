@@ -195,9 +195,15 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends Throwable> T getLastFailure() {
+  public <T extends Throwable> T getLastException() {
     ExecutionResult<R> r = result != null ? result : previousResult;
-    return r == null ? null : (T) r.getFailure();
+    return r == null ? null : (T) r.getException();
+  }
+
+  @Override
+  @Deprecated
+  public <T extends Throwable> T getLastFailure() {
+    return getLastException();
   }
 
   @Override
@@ -230,6 +236,6 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   @Override
   public String toString() {
     return "[" + "attempts=" + attempts + ", executions=" + executions + ", lastResult=" + getLastResult()
-      + ", lastFailure=" + getLastFailure() + ']';
+      + ", lastException=" + getLastException() + ']';
   }
 }

@@ -13,7 +13,7 @@ import static org.testng.Assert.assertTrue;
 public class Issue165Test {
   public void testOfStage() {
     Fallback<Object> fallback = Fallback.ofStage(e -> {
-      assertTrue(e.getLastFailure() instanceof IllegalStateException);
+      assertTrue(e.getLastException() instanceof IllegalStateException);
       return CompletableFuture.supplyAsync(() -> "test");
     });
     Object result = Failsafe.with(fallback).get(() -> {

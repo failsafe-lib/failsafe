@@ -46,7 +46,7 @@ final class Functions {
         result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
       } catch (Throwable t) {
         throwable = t;
-        result = ExecutionResult.failure(t);
+        result = ExecutionResult.exception(t);
       }
       execution.record(result);
 
@@ -82,7 +82,7 @@ final class Functions {
         execution.preExecute();
         result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
       } catch (Throwable t) {
-        result = ExecutionResult.failure(t);
+        result = ExecutionResult.exception(t);
       }
       execution.record(result);
       return CompletableFuture.completedFuture(result);
@@ -144,16 +144,16 @@ final class Functions {
           if (stage instanceof Future)
             future.propagateCancellation((Future<R>) stage);
 
-          stage.whenComplete((result, failure) -> {
-            if (failure instanceof CompletionException)
-              failure = failure.getCause();
-            ExecutionResult<R> r = failure == null ? ExecutionResult.success(result) : ExecutionResult.failure(failure);
+          stage.whenComplete((result, exception) -> {
+            if (exception instanceof CompletionException)
+              exception = exception.getCause();
+            ExecutionResult<R> r = exception == null ? ExecutionResult.success(result) : ExecutionResult.exception(exception);
             execution.record(r);
             promise.complete(r);
           });
         }
       } catch (Throwable t) {
-        ExecutionResult<R> result = ExecutionResult.failure(t);
+        ExecutionResult<R> result = ExecutionResult.exception(t);
         execution.record(result);
         promise.complete(result);
       }

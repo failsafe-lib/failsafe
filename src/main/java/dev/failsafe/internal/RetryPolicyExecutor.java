@@ -16,7 +16,6 @@
 package dev.failsafe.internal;
 
 import dev.failsafe.ExecutionContext;
-import dev.failsafe.FailsafeException;
 import dev.failsafe.RetryPolicy;
 import dev.failsafe.RetryPolicyConfig;
 import dev.failsafe.spi.*;
@@ -92,7 +91,7 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
           // Set interrupt flag if interruption was not performed by Failsafe
           if (!execution.isInterrupted())
             Thread.currentThread().interrupt();
-          return ExecutionResult.failure(e);
+          return ExecutionResult.exception(e);
         } finally {
           execution.setInterruptable(false);
         }
@@ -235,7 +234,7 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
     boolean maxRetriesExceeded = config.getMaxRetries() != -1 && failedAttempts > config.getMaxRetries();
     boolean maxDurationExceeded = config.getMaxDuration() != null && elapsedNanos > config.getMaxDuration().toNanos();
     retriesExceeded = maxRetriesExceeded || maxDurationExceeded;
-    boolean isAbortable = retryPolicy.isAbortable(result.getResult(), result.getFailure());
+    boolean isAbortable = retryPolicy.isAbortable(result.getResult(), result.getException());
     boolean shouldRetry = !result.isSuccess() && !isAbortable && !retriesExceeded && config.allowsRetries();
     boolean completed = isAbortable || !shouldRetry;
     boolean success = completed && result.isSuccess() && !isAbortable;

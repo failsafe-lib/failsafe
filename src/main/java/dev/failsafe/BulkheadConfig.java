@@ -50,6 +50,10 @@ public class BulkheadConfig<R> extends PolicyConfig<R> {
   /**
    * Returns the max time to wait for permits to be available. If permits cannot be acquired before the max wait time is
    * exceeded, then the bulkhead will throw {@link BulkheadFullException}.
+   * <p>
+   * This setting only applies when the Bulkhead is used with the {@link Failsafe} class. It does not apply when the
+   * Bulkhead is used in a standalone way.
+   * </p>
    *
    * @see BulkheadBuilder#withMaxWaitTime(Duration)
    */

@@ -55,14 +55,14 @@ public abstract class PolicyExecutor<R> {
   }
 
   /**
-   * Called before execution to return an alternative result or failure such as if execution is not allowed or needed.
+   * Called before execution to return an alternative result or exception such as if execution is not allowed or needed.
    */
   protected ExecutionResult<R> preExecute() {
     return null;
   }
 
   /**
-   * Called before an async execution to return an alternative result or failure such as if execution is not allowed or
+   * Called before an async execution to return an alternative result or exception such as if execution is not allowed or
    * needed. Returns {@code null} if pre execution is not performed. If the resulting future is completed with a {@link
    * ExecutionResult#isNonResult() non-result}, then execution and post-execution should still be performed. If the
    * resulting future is completed with {@code null}, then the execution is assumed to have been cancelled.
@@ -147,7 +147,7 @@ public abstract class PolicyExecutor<R> {
   public ExecutionResult<R> postExecute(ExecutionInternal<R> execution, ExecutionResult<R> result) {
     execution.recordAttempt();
     if (isFailure(result)) {
-      result = onFailure(execution, result.withFailure());
+      result = onFailure(execution, result.withException());
       handleFailure(result, execution);
     } else {
       result = result.withSuccess();
@@ -170,7 +170,7 @@ public abstract class PolicyExecutor<R> {
     if (!execution.isAsyncExecution() || !execution.isPostExecuted(policyIndex)) {
       execution.recordAttempt();
       if (isFailure(result)) {
-        postFuture = onFailureAsync(execution, result.withFailure(), scheduler, future).whenComplete(
+        postFuture = onFailureAsync(execution, result.withException(), scheduler, future).whenComplete(
           (postResult, error) -> handleFailure(postResult, execution));
       } else {
         result = result.withSuccess();
@@ -193,9 +193,9 @@ public abstract class PolicyExecutor<R> {
     if (result.isNonResult())
       return false;
     else if (failurePolicy != null)
-      return failurePolicy.isFailure(result.getResult(), result.getFailure());
+      return failurePolicy.isFailure(result.getResult(), result.getException());
     else
-      return result.getFailure() != null;
+      return result.getException() != null;
   }
 
   /**

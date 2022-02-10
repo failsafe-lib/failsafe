@@ -100,9 +100,9 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   }
 
   @Override
-  public void record(R result, Throwable failure) {
+  public void record(R result, Throwable exception) {
     preExecute();
-    postExecute(new ExecutionResult<>(result, failure));
+    postExecute(new ExecutionResult<>(result, exception));
   }
 
   @Override
@@ -112,9 +112,15 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   }
 
   @Override
-  public void recordFailure(Throwable failure) {
+  public void recordException(Throwable exception) {
     preExecute();
-    postExecute(new ExecutionResult<>(null, failure));
+    postExecute(new ExecutionResult<>(null, exception));
+  }
+
+  @Override
+  @Deprecated
+  public void recordFailure(Throwable failure) {
+    recordException(failure);
   }
 
   @Override

@@ -25,19 +25,27 @@ import dev.failsafe.ExecutionContext;
  */
 public class ExecutionCompletedEvent<R> extends ExecutionEvent {
   private final R result;
-  private final Throwable failure;
+  private final Throwable exception;
 
-  public ExecutionCompletedEvent(R result, Throwable failure, ExecutionContext<R> context) {
+  public ExecutionCompletedEvent(R result, Throwable exception, ExecutionContext<R> context) {
     super(context);
     this.result = result;
-    this.failure = failure;
+    this.exception = exception;
   }
 
   /**
    * Returns the failure that preceded the event, else {@code null} if there was none.
    */
+  public Throwable getException() {
+    return exception;
+  }
+
+  /**
+   * @deprecated Use {@link #getException()} instead
+   */
+  @Deprecated
   public Throwable getFailure() {
-    return failure;
+    return exception;
   }
 
   /**
@@ -49,6 +57,6 @@ public class ExecutionCompletedEvent<R> extends ExecutionEvent {
 
   @Override
   public String toString() {
-    return "ExecutionCompletedEvent[" + "result=" + result + ", failure=" + failure + ']';
+    return "ExecutionCompletedEvent[" + "result=" + result + ", exception=" + exception + ']';
   }
 }

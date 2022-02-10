@@ -50,6 +50,10 @@ public class BulkheadBuilder<R> extends PolicyBuilder<BulkheadBuilder<R>, Bulkhe
   /**
    * Configures the {@code maxWaitTime} to wait for permits to be available. If permits cannot be acquired before the
    * {@code maxWaitTime} is exceeded, then the bulkhead will throw {@link BulkheadFullException}.
+   * <p>
+   * This setting only applies when the resulting Bulkhead is used with the {@link Failsafe} class. It does not apply
+   * when the Bulkhead is used in a standalone way.
+   * </p>
    *
    * @throws NullPointerException if {@code maxWaitTime} is null
    */

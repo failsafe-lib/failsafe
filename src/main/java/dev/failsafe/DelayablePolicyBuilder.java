@@ -63,7 +63,7 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
    * <li>Any configured jitter is still applied to DelayFunction provided values
    * <li>Any configured max duration is still applied to DelayFunction provided values
    * <li>The {@link ExecutionContext} that is provided to the {@code delayFunction} may be {@code null} if the prior execution
-   * failure was manually recorded outside of a Failsafe execution.</li>
+   * exception was manually recorded outside of a Failsafe execution.</li>
    * </ul>
    * </p>
    *
@@ -78,7 +78,7 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
 
   /**
    * Sets the {@code delayFunction} that computes the next delay before allowing another execution. Delays will only
-   * occur for failures that are assignable from the {@code failure}.
+   * occur for exceptions that are assignable from the {@code exception}.
    * <p>
    * The {@code delayFunction} must complete quickly, not have side-effects, and always return the same result for the
    * same input. Exceptions thrown by the {@code delayFunction} method will <strong>not</strong> be handled and will
@@ -91,20 +91,20 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
    * <li>Any configured jitter is still applied to DelayFunction provided values
    * <li>Any configured max duration is still applied to DelayFunction provided values
    * <li>The {@link ExecutionContext} that is provided to the {@code delayFunction} may be {@code null} if the prior execution
-   * failure was manually recorded outside of a Failsafe execution.</li>
+   * exception was manually recorded outside of a Failsafe execution.</li>
    * </ul>
    * </p>
    *
    * @param delayFunction the function to use to compute the delay before a next attempt
-   * @param failure the execution failure that is expected in order to trigger the delay
-   * @param <F> failure type
-   * @throws NullPointerException if {@code delayFunction} or {@code failure} are null
+   * @param exception the execution exception that is expected in order to trigger the delay
+   * @param <F> exception type
+   * @throws NullPointerException if {@code delayFunction} or {@code exception} are null
    */
   @SuppressWarnings("unchecked")
-  public <F extends Throwable> S withDelayFnOn(ContextualSupplier<R, Duration> delayFunction, Class<F> failure) {
+  public <F extends Throwable> S withDelayFnOn(ContextualSupplier<R, Duration> delayFunction, Class<F> exception) {
     withDelayFn(delayFunction);
-    Assert.notNull(failure, "failure");
-    config.delayFailure = failure;
+    Assert.notNull(exception, "exception");
+    config.delayException = exception;
     return (S) this;
   }
 
@@ -123,7 +123,7 @@ public abstract class DelayablePolicyBuilder<S, C extends DelayablePolicyConfig<
    * <li>Any configured jitter is still applied to DelayFunction provided values
    * <li>Any configured max duration is still applied to DelayFunction provided values
    * <li>The {@link ExecutionContext} that is provided to the {@code delayFunction} may be {@code null} if the prior execution
-   * failure was manually recorded outside of a Failsafe execution.</li>
+   * exception was manually recorded outside of a Failsafe execution.</li>
    * </ul>
    * </p>
    *

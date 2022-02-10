@@ -18,13 +18,13 @@ package dev.failsafe.internal;
 import dev.failsafe.RetryPolicy;
 import dev.failsafe.RetryPolicyBuilder;
 import dev.failsafe.RetryPolicyConfig;
+import dev.failsafe.function.CheckedBiPredicate;
+import dev.failsafe.function.CheckedPredicate;
 import dev.failsafe.spi.DelayablePolicy;
 import dev.failsafe.spi.FailurePolicy;
 import dev.failsafe.spi.PolicyExecutor;
 
 import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 /**
  * A {@link RetryPolicy} implementation.
@@ -50,17 +50,17 @@ public class RetryPolicyImpl<R> implements RetryPolicy<R>, FailurePolicy<R>, Del
    *
    * @see RetryPolicyBuilder#abortOn(Class...)
    * @see RetryPolicyBuilder#abortOn(List)
-   * @see RetryPolicyBuilder#abortOn(Predicate)
-   * @see RetryPolicyBuilder#abortIf(BiPredicate)
-   * @see RetryPolicyBuilder#abortIf(Predicate)
+   * @see RetryPolicyBuilder#abortOn(CheckedPredicate)
+   * @see RetryPolicyBuilder#abortIf(CheckedBiPredicate)
+   * @see RetryPolicyBuilder#abortIf(CheckedPredicate)
    * @see RetryPolicyBuilder#abortWhen(R)
    */
   public boolean isAbortable(R result, Throwable failure) {
-    for (BiPredicate<R, Throwable> predicate : config.getAbortConditions()) {
+    for (CheckedBiPredicate<R, Throwable> predicate : config.getAbortConditions()) {
       try {
         if (predicate.test(result, failure))
           return true;
-      } catch (Exception ignore) {
+      } catch (Throwable ignore) {
       }
     }
     return false;

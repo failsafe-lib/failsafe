@@ -115,7 +115,7 @@ public class NestedTimeoutTest extends Testing {
 
     // When / Then
     testGetFailure(false, Failsafe.with(rp, innerTimeout, outerTimeout), ctx -> {
-      assertTrue(ctx.getLastFailure() == null || ctx.getLastFailure() instanceof TimeoutExceededException);
+      assertTrue(ctx.getLastException() == null || ctx.getLastException() instanceof TimeoutExceededException);
 
       try {
         assertFalse(ctx.isCancelled());

@@ -325,10 +325,10 @@ public class Testing extends Logging {
       ExecutionCompletedEvent<T> completedEvent = completedEventRef.get();
       if (expectedExInner.length > 0) {
         assertNull(completedEvent.getResult());
-        assertMatches(completedEvent.getFailure(), Arrays.asList(expectedExInner));
+        assertMatches(completedEvent.getException(), Arrays.asList(expectedExInner));
       } else {
         resultAssertion.accept(completedEvent.getResult());
-        assertNull(completedEvent.getFailure());
+        assertNull(completedEvent.getException());
       }
       if (then != null)
         then.accept(futureRef.get(), completedEvent);
@@ -358,15 +358,12 @@ public class Testing extends Logging {
     Consumer<Function<FailsafeExecutor<T>, CompletableFuture<T>>> asyncTester = test -> {
       if (given != null)
         uncheck(given).run();
-      if (expectedExInner.length == 0) {
-        CompletableFuture<T> future = test.apply(failsafe.onComplete(setCompletedEventFn));
-        futureRef.set(future);
+      CompletableFuture<T> future = test.apply(failsafe.onComplete(setCompletedEventFn));
+      futureRef.set(future);
+      if (expectedExInner.length == 0)
         resultAssertion.accept(unwrapExceptions(future::get));
-      } else {
-        CompletableFuture<T> future = test.apply(failsafe.onComplete(setCompletedEventFn));
-        futureRef.set(future);
+      else
         assertThrowsSup(future::get, expected);
-      }
       postTestFn.run();
     };
 
@@ -387,7 +384,7 @@ public class Testing extends Logging {
             else
               exec.recordResult(result);
           } catch (Throwable t) {
-            exec.recordFailure(t);
+            exec.recordException(t);
           }
         });
       };

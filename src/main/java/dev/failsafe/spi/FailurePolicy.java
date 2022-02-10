@@ -18,10 +18,10 @@ package dev.failsafe.spi;
 import dev.failsafe.FailurePolicyBuilder;
 import dev.failsafe.FailurePolicyConfig;
 import dev.failsafe.Policy;
+import dev.failsafe.function.CheckedBiPredicate;
+import dev.failsafe.function.CheckedPredicate;
 
 import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 /**
  * A policy that can handle specifically configured failures.
@@ -33,30 +33,30 @@ public interface FailurePolicy<R> extends Policy<R> {
   FailurePolicyConfig<R> getConfig();
 
   /**
-   * Returns whether an execution {@code result} or {@code failure} are considered a failure according to the policy
+   * Returns whether an execution {@code result} or {@code exception} are considered a failure according to the policy
    * configuration.
    *
    * @see FailurePolicyBuilder#handle(Class...)
    * @see FailurePolicyBuilder#handle(List)
-   * @see FailurePolicyBuilder#handleIf(BiPredicate)
-   * @see FailurePolicyBuilder#handleIf(Predicate)
-   * @see FailurePolicyBuilder#handleResult(Object) 
-   * @see FailurePolicyBuilder#handleResultIf(Predicate)
+   * @see FailurePolicyBuilder#handleIf(CheckedBiPredicate)
+   * @see FailurePolicyBuilder#handleIf(CheckedPredicate)
+   * @see FailurePolicyBuilder#handleResult(Object)
+   * @see FailurePolicyBuilder#handleResultIf(CheckedPredicate)
    */
-  default boolean isFailure(R result, Throwable failure) {
+  default boolean isFailure(R result, Throwable exception) {
     FailurePolicyConfig<R> config = getConfig();
     if (config.getFailureConditions().isEmpty())
-      return failure != null;
+      return exception != null;
 
-    for (BiPredicate<R, Throwable> predicate : config.getFailureConditions()) {
+    for (CheckedBiPredicate<R, Throwable> predicate : config.getFailureConditions()) {
       try {
-        if (predicate.test(result, failure))
+        if (predicate.test(result, exception))
           return true;
-      } catch (Exception ignore) {
+      } catch (Throwable ignore) {
       }
     }
 
-    // Fail by default if a failure is not checked by a condition
-    return failure != null && !config.isFailuresChecked();
+    // Fail by default if an exception is not checked by a condition
+    return exception != null && !config.isExceptionsChecked();
   }
 }

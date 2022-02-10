@@ -36,21 +36,21 @@ public interface EventHandler<R> {
     return handler == null ?
       null :
       (result, context) -> handler.acceptUnchecked(
-        new ExecutionCompletedEvent<>(result.getResult(), result.getFailure(), context));
+        new ExecutionCompletedEvent<>(result.getResult(), result.getException(), context));
   }
 
   static <R> EventHandler<R> ofExecutionAttempted(EventListener<ExecutionAttemptedEvent<R>> handler) {
     return handler == null ?
       null :
       (result, context) -> handler.acceptUnchecked(
-        new ExecutionAttemptedEvent<>(result.getResult(), result.getFailure(), context));
+        new ExecutionAttemptedEvent<>(result.getResult(), result.getException(), context));
   }
 
   static <R> EventHandler<R> ofExecutionScheduled(EventListener<ExecutionScheduledEvent<R>> handler) {
     return handler == null ?
       null :
       (result, context) -> handler.acceptUnchecked(
-        new ExecutionScheduledEvent<>(result.getResult(), result.getFailure(), Duration.ofNanos(result.getDelay()),
+        new ExecutionScheduledEvent<>(result.getResult(), result.getException(), Duration.ofNanos(result.getDelay()),
           context));
   }
 }

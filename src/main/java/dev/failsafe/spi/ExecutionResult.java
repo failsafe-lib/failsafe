@@ -34,8 +34,8 @@ public final class ExecutionResult<R> {
 
   /** The execution result, if any */
   private final R result;
-  /** The execution failure, if any */
-  private final Throwable failure;
+  /** The execution exception, if any */
+  private final Throwable exception;
   /** Whether the result represents a non result rather than a {@code null} result */
   private final boolean nonResult;
   /** The amount of time to wait prior to the next execution, according to the policy */
@@ -49,18 +49,18 @@ public final class ExecutionResult<R> {
   private final Boolean successAll;
 
   /**
-   * Records an initial execution result with {@code complete} true and {@code success} set to true if {@code failure}
+   * Records an initial execution result with {@code complete} true and {@code success} set to true if {@code exception}
    * is not null.
    */
-  public ExecutionResult(R result, Throwable failure) {
-    this(result, failure, false, 0, true, failure == null, failure == null);
+  public ExecutionResult(R result, Throwable exception) {
+    this(result, exception, false, 0, true, exception == null, exception == null);
   }
 
-  private ExecutionResult(R result, Throwable failure, boolean nonResult, long delayNanos, boolean complete,
+  private ExecutionResult(R result, Throwable exception, boolean nonResult, long delayNanos, boolean complete,
     boolean success, Boolean successAll) {
     this.nonResult = nonResult;
     this.result = result;
-    this.failure = failure;
+    this.exception = exception;
     this.delayNanos = delayNanos;
     this.complete = complete;
     this.success = success;
@@ -84,10 +84,10 @@ public final class ExecutionResult<R> {
   }
 
   /**
-   * Returns an ExecutionResult with the {@code failure} set, {@code complete} true and {@code success} false.
+   * Returns an ExecutionResult with the {@code exception} set, {@code complete} true and {@code success} false.
    */
-  public static <R> ExecutionResult<R> failure(Throwable failure) {
-    return new ExecutionResult<>(null, failure, false, 0, true, false, false);
+  public static <R> ExecutionResult<R> exception(Throwable exception) {
+    return new ExecutionResult<>(null, exception, false, 0, true, false, false);
   }
 
   /**
@@ -102,8 +102,8 @@ public final class ExecutionResult<R> {
     return result;
   }
 
-  public Throwable getFailure() {
-    return failure;
+  public Throwable getException() {
+    return exception;
   }
 
   public long getDelay() {
@@ -137,7 +137,7 @@ public final class ExecutionResult<R> {
    * {@code this} if {@link #success} and {@link #result} are unchanged.
    */
   public ExecutionResult<R> withResult(R result) {
-    boolean unchangedNull = this.result == null && result == null && failure == null;
+    boolean unchangedNull = this.result == null && result == null && exception == null;
     boolean unchangedNotNull = this.result != null && this.result.equals(result);
     return success && (unchangedNull || unchangedNotNull) ?
       this :
@@ -150,14 +150,16 @@ public final class ExecutionResult<R> {
   public ExecutionResult<R> withNotComplete() {
     return !this.complete ?
       this :
-      new ExecutionResult<>(result, failure, nonResult, delayNanos, false, success, successAll);
+      new ExecutionResult<>(result, exception, nonResult, delayNanos, false, success, successAll);
   }
 
   /**
    * Returns a copy of the ExecutionResult with success value of {code false}.
    */
-  public ExecutionResult<R> withFailure() {
-    return !this.success ? this : new ExecutionResult<>(result, failure, nonResult, delayNanos, complete, false, false);
+  public ExecutionResult<R> withException() {
+    return !this.success ?
+      this :
+      new ExecutionResult<>(result, exception, nonResult, delayNanos, complete, false, false);
   }
 
   /**
@@ -166,7 +168,7 @@ public final class ExecutionResult<R> {
   public ExecutionResult<R> withSuccess() {
     return this.complete && this.success ?
       this :
-      new ExecutionResult<>(result, failure, nonResult, delayNanos, true, true, successAll);
+      new ExecutionResult<>(result, exception, nonResult, delayNanos, true, true, successAll);
   }
 
   /**
@@ -175,7 +177,7 @@ public final class ExecutionResult<R> {
   public ExecutionResult<R> withDelay(long delayNanos) {
     return this.delayNanos == delayNanos ?
       this :
-      new ExecutionResult<>(result, failure, nonResult, delayNanos, complete, success, successAll);
+      new ExecutionResult<>(result, exception, nonResult, delayNanos, complete, success, successAll);
   }
 
   /**
@@ -184,7 +186,7 @@ public final class ExecutionResult<R> {
   public ExecutionResult<R> with(long delayNanos, boolean complete, boolean success) {
     return this.delayNanos == delayNanos && this.complete == complete && this.success == success ?
       this :
-      new ExecutionResult<>(result, failure, nonResult, delayNanos, complete, success,
+      new ExecutionResult<>(result, exception, nonResult, delayNanos, complete, success,
         successAll == null ? success : success && successAll);
   }
 
@@ -197,8 +199,8 @@ public final class ExecutionResult<R> {
 
   @Override
   public String toString() {
-    return "[" + "result=" + result + ", failure=" + failure + ", nonResult=" + nonResult + ", delayNanos=" + delayNanos
-      + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll + ']';
+    return "[" + "result=" + result + ", exception=" + exception + ", nonResult=" + nonResult + ", delayNanos="
+      + delayNanos + ", complete=" + complete + ", success=" + success + ", successAll=" + successAll + ']';
   }
 
   @Override
@@ -208,11 +210,11 @@ public final class ExecutionResult<R> {
     if (o == null || getClass() != o.getClass())
       return false;
     ExecutionResult<?> that = (ExecutionResult<?>) o;
-    return Objects.equals(result, that.result) && Objects.equals(failure, that.failure);
+    return Objects.equals(result, that.result) && Objects.equals(exception, that.exception);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(result, failure);
+    return Objects.hash(result, exception);
   }
 }

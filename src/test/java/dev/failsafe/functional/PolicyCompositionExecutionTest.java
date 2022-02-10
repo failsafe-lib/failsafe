@@ -33,10 +33,10 @@ public class PolicyCompositionExecutionTest {
     CircuitBreaker<Object> cb = CircuitBreaker.builder().withFailureThreshold(5).build();
 
     Execution<Object> execution = Execution.of(rp, cb);
-    execution.recordFailure(new Exception());
-    execution.recordFailure(new Exception());
+    execution.recordException(new Exception());
+    execution.recordException(new Exception());
     assertFalse(execution.isComplete());
-    execution.recordFailure(new Exception());
+    execution.recordException(new Exception());
     assertTrue(execution.isComplete());
 
     assertTrue(cb.isClosed());
@@ -47,9 +47,9 @@ public class PolicyCompositionExecutionTest {
     CircuitBreaker<Object> cb = CircuitBreaker.builder().withFailureThreshold(5).build();
 
     Execution<Object> execution = Execution.of(cb, rp);
-    execution.recordFailure(new Exception());
+    execution.recordException(new Exception());
     assertFalse(execution.isComplete());
-    execution.recordFailure(new Exception());
+    execution.recordException(new Exception());
     assertTrue(execution.isComplete());
 
     assertTrue(cb.isClosed());

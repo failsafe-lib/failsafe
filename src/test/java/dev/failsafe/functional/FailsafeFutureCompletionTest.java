@@ -54,7 +54,7 @@ public class FailsafeFutureCompletionTest extends Testing {
 
     // Given
     CompletableFuture<Boolean> future2 = Failsafe.with(retryNever).onFailure(e -> {
-      waiter.assertTrue(e.getFailure() instanceof IllegalArgumentException);
+      waiter.assertTrue(e.getException() instanceof IllegalArgumentException);
       waiter.resume();
     }).getAsync(() -> {
       waiter.resume();

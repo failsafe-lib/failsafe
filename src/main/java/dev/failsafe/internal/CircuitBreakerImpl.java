@@ -125,8 +125,14 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   }
 
   @Override
+  public void recordException(Throwable exception) {
+    recordResult(null, exception);
+  }
+
+  @Override
+  @Deprecated
   public void recordFailure(Throwable failure) {
-    recordResult(null, failure);
+    recordException(failure);
   }
 
   @Override
@@ -144,8 +150,8 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
     return getState().toString();
   }
 
-  protected void recordResult(R result, Throwable failure) {
-    if (isFailure(result, failure))
+  protected void recordResult(R result, Throwable exception) {
+    if (isFailure(result, exception))
       state.get().recordFailure(null);
     else
       state.get().recordSuccess();

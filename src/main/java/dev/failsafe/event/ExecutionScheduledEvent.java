@@ -24,30 +24,37 @@ import java.time.Duration;
 /**
  * Indicates an execution was scheduled. A scheduled execution will be executed after the {@link #getDelay() delay}
  * unless it is cancelled, either explicitly or via {@link java.util.concurrent.Future#cancel(boolean)
- * Future.cancel(boolean)}, a {@link Timeout Timeout}, or if the underlying {@link
- * Scheduler Scheduler} or {@link java.util.concurrent.ExecutorService
- * ExecutorService} is shutdown.
+ * Future.cancel(boolean)}, a {@link Timeout Timeout}, or if the underlying {@link Scheduler Scheduler} or {@link
+ * java.util.concurrent.ExecutorService ExecutorService} is shutdown.
  *
  * @param <R> result type
  * @author Jonathan Halterman
  */
 public class ExecutionScheduledEvent<R> extends ExecutionEvent {
   private final R result;
-  private final Throwable failure;
+  private final Throwable exception;
   private final Duration delay;
 
-  public ExecutionScheduledEvent(R result, Throwable failure, Duration delay, ExecutionContext<R> context) {
+  public ExecutionScheduledEvent(R result, Throwable exception, Duration delay, ExecutionContext<R> context) {
     super(context);
     this.result = result;
-    this.failure = failure;
+    this.exception = exception;
     this.delay = delay;
   }
 
   /**
    * Returns the failure that preceded the event, else {@code null} if there was none.
    */
+  public Throwable getLastException() {
+    return exception;
+  }
+
+  /**
+   * @deprecated Use {@link #getLastException()} instead
+   */
+  @Deprecated
   public Throwable getLastFailure() {
-    return failure;
+    return exception;
   }
 
   /**
@@ -66,6 +73,6 @@ public class ExecutionScheduledEvent<R> extends ExecutionEvent {
 
   @Override
   public String toString() {
-    return "ExecutionScheduledEvent[" + "result=" + result + ", failure=" + failure + ", delay=" + delay + ']';
+    return "ExecutionScheduledEvent[" + "result=" + result + ", exception=" + exception + ", delay=" + delay + ']';
   }
 }

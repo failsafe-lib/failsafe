@@ -123,12 +123,12 @@ public class Logging extends Mocking {
       stats.failedAttemptCount++;
       if (withLogging)
         System.out.printf("RetryPolicy %s failed attempt [result: %s, failure: %s, attempts: %s, executions: %s]%n",
-          builder.hashCode(), e.getLastResult(), e.getLastFailure(), e.getAttemptCount(), e.getExecutionCount());
+          builder.hashCode(), e.getLastResult(), e.getLastException(), e.getAttemptCount(), e.getExecutionCount());
     }).onRetry(e -> {
       stats.retryCount++;
       if (withLogging)
         System.out.printf("RetryPolicy %s retrying [result: %s, failure: %s]%n", builder.hashCode(), e.getLastResult(),
-          e.getLastFailure());
+          e.getLastException());
     }).onRetryScheduled(e -> {
       stats.retryScheduledCount++;
       if (withLogging)
@@ -220,7 +220,7 @@ public class Logging extends Mocking {
       stats.failureCount++;
       if (withLogging)
         System.out.printf("%s failure [result: %s, failure: %s, attempts: %s, executions: %s]%n",
-          builder.getClass().getSimpleName(), e.getResult(), e.getFailure(), e.getAttemptCount(),
+          builder.getClass().getSimpleName(), e.getResult(), e.getException(), e.getAttemptCount(),
           e.getExecutionCount());
     });
     return builder;

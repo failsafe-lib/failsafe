@@ -62,14 +62,6 @@ public class FailurePolicyTest {
     assertFalse(policy.isFailure(1, null));
   }
 
-  @Test(expectedExceptions = OutOfMemoryError.class)
-  public void testThrowsFatalErrors() {
-    FooPolicy<String> policy = FooPolicy.<String>builder().handleIf((result, failure) -> {
-      throw new OutOfMemoryError();
-    }).build();
-    policy.isFailure("result", null);
-  }
-
   public void testIsFailureForFailure() {
     FooPolicy<Object> policy = FooPolicy.builder().build();
     assertTrue(policy.isFailure(null, new Exception()));

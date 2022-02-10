@@ -51,7 +51,7 @@ public class ExecutionTest {
     assertEquals(exec.getExecutionCount(), 3);
     assertTrue(exec.isComplete());
     assertEquals(exec.getLastResult(), 1);
-    assertNull(exec.getLastFailure());
+    assertNull(exec.getLastException());
 
     // Given 2 max retries
     exec = Execution.of(RetryPolicy.builder().handleResult(null).build());
@@ -69,7 +69,7 @@ public class ExecutionTest {
     assertEquals(exec.getExecutionCount(), 3);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
-    assertNull(exec.getLastFailure());
+    assertNull(exec.getLastException());
   }
 
   public void testRetryForThrowable() {
@@ -77,9 +77,9 @@ public class ExecutionTest {
     Execution<Object> exec = Execution.of(RetryPolicy.builder().handle(IllegalArgumentException.class).build());
 
     // When / Then
-    exec.recordFailure(new IllegalArgumentException());
+    exec.recordException(new IllegalArgumentException());
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertTrue(exec.isComplete());
 
     // Then
@@ -87,17 +87,17 @@ public class ExecutionTest {
     assertEquals(exec.getExecutionCount(), 2);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
-    assertEquals(exec.getLastFailure(), e);
+    assertEquals(exec.getLastException(), e);
 
     // Given 2 max retries
     exec = Execution.of(RetryPolicy.ofDefaults());
 
     // When / Then
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertTrue(exec.isComplete());
 
     // Then
@@ -105,7 +105,7 @@ public class ExecutionTest {
     assertEquals(exec.getExecutionCount(), 3);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
-    assertEquals(exec.getLastFailure(), e);
+    assertEquals(exec.getLastException(), e);
   }
 
   public void testRetryForResultAndThrowable() {
@@ -146,8 +146,8 @@ public class ExecutionTest {
 
   public void testGetAttemptCount() {
     Execution<Object> exec = Execution.of(RetryPolicy.ofDefaults());
-    exec.recordFailure(e);
-    exec.recordFailure(e);
+    exec.recordException(e);
+    exec.recordException(e);
     assertEquals(exec.getAttemptCount(), 2);
     assertEquals(exec.getExecutionCount(), 2);
   }
@@ -171,7 +171,7 @@ public class ExecutionTest {
       try {
         exec.recordResult(list.size());
       } catch (IllegalStateException e) {
-        exec.recordFailure(e);
+        exec.recordException(e);
       }
     }
 
@@ -184,17 +184,17 @@ public class ExecutionTest {
     Execution<Object> exec = Execution.of(
       RetryPolicy.builder().withMaxAttempts(10).withBackoff(Duration.ofNanos(1), Duration.ofNanos(10)).build());
     assertEquals(exec.getDelay().toNanos(), 0);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 1);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 2);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 4);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 8);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 10);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 10);
   }
 
@@ -204,13 +204,13 @@ public class ExecutionTest {
       .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() * 2))
       .build());
     assertEquals(exec.getDelay().toNanos(), 0);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 2);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 4);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 6);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 8);
   }
 
@@ -221,17 +221,17 @@ public class ExecutionTest {
       .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
       .build());
     assertEquals(exec.getDelay().toNanos(), 0);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 5);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 4);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 5);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 8);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 5);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 12);
   }
 
@@ -242,19 +242,19 @@ public class ExecutionTest {
       .withDelayFn(ctx -> Duration.ofNanos(ctx.getAttemptCount() % 2 == 0 ? ctx.getAttemptCount() * 2 : -1))
       .build());
     assertEquals(exec.getDelay().toNanos(), 0);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 1);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 4);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 2);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 8);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 4);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 12);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertEquals(exec.getDelay().toNanos(), 8);
   }
 
@@ -262,31 +262,31 @@ public class ExecutionTest {
     Execution<Object> exec = Execution.of(
       RetryPolicy.builder().withDelay(Duration.ofMillis(49)).withMaxDuration(Duration.ofMillis(50)).build());
     Thread.sleep(10);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
     assertTrue(exec.getDelay().toNanos() < TimeUnit.MILLISECONDS.toNanos(50) && exec.getDelay().toNanos() > 0);
   }
 
   public void shouldSupportMaxDuration() throws Exception {
     Execution<Object> exec = Execution.of(RetryPolicy.builder().withMaxDuration(Duration.ofMillis(100)).build());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
     Thread.sleep(105);
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertTrue(exec.isComplete());
   }
 
   public void shouldSupportMaxRetries() {
     Execution<Object> exec = Execution.of(RetryPolicy.builder().withMaxRetries(3).build());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertFalse(exec.isComplete());
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertTrue(exec.isComplete());
   }
 
@@ -316,6 +316,6 @@ public class ExecutionTest {
   public void shouldThrowOnCanRetryWhenAlreadyComplete() {
     Execution<Object> exec = Execution.of(RetryPolicy.ofDefaults());
     exec.complete();
-    exec.recordFailure(e);
+    exec.recordException(e);
   }
 }

@@ -15,18 +15,18 @@
  */
 package dev.failsafe.issues;
 
-import dev.failsafe.FailsafeException;
-import net.jodah.concurrentunit.Waiter;
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.Failsafe;
+import dev.failsafe.FailsafeException;
 import dev.failsafe.FailsafeExecutor;
+import dev.failsafe.function.CheckedPredicate;
+import net.jodah.concurrentunit.Waiter;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Predicate;
 
 @Test
 public class Issue131Test {
@@ -34,7 +34,7 @@ public class Issue131Test {
    * This predicate is invoked in failure scenarios with an arg of null, producing a {@link NullPointerException}
    * yielding surprising results.
    */
-  private static Predicate<String> handleIfEqualsIgnoreCaseFoo = s -> {
+  private static CheckedPredicate<String> handleIfEqualsIgnoreCaseFoo = s -> {
     return s.equalsIgnoreCase("foo"); // produces NPE when invoked in failing scenarios.
   };
 

@@ -58,12 +58,12 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
   }
 
   /**
-   * If not already completed, completes the future with the {@code failure}, calling the complete and failure
+   * If not already completed, completes the future with the {@code exception}, calling the complete and failure
    * handlers.
    */
   @Override
-  public synchronized boolean completeExceptionally(Throwable failure) {
-    return completeResult(ExecutionResult.failure(failure));
+  public synchronized boolean completeExceptionally(Throwable exception) {
+    return completeResult(ExecutionResult.exception(exception));
   }
 
   /**
@@ -78,8 +78,8 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     newestExecution.cancel();
     boolean cancelResult = super.cancel(mayInterruptIfRunning);
     cancelDependencies(null, mayInterruptIfRunning, null);
-    ExecutionResult<R> result = ExecutionResult.failure(new CancellationException());
-    super.completeExceptionally(result.getFailure());
+    ExecutionResult<R> result = ExecutionResult.exception(new CancellationException());
+    super.completeExceptionally(result.getException());
     completionHandler.accept(result, newestExecution);
     return cancelResult;
   }
@@ -91,12 +91,12 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     if (isDone())
       return false;
 
-    Throwable failure = result.getFailure();
+    Throwable exception = result.getException();
     boolean completed;
-    if (failure == null)
+    if (exception == null)
       completed = super.complete(result.getResult());
     else
-      completed = super.completeExceptionally(failure);
+      completed = super.completeExceptionally(exception);
     if (completed)
       completionHandler.accept(result, newestExecution);
     return completed;

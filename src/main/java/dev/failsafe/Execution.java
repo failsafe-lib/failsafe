@@ -59,12 +59,12 @@ public interface Execution<R> extends ExecutionContext<R> {
   Duration getDelay();
 
   /**
-   * Records an execution {@code result} or {@code failure} which triggers failure handling, if needed, by the
+   * Records an execution {@code result} or {@code exception} which triggers failure handling, if needed, by the
    * configured policies. If policy handling is not possible or completed, the execution is completed.
    *
    * @throws IllegalStateException if the execution is already complete
    */
-  void record(R result, Throwable failure);
+  void record(R result, Throwable exception);
 
   /**
    * Records an execution {@code result} which triggers failure handling, if needed, by the configured policies. If
@@ -75,10 +75,16 @@ public interface Execution<R> extends ExecutionContext<R> {
   void recordResult(R result);
 
   /**
-   * Records an execution {@code failure} which triggers failure handling, if needed, by the configured policies. If
-   * policy handling is not possible or completed, the execution is completed.
+   * Records an {@code exception} which triggers failure handling, if needed, by the configured policies. If policy
+   * handling is not possible or completed, the execution is completed.
    *
    * @throws IllegalStateException if the execution is already complete
    */
+  void recordException(Throwable exception);
+
+  /**
+   * @deprecated Use {@link #recordException(Throwable)} instead
+   */
+  @Deprecated
   void recordFailure(Throwable failure);
 }

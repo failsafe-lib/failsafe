@@ -28,7 +28,7 @@ import java.time.Duration;
 public abstract class DelayablePolicyConfig<R> extends FailurePolicyConfig<R> {
   Duration delay;
   R delayResult;
-  Class<? extends Throwable> delayFailure;
+  Class<? extends Throwable> delayException;
   ContextualSupplier<R, Duration> delayFn;
 
   protected DelayablePolicyConfig() {
@@ -38,7 +38,7 @@ public abstract class DelayablePolicyConfig<R> extends FailurePolicyConfig<R> {
     super(config);
     delay = config.delay;
     delayResult = config.delayResult;
-    delayFailure = config.delayFailure;
+    delayException = config.delayException;
     delayFn = config.delayFn;
   }
 
@@ -67,8 +67,8 @@ public abstract class DelayablePolicyConfig<R> extends FailurePolicyConfig<R> {
    *
    * @see DelayablePolicyBuilder#withDelayFnOn(ContextualSupplier, Class)
    */
-  public Class<? extends Throwable> getDelayFailure() {
-    return delayFailure;
+  public Class<? extends Throwable> getDelayException() {
+    return delayException;
   }
 
   /**

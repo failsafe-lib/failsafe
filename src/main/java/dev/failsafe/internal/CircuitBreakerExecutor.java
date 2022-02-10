@@ -39,7 +39,7 @@ public class CircuitBreakerExecutor<R> extends PolicyExecutor<R> {
   protected ExecutionResult<R> preExecute() {
     return circuitBreaker.tryAcquirePermit() ?
       null :
-      ExecutionResult.failure(new CircuitBreakerOpenException(circuitBreaker));
+      ExecutionResult.exception(new CircuitBreakerOpenException(circuitBreaker));
   }
 
   @Override

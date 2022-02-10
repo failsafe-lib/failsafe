@@ -74,6 +74,6 @@ public class DelayablePolicyTest {
   }
 
   static <R> ExecutionContext<R> execOfFailure(Throwable failure) {
-    return new ExecutionImpl<>(ExecutionResult.failure(failure));
+    return new ExecutionImpl<>(ExecutionResult.exception(failure));
   }
 }

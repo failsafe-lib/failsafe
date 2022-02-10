@@ -133,6 +133,11 @@ public class Asserts {
     return true;
   }
 
+  @SafeVarargs
+  public static void assertMatches(Throwable actual, Class<? extends Throwable>... throwableHierarchy) {
+    assertMatches(actual, Arrays.asList(throwableHierarchy));
+  }
+
   public static void assertMatches(Throwable actual, List<Class<? extends Throwable>> throwableHierarchy) {
     Throwable current = actual;
     for (Class<? extends Throwable> expected : throwableHierarchy) {

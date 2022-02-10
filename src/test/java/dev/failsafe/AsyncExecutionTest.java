@@ -62,7 +62,7 @@ public class AsyncExecutionTest extends Testing {
     assertEquals(exec.getExecutionCount(), 1);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
-    assertNull(exec.getLastFailure());
+    assertNull(exec.getLastException());
     verify(future).completeResult(ExecutionResult.none());
   }
 
@@ -89,7 +89,7 @@ public class AsyncExecutionTest extends Testing {
     assertEquals(exec.getExecutionCount(), 3);
     assertTrue(exec.isComplete());
     assertEquals(exec.getLastResult(), 1);
-    assertNull(exec.getLastFailure());
+    assertNull(exec.getLastException());
     verifyScheduler(2);
     verify(future).completeResult(ExecutionResult.success(1));
   }
@@ -101,11 +101,11 @@ public class AsyncExecutionTest extends Testing {
 
     // When / Then
     exec.preExecute();
-    exec.recordFailure(new IllegalArgumentException());
+    exec.recordException(new IllegalArgumentException());
     assertFalse(exec.isComplete());
     exec = exec.copy();
     exec.preExecute();
-    exec.recordFailure(e);
+    exec.recordException(e);
     assertTrue(exec.isComplete());
 
     // Then
@@ -113,9 +113,9 @@ public class AsyncExecutionTest extends Testing {
     assertEquals(exec.getExecutionCount(), 2);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
-    assertEquals(exec.getLastFailure(), e);
+    assertEquals(exec.getLastException(), e);
     verifyScheduler(1);
-    verify(future).completeResult(ExecutionResult.failure(e));
+    verify(future).completeResult(ExecutionResult.exception(e));
   }
 
   public void testRetryForResultAndThrowable() {
@@ -145,7 +145,7 @@ public class AsyncExecutionTest extends Testing {
     assertEquals(exec.getExecutionCount(), 4);
     assertTrue(exec.isComplete());
     assertEquals(exec.getLastResult(), 1);
-    assertNull(exec.getLastFailure());
+    assertNull(exec.getLastException());
     verifyScheduler(3);
     verify(future).completeResult(ExecutionResult.success(1));
   }
@@ -156,10 +156,10 @@ public class AsyncExecutionTest extends Testing {
 
     // When
     exec.preExecute();
-    exec.recordFailure(e);
+    exec.recordException(e);
     exec = exec.copy();
     exec.preExecute();
-    exec.recordFailure(e);
+    exec.recordException(e);
 
     // Then
     assertEquals(exec.getAttemptCount(), 2);
@@ -171,7 +171,7 @@ public class AsyncExecutionTest extends Testing {
     exec = new AsyncExecutionImpl<>(Arrays.asList(RetryPolicy.ofDefaults()), scheduler, future, true, innerFn);
     exec.complete();
     exec.preExecute();
-    exec.recordFailure(e);
+    exec.recordException(e);
   }
 
   public void testCompleteOrRetry() {
@@ -191,7 +191,7 @@ public class AsyncExecutionTest extends Testing {
     assertEquals(exec.getExecutionCount(), 2);
     assertTrue(exec.isComplete());
     assertNull(exec.getLastResult());
-    assertNull(exec.getLastFailure());
+    assertNull(exec.getLastException());
     verifyScheduler(1);
     verify(future).completeResult(ExecutionResult.none());
   }

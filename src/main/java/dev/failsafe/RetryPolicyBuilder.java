@@ -19,6 +19,8 @@ import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionAttemptedEvent;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.event.ExecutionScheduledEvent;
+import dev.failsafe.function.CheckedBiPredicate;
+import dev.failsafe.function.CheckedPredicate;
 import dev.failsafe.internal.RetryPolicyImpl;
 import dev.failsafe.internal.util.Assert;
 import dev.failsafe.internal.util.Durations;
@@ -28,8 +30,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 /**
  * Builds {@link RetryPolicy instances}.
@@ -40,10 +40,10 @@ import java.util.function.Predicate;
  *   configuration methods.</li>
  *   <li>By default, any exception is considered a failure and will be handled by the policy. You can override this by
  *   specifying your own {@code handle} conditions. The default exception handling condition will only be overridden by
- *   another condition that handles failure exceptions such as {@link #handle(Class)} or {@link #handleIf(BiPredicate)}.
+ *   another condition that handles exceptions such as {@link #handle(Class)} or {@link #handleIf(CheckedBiPredicate)}.
  *   Specifying a condition that only handles results, such as {@link #handleResult(Object)} or
- *   {@link #handleResultIf(Predicate)} will not replace the default exception handling condition.</li>
- *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or failure
+ *   {@link #handleResultIf(CheckedPredicate)} will not replace the default exception handling condition.</li>
+ *   <li>If multiple {@code handle} conditions are specified, any condition that matches an execution result or exception
  *   will trigger policy handling.</li>
  *   <li>The {@code abortOn}, {@code abortWhen} and {@code abortIf} methods describe when retries should be aborted.</li>
  * </ul>
@@ -83,76 +83,79 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   }
 
   /**
-   * Specifies that retries should be aborted if the {@code completionPredicate} matches the completion result.
+   * Specifies that retries should be aborted if the {@code completionPredicate} matches the completion result. Any
+   * exception thrown from the {@code completionPredicate} is treated as a {@code false} result.
    *
    * @throws NullPointerException if {@code completionPredicate} is null
    */
   @SuppressWarnings("unchecked")
-  public RetryPolicyBuilder<R> abortIf(BiPredicate<R, ? extends Throwable> completionPredicate) {
+  public RetryPolicyBuilder<R> abortIf(CheckedBiPredicate<R, ? extends Throwable> completionPredicate) {
     Assert.notNull(completionPredicate, "completionPredicate");
-    config.abortConditions.add((BiPredicate<R, Throwable>) completionPredicate);
+    config.abortConditions.add((CheckedBiPredicate<R, Throwable>) completionPredicate);
     return this;
   }
 
   /**
    * Specifies that retries should be aborted if the {@code resultPredicate} matches the result. Predicate is not
-   * invoked when the operation fails.
+   * invoked when the operation fails. Any exception thrown from the {@code resultPredicate} is treated as a {@code
+   * false} result.
    *
    * @throws NullPointerException if {@code resultPredicate} is null
    */
-  public RetryPolicyBuilder<R> abortIf(Predicate<R> resultPredicate) {
+  public RetryPolicyBuilder<R> abortIf(CheckedPredicate<R> resultPredicate) {
     Assert.notNull(resultPredicate, "resultPredicate");
     config.abortConditions.add(resultPredicateFor(resultPredicate));
     return this;
   }
 
   /**
-   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failure} will be result in
-   * retries being aborted.
+   * Specifies when retries should be aborted. Any exception that is assignable from the {@code exception} will be
+   * result in retries being aborted.
    *
-   * @throws NullPointerException if {@code failure} is null
+   * @throws NullPointerException if {@code exception} is null
    */
-  public RetryPolicyBuilder<R> abortOn(Class<? extends Throwable> failure) {
-    Assert.notNull(failure, "failure");
-    return abortOn(Arrays.asList(failure));
+  public RetryPolicyBuilder<R> abortOn(Class<? extends Throwable> exception) {
+    Assert.notNull(exception, "exception");
+    return abortOn(Arrays.asList(exception));
   }
 
   /**
-   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failures} will be result
-   * in retries being aborted.
+   * Specifies when retries should be aborted. Any exception that is assignable from the {@code exceptions} will be
+   * result in retries being aborted.
    *
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is empty
+   * @throws NullPointerException if {@code exceptions} is null
+   * @throws IllegalArgumentException if exceptions is empty
    */
   @SafeVarargs
-  public final RetryPolicyBuilder<R> abortOn(Class<? extends Throwable>... failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(failures.length > 0, "Failures cannot be empty");
-    return abortOn(Arrays.asList(failures));
+  public final RetryPolicyBuilder<R> abortOn(Class<? extends Throwable>... exceptions) {
+    Assert.notNull(exceptions, "exceptions");
+    Assert.isTrue(exceptions.length > 0, "exceptions cannot be empty");
+    return abortOn(Arrays.asList(exceptions));
   }
 
   /**
-   * Specifies when retries should be aborted. Any failure that is assignable from the {@code failures} will be result
-   * in retries being aborted.
+   * Specifies when retries should be aborted. Any exception that is assignable from the {@code exceptions} will be
+   * result in retries being aborted.
    *
-   * @throws NullPointerException if {@code failures} is null
-   * @throws IllegalArgumentException if failures is null or empty
+   * @throws NullPointerException if {@code exceptions} is null
+   * @throws IllegalArgumentException if exceptions is null or empty
    */
-  public RetryPolicyBuilder<R> abortOn(List<Class<? extends Throwable>> failures) {
-    Assert.notNull(failures, "failures");
-    Assert.isTrue(!failures.isEmpty(), "failures cannot be empty");
-    config.abortConditions.add(failurePredicateFor(failures));
+  public RetryPolicyBuilder<R> abortOn(List<Class<? extends Throwable>> exceptions) {
+    Assert.notNull(exceptions, "exceptions");
+    Assert.isTrue(!exceptions.isEmpty(), "exceptions cannot be empty");
+    config.abortConditions.add(failurePredicateFor(exceptions));
     return this;
   }
 
   /**
-   * Specifies that retries should be aborted if the {@code failurePredicate} matches the failure.
+   * Specifies that retries should be aborted if the {@code abortPredicate} matches the exception. Any exception
+   * thrown from the {@code abortPredicate} is treated as a {@code false} result.
    *
-   * @throws NullPointerException if {@code failurePredicate} is null
+   * @throws NullPointerException if {@code abortPredicate} is null
    */
-  public RetryPolicyBuilder<R> abortOn(Predicate<? extends Throwable> failurePredicate) {
-    Assert.notNull(failurePredicate, "failurePredicate");
-    config.abortConditions.add(failurePredicateFor(failurePredicate));
+  public RetryPolicyBuilder<R> abortOn(CheckedPredicate<? extends Throwable> abortPredicate) {
+    Assert.notNull(abortPredicate, "abortPredicate");
+    config.abortConditions.add(failurePredicateFor(abortPredicate));
     return this;
   }
 

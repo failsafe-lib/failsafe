@@ -106,7 +106,7 @@ public class FailsafeExecutor<R> {
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * FailsafeException#getCause()} can be used to learn the underlying checked exception
    * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
    * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
@@ -120,7 +120,7 @@ public class FailsafeExecutor<R> {
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * FailsafeException#getCause()} can be used to learn the underlying checked exception
    * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
    * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
@@ -173,8 +173,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code runnable} asynchronously until a successful result is recorded or the configured policies are
    * exceeded. Executions must be recorded via one of the {@code AsyncExecution.record} methods which will trigger
    * failure handling, if needed, by the configured policies, else the resulting {@link CompletableFuture} will be
-   * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@code
-   * AsyncExecution.recordFailure}.
+   * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@link
+   * AsyncExecution#recordException(Throwable)}.
    * </p>
    * <ul>
    *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
@@ -241,7 +241,7 @@ public class FailsafeExecutor<R> {
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * FailsafeException#getCause()} can be used to learn the underlying checked exception
    * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
    * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
@@ -255,7 +255,7 @@ public class FailsafeExecutor<R> {
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the checked exception that caused the failure.
+   * FailsafeException#getCause()} can be used to learn the underlying checked exception
    * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
    * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
    * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
@@ -306,8 +306,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code runnable} asynchronously until a successful result is recorded or the configured policies are
    * exceeded. Executions must be recorded via one of the {@code AsyncExecution.record} methods which will trigger
    * failure handling, if needed, by the configured policies, else the resulting {@link CompletableFuture} will be
-   * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@code
-   * AsyncExecution.recordFailure}.
+   * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@link
+   * AsyncExecution#recordException(Throwable)}.
    * </p>
    * <ul>
    *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
@@ -436,13 +436,13 @@ public class FailsafeExecutor<R> {
   private <T> T call(ContextualSupplier<T, T> innerSupplier) {
     SyncExecutionImpl<T> execution = new SyncExecutionImpl(this, scheduler, Functions.get(innerSupplier, executor));
     ExecutionResult<T> result = execution.executeSync();
-    Throwable failure = result.getFailure();
-    if (failure != null) {
-      if (failure instanceof RuntimeException)
-        throw (RuntimeException) failure;
-      if (failure instanceof Error)
-        throw (Error) failure;
-      throw new FailsafeException(failure);
+    Throwable exception = result.getException();
+    if (exception != null) {
+      if (exception instanceof RuntimeException)
+        throw (RuntimeException) exception;
+      if (exception instanceof Error)
+        throw (Error) exception;
+      throw new FailsafeException(exception);
     }
     return result.getResult();
   }

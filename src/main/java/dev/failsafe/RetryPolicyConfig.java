@@ -19,13 +19,13 @@ import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionAttemptedEvent;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.event.ExecutionScheduledEvent;
+import dev.failsafe.function.CheckedBiPredicate;
+import dev.failsafe.function.CheckedPredicate;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 /**
  * Configuration for a {@link RetryPolicy}.
@@ -46,7 +46,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   double jitterFactor;
   Duration maxDuration;
   int maxRetries;
-  List<BiPredicate<R, Throwable>> abortConditions;
+  List<CheckedBiPredicate<R, Throwable>> abortConditions;
 
   // Listeners
   EventListener<ExecutionCompletedEvent<R>> abortListener;
@@ -90,16 +90,16 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   }
 
   /**
-   * Returns the conditions for which an executionr esult or failure will cause retries to be aborted.
+   * Returns the conditions for which an execution result or exception will cause retries to be aborted.
    *
    * @see RetryPolicyBuilder#abortOn(Class...)
    * @see RetryPolicyBuilder#abortOn(List)
-   * @see RetryPolicyBuilder#abortOn(Predicate)
-   * @see RetryPolicyBuilder#abortIf(BiPredicate)
-   * @see RetryPolicyBuilder#abortIf(Predicate)
+   * @see RetryPolicyBuilder#abortOn(CheckedPredicate)
+   * @see RetryPolicyBuilder#abortIf(CheckedBiPredicate)
+   * @see RetryPolicyBuilder#abortIf(CheckedPredicate) 
    * @see RetryPolicyBuilder#abortWhen(Object) 
    */
-  public List<BiPredicate<R, Throwable>> getAbortConditions() {
+  public List<CheckedBiPredicate<R, Throwable>> getAbortConditions() {
     return abortConditions;
   }
 

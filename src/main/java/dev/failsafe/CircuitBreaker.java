@@ -112,7 +112,7 @@ public interface CircuitBreaker<R> extends Policy<R> {
    * to the configured success or failure thresholding capacity.
    * @see #tryAcquirePermit()
    * @see #recordResult(Object)
-   * @see #recordFailure(Throwable)
+   * @see #recordException(Throwable)
    * @see #recordSuccess()
    * @see #recordFailure()
    */
@@ -126,7 +126,7 @@ public interface CircuitBreaker<R> extends Policy<R> {
    * automatically released when a result or failure is recorded.
    *
    * @see #recordResult(Object)
-   * @see #recordFailure(Throwable)
+   * @see #recordException(Throwable)
    * @see #recordSuccess()
    * @see #recordFailure()
    */
@@ -229,8 +229,14 @@ public interface CircuitBreaker<R> extends Policy<R> {
   void recordFailure();
 
   /**
-   * Records an execution {@code failure} as a success or failure based on the failure configuration.
+   * Records an {@code exception} as a success or failure based on the exception configuration.
    */
+  void recordException(Throwable exception);
+
+  /**
+   * @deprecated Use {@link #recordException(Throwable)} instead.
+   */
+  @Deprecated
   void recordFailure(Throwable failure);
 
   /**

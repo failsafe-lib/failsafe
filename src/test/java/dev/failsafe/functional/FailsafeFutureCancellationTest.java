@@ -46,7 +46,7 @@ public class FailsafeFutureCancellationTest extends Testing {
     // Given
     CompletableFuture<Void> future = executor.onComplete(e -> {
       waiter.assertNull(e.getResult());
-      waiter.assertTrue(e.getFailure() instanceof CancellationException);
+      waiter.assertTrue(e.getException() instanceof CancellationException);
       waiter.resume();
     }).runAsync(runnable);
 
@@ -144,7 +144,7 @@ public class FailsafeFutureCancellationTest extends Testing {
     assertThrows(() -> futureRef.get().get(1, TimeUnit.SECONDS), CancellationException.class);
     waiter.await(1000);
     assertNull(completedRef.get().getResult());
-    assertTrue(completedRef.get().getFailure() instanceof CancellationException);
+    assertTrue(completedRef.get().getException() instanceof CancellationException);
     assertEquals(outerRetryStats.failedAttemptCount, 0);
     assertEquals(innerRetryStats.failedAttemptCount, 1);
   }

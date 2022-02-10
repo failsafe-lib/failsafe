@@ -18,7 +18,6 @@ package dev.failsafe.internal;
 import dev.failsafe.Fallback;
 import dev.failsafe.spi.*;
 import dev.failsafe.FallbackConfig;
-import dev.failsafe.spi.*;
 
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -60,9 +59,9 @@ public class FallbackExecutor<R> extends PolicyExecutor<R> {
         try {
           result = fallback == FallbackImpl.NONE ?
             result.withNonResult() :
-            result.withResult(fallback.apply(result.getResult(), result.getFailure(), execution));
+            result.withResult(fallback.apply(result.getResult(), result.getException(), execution));
         } catch (Throwable t) {
-          result = ExecutionResult.failure(t);
+          result = ExecutionResult.exception(t);
         }
       }
 
@@ -92,15 +91,15 @@ public class FallbackExecutor<R> extends PolicyExecutor<R> {
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       Callable<R> callable = () -> {
         try {
-          CompletableFuture<R> fallbackFuture = fallback.applyStage(result.getResult(), result.getFailure(), execution);
-          fallbackFuture.whenComplete((innerResult, failure) -> {
-            if (failure instanceof CompletionException)
-              failure = failure.getCause();
-            ExecutionResult<R> r = failure == null ? result.withResult(innerResult) : ExecutionResult.failure(failure);
+          CompletableFuture<R> fallbackFuture = fallback.applyStage(result.getResult(), result.getException(), execution);
+          fallbackFuture.whenComplete((innerResult, exception) -> {
+            if (exception instanceof CompletionException)
+              exception = exception.getCause();
+            ExecutionResult<R> r = exception == null ? result.withResult(innerResult) : ExecutionResult.exception(exception);
             promise.complete(r);
           });
         } catch (Throwable t) {
-          promise.complete(ExecutionResult.failure(t));
+          promise.complete(ExecutionResult.exception(t));
         }
         return null;
       };

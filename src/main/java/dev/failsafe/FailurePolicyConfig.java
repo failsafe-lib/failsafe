@@ -15,10 +15,11 @@
  */
 package dev.failsafe;
 
+import dev.failsafe.function.CheckedBiPredicate;
+import dev.failsafe.function.CheckedPredicate;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 /**
  * Configuration for policies that handle specific failures and conditions.
@@ -27,10 +28,10 @@ import java.util.function.Predicate;
  * @author Jonathan Halterman
  */
 public abstract class FailurePolicyConfig<R> extends PolicyConfig<R> {
-  /** Indicates whether failures are checked by a configured failure condition */
-  boolean failuresChecked;
+  /** Indicates whether exceptions are checked by a configured failure condition */
+  boolean exceptionsChecked;
   /** Conditions that determine whether an execution is a failure */
-  List<BiPredicate<R, Throwable>> failureConditions;
+  List<CheckedBiPredicate<R, Throwable>> failureConditions;
 
   protected FailurePolicyConfig() {
     failureConditions = new ArrayList<>();
@@ -38,15 +39,15 @@ public abstract class FailurePolicyConfig<R> extends PolicyConfig<R> {
 
   protected FailurePolicyConfig(FailurePolicyConfig<R> config) {
     super(config);
-    failuresChecked = config.failuresChecked;
+    exceptionsChecked = config.exceptionsChecked;
     failureConditions = new ArrayList<>(config.failureConditions);
   }
 
   /**
-   * Returns whether failures are checked by a configured failure condition.
+   * Returns whether exceptions are checked by a configured failure condition.
    */
-  public boolean isFailuresChecked() {
-    return failuresChecked;
+  public boolean isExceptionsChecked() {
+    return exceptionsChecked;
   }
 
   /**
@@ -54,12 +55,12 @@ public abstract class FailurePolicyConfig<R> extends PolicyConfig<R> {
    *
    * @see FailurePolicyBuilder#handle(Class...)
    * @see FailurePolicyBuilder#handle(List)
-   * @see FailurePolicyBuilder#handleIf(BiPredicate)
-   * @see FailurePolicyBuilder#handleIf(Predicate)
-   * @see FailurePolicyBuilder#handleResult(Object) 
-   * @see FailurePolicyBuilder#handleResultIf(Predicate)
+   * @see FailurePolicyBuilder#handleIf(CheckedBiPredicate)
+   * @see FailurePolicyBuilder#handleIf(CheckedPredicate)
+   * @see FailurePolicyBuilder#handleResult(Object)
+   * @see FailurePolicyBuilder#handleResultIf(CheckedPredicate)
    */
-  public List<BiPredicate<R, Throwable>> getFailureConditions() {
+  public List<CheckedBiPredicate<R, Throwable>> getFailureConditions() {
     return failureConditions;
   }
 }

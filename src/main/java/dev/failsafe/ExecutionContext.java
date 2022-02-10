@@ -48,8 +48,14 @@ public interface ExecutionContext<R> {
   int getExecutionCount();
 
   /**
-   * Returns the last failure that was recorded else {@code null}.
+   * Returns the last exception that was recorded else {@code null}.
    */
+  <T extends Throwable> T getLastException();
+
+  /**
+   * @deprecated Use {@link #getLastException()} instead
+   */
+  @Deprecated
   <T extends Throwable> T getLastFailure();
 
   /**

@@ -18,7 +18,6 @@ package dev.failsafe.internal;
 import dev.failsafe.Bulkhead;
 import dev.failsafe.BulkheadFullException;
 import dev.failsafe.ExecutionContext;
-import dev.failsafe.RateLimitExceededException;
 import dev.failsafe.spi.ExecutionResult;
 import dev.failsafe.spi.FailsafeFuture;
 import dev.failsafe.spi.PolicyExecutor;
@@ -50,11 +49,11 @@ public class BulkheadExecutor<R> extends PolicyExecutor<R> {
     try {
       return bulkhead.tryAcquirePermit(maxWaitTime) ?
         null :
-        ExecutionResult.failure(new BulkheadFullException(bulkhead));
+        ExecutionResult.exception(new BulkheadFullException(bulkhead));
     } catch (InterruptedException e) {
       // Set interrupt flag
       Thread.currentThread().interrupt();
-      return ExecutionResult.failure(e);
+      return ExecutionResult.exception(e);
     }
   }
 
@@ -71,7 +70,7 @@ public class BulkheadExecutor<R> extends PolicyExecutor<R> {
       try {
         // Schedule bulkhead permit timeout
         Future<?> timeoutFuture = scheduler.schedule(() -> {
-          promise.complete(ExecutionResult.failure(new BulkheadFullException(bulkhead)));
+          promise.complete(ExecutionResult.exception(new BulkheadFullException(bulkhead)));
           acquireFuture.cancel(true);
           return null;
         }, maxWaitTime.toNanos(), TimeUnit.NANOSECONDS);

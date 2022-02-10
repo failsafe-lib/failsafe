@@ -39,7 +39,7 @@ public class Java8Example {
         .map(value -> Failsafe.with(retryPolicy).get(() -> value + "bar"))
         .collect(Collectors.toList()));
 
-    // Create a individual retryable Stream operation
+    // Create an individual retryable Stream operation
     Stream.of("foo").map(value -> Failsafe.with(retryPolicy).get(() -> value + "bar")).forEach(System.out::println);
 
     // Create a retryable CompletableFuture
