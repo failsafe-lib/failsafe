@@ -1,3 +1,14 @@
+# 3.2.1
+
+### Improvements
+
+- Issue #326 - Added support for reserving a `RateLimiter` permit with a wait time.
+
+### API Changes
+
+- Deprecated `ExecutionContext.getLastFailure`, `Execution.recordFailure` and similar methods throughout that API that refer to exceptions as failures. In their place, new methods have been added, such as `getLastException`, `recordException` and so on. This clarifies the difference between an exception and a failure, since an exception may or may not be a failure, depending on the policy configuration.
+- Changed the policy builders to use `CheckedPredicate` and `CheckedBiPredicate` instead of `Predicate` and `BiPredicate`, allowing exceptions to be thrown which are ignored.
+
 # 3.2.0
 
 ### Improvements
