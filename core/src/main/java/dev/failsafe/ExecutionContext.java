@@ -15,7 +15,10 @@
  */
 package dev.failsafe;
 
+import dev.failsafe.function.CheckedRunnable;
+
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Contextual execution information.
@@ -24,6 +27,12 @@ import java.time.Duration;
  * @author Jonathan Halterman
  */
 public interface ExecutionContext<R> {
+  /**
+   * Sets the {@code cancelCallback} to be called if the execution is cancelled, such as by the resulting {@link Call}
+   * or {@link CompletableFuture}, or a {@link Timeout}. Any exception thrown by the {@code cancelCallback} is ignored.
+   */
+  void onCancel(CheckedRunnable cancelCallback);
+
   /**
    * Returns the elapsed time since initial execution began.
    */

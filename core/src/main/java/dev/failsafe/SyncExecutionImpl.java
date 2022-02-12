@@ -17,8 +17,8 @@ package dev.failsafe;
 
 import dev.failsafe.spi.ExecutionResult;
 import dev.failsafe.spi.PolicyExecutor;
-import dev.failsafe.spi.SyncExecutionInternal;
 import dev.failsafe.spi.Scheduler;
+import dev.failsafe.spi.SyncExecutionInternal;
 
 import java.time.Duration;
 import java.util.List;
@@ -35,6 +35,8 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
 
   // An optional Failsafe executor
   private final FailsafeExecutor<R> executor;
+  // An optoinal Failsafe call
+  private final CallImpl<R> call;
   // The outer-most function that executions begin with
   private Function<SyncExecutionInternal<R>, ExecutionResult<R>> outerFn;
   // Whether the execution is currently interruptable
@@ -55,6 +57,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   SyncExecutionImpl(List<? extends Policy<R>> policies) {
     super(policies);
     executor = null;
+    call = null;
     initial = this;
     preExecute();
   }
@@ -62,11 +65,14 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   /**
    * Create a sync execution for the {@code executor}.
    */
-  SyncExecutionImpl(FailsafeExecutor<R> executor, Scheduler scheduler,
+  SyncExecutionImpl(FailsafeExecutor<R> executor, Scheduler scheduler, CallImpl<R> call,
     Function<SyncExecutionInternal<R>, ExecutionResult<R>> innerFn) {
     super(executor.policies);
     this.executor = executor;
+    this.call = call;
     initial = this;
+    if (call != null)
+      call.setExecution(this);
 
     outerFn = innerFn;
     for (PolicyExecutor<R> policyExecutor : policyExecutors)
@@ -79,9 +85,12 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   private SyncExecutionImpl(SyncExecutionImpl<R> execution) {
     super(execution);
     executor = execution.executor;
+    call = execution.call;
     interruptable = execution.interruptable;
     interrupted = execution.interrupted;
     initial = execution.initial;
+    if (call != null)
+      call.setExecution(this);
   }
 
   @Override
@@ -178,10 +187,18 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   /**
    * Performs a synchronous execution.
    */
-  ExecutionResult<R> executeSync() {
+  R executeSync() {
     ExecutionResult<R> result = outerFn.apply(this);
     completed = result.isComplete();
     executor.completionHandler.accept(result, this);
-    return result;
+    Throwable exception = result.getException();
+    if (exception != null) {
+      if (exception instanceof RuntimeException)
+        throw (RuntimeException) exception;
+      if (exception instanceof Error)
+        throw (Error) exception;
+      throw new FailsafeException(exception);
+    }
+    return result.getResult();
   }
 }

@@ -2,16 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
-
+  <packaging>pom</packaging>
   <groupId>dev.failsafe</groupId>
-  <artifactId>failsafe</artifactId>
+  <artifactId>failsafe-parent</artifactId>
   <version>3.2.2-SNAPSHOT</version>
-  <name>Failsafe</name>
+  <name>Failsafe Parent</name>
   <url>https://failsafe.dev</url>
 
   <licenses>
@@ -35,6 +30,12 @@
     <url>https://github.com/failsafe-lib/failsafe</url>
   </scm>
 
+  <modules>
+    <module>core</module>
+    <module>examples</module>
+    <module>modules/okhttp</module>
+  </modules>
+
   <dependencies>
     <!-- Test Dependencies -->
     <dependency>
@@ -53,26 +54,6 @@
       <groupId>net.jodah</groupId>
       <artifactId>concurrentunit</artifactId>
       <version>0.4.4</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- Examples dependencies -->
-    <dependency>
-      <groupId>io.reactivex</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>1.0.12</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>4.1.51.Final</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-      <version>3.9.8</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

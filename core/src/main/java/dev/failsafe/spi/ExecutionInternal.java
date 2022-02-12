@@ -52,12 +52,14 @@ public interface ExecutionInternal<R> extends ExecutionContext<R> {
   void record(ExecutionResult<R> result);
 
   /**
-   * Marks the execution as having been cancelled.
+   * Marks the execution as having been cancelled externally, which will cancel pending executions of all policies.
    */
   void cancel();
 
   /**
-   * Marks the execution as having been cancelled by the {@code policyExecutor}.
+   * Marks the execution as having been cancelled by the {@code policyExecutor}, which will also cancel pending
+   * executions of any inner policies of the {@code policyExecutor}. Outer policies of the {@code policyExecutor} will
+   * be unaffected.
    */
   void cancel(PolicyExecutor<R> policyExecutor);
 

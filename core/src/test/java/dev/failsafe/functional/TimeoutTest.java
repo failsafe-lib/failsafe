@@ -206,7 +206,7 @@ public class TimeoutTest extends Testing {
       fbStats.reset();
     }, Failsafe.with(fallback).compose(timeout), ctx -> {
       System.out.println("Executing");
-      Thread.sleep(200);
+      Thread.sleep(100);
       throw new Exception();
     }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
@@ -216,11 +216,11 @@ public class TimeoutTest extends Testing {
     }, IllegalStateException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)), timeoutStats).build();
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(100)).withInterrupt(), timeoutStats).build();
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(1)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 

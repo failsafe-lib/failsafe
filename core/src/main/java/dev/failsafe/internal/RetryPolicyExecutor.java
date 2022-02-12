@@ -96,6 +96,7 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
           execution.setInterruptable(false);
         }
 
+        // Check again for cancellation
         if (execution.isCancelled(this))
           return result;
 

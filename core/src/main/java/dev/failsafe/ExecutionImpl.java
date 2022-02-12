@@ -15,6 +15,7 @@
  */
 package dev.failsafe;
 
+import dev.failsafe.function.CheckedRunnable;
 import dev.failsafe.internal.util.Assert;
 import dev.failsafe.spi.ExecutionInternal;
 import dev.failsafe.spi.ExecutionResult;
@@ -53,6 +54,8 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   volatile Duration attemptStartTime;
   // The index of a PolicyExecutor that cancelled the execution. Integer.MIN_VALUE represents non-cancelled.
   volatile int cancelledIndex = Integer.MIN_VALUE;
+  // The user-provided callback to be called when an execution is cancelled
+  volatile CheckedRunnable cancelCallback;
   // Whether the execution has pre-executed indicating it has started
   private volatile boolean preExecuted;
   // Whether the execution attempt has been recorded
@@ -100,6 +103,11 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   @Override
   public ExecutionResult<R> getResult() {
     return result;
+  }
+
+  @Override
+  public void onCancel(CheckedRunnable cancelCallback) {
+    this.cancelCallback = cancelCallback;
   }
 
   @Override
@@ -153,14 +161,30 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     return result;
   }
 
+  /** Called by users. */
   @Override
   public void cancel() {
-    cancelledIndex = Integer.MAX_VALUE;
+    if (!isCancelled()) {
+      cancelledIndex = Integer.MAX_VALUE;
+      if (cancelCallback != null) {
+        try {
+          cancelCallback.run();
+        } catch (Throwable ignore) {
+        }
+      }
+    }
   }
 
+  /** Called by policies. */
   @Override
   public void cancel(PolicyExecutor<R> policyExecutor) {
     cancelledIndex = policyExecutor.getPolicyIndex();
+    if (cancelCallback != null) {
+      try {
+        cancelCallback.run();
+      } catch (Throwable ignore) {
+      }
+    }
   }
 
   @Override

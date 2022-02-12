@@ -52,7 +52,7 @@ public class FailsafeExecutor<R> {
   private Executor executor;
   /** Policies sorted outer-most first */
   final List<? extends Policy<R>> policies;
-  private EventHandler<R> completeHandler;
+  private volatile EventHandler<R> completeHandler;
   private volatile EventHandler<R> failureHandler;
   private volatile EventHandler<R> successHandler;
 
@@ -105,11 +105,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the underlying checked exception
-   * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
-   * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
+   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
+   * be used to learn the underlying checked exception.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
     return call(toCtxSupplier(supplier));
@@ -119,27 +116,36 @@ public class FailsafeExecutor<R> {
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the {@code supplier} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the underlying checked exception
-   * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
-   * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
+   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
+   * be used to learn the underlying checked exception.
    */
   public <T extends R> T get(ContextualSupplier<T, T> supplier) {
     return call(Assert.notNull(supplier, "supplier"));
   }
 
   /**
+   * Returns a call that can execute the {@code supplier} until a successful result is returned or the configured
+   * policies are exceeded.
+   *
+   * @throws NullPointerException if the {@code supplier} is null
+   */
+  public Call<Void> getCall(ContextualRunnable<Void> runnable) {
+    return callSync(toCtxSupplier(runnable));
+  }
+
+  /**
+   * Returns a call that can execute the {@code supplier} until a successful result is returned or the configured
+   * policies are exceeded.
+   *
+   * @throws NullPointerException if the {@code supplier} is null
+   */
+  public <T extends R> Call<T> getCall(ContextualSupplier<T, T> supplier) {
+    return callSync(Assert.notNull(supplier, "supplier"));
+  }
+
+  /**
    * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
    * exceeded.
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -151,14 +157,6 @@ public class FailsafeExecutor<R> {
   /**
    * Executes the {@code supplier} asynchronously until a successful result is returned or the configured policies are
    * exceeded.
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -176,14 +174,6 @@ public class FailsafeExecutor<R> {
    * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@link
    * AsyncExecution#recordException(Throwable)}.
    * </p>
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -197,14 +187,6 @@ public class FailsafeExecutor<R> {
    * policies are exceeded.
    * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
    * CompletionStage} if it's a {@link Future}.</p>
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -218,15 +200,6 @@ public class FailsafeExecutor<R> {
    * policies are exceeded.
    * <p>Cancelling the resulting {@link CompletableFuture} will automatically cancels the supplied {@link
    * CompletionStage} if it's a {@link Future}.</p>
-   * <ul>
-   *   <li>If the {@code supplier} returns {@code null}, the execution attempt will record a {@code null} result.</li>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code supplier} is null
    * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
@@ -240,11 +213,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the underlying checked exception
-   * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
-   * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
+   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
+   * be used to learn the underlying checked exception.
    */
   public void run(CheckedRunnable runnable) {
     call(toCtxSupplier(runnable));
@@ -254,11 +224,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the {@code runnable} fails with a checked Exception. {@link
-   * FailsafeException#getCause()} can be used to learn the underlying checked exception
-   * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
-   * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
+   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
+   * be used to learn the underlying checked exception.
    */
   public void run(ContextualRunnable<Void> runnable) {
     call(toCtxSupplier(runnable));
@@ -266,14 +233,6 @@ public class FailsafeExecutor<R> {
 
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
@@ -284,14 +243,6 @@ public class FailsafeExecutor<R> {
 
   /**
    * Executes the {@code runnable} asynchronously until successful or until the configured policies are exceeded.
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
@@ -309,14 +260,6 @@ public class FailsafeExecutor<R> {
    * completed. Any exception that is thrown from the {@code runnable} will automatically be recorded via {@link
    * AsyncExecution#recordException(Throwable)}.
    * </p>
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @throws NullPointerException if the {@code runnable} is null
    * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
@@ -425,39 +368,28 @@ public class FailsafeExecutor<R> {
 
   /**
    * Calls the {@code innerSupplier} synchronously, handling results according to the configured policies.
-   *
-   * @throws FailsafeException if the {@code innerSupplier} fails with a checked Exception or if interrupted while
-   * waiting to perform a retry.
-   * @throws TimeoutExceededException if the execution fails because a {@link Timeout} is exceeded.
-   * @throws CircuitBreakerOpenException if the execution fails because a {@link CircuitBreaker} is open.
-   * @throws RateLimitExceededException if the execution fails because a {@link RateLimiter} is exceeded.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> T call(ContextualSupplier<T, T> innerSupplier) {
-    SyncExecutionImpl<T> execution = new SyncExecutionImpl(this, scheduler, Functions.get(innerSupplier, executor));
-    ExecutionResult<T> result = execution.executeSync();
-    Throwable exception = result.getException();
-    if (exception != null) {
-      if (exception instanceof RuntimeException)
-        throw (RuntimeException) exception;
-      if (exception instanceof Error)
-        throw (Error) exception;
-      throw new FailsafeException(exception);
-    }
-    return result.getResult();
+    SyncExecutionImpl<T> execution = new SyncExecutionImpl(this, scheduler, null,
+      Functions.get(innerSupplier, executor));
+    return execution.executeSync();
+  }
+
+  /**
+   * Returns a Call that calls the {@code innerSupplier} synchronously, handling results according to the configured
+   * policies.
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private <T> Call<T> callSync(ContextualSupplier<T, T> innerSupplier) {
+    CallImpl<T> call = new CallImpl<>();
+    new SyncExecutionImpl(this, scheduler, call, Functions.get(innerSupplier, executor));
+    return call;
   }
 
   /**
    * Calls the asynchronous {@code innerFn} via the configured Scheduler, handling results according to the configured
    * policies.
-   * <ul>
-   *   <li>If the execution fails because a {@link Timeout} is exceeded, the resulting future is completed exceptionally
-   *   with {@link TimeoutExceededException}.</li>
-   *   <li>If the execution fails because a {@link CircuitBreaker} is open, the resulting future is completed
-   *   exceptionally with {@link CircuitBreakerOpenException}.</li>
-   *   <li>If the execution fails because a {@link RateLimiter} is exceeded, the resulting future is completed
-   *   exceptionally with {@link RateLimitExceededException}.</li>
-   * </ul>
    *
    * @param asyncExecution whether this is a detached, async execution that must be manually completed
    * @throws NullPointerException if the {@code innerFn} is null
