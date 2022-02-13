@@ -8,3 +8,4 @@ docs/
 .idea
 *.iml
 _site
+.java-version
