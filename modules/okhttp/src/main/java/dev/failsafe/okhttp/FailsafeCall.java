@@ -141,7 +141,7 @@ public final class FailsafeCall {
   /**
    * Returns whether the call has been cancelled.
    */
-  public boolean isCanceled() {
+  public boolean isCancelled() {
     return cancelled.get();
   }
 

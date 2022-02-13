@@ -174,7 +174,7 @@ public class FailsafeCallTest extends OkHttpTesting {
     });
     assertThrows(failsafeCall::execute, IOException.class);
     assertTrue(call.isCanceled());
-    assertTrue(failsafeCall.isCanceled());
+    assertTrue(failsafeCall.isCancelled());
 
     // When / Then Async
     Call call2 = call.clone();
@@ -185,7 +185,7 @@ public class FailsafeCallTest extends OkHttpTesting {
     });
     assertThrows(() -> failsafeCall2.executeAsync().get(), CancellationException.class);
     assertTrue(call2.isCanceled());
-    assertTrue(failsafeCall2.isCanceled());
+    assertTrue(failsafeCall2.isCancelled());
     assertCalled("/test", 2);
   }
 
