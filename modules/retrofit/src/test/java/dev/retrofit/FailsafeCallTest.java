@@ -33,6 +33,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.Future;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
@@ -202,6 +203,23 @@ public class FailsafeCallTest extends RetrofitTesting {
     assertTrue(call2.isCanceled());
     assertTrue(failsafeCall2.isCancelled());
     assertCalled("/test", 2);
+  }
+
+  public void testCancelViaFuture() {
+    // Given
+    mockDelayedResponse(200, "foo", 1000);
+    FailsafeExecutor<Response<User>> failsafe = Failsafe.none();
+    Call<User> call = service.testUser();
+    FailsafeCall<User> failsafeCall = FailsafeCall.of(call, failsafe);
+
+    // When / Then Async
+    Future<Response<User>> future = failsafeCall.executeAsync();
+    sleep(150);
+    future.cancel(false);
+    assertThrows(future::get, CancellationException.class);
+    assertTrue(call.isCanceled());
+    assertTrue(failsafeCall.isCancelled());
+    assertCalled("/test", 1);
   }
 
   private void mockResponse(int responseCode, User body) {

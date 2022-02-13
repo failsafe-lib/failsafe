@@ -164,7 +164,10 @@ public final class FailsafeCall {
     }
 
     // Propagate cancellation to the call
-    ctx.onCancel(call::cancel);
+    ctx.onCancel(() -> {
+      cancelled.set(true);
+      call.cancel();
+    });
     return call;
   }
 }

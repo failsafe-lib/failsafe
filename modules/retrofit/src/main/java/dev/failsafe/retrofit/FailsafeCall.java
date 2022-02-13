@@ -156,7 +156,10 @@ public final class FailsafeCall<T> {
     retrofit2.Call<T> call = ctx.isFirstAttempt() ? initialCall : initialCall.clone();
 
     // Propagate cancellation to the call
-    ctx.onCancel(call::cancel);
+    ctx.onCancel(() -> {
+      cancelled.set(true);
+      call.cancel();
+    });
     return call;
   }
 }

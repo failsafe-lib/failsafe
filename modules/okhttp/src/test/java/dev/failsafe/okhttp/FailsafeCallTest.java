@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.Future;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.testng.Assert.assertEquals;
@@ -187,6 +188,23 @@ public class FailsafeCallTest extends OkHttpTesting {
     assertTrue(call2.isCanceled());
     assertTrue(failsafeCall2.isCancelled());
     assertCalled("/test", 2);
+  }
+
+  public void testCancelViaFuture() {
+    // Given
+    mockDelayedResponse(200, "foo", 1000);
+    FailsafeExecutor<Response> failsafe = Failsafe.none();
+    Call call = callFor("/test");
+
+    // When / Then Async
+    FailsafeCall failsafeCall = FailsafeCall.of(call, failsafe);
+    Future<Response> future = failsafeCall.executeAsync();
+    sleep(150);
+    future.cancel(false);
+    assertThrows(future::get, CancellationException.class);
+    assertTrue(call.isCanceled());
+    assertTrue(failsafeCall.isCancelled());
+    assertCalled("/test", 1);
   }
 
   private Call callFor(String path) {
