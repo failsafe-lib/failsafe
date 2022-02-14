@@ -98,7 +98,7 @@ public final class FailsafeCall<T> {
   public Response<T> execute() throws IOException {
     Assert.isTrue(executed.compareAndSet(false, true), "already executed");
 
-    failsafeCall = failsafe.getCall(ctx -> {
+    failsafeCall = failsafe.newCall(ctx -> {
       return prepareCall(ctx).execute();
     });
 

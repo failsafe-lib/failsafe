@@ -124,12 +124,12 @@ public class FailsafeExecutor<R> {
   }
 
   /**
-   * Returns a call that can execute the {@code supplier} until a successful result is returned or the configured
+   * Returns a call that can execute the {@code runnable} until a successful result is returned or the configured
    * policies are exceeded.
    *
-   * @throws NullPointerException if the {@code supplier} is null
+   * @throws NullPointerException if the {@code runnable} is null
    */
-  public Call<Void> getCall(ContextualRunnable<Void> runnable) {
+  public Call<Void> newCall(ContextualRunnable<Void> runnable) {
     return callSync(toCtxSupplier(runnable));
   }
 
@@ -139,7 +139,7 @@ public class FailsafeExecutor<R> {
    *
    * @throws NullPointerException if the {@code supplier} is null
    */
-  public <T extends R> Call<T> getCall(ContextualSupplier<T, T> supplier) {
+  public <T extends R> Call<T> newCall(ContextualSupplier<T, T> supplier) {
     return callSync(Assert.notNull(supplier, "supplier"));
   }
 
