@@ -1,3 +1,16 @@
+# 3.2.2
+
+### Improvements
+
+- Released [OkHttp](https://square.github.io/okhttp/) module.
+- Released [Retrofit](https://square.github.io/retrofit/) module.
+- Added `Call` support to `FailsafeExecutor`, which can cancel synchrnous calls.
+- Added `onCancel` callback to `ExecutionContext`, which can propagate cancellations.
+
+### SPI Changes
+
+- `SyncExecutionInternal.isInterruptable()` and `.setInterrupted` were removed and `.interrupt()` was added instead to simplify performing an interruption.
+
 # 3.2.1
 
 ### Improvements
