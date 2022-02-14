@@ -38,10 +38,19 @@ public interface Call<R> {
   R execute();
 
   /**
-   * Cancels a synchronous execution by calling the most recent {@link ExecutionContext#onCancel(CheckedRunnable)
-   * cancelCallback} that was registered during the execution and marking the execution as cancelled. The execution is
-   * still allowed to complete and return a result. In addition to using a {@link ExecutionContext#onCancel(CheckedRunnable)
-   * cancelCallback}, executions can cooperate with cancellation by checking {@link ExecutionContext#isCancelled()}.
+   * Cancels a synchronous execution and calls the most recent {@link ExecutionContext#onCancel(CheckedRunnable)
+   * cancelCallback} that was registered. The execution is still allowed to complete and return a result. In addition to
+   * using a {@link ExecutionContext#onCancel(CheckedRunnable) cancelCallback}, executions can cooperate with
+   * cancellation by checking {@link ExecutionContext#isCancelled()}.
+   *
+   * @param mayInterruptIfRunning whether the execution should be interrupted
+   * @return whether cancellation was successful or not. Returns {@code false} if the execution was already cancelled or
+   * completed.
    */
-  void cancel();
+  boolean cancel(boolean mayInterruptIfRunning);
+
+  /**
+   * Returns whether the call has been cancelled.
+   */
+  boolean isCancelled();
 }

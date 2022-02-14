@@ -75,7 +75,7 @@ public final class FailsafeCall<T> {
     if (!cancelled.compareAndSet(false, true))
       return;
     if (failsafeCall != null)
-      failsafeCall.cancel();
+      failsafeCall.cancel(false);
     if (failsafeFuture != null)
       failsafeFuture.cancel(false);
   }

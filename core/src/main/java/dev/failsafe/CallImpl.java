@@ -34,7 +34,15 @@ class CallImpl<R> implements Call<R> {
   }
 
   @Override
-  public void cancel() {
-    execution.cancel();
+  public boolean cancel(boolean mayInterruptIfRunning) {
+    boolean result = execution.cancel();
+    if (mayInterruptIfRunning)
+      execution.interrupt();
+    return result;
+  }
+
+  @Override
+  public boolean isCancelled() {
+    return execution.isCancelled();
   }
 }

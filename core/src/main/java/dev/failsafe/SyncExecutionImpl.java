@@ -35,10 +35,12 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
 
   // An optional Failsafe executor
   private final FailsafeExecutor<R> executor;
-  // An optoinal Failsafe call
+  // An optional Failsafe call
   private final CallImpl<R> call;
   // The outer-most function that executions begin with
   private Function<SyncExecutionInternal<R>, ExecutionResult<R>> outerFn;
+  // The interruptable execution thread
+  private final Thread executionThread;
   // Whether the execution is currently interruptable
   private volatile boolean interruptable;
   // Whether the execution has been internally interrupted
@@ -59,6 +61,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     executor = null;
     call = null;
     initial = this;
+    executionThread = Thread.currentThread();
     preExecute();
   }
 
@@ -71,6 +74,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     this.executor = executor;
     this.call = call;
     initial = this;
+    executionThread = Thread.currentThread();
     if (call != null)
       call.setExecution(this);
 
@@ -89,6 +93,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     interruptable = execution.interruptable;
     interrupted = execution.interrupted;
     initial = execution.initial;
+    executionThread = execution.executionThread;
     if (call != null)
       call.setExecution(this);
   }
@@ -151,11 +156,6 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   }
 
   @Override
-  public boolean isInterruptable() {
-    return interruptable;
-  }
-
-  @Override
   public boolean isInterrupted() {
     return interrupted;
   }
@@ -166,8 +166,14 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   }
 
   @Override
-  public void setInterrupted(boolean interrupted) {
-    this.interrupted = interrupted;
+  public void interrupt() {
+    // Guard against race with the execution completing
+    synchronized (getInitial()) {
+      if (interruptable) {
+        interrupted = true;
+        executionThread.interrupt();
+      }
+    }
   }
 
   @Override

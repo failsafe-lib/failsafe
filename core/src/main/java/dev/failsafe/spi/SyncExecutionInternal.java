@@ -31,11 +31,6 @@ public interface SyncExecutionInternal<R> extends ExecutionInternal<R>, Executio
   SyncExecutionInternal<R> getInitial();
 
   /**
-   * Returns whether the execution is currently interruptable.
-   */
-  boolean isInterruptable();
-
-  /**
    * Returns whether the execution is currently interrupted.
    */
   boolean isInterrupted();
@@ -46,9 +41,9 @@ public interface SyncExecutionInternal<R> extends ExecutionInternal<R>, Executio
   void setInterruptable(boolean interruptable);
 
   /**
-   * Sets whether the execution has been internally {@code interrupted}.
+   * Interrupts the execution.
    */
-  void setInterrupted(boolean interrupted);
+  void interrupt();
 
   /**
    * Returns a new copy of the SyncExecutionInternal if it is not standalone, else returns {@code this} since standalone

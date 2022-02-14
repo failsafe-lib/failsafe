@@ -28,7 +28,7 @@ import static org.testng.Assert.assertFalse;
  * Tests behavior when a FailsafeFuture is explicitly completed.
  */
 @Test
-public class FailsafeFutureCompletionTest extends Testing {
+public class FutureCompletionTest extends Testing {
   /**
    * Asserts that an externally completed FailsafeFuture works as expected.
    */

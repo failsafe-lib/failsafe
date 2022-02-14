@@ -161,10 +161,11 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     return result;
   }
 
-  /** Called by users. */
+  /** Called indorectly by users. */
   @Override
-  public void cancel() {
-    if (!isCancelled()) {
+  public boolean cancel() {
+    boolean cancelled = isCancelled();
+    if (!cancelled) {
       cancelledIndex = Integer.MAX_VALUE;
       if (cancelCallback != null) {
         try {
@@ -173,6 +174,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
         }
       }
     }
+    return !cancelled && !completed;
   }
 
   /** Called by policies. */

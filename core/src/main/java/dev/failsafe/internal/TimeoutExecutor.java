@@ -65,7 +65,6 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
       // Coordinates a result between the timeout and execution threads
       AtomicReference<ExecutionResult<R>> result = new AtomicReference<>();
       Future<?> timeoutFuture;
-      Thread executionThread = Thread.currentThread();
 
       try {
         // Schedule timeout check
@@ -76,15 +75,8 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
             // Cancel and interrupt
             execution.record(cancelResult);
             execution.cancel(this);
-            if (config.canInterrupt()) {
-              // Guard against race with the execution completing
-              synchronized (execution.getInitial()) {
-                if (execution.isInterruptable()) {
-                  execution.setInterrupted(true);
-                  executionThread.interrupt();
-                }
-              }
-            }
+            if (config.canInterrupt())
+              execution.interrupt();
           }
           return null;
         }, config.getTimeout().toNanos(), TimeUnit.NANOSECONDS);

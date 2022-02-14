@@ -20,7 +20,6 @@ import dev.failsafe.function.ContextualRunnable;
 import dev.failsafe.testing.Testing;
 import net.jodah.concurrentunit.Waiter;
 import dev.failsafe.event.ExecutionCompletedEvent;
-import dev.failsafe.function.ContextualSupplier;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -34,7 +33,7 @@ import static org.testng.Assert.*;
  * Tests behavior when a FailsafeFuture is explicitly cancelled.
  */
 @Test
-public class FailsafeFutureCancellationTest extends Testing {
+public class FutureCancellationTest extends Testing {
   Waiter waiter;
 
   @BeforeMethod
