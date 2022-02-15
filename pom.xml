@@ -89,6 +89,7 @@
         <configuration>
           <releaseProfiles>release</releaseProfiles>
           <arguments>-Prelease</arguments>
+          <mavenExecutorId>forked-path</mavenExecutorId>
         </configuration>
       </plugin>
       <plugin>
@@ -216,7 +217,8 @@
             <configuration>
               <serverId>sonatype-nexus-staging</serverId>
               <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+              <skipStagingRepositoryClose>true</skipStagingRepositoryClose>
+              <!-- <autoReleaseAfterClose>true</autoReleaseAfterClose> -->
             </configuration>
           </plugin>
           <plugin>
