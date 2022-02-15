@@ -7,6 +7,7 @@
   <artifactId>failsafe-parent</artifactId>
   <version>3.2.2-SNAPSHOT</version>
   <name>Failsafe Parent</name>
+  <description>Fault tolerance and resilience patterns</description>
   <url>https://failsafe.dev</url>
 
   <licenses>
@@ -32,7 +33,6 @@
 
   <modules>
     <module>core</module>
-    <module>examples</module>
     <module>modules/okhttp</module>
     <module>modules/retrofit</module>
   </modules>
