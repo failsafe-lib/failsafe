@@ -168,7 +168,7 @@ public class FailsafeCallTest extends OkHttpTesting {
     Call call = callFor("/test");
 
     // When / Then Sync
-    FailsafeCall failsafeCall = FailsafeCall.of(call, failsafe);
+    FailsafeCall failsafeCall = FailsafeCall.with(failsafe).compose(call);
     runInThread(() -> {
       sleep(150);
       failsafeCall.cancel();
@@ -179,7 +179,7 @@ public class FailsafeCallTest extends OkHttpTesting {
 
     // When / Then Async
     Call call2 = call.clone();
-    FailsafeCall failsafeCall2 = FailsafeCall.of(call2, failsafe);
+    FailsafeCall failsafeCall2 = FailsafeCall.with(failsafe).compose(call2);
     runInThread(() -> {
       sleep(150);
       failsafeCall2.cancel();
@@ -197,7 +197,7 @@ public class FailsafeCallTest extends OkHttpTesting {
     Call call = callFor("/test");
 
     // When / Then Async
-    FailsafeCall failsafeCall = FailsafeCall.of(call, failsafe);
+    FailsafeCall failsafeCall = FailsafeCall.with(failsafe).compose(call);
     Future<Response> future = failsafeCall.executeAsync();
     sleep(150);
     future.cancel(false);

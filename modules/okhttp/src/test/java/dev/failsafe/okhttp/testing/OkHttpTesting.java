@@ -72,7 +72,7 @@ public class OkHttpTesting extends Testing {
 
     // Run sync test and assert result
     System.out.println("\nRunning sync test");
-    FailsafeCall failsafeCall = FailsafeCall.of(when, failsafe);
+    FailsafeCall failsafeCall = FailsafeCall.with(failsafe).compose(when);
     if (expectedExceptions == null) {
       assertResult.accept(unwrapExceptions(failsafeCall::execute));
     } else {

@@ -183,7 +183,7 @@ public class FailsafeCallTest extends RetrofitTesting {
     Call<User> call = service.testUser();
 
     // When / Then Sync
-    FailsafeCall<User> failsafeCall = FailsafeCall.of(call, failsafe);
+    FailsafeCall<User> failsafeCall = FailsafeCall.with(failsafe).compose(call);
     runInThread(() -> {
       sleep(150);
       failsafeCall.cancel();
@@ -194,7 +194,7 @@ public class FailsafeCallTest extends RetrofitTesting {
 
     // When / Then Async
     Call<User> call2 = call.clone();
-    FailsafeCall<User> failsafeCall2 = FailsafeCall.of(call2, failsafe);
+    FailsafeCall<User> failsafeCall2 = FailsafeCall.with(failsafe).compose(call2);
     runInThread(() -> {
       sleep(150);
       failsafeCall2.cancel();
@@ -210,7 +210,7 @@ public class FailsafeCallTest extends RetrofitTesting {
     mockDelayedResponse(200, "foo", 1000);
     FailsafeExecutor<Response<User>> failsafe = Failsafe.none();
     Call<User> call = service.testUser();
-    FailsafeCall<User> failsafeCall = FailsafeCall.of(call, failsafe);
+    FailsafeCall<User> failsafeCall = FailsafeCall.with(failsafe).compose(call);
 
     // When / Then Async
     Future<Response<User>> future = failsafeCall.executeAsync();

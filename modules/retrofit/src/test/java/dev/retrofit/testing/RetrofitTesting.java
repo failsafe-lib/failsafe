@@ -68,7 +68,7 @@ public class RetrofitTesting extends Testing {
 
     // Run sync test and assert result
     System.out.println("\nRunning sync test");
-    FailsafeCall<T> failsafeCall = FailsafeCall.of(when, failsafe);
+    FailsafeCall<T> failsafeCall = FailsafeCall.with(failsafe).compose(when);
     if (expectedExceptions == null) {
       assertResult.accept(unwrapExceptions(failsafeCall::execute));
     } else {

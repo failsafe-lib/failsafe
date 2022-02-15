@@ -27,45 +27,61 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * A Failsafe wrapped Retrofit {@link Call}. Supports synchronous and asynchronous executions, and cancellation.
  *
- * @param <T> response type
+ * @param <R> response type
  * @author Jonathan Halterman
  */
-public final class FailsafeCall<T> {
-  private final FailsafeExecutor<Response<T>> failsafe;
-  private final retrofit2.Call<T> initialCall;
+public final class FailsafeCall<R> {
+  private final FailsafeExecutor<Response<R>> failsafe;
+  private final retrofit2.Call<R> initialCall;
 
-  private volatile Call<Response<T>> failsafeCall;
-  private volatile CompletableFuture<Response<T>> failsafeFuture;
+  private volatile Call<Response<R>> failsafeCall;
+  private volatile CompletableFuture<Response<R>> failsafeFuture;
   private AtomicBoolean cancelled = new AtomicBoolean();
   private AtomicBoolean executed = new AtomicBoolean();
 
-  private FailsafeCall(retrofit2.Call<T> call, FailsafeExecutor<Response<T>> failsafe) {
-    this.initialCall = call;
+  private FailsafeCall(FailsafeExecutor<Response<R>> failsafe, retrofit2.Call<R> call) {
     this.failsafe = failsafe;
+    this.initialCall = call;
+  }
+
+  public static final class FailsafeCallBuilder<R> {
+    private FailsafeExecutor<Response<R>> failsafe;
+
+    private FailsafeCallBuilder(FailsafeExecutor<Response<R>> failsafe) {
+      this.failsafe = failsafe;
+    }
+
+    public <P extends Policy<Response<R>>> FailsafeCallBuilder<R> compose(P innerPolicy) {
+      failsafe = failsafe.compose(innerPolicy);
+      return this;
+    }
+
+    public FailsafeCall<R> compose(retrofit2.Call<R> call) {
+      return new FailsafeCall<>(failsafe, call);
+    }
   }
 
   /**
-   * Returns a FailsafeCall for the {@code call}, {@code outerPolicy} and {@code policies}. See {@link
-   * Failsafe#with(Policy, Policy[])} for docs on how policy composition works.
+   * Returns a FailsafeCallBuilder for the {@code outerPolicy} and {@code policies}. See {@link Failsafe#with(Policy,
+   * Policy[])} for docs on how policy composition works.
    *
-   * @param <T> response type
+   * @param <R> result type
    * @param <P> policy type
    * @throws NullPointerException if {@code call} or {@code outerPolicy} are null
    */
   @SafeVarargs
-  public static <T, P extends Policy<Response<T>>> FailsafeCall<T> of(retrofit2.Call<T> call, P outerPolicy,
-    P... policies) {
-    return of(call, Failsafe.with(outerPolicy, policies));
+  public static <R, P extends Policy<Response<R>>> FailsafeCallBuilder<R> with(P outerPolicy, P... policies) {
+    return new FailsafeCallBuilder<>(Failsafe.with(outerPolicy, policies));
   }
 
   /**
-   * Returns a FailsafeCall for the {@code call} and {@code failsafeExecutor}.
+   * Returns a FailsafeCallBuilder for the {@code failsafeExecutor}.
    *
-   * @param <T> response type
-   * @throws NullPointerException if {@code call} or {@code failsafeExecutor} are null
+   * @param <R> result type
+   * @throws NullPointerException if {@code failsafeExecutor} is null
    */
-  public static <T> FailsafeCall<T> of(retrofit2.Call<T> call, FailsafeExecutor<Response<T>> failsafeExecutor) {
-    return new FailsafeCall<>(Assert.notNull(call, "call"), Assert.notNull(failsafeExecutor, "failsafeExecutor"));
+  public static <R> FailsafeCallBuilder<R> with(FailsafeExecutor<Response<R>> failsafeExecutor) {
+    return new FailsafeCallBuilder<>(Assert.notNull(failsafeExecutor, "failsafeExecutor"));
   }
 
   /**
@@ -83,8 +99,8 @@ public final class FailsafeCall<T> {
   /**
    * Returns a clone of the FailsafeCall.
    */
-  public FailsafeCall<T> clone() {
-    return FailsafeCall.of(initialCall.clone(), failsafe);
+  public FailsafeCall<R> clone() {
+    return new FailsafeCall<>(failsafe, initialCall.clone());
   }
 
   /**
@@ -95,7 +111,7 @@ public final class FailsafeCall<T> {
    * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
    * be used to learn the underlying checked exception.
    */
-  public Response<T> execute() throws IOException {
+  public Response<R> execute() throws IOException {
     Assert.isTrue(executed.compareAndSet(false, true), "already executed");
 
     failsafeCall = failsafe.newCall(ctx -> {
@@ -114,22 +130,22 @@ public final class FailsafeCall<T> {
   /**
    * Executes the call asynchronously until a successful result is returned or the configured policies are exceeded.
    */
-  public CompletableFuture<Response<T>> executeAsync() {
+  public CompletableFuture<Response<R>> executeAsync() {
     if (!executed.compareAndSet(false, true)) {
-      CompletableFuture<Response<T>> result = new CompletableFuture<>();
+      CompletableFuture<Response<R>> result = new CompletableFuture<>();
       result.completeExceptionally(new IllegalStateException("already executed"));
       return result;
     }
 
     failsafeFuture = failsafe.getAsyncExecution(exec -> {
-      prepareCall(exec).enqueue(new Callback<T>() {
+      prepareCall(exec).enqueue(new Callback<R>() {
         @Override
-        public void onResponse(retrofit2.Call<T> call, Response<T> response) {
+        public void onResponse(retrofit2.Call<R> call, Response<R> response) {
           exec.recordResult(response);
         }
 
         @Override
-        public void onFailure(retrofit2.Call<T> call, Throwable throwable) {
+        public void onFailure(retrofit2.Call<R> call, Throwable throwable) {
           exec.recordException(throwable);
         }
       });
@@ -152,8 +168,8 @@ public final class FailsafeCall<T> {
     return executed.get();
   }
 
-  private retrofit2.Call<T> prepareCall(ExecutionContext<Response<T>> ctx) {
-    retrofit2.Call<T> call = ctx.isFirstAttempt() ? initialCall : initialCall.clone();
+  private retrofit2.Call<R> prepareCall(ExecutionContext<Response<R>> ctx) {
+    retrofit2.Call<R> call = ctx.isFirstAttempt() ? initialCall : initialCall.clone();
 
     // Propagate cancellation to the call
     ctx.onCancel(() -> {

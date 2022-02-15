@@ -38,30 +38,47 @@ public final class FailsafeCall {
   private AtomicBoolean cancelled = new AtomicBoolean();
   private AtomicBoolean executed = new AtomicBoolean();
 
-  private FailsafeCall(okhttp3.Call call, FailsafeExecutor<Response> failsafe) {
-    this.initialCall = call;
+  private FailsafeCall(FailsafeExecutor<Response> failsafe, okhttp3.Call call) {
     this.failsafe = failsafe;
+    this.initialCall = call;
+  }
+
+  public static final class FailsafeCallBuilder {
+    private FailsafeExecutor<Response> failsafe;
+
+    private FailsafeCallBuilder(FailsafeExecutor<Response> failsafe) {
+      this.failsafe = failsafe;
+    }
+
+    public <P extends Policy<Response>> FailsafeCallBuilder compose(P innerPolicy) {
+      failsafe = failsafe.compose(innerPolicy);
+      return this;
+    }
+
+    public FailsafeCall compose(okhttp3.Call call) {
+      return new FailsafeCall(failsafe, call);
+    }
   }
 
   /**
-   * Returns a FailsafeCall for the {@code call}, {@code outerPolicy} and {@code policies}. See {@link
-   * Failsafe#with(Policy, Policy[])} for docs on how policy composition works.
+   * Returns a FailsafeCallBuilder for the {@code outerPolicy} and {@code policies}. See {@link Failsafe#with(Policy,
+   * Policy[])} for docs on how policy composition works.
    *
    * @param <P> policy type
    * @throws NullPointerException if {@code call} or {@code outerPolicy} are null
    */
   @SafeVarargs
-  public static <P extends Policy<Response>> FailsafeCall of(okhttp3.Call call, P outerPolicy, P... policies) {
-    return of(call, Failsafe.with(outerPolicy, policies));
+  public static <P extends Policy<Response>> FailsafeCallBuilder with(P outerPolicy, P... policies) {
+    return new FailsafeCallBuilder(Failsafe.with(outerPolicy, policies));
   }
 
   /**
-   * Returns a FailsafeCall for the {@code call} and {@code failsafeExecutor}.
+   * Returns a FailsafeCallBuilder for the {@code failsafeExecutor}.
    *
-   * @throws NullPointerException if {@code call} or {@code failsafeExecutor} are null
+   * @throws NullPointerException if {@code failsafeExecutor} is null
    */
-  public static FailsafeCall of(okhttp3.Call call, FailsafeExecutor<Response> failsafeExecutor) {
-    return new FailsafeCall(Assert.notNull(call, "call"), Assert.notNull(failsafeExecutor, "failsafeExecutor"));
+  public static FailsafeCallBuilder with(FailsafeExecutor<Response> failsafeExecutor) {
+    return new FailsafeCallBuilder(Assert.notNull(failsafeExecutor, "failsafeExecutor"));
   }
 
   /**
@@ -80,7 +97,7 @@ public final class FailsafeCall {
    * Returns a clone of the FailsafeCall.
    */
   public FailsafeCall clone() {
-    return FailsafeCall.of(initialCall.clone(), failsafe);
+    return new FailsafeCall(failsafe, initialCall.clone());
   }
 
   /**
