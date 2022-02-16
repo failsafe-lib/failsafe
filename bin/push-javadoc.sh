@@ -4,15 +4,25 @@
 ORG=failsafe-lib
 REPO=failsafe.dev
 
+pwd=`pwd`
+
 build () {
-  echo "Building javadocs"
+  echo "Building Javadocs for $1"
+  cd $pwd
+  if [ "$1" != "core" ]; then
+    cd modules
+  fi
+  cd $1
   mvn javadoc:javadoc -Djv=$apiVersion
   rm -rf target/docs
   git clone git@github.com:$ORG/$REPO.git target/docs
   cd target/docs
-  git rm -rf javadoc
-  mkdir -p javadoc
-  mv -v ../site/apidocs/* javadoc
+  git rm -rf javadoc/$1
+  mkdir -p javadoc/$1
+  mv -v ../site/apidocs/* javadoc/$1
+
+  patchFavIcon "javadoc" "../assets/images/favicon.png"
+  commit && echo "Published Javadocs for $1"
 }
 
 patchFavIcon () {
@@ -45,6 +55,13 @@ commit() {
   git push -fq > /dev/null
 }
 
-build
-patchFavIcon "javadoc" "../assets/images/favicon.png"
-commit && echo "Published Javadocs"
+# Install parent and core
+echo "Installing parent and core artifacts"
+mvn install -N
+cd core
+mvn install -DskipTests=true
+cd ../
+
+build "core"
+build "okhttp"
+build "retrofit"
