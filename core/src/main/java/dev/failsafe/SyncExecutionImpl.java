@@ -168,7 +168,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   @Override
   public void interrupt() {
     // Guard against race with the execution completing
-    synchronized (getInitial()) {
+    synchronized (initial) {
       if (interruptable) {
         interrupted = true;
         executionThread.interrupt();
@@ -176,8 +176,11 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     }
   }
 
-  @Override
-  public SyncExecutionInternal<R> getInitial() {
+  /**
+   * Returns the initial execution for a series of execution attempts, prior to {@link #copy() copies} being made.
+   * Useful for locking to perform atomic operations on the same execution reference.
+   */
+  SyncExecutionInternal<R> getInitial() {
     return initial;
   }
 

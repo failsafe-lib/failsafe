@@ -25,12 +25,6 @@ import dev.failsafe.Execution;
  */
 public interface SyncExecutionInternal<R> extends ExecutionInternal<R>, Execution<R> {
   /**
-   * Returns the initial execution for a series of execution attempts, prior to {@link #copy() copies} being made.
-   * Useful for locking to perform atomic operations on the same execution reference.
-   */
-  SyncExecutionInternal<R> getInitial();
-
-  /**
    * Returns whether the execution is currently interrupted.
    */
   boolean isInterrupted();

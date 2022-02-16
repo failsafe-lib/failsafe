@@ -35,7 +35,7 @@ final class Functions {
    *
    * @param <R> result type
    */
-  static <R> Function<SyncExecutionInternal<R>, ExecutionResult<R>> get(ContextualSupplier<R, R> supplier,
+  static <R> Function<SyncExecutionImpl<R>, ExecutionResult<R>> get(ContextualSupplier<R, R> supplier,
     Executor executor) {
 
     return execution -> {
