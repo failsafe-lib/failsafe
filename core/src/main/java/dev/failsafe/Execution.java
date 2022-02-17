@@ -29,7 +29,7 @@ import java.time.Duration;
  */
 public interface Execution<R> extends ExecutionContext<R> {
   /**
-   * Creates a new {@link SyncExecutionImpl} that will use the {@code outerPolicy} and {@code innerPolicies} to handle
+   * Creates a new {@code Execution} that will use the {@code outerPolicy} and {@code innerPolicies} to handle
    * failures. Policies are applied in reverse order, with the last policy being applied first.
    *
    * @throws NullPointerException if {@code outerPolicy} is null
