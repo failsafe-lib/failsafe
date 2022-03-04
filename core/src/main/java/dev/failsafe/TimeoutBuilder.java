@@ -57,7 +57,7 @@ public class TimeoutBuilder<R> extends PolicyBuilder<TimeoutBuilder<R>, TimeoutC
    * Note: Only configure interrupts if the code being executed is designed to be interrupted.
    * <p>
    * <p>Note: interruption will have no effect when performing an {@link
-   * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unkown to
+   * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unknown to
    * Failsafe.</p>
    */
   public TimeoutBuilder<R> withInterrupt() {

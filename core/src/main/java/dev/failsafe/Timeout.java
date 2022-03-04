@@ -35,7 +35,7 @@ import java.time.Duration;
  * handlers can be used to handle a timeout being exceeded or not.
  * </p>
  * <p>Note: {@link TimeoutBuilder#withInterrupt() interruption} will have no effect when performing an {@link
- * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unkown to Failsafe.</p>
+ * FailsafeExecutor#getAsyncExecution(AsyncRunnable) async execution} since the async thread is unknown to Failsafe.</p>
  * <p>
  * This class is threadsafe.
  * </p>
