@@ -50,8 +50,8 @@ final class Functions {
       }
       execution.record(result);
 
-      // Guard against race with Timeout interruption
-      synchronized (execution.getInitial()) {
+      // Guard against race with Timeout interrupting the execution
+      synchronized (execution.getLock()) {
         execution.setInterruptable(false);
         if (execution.isInterrupted()) {
           // Clear interrupt flag if interruption was performed by Failsafe

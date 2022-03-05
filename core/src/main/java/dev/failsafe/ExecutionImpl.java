@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Execution and ExecutionInternal implementation.
@@ -40,9 +41,11 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   // When the first execution attempt was started
   private volatile Duration startTime;
   // Number of execution attempts
-  private AtomicInteger attempts;
+  private final AtomicInteger attempts;
   // Number of completed executions
-  private AtomicInteger executions;
+  private final AtomicInteger executions;
+  // The latest execution attenpt
+  private final AtomicReference<ExecutionInternal<R>> latest;
 
   // -- Per-attempt state --
 
@@ -72,6 +75,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     attemptStartTime = Duration.ZERO;
     attempts = new AtomicInteger();
     executions = new AtomicInteger();
+    latest = new AtomicReference<>(this);
     previousResult = null;
 
     // Create policy executors
@@ -91,12 +95,17 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     startTime = execution.startTime;
     attempts = execution.attempts;
     executions = execution.executions;
+    latest = execution.latest;
+    latest.set(this);
     previousResult = execution.result;
   }
 
   /** Used for testing purposes only */
   ExecutionImpl(ExecutionResult<R> previousResult) {
     policyExecutors = null;
+    attempts = new AtomicInteger();
+    executions = new AtomicInteger();
+    latest = new AtomicReference<>(this);
     this.previousResult = previousResult;
   }
 
@@ -197,6 +206,16 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   @Override
   public boolean isCancelled(PolicyExecutor<R> policyExecutor) {
     return cancelledIndex > policyExecutor.getPolicyIndex();
+  }
+
+  @Override
+  public Object getLock() {
+    return latest;
+  }
+
+  @Override
+  public ExecutionInternal<R> getLatest() {
+    return latest.get();
   }
 
   @Override

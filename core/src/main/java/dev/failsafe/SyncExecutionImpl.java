@@ -22,6 +22,8 @@ import dev.failsafe.spi.SyncExecutionInternal;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -42,11 +44,9 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   // The interruptable execution thread
   private final Thread executionThread;
   // Whether the execution is currently interruptable
-  private volatile boolean interruptable;
+  private final AtomicBoolean interruptable;
   // Whether the execution has been internally interrupted
-  private volatile boolean interrupted;
-  // The initial execution instance prior to copies being made
-  private final SyncExecutionInternal<R> initial;
+  private final AtomicBoolean interrupted;
 
   // -- Per-attempt state --
 
@@ -60,7 +60,8 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     super(policies);
     executor = null;
     call = null;
-    initial = this;
+    interruptable = new AtomicBoolean();
+    interrupted = new AtomicBoolean();
     executionThread = Thread.currentThread();
     preExecute();
   }
@@ -73,7 +74,8 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     super(executor.policies);
     this.executor = executor;
     this.call = call;
-    initial = this;
+    interruptable = new AtomicBoolean();
+    interrupted = new AtomicBoolean();
     executionThread = Thread.currentThread();
     if (call != null)
       call.setExecution(this);
@@ -92,7 +94,6 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     call = execution.call;
     interruptable = execution.interruptable;
     interrupted = execution.interrupted;
-    initial = execution.initial;
     executionThread = execution.executionThread;
     if (call != null)
       call.setExecution(this);
@@ -142,10 +143,10 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
     if (isStandalone()) {
       attemptRecorded = false;
       cancelledIndex = Integer.MIN_VALUE;
-      interrupted = false;
+      interrupted.set(false);
     }
     super.preExecute();
-    interruptable = true;
+    interruptable.set(true);
   }
 
   @Override
@@ -157,31 +158,23 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
 
   @Override
   public boolean isInterrupted() {
-    return interrupted;
+    return interrupted.get();
   }
 
   @Override
   public void setInterruptable(boolean interruptable) {
-    this.interruptable = interruptable;
+    this.interruptable.set(interruptable);
   }
 
   @Override
   public void interrupt() {
     // Guard against race with the execution completing
-    synchronized (initial) {
-      if (interruptable) {
-        interrupted = true;
+    synchronized (getLock()) {
+      if (interruptable.get()) {
+        interrupted.set(true);
         executionThread.interrupt();
       }
     }
-  }
-
-  /**
-   * Returns the initial execution for a series of execution attempts, prior to {@link #copy() copies} being made.
-   * Useful for locking to perform atomic operations on the same execution reference.
-   */
-  SyncExecutionInternal<R> getInitial() {
-    return initial;
   }
 
   private boolean isStandalone() {

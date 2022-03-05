@@ -54,8 +54,8 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
    * Schedules a separate timeout call that fails with {@link TimeoutExceededException} if the policy's timeout is
    * exceeded.
    * <p>
-   * This implementation sets up a race between a timeout being triggered and the execution completing. Whichever
-   * completes first will be the result that's recorded.
+   * This implementation sets up a race between a timeout being triggered and the {@code innerFn} returning. Whichever
+   * completes first will be the result that's returned.
    */
   @Override
   public Function<SyncExecutionInternal<R>, ExecutionResult<R>> apply(
@@ -69,14 +69,18 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
       try {
         // Schedule timeout check
         timeoutFuture = Scheduler.DEFAULT.schedule(() -> {
-          // Guard against race with execution completion
+          // Guard against race with innerFn returning a result
           ExecutionResult<R> cancelResult = ExecutionResult.exception(new TimeoutExceededException(policy));
           if (result.compareAndSet(null, cancelResult)) {
-            // Cancel and interrupt
-            execution.record(cancelResult);
-            execution.cancel(this);
-            if (config.canInterrupt())
-              execution.interrupt();
+            // Guard against race with RetryPolicy changing the latest execution
+            synchronized (execution.getLock()) {
+              // Cancel and interrupt the latest attempt
+              ExecutionInternal<R> latestExecution = execution.getLatest();
+              latestExecution.record(cancelResult);
+              latestExecution.cancel(this);
+              if (config.canInterrupt())
+                execution.interrupt();
+            }
           }
           return null;
         }, config.getTimeout().toNanos(), TimeUnit.NANOSECONDS);
@@ -96,7 +100,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
    * Schedules a separate timeout call that blocks and fails with {@link TimeoutExceededException} if the policy's
    * timeout is exceeded.
    * <p>
-   * This implementation sets up a race between a timeout being triggered and the execution completing. Whichever
+   * This implementation sets up a race between a timeout being triggered and the {@code innerFn} returning. Whichever
    * completes first will be the result that's recorded and used to complete the resulting promise.
    */
   @Override
@@ -117,13 +121,17 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
         if (!future.isDone() && !execution.isRecorded()) {
           try {
             Future<R> timeoutFuture = (Future<R>) Scheduler.DEFAULT.schedule(() -> {
-              // Guard against race with execution completion
+              // Guard against race with innerFn returning a result
               ExecutionResult<R> cancelResult = ExecutionResult.exception(new TimeoutExceededException(policy));
               if (resultRef.compareAndSet(null, cancelResult)) {
-                // Cancel and interrupt
-                execution.record(cancelResult);
-                execution.cancel(this);
-                future.cancelDependencies(this, config.canInterrupt(), cancelResult);
+                // Guard against race with RetryPolicy changing the latest execution
+                synchronized (execution.getLock()) {
+                  // Cancel and interrupt the latest attempt
+                  ExecutionInternal<R> latestExecution = execution.getLatest();
+                  latestExecution.record(cancelResult);
+                  latestExecution.cancel(this);
+                  future.cancelDependencies(this, config.canInterrupt(), cancelResult);
+                }
               }
 
               return null;

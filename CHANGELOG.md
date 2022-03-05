@@ -1,3 +1,9 @@
+# 3.2.3
+
+### Bug Fixes
+
+- Fixed an issue where Timeouts would not fire under certain conditions when used outside a RetryPolicy.
+
 # 3.2.2
 
 ### Improvements

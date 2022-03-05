@@ -96,12 +96,14 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
           execution.setInterruptable(false);
         }
 
-        // Check again for cancellation
-        if (execution.isCancelled(this))
-          return result;
+        // Guard against race with Timeout cancelling the execution
+        synchronized (execution.getLock()) {
+          if (execution.isCancelled(this))
+            return result;
 
-        // Initialize next attempt
-        execution = execution.copy();
+          // Initialize next attempt
+          execution = execution.copy();
+        }
 
         // Call retry handler
         if (retryHandler != null)
@@ -147,39 +149,37 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
         } else {
           postExecuteAsync(execution, result, scheduler, future).whenComplete((postResult, postError) -> {
             if (isValidResult(postResult, postError, promise)) {
-              if (postResult.isComplete() || execution.isCancelled(this)) {
-                promise.complete(postResult);
-              } else {
-                // Guard against race with future.complete or future.cancel
-                synchronized (future) {
-                  if (!future.isDone()) {
-                    try {
-                      if (retryScheduledHandler != null)
-                        retryScheduledHandler.handle(postResult, execution);
+              // Guard against race with future.complete or future.cancel
+              synchronized (future) {
+                if (postResult.isComplete() || execution.isCancelled(this)) {
+                  promise.complete(postResult);
+                } else if (!future.isDone()) {
+                  try {
+                    if (retryScheduledHandler != null)
+                      retryScheduledHandler.handle(postResult, execution);
 
-                      previousResultRef.set(postResult);
-                      AsyncExecutionInternal<R> retryExecution = execution.copy();
-                      future.setExecution(retryExecution);
-                      Callable<Object> retryFn = () -> handleAsync(retryExecution, innerFn, scheduler, future, promise,
-                        previousResultRef);
-                      Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getDelay(),
-                        TimeUnit.NANOSECONDS);
-                      // Cancel prior inner executions, such as pending timeouts
-                      future.cancelDependencies(this, false, null);
+                    previousResultRef.set(postResult);
 
-                      // Propagate outer cancellations to the thread that the innerFn will run with
-                      future.setCancelFn(-1, (mayInterrupt, cancelResult) -> {
-                        scheduledRetry.cancel(mayInterrupt);
-                      });
+                    AsyncExecutionInternal<R> retryExecution = execution.copy();
+                    future.setExecution(retryExecution);
+                    Callable<Object> retryFn = () -> handleAsync(retryExecution, innerFn, scheduler, future, promise,
+                      previousResultRef);
+                    Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getDelay(), TimeUnit.NANOSECONDS);
+                    // Cancel prior inner executions, such as pending timeouts
+                    future.cancelDependencies(this, false, null);
 
-                      // Propagate outer cancellations to the retry future and its promise
-                      future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
-                        promise.complete(cancelResult);
-                      });
-                    } catch (Throwable t) {
-                      // Hard scheduling failure
-                      promise.completeExceptionally(t);
-                    }
+                    // Propagate outer cancellations to the thread that the innerFn will run with
+                    future.setCancelFn(-1, (mayInterrupt, cancelResult) -> {
+                      scheduledRetry.cancel(mayInterrupt);
+                    });
+
+                    // Propagate outer cancellations to the retry future and its promise
+                    future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
+                      promise.complete(cancelResult);
+                    });
+                  } catch (Throwable t) {
+                    // Hard scheduling failure
+                    promise.completeExceptionally(t);
                   }
                 }
               }

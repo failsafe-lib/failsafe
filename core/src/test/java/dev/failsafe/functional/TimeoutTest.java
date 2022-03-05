@@ -87,20 +87,16 @@ public class TimeoutTest extends Testing {
    * accidentally cancelling a scheduled retry that may be pending.
    */
   public void testRetryTimeoutWithPendingRetry() {
-    AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
     RetryPolicy<Object> retryPolicy = withLogs(RetryPolicy.builder().withDelay(Duration.ofMillis(100))).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(() -> {
-      executionCounter.set(0);
       timeoutStats.reset();
     }, Failsafe.with(retryPolicy, timeout), ctx -> {
-      executionCounter.incrementAndGet();
       throw new IllegalStateException();
     }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 3);
       assertEquals(e.getExecutionCount(), 3);
-      assertEquals(executionCounter.get(), 3);
       assertEquals(timeoutStats.successCount, 3);
       assertEquals(timeoutStats.failureCount, 0);
     }, IllegalStateException.class);
@@ -117,37 +113,31 @@ public class TimeoutTest extends Testing {
   /**
    * Tests that an outer timeout will cancel inner retries when the inner Supplier is blocked. The flow should be:
    * <p>
-   * <br>Execution that blocks
+   * <br>Execution that retries a few times, blocking each time
    * <br>Timeout
    */
   public void testTimeoutRetryWithBlockedSupplier() {
-    AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
-    RetryPolicy<Object> retryPolicy = RetryPolicy.builder().onRetry(e -> {
-      System.out.println("Retrying");
-    }).build();
+    RetryPolicy<Object> retryPolicy = RetryPolicy.ofDefaults();
 
-    Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
-      executionCounter.set(0);
+    Consumer<Timeout<Object>> test = timeout -> testRunFailure(() -> {
       timeoutStats.reset();
     }, Failsafe.with(timeout, retryPolicy), ctx -> {
       System.out.println("Executing");
-      executionCounter.incrementAndGet();
-      Thread.sleep(100);
+      Thread.sleep(60);
       throw new Exception();
     }, (f, e) -> {
-      assertEquals(e.getAttemptCount(), 1);
-      assertEquals(e.getExecutionCount(), 1);
-      assertEquals(executionCounter.get(), 1);
+      assertEquals(e.getAttemptCount(), 3);
+      assertEquals(e.getExecutionCount(), 3);
       assertEquals(timeoutStats.failureCount, 1);
     }, TimeoutExceededException.class);
 
     // Test without interrupt
-    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(10)), timeoutStats).build();
+    Timeout<Object> timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(150)), timeoutStats).build();
     test.accept(timeout);
 
     // Test with interrupt
-    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(10)).withInterrupt(), timeoutStats).build();
+    timeout = withStatsAndLogs(Timeout.builder(Duration.ofMillis(150)).withInterrupt(), timeoutStats).build();
     test.accept(timeout);
   }
 
@@ -159,24 +149,20 @@ public class TimeoutTest extends Testing {
    * <br>Timeout
    */
   public void testTimeoutRetryWithPendingRetry() {
-    AtomicInteger executionCounter = new AtomicInteger();
     Stats timeoutStats = new Stats();
     Stats rpStats = new Stats();
     RetryPolicy<Object> retryPolicy = withStatsAndLogs(RetryPolicy.builder().withDelay(Duration.ofMillis(1000)),
       rpStats).build();
 
     Consumer<Timeout<Object>> test = timeout -> testRunFailure(false, () -> {
-      executionCounter.set(0);
       timeoutStats.reset();
       rpStats.reset();
     }, Failsafe.with(timeout).compose(retryPolicy), ctx -> {
       System.out.println("Executing");
-      executionCounter.incrementAndGet();
       throw new Exception();
     }, (f, e) -> {
       assertEquals(e.getAttemptCount(), 1);
       assertEquals(e.getExecutionCount(), 1);
-      assertEquals(executionCounter.get(), 1);
       assertEquals(timeoutStats.failureCount, 1);
       assertEquals(rpStats.failedAttemptCount, 1);
     }, TimeoutExceededException.class);

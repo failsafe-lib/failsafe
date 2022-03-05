@@ -70,4 +70,15 @@ public interface ExecutionInternal<R> extends ExecutionContext<R> {
    * Returns whether the execution is considered cancelled for the {@code policyExecutor}.
    */
   boolean isCancelled(PolicyExecutor<R> policyExecutor);
+
+  /**
+   * Returns a lock object that is common across all execution attempts. Useful for guarding against races when mutating
+   * an execution.
+   */
+  Object getLock();
+
+  /**
+   * Returns the most recent execution to be attempted.
+   */
+  ExecutionInternal<R> getLatest();
 }
