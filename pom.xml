@@ -5,7 +5,7 @@
   <packaging>pom</packaging>
   <groupId>dev.failsafe</groupId>
   <artifactId>failsafe-parent</artifactId>
-  <version>3.2.3</version>
+  <version>3.2.4-SNAPSHOT</version>
   <name>Failsafe Parent</name>
   <description>Fault tolerance and resilience patterns</description>
   <url>https://failsafe.dev</url>
@@ -29,7 +29,7 @@
     <connection>scm:git:git@github.com:failsafe-lib/failsafe.git</connection>
     <developerConnection>scm:git:git@github.com:failsafe-lib/failsafe.git</developerConnection>
     <url>https://github.com/failsafe-lib/failsafe</url>
-    <tag>failsafe-parent-3.2.3</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <modules>
