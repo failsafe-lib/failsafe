@@ -148,10 +148,12 @@
           <author>false</author>
           <show>protected</show>
           <excludePackageNames>*.internal</excludePackageNames>
+          <detectOfflineLinks/>
           <additionalparam>
             -Xdoclint:none
             -notimestamp
             -link http://docs.oracle.com/javase/8/docs/api/
+            -link https://failsafe.dev/javadoc/core/
           </additionalparam>
         </configuration>
       </plugin>
