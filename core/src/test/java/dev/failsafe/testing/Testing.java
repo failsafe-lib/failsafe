@@ -21,7 +21,6 @@ import dev.failsafe.RetryPolicy;
 import dev.failsafe.event.EventListener;
 import dev.failsafe.event.ExecutionCompletedEvent;
 import dev.failsafe.function.*;
-import dev.failsafe.internal.InternalTesting;
 import dev.failsafe.internal.util.Lists;
 import net.jodah.concurrentunit.Waiter;
 
