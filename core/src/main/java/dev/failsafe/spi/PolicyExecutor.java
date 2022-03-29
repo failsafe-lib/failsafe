@@ -31,7 +31,7 @@ import java.util.function.Function;
  * @author Jonathan Halterman
  */
 public abstract class PolicyExecutor<R> {
-  /** Index of the policy relative to other policies in a composition, inner-most first */
+  /** Index of the policy relative to other policies in a composition, innermost first */
   private final int policyIndex;
 
   /** Optional APIs for policies that support them */
@@ -47,7 +47,7 @@ public abstract class PolicyExecutor<R> {
   }
 
   /**
-   * Returns the index of the policy relative to other policies in a composition, where the inner-most policy in a
+   * Returns the index of the policy relative to other policies in a composition, where the innermost policy in a
    * composition has an index of {@code 0}.
    */
   public int getPolicyIndex() {

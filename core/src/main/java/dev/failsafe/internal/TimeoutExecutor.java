@@ -72,7 +72,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
           // Guard against race with innerFn returning a result
           ExecutionResult<R> cancelResult = ExecutionResult.exception(new TimeoutExceededException(policy));
           if (result.compareAndSet(null, cancelResult)) {
-            // Guard against race with RetryPolicy changing the latest execution
+            // Guard against race with RetryPolicy updating the latest execution
             synchronized (execution.getLock()) {
               // Cancel and interrupt the latest attempt
               ExecutionInternal<R> latestExecution = execution.getLatest();
@@ -115,7 +115,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
       AtomicReference<Future<R>> timeoutFutureRef = new AtomicReference<>();
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
 
-      // Guard against race with AsyncExecution.record, AsyncExecution.complete, future.complete or future.cancel
+      // Guard against race with future.complete, future.cancel, AsyncExecution.record or AsyncExecution.complete
       synchronized (future) {
         // Schedule timeout if we are not done and not recording a result
         if (!future.isDone() && !execution.isRecorded()) {
@@ -124,7 +124,7 @@ public class TimeoutExecutor<R> extends PolicyExecutor<R> {
               // Guard against race with innerFn returning a result
               ExecutionResult<R> cancelResult = ExecutionResult.exception(new TimeoutExceededException(policy));
               if (resultRef.compareAndSet(null, cancelResult)) {
-                // Guard against race with RetryPolicy changing the latest execution
+                // Guard against race with RetryPolicy updating the latest execution
                 synchronized (execution.getLock()) {
                   // Cancel and interrupt the latest attempt
                   ExecutionInternal<R> latestExecution = execution.getLatest();

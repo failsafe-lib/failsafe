@@ -34,14 +34,14 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
 
   private final FailsafeFuture<R> future;
   private final boolean asyncExecution;
-  // The outer-most function that executions begin with
+  // The outermost function that executions begin with
   private Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> outerFn;
 
   // -- Per-attempt state --
 
   // Whether a policy executor completed post execution
   private final boolean[] policyPostExecuted = new boolean[policyExecutors.size()];
-  // Whether a result has been publicly recorded
+  // Whether a result has been recorded
   private volatile boolean recorded;
 
   AsyncExecutionImpl(List<Policy<R>> policies, Scheduler scheduler, FailsafeFuture<R> future, boolean asyncExecution,
@@ -72,7 +72,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
     Assert.state(!recorded, "The most recent execution has already been recorded or completed");
     recorded = true;
 
-    // Guard against race with a timeout expiring
+    // Guard against race with a timeout being set
     synchronized (future) {
       ExecutionResult<R> result = this.result != null ? this.result : ExecutionResult.none();
       complete(postExecute(result), null);
@@ -89,7 +89,7 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
     Assert.state(!recorded, "The most recent execution has already been recorded or completed");
     recorded = true;
 
-    // Guard against race with a timeout expiring
+    // Guard against race with a timeout being set
     synchronized (future) {
       if (!attemptRecorded) {
         Assert.state(!completed, "Execution has already been completed");

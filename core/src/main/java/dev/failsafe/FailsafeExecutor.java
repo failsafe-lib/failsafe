@@ -50,7 +50,7 @@ import static dev.failsafe.Functions.*;
 public class FailsafeExecutor<R> {
   private Scheduler scheduler = Scheduler.DEFAULT;
   private Executor executor;
-  /** Policies sorted outer-most first */
+  /** Policies sorted outermost first */
   final List<? extends Policy<R>> policies;
   private volatile EventHandler<R> completeHandler;
   private volatile EventHandler<R> failureHandler;

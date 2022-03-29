@@ -39,7 +39,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   private final FailsafeExecutor<R> executor;
   // An optional Failsafe call
   private final CallImpl<R> call;
-  // The outer-most function that executions begin with
+  // The outermost function that executions begin with
   private Function<SyncExecutionInternal<R>, ExecutionResult<R>> outerFn;
   // The interruptable execution thread
   private final Thread executionThread;
@@ -168,7 +168,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
 
   @Override
   public void interrupt() {
-    // Guard against race with the execution completing
+    // Guard against race with the execution becoming uninterruptable
     synchronized (getLock()) {
       if (interruptable.get()) {
         interrupted.set(true);
