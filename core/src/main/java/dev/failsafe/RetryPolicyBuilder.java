@@ -314,6 +314,16 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   }
 
   /**
+   * If a backoff delay factor is given, the delay will be reset to the initial delay when a task attempt has been
+   * running without error for the given duration. This can be used for long-running tasks that can continue their work
+   * after a period with network issues for example.
+   */
+  public RetryPolicyBuilder<R> withBackoffResetAfter(Duration backoffReset) {
+    config.backoffReset = backoffReset;
+    return this;
+  }
+
+  /**
    * Sets the {@code delay} to occur between retries. Replaces any previously configured {@link #withBackoff(Duration,
    * Duration) backoff} or {@link #withDelay(Duration, Duration) random} delays.
    *
