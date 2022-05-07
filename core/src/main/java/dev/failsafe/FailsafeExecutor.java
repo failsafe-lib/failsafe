@@ -175,8 +175,8 @@ public class FailsafeExecutor<R> {
    * AsyncExecution#recordException(Throwable)}.
    * </p>
    *
-   * @throws NullPointerException if the {@code supplier} is null
-   * @throws RejectedExecutionException if the {@code supplier} cannot be scheduled for execution
+   * @throws NullPointerException if the {@code runnable} is null
+   * @throws RejectedExecutionException if the {@code runnable} cannot be scheduled for execution
    */
   public <T extends R> CompletableFuture<T> getAsyncExecution(AsyncRunnable<T> runnable) {
     return callAsync(future -> getPromiseExecution(runnable, executor), true);
