@@ -220,7 +220,6 @@
             <configuration>
               <serverId>sonatype-nexus-staging</serverId>
               <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-              <skipStagingRepositoryClose>true</skipStagingRepositoryClose>
               <autoReleaseAfterClose>true</autoReleaseAfterClose>
             </configuration>
           </plugin>
