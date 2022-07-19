@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Builds {@link RetryPolicy instances}.
+ * Builds {@link RetryPolicy} instances.
  * <ul>
  *   <li>By default, a RetryPolicy will retry up to {@code 2} times when any {@code Exception} is thrown, with no delay
  *   between retry attempts.</li>
