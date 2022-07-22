@@ -41,6 +41,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   Duration delayMin;
   Duration delayMax;
   double delayFactor;
+  Duration backoffReset;
   Duration maxDelay;
   Duration jitter;
   double jitterFactor;
@@ -63,6 +64,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
     delayMin = config.delayMin;
     delayMax = config.delayMax;
     delayFactor = config.delayFactor;
+    backoffReset = config.backoffReset;
     maxDelay = config.maxDelay;
     jitter = config.jitter;
     jitterFactor = config.jitterFactor;
@@ -144,6 +146,15 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
    */
   public double getDelayFactor() {
     return delayFactor;
+  }
+
+  /**
+   * Returns the duration after which the backoff delay will be reset
+   *
+   * @see RetryPolicyBuilder#withBackoffResetAfter(Duration)
+   */
+  public Duration getBackoffReset() {
+    return backoffReset;
   }
 
   /**

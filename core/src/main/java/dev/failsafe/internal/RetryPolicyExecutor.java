@@ -279,6 +279,9 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
   }
 
   private long adjustForBackoff(ExecutionContext<R> context, long delayNanos) {
+    if (config.getBackoffReset() != null && context.getElapsedAttemptTime().compareTo(config.getBackoffReset()) >= 0) {
+      return config.getDelay().toNanos();
+    }
     if (context.getAttemptCount() != 1 && config.getMaxDelay() != null)
       delayNanos = (long) Math.min(delayNanos * config.getDelayFactor(), config.getMaxDelay().toNanos());
     return delayNanos;
