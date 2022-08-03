@@ -148,8 +148,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   }
 
   /**
-   * Specifies that retries should be aborted if the {@code abortPredicate} matches the exception. Any exception
-   * thrown from the {@code abortPredicate} is treated as a {@code false} result.
+   * Specifies that retries should be aborted if the {@code abortPredicate} matches the exception. Any exception thrown
+   * from the {@code abortPredicate} is treated as a {@code false} result.
    *
    * @throws NullPointerException if {@code abortPredicate} is null
    */
@@ -314,8 +314,8 @@ public class RetryPolicyBuilder<R> extends DelayablePolicyBuilder<RetryPolicyBui
   }
 
   /**
-   * Sets the {@code delay} to occur between retries. Replaces any previously configured {@link #withBackoff(Duration,
-   * Duration) backoff} or {@link #withDelay(Duration, Duration) random} delays.
+   * Sets the fixed {@code delay} to occur between retries. Replaces any previously configured {@link
+   * #withBackoff(Duration, Duration) backoff} or {@link #withDelay(Duration, Duration) random} delays.
    *
    * @throws NullPointerException if {@code delay} is null
    * @throws IllegalArgumentException if {@code delay} <= 0

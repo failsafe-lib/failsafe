@@ -96,15 +96,16 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
    * @see RetryPolicyBuilder#abortOn(List)
    * @see RetryPolicyBuilder#abortOn(CheckedPredicate)
    * @see RetryPolicyBuilder#abortIf(CheckedBiPredicate)
-   * @see RetryPolicyBuilder#abortIf(CheckedPredicate) 
-   * @see RetryPolicyBuilder#abortWhen(Object) 
+   * @see RetryPolicyBuilder#abortIf(CheckedPredicate)
+   * @see RetryPolicyBuilder#abortWhen(Object)
    */
   public List<CheckedBiPredicate<R, Throwable>> getAbortConditions() {
     return abortConditions;
   }
 
   /**
-   * Returns the delay between retries. Defaults to {@link Duration#ZERO}.
+   * Returns the delay between retries, else {@link Duration#ZERO} if delays have not been configured. If backoff
+   * delays are configured, this value will represent the initial delay.
    *
    * @see RetryPolicyBuilder#withDelay(Duration)
    * @see RetryPolicyBuilder#withBackoff(Duration, Duration, double)
@@ -117,7 +118,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   }
 
   /**
-   * Returns the min delay between retries.
+   * Returns the min random delay between retries, else {@code null} if random delays have not been configured.
    *
    * @see RetryPolicyBuilder#withDelay(Duration, Duration)
    * @see RetryPolicyBuilder#withDelay(long, long, ChronoUnit)
@@ -127,7 +128,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   }
 
   /**
-   * Returns the max delay between retries.
+   * Returns the max random delay between retries, else {@code null} if random delays have not been configured.
    *
    * @see RetryPolicyBuilder#withDelay(Duration, Duration)
    * @see RetryPolicyBuilder#withDelay(long, long, ChronoUnit)
@@ -176,7 +177,7 @@ public class RetryPolicyConfig<R> extends DelayablePolicyConfig<R> {
   }
 
   /**
-   * Returns the max delay between backoff retries.
+   * Returns the max delay between backoff retries, else {@code null} if backoff delays have not been configured.
    *
    * @see RetryPolicyBuilder#withBackoff(Duration, Duration)
    * @see RetryPolicyBuilder#withBackoff(Duration, Duration, double)
