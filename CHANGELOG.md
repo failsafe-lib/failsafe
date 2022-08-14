@@ -113,7 +113,7 @@ This release introduces some breaking changes to the API:
 - The standalone `Execution` API, and the `AsyncExecution` API created via the `FailsafeExecutor.runAsyncExecution` and `getAsyncExecution` methods, have been unified to include:
   - `record(R, Throwable)`
   - `recordResult(R)`
-  - `recordFailure(Throwable)`
+  - `recordException(Throwable)`
   - `complete()`
 - The previously supported `Execution` and `AsyncExecution` methods for recording a result have been removed. The methods for performing a retry have also been removed. For `Execution`, `isComplete` will indicate whether the execution is complete else if retries can be performed. For `AsyncExecution` retries will automatically be performed, if possible, immediately after a result or failure is recorded.
 - The `Execution` constructor is no longer visible. `Execution` instances must now be constructed via `Execution.of(policies)`.
