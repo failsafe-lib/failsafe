@@ -130,12 +130,6 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   }
 
   @Override
-  @Deprecated
-  public void recordFailure(Throwable failure) {
-    recordException(failure);
-  }
-
-  @Override
   public void recordResult(R result) {
     recordResult(result, null);
   }

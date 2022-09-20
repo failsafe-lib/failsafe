@@ -112,12 +112,6 @@ final class AsyncExecutionImpl<R> extends ExecutionImpl<R> implements AsyncExecu
   }
 
   @Override
-  @Deprecated
-  public void recordFailure(Throwable failure) {
-    recordException(failure);
-  }
-
-  @Override
   public boolean isAsyncExecution() {
     return asyncExecution;
   }

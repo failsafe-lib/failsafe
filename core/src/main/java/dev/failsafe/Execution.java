@@ -81,10 +81,4 @@ public interface Execution<R> extends ExecutionContext<R> {
    * @throws IllegalStateException if the execution is already complete
    */
   void recordException(Throwable exception);
-
-  /**
-   * @deprecated Use {@link #recordException(Throwable)} instead
-   */
-  @Deprecated
-  void recordFailure(Throwable failure);
 }

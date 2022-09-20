@@ -63,12 +63,6 @@ public interface ExecutionContext<R> {
   <T extends Throwable> T getLastException();
 
   /**
-   * @deprecated Use {@link #getLastException()} instead
-   */
-  @Deprecated
-  <T extends Throwable> T getLastFailure();
-
-  /**
    * Returns the last result that was recorded else {@code null}.
    */
   R getLastResult();

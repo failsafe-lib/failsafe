@@ -41,14 +41,6 @@ public class ExecutionCompletedEvent<R> extends ExecutionEvent {
   }
 
   /**
-   * @deprecated Use {@link #getException()} instead
-   */
-  @Deprecated
-  public Throwable getFailure() {
-    return exception;
-  }
-
-  /**
    * Returns the result that preceded the event, else {@code null} if there was none.
    */
   public R getResult() {

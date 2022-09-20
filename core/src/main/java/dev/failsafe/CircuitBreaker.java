@@ -234,12 +234,6 @@ public interface CircuitBreaker<R> extends Policy<R> {
   void recordException(Throwable exception);
 
   /**
-   * @deprecated Use {@link #recordException(Throwable)} instead.
-   */
-  @Deprecated
-  void recordFailure(Throwable failure);
-
-  /**
    * Records an execution {@code result} as a success or failure based on the failure configuration.
    */
   void recordResult(R result);

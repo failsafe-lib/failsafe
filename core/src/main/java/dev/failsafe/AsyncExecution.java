@@ -61,10 +61,4 @@ public interface AsyncExecution<R> extends ExecutionContext<R> {
    * @throws IllegalStateException if the most recent execution was already recorded or the execution is complete
    */
   void recordException(Throwable exception);
-
-  /**
-   * @deprecated Use {@link #recordException(Throwable)} instead
-   */
-  @Deprecated
-  void recordFailure(Throwable failure);
 }

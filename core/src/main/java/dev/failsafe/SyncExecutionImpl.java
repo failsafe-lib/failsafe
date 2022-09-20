@@ -133,12 +133,6 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
   }
 
   @Override
-  @Deprecated
-  public void recordFailure(Throwable failure) {
-    recordException(failure);
-  }
-
-  @Override
   public synchronized void preExecute() {
     if (isStandalone()) {
       attemptRecorded = false;

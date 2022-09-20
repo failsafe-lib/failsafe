@@ -50,14 +50,6 @@ public class ExecutionScheduledEvent<R> extends ExecutionEvent {
   }
 
   /**
-   * @deprecated Use {@link #getLastException()} instead
-   */
-  @Deprecated
-  public Throwable getLastFailure() {
-    return exception;
-  }
-
-  /**
    * Returns the result that preceded the event, else {@code null} if there was none.
    */
   public R getLastResult() {

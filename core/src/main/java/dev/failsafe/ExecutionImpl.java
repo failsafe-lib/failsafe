@@ -245,12 +245,6 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   }
 
   @Override
-  @Deprecated
-  public <T extends Throwable> T getLastFailure() {
-    return getLastException();
-  }
-
-  @Override
   public R getLastResult() {
     ExecutionResult<R> r = result != null ? result : previousResult;
     return r == null ? null : r.getResult();
