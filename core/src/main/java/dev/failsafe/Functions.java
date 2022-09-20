@@ -30,7 +30,7 @@ import java.util.function.Function;
  */
 final class Functions {
   /**
-   * Returns a Supplier that for synchronous executions, that pre-executes the {@code execution}, applies the {@code
+   * Returns a Supplier for synchronous executions that pre-executes the {@code execution}, applies the {@code
    * supplier}, records the result and returns the result. This implementation also handles Thread interrupts.
    *
    * @param <R> result type
@@ -90,7 +90,7 @@ final class Functions {
   }
 
   /**
-   * Returns a Function for asynchronous executions, that pre-executes the {@code execution}, runs the {@code runnable},
+   * Returns a Function for asynchronous executions that pre-executes the {@code execution}, runs the {@code runnable},
    * and attempts to complete the {@code execution} if a failure occurs. Locks to ensure the resulting supplier cannot
    * be applied multiple times concurrently.
    *
@@ -117,7 +117,7 @@ final class Functions {
   }
 
   /**
-   * Returns a Function that for asynchronous executions, that pre-executes the {@code execution}, applies the {@code
+   * Returns a Function that for asynchronous executions that pre-executes the {@code execution}, applies the {@code
    * supplier}, records the result and returns a promise containing the result.
    *
    * @param <R> result type

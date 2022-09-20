@@ -1,3 +1,9 @@
+# 3.3.0
+
+### API Changes
+
+- `ExecutionContext.getStartTime` now returns an `Instant` rather than a `Duration` object.
+
 # 3.2.4
 
 ### Improvements

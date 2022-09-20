@@ -18,6 +18,7 @@ package dev.failsafe;
 import dev.failsafe.function.CheckedRunnable;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -78,9 +79,9 @@ public interface ExecutionContext<R> {
   R getLastResult(R defaultValue);
 
   /**
-   * Returns the time that the initial execution started.
+   * Returns the time that the initial execution started, else {code null} if an execution has not started yet.
    */
-  Duration getStartTime();
+  Instant getStartTime();
 
   /**
    * Returns whether the execution has been cancelled. In this case the implementor should attempt to stop execution.

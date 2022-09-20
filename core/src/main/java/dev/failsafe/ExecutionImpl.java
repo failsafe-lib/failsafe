@@ -22,6 +22,7 @@ import dev.failsafe.spi.ExecutionResult;
 import dev.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -39,7 +40,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
 
   final List<PolicyExecutor<R>> policyExecutors;
   // When the first execution attempt was started
-  private volatile Duration startTime;
+  private volatile Instant startTime;
   // Number of execution attempts
   private final AtomicInteger attempts;
   // Number of completed executions
@@ -54,7 +55,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   // The result of the current execution attempt;
   volatile ExecutionResult<R> result;
   // When the most recent execution attempt was started
-  volatile Duration attemptStartTime;
+  private volatile Instant attemptStartTime;
   // The index of a PolicyExecutor that cancelled the execution. Integer.MIN_VALUE represents non-cancelled.
   volatile int cancelledIndex = Integer.MIN_VALUE;
   // The user-provided callback to be called when an execution is cancelled
@@ -71,8 +72,6 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
    */
   ExecutionImpl(List<? extends Policy<R>> policies) {
     policyExecutors = new ArrayList<>(policies.size());
-    startTime = Duration.ZERO;
-    attemptStartTime = Duration.ZERO;
     attempts = new AtomicInteger();
     executions = new AtomicInteger();
     latest = new AtomicReference<>(this);
@@ -122,8 +121,8 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   @Override
   public synchronized void preExecute() {
     if (!preExecuted) {
-      attemptStartTime = Duration.ofNanos(System.nanoTime());
-      if (startTime == Duration.ZERO)
+      attemptStartTime = Instant.now();
+      if (startTime == null)
         startTime = attemptStartTime;
       preExecuted = true;
     }
@@ -220,12 +219,12 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
 
   @Override
   public Duration getElapsedTime() {
-    return Duration.ofNanos(System.nanoTime() - startTime.toNanos());
+    return startTime == null ? Duration.ZERO : Duration.between(startTime, Instant.now());
   }
 
   @Override
   public Duration getElapsedAttemptTime() {
-    return Duration.ofNanos(System.nanoTime() - attemptStartTime.toNanos());
+    return attemptStartTime == null ? Duration.ZERO : Duration.between(attemptStartTime, Instant.now());
   }
 
   @Override
@@ -264,7 +263,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
   }
 
   @Override
-  public Duration getStartTime() {
+  public Instant getStartTime() {
     return startTime;
   }
 
