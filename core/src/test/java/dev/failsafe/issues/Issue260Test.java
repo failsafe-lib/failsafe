@@ -42,5 +42,6 @@ public class Issue260Test {
     f1.get(1, TimeUnit.SECONDS);
     f2.get(1, TimeUnit.SECONDS);
     f3.get(1, TimeUnit.SECONDS);
+    executor.shutdownNow();
   }
 }

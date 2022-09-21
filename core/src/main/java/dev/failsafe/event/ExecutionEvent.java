@@ -20,6 +20,7 @@ import dev.failsafe.ExecutionContext;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Encapsulates information about a Failsafe execution.
@@ -61,8 +62,8 @@ public abstract class ExecutionEvent {
   /**
    * Returns the time that the initial execution started, else {code null} if an execution has not started yet.
    */
-  public Instant getStartTime() {
-    return context.getStartTime();
+  public Optional<Instant> getStartTime() {
+    return Optional.ofNullable(context.getStartTime());
   }
 
   /**

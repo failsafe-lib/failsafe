@@ -18,6 +18,7 @@ package dev.failsafe.functional;
 import dev.failsafe.*;
 import dev.failsafe.testing.Asserts;
 import dev.failsafe.testing.Testing;
+import net.jodah.concurrentunit.Waiter;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -30,7 +31,7 @@ import static org.testng.Assert.assertFalse;
  * Tests scenarios against a small threadpool where executions could be temporarily blocked.
  */
 @Test
-public class BlockedExecutionTest {
+public class BlockedExecutionTest extends Testing {
   /**
    * Asserts that a scheduled execution that is blocked on a threadpool is properly cancelled when a timeout occurs.
    */
@@ -49,6 +50,7 @@ public class BlockedExecutionTest {
       TimeoutExceededException.class);
     Thread.sleep(300);
     assertFalse(supplierCalled.get());
+    executor.shutdownNow();
   }
 
   /**
@@ -70,6 +72,7 @@ public class BlockedExecutionTest {
 
     Asserts.assertThrows(() -> future.get(500, TimeUnit.MILLISECONDS), ExecutionException.class,
       TimeoutExceededException.class);
+    executor.shutdownNow();
   }
 
   /**
@@ -93,6 +96,7 @@ public class BlockedExecutionTest {
     Asserts.assertThrows(() -> future.get(500, TimeUnit.MILLISECONDS), ExecutionException.class,
       TimeoutExceededException.class);
     assertFalse(fallbackCalled.get());
+    executor.shutdownNow();
   }
 
   /**
@@ -117,5 +121,31 @@ public class BlockedExecutionTest {
     Asserts.assertThrows(future::get, CancellationException.class);
     Thread.sleep(300);
     assertFalse(fallbackCalled.get());
+    executor.shutdownNow();
+  }
+
+  /**
+   * Asserts that start times are not populated in execution events for an execution that times out while blocked on a
+   * thread pool, and never starts.
+   */
+  public void shouldNotPopulateStartTime() throws Throwable {
+    Waiter waiter = new Waiter();
+    Timeout<Object> timeout = Timeout.builder(Duration.ofMillis(50)).withInterrupt().onFailure(e -> {
+      waiter.assertTrue(!e.getStartTime().isPresent());
+    }).build();
+    ExecutorService executor = Executors.newFixedThreadPool(1);
+    executor.execute(uncheck(() -> {
+      Thread.sleep(500);
+    }));
+
+    Failsafe.with(timeout).with(executor).onComplete(e -> {
+      waiter.assertTrue(!e.getStartTime().isPresent());
+      waiter.resume();
+    }).runAsync(() -> {
+      waiter.fail("Execution should not start due to timeout");
+    });
+
+    waiter.await(1, TimeUnit.SECONDS);
+    executor.shutdownNow();
   }
 }

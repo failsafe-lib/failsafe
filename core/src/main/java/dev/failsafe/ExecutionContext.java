@@ -73,7 +73,7 @@ public interface ExecutionContext<R> {
   R getLastResult(R defaultValue);
 
   /**
-   * Returns the time that the initial execution started, else {code null} if an execution has not started yet.
+   * Returns the time that the initial execution started.
    */
   Instant getStartTime();
 

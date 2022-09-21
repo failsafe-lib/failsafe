@@ -33,5 +33,6 @@ public class Issue231Test {
       }
     }).get(), ExecutionException.class, TimeoutExceededException.class);
     assertTrue(executionCompleted.get());
+    executorService.shutdownNow();
   }
 }

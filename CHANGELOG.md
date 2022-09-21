@@ -2,7 +2,7 @@
 
 ### API Changes
 
-- `ExecutionContext.getStartTime` now returns an `Instant` rather than a `Duration` object.
+- `ExecutionContext.getStartTime` now returns a `Instant` rather than `Duration`, and `ExecutionEvent.getStartTime` now returns `Optional<Instant>`.
 - `getFailure`, `getLastFailure`, `recordFailure` and similar methods for recording Exceptions, which were previously deprecated, were removed. Use `getException`, `getLastException`, `recordException`, etc. instead.
 
 # 3.2.4
