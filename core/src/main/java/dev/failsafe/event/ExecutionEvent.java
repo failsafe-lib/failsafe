@@ -60,7 +60,7 @@ public abstract class ExecutionEvent {
   }
 
   /**
-   * Returns the time that the initial execution started, else {code null} if an execution has not started yet.
+   * Returns the time that the initial execution started, else {@link Optional#empty()} if an execution has not started yet.
    */
   public Optional<Instant> getStartTime() {
     return Optional.ofNullable(context.getStartTime());

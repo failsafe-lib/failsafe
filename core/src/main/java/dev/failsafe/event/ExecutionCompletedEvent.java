@@ -18,7 +18,7 @@ package dev.failsafe.event;
 import dev.failsafe.ExecutionContext;
 
 /**
- * Indicates an execution was completed.
+ * Indicates an execution was completed or cancelled.
  *
  * @param <R> result type
  * @author Jonathan Halterman
