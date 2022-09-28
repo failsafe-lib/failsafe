@@ -75,9 +75,9 @@ public interface CircuitBreaker<R> extends Policy<R> {
   }
 
   /**
-   * Creates a count based CircuitBreaker that opens after a {@link CircuitBreakerBuilder#withFailureThreshold(int)
-   * single failure}, closes after a {@link CircuitBreakerBuilder#withSuccessThreshold(int) single success}, and has a 1
-   * minute {@link CircuitBreakerBuilder#withDelay(Duration) delay} by default. To configure additional options on a
+   * Creates a count based CircuitBreaker that opens after one {@link CircuitBreakerBuilder#withFailureThreshold(int)
+   * failure}, half-opens after a one minute {@link CircuitBreakerBuilder#withDelay(Duration) delay}, and closes after one
+   * {@link CircuitBreakerBuilder#withSuccessThreshold(int) success}. To configure additional options on a
    * CircuitBreaker, use {@link #builder()} instead.
    *
    * @see #builder()
