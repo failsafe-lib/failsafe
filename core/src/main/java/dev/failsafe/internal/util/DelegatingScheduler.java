@@ -17,7 +17,16 @@ package dev.failsafe.internal.util;
 
 import dev.failsafe.spi.Scheduler;
 
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A {@link Scheduler} implementation that schedules delays on an internal, common ScheduledExecutorService and executes
@@ -34,8 +43,6 @@ import java.util.concurrent.*;
  */
 public final class DelegatingScheduler implements Scheduler {
   public static final DelegatingScheduler INSTANCE = new DelegatingScheduler();
-  private static volatile ForkJoinPool FORK_JOIN_POOL;
-  private static volatile ScheduledThreadPoolExecutor DELAYER;
 
   private final ExecutorService executorService;
 
@@ -47,12 +54,32 @@ public final class DelegatingScheduler implements Scheduler {
     this.executorService = executor;
   }
 
-  private static final class DelayerThreadFactory implements ThreadFactory {
-    public Thread newThread(Runnable r) {
+  private static final class LazyDelayerHolder {
+    private static final ScheduledThreadPoolExecutor DELAYER = create();
+
+    private static ScheduledThreadPoolExecutor create() {
+      ScheduledThreadPoolExecutor delayer = new ScheduledThreadPoolExecutor(1, LazyDelayerHolder::newThread);
+      delayer.setRemoveOnCancelPolicy(true);
+      return delayer;
+    }
+
+    public static Thread newThread(Runnable r) {
       Thread t = new Thread(r);
       t.setDaemon(true);
       t.setName("FailsafeDelayScheduler");
       return t;
+    }
+  }
+
+  private static final class LazyForkJoinPoolHolder {
+    private static final ForkJoinPool FORK_JOIN_POOL = create();
+
+    private static ForkJoinPool create(){
+      return ForkJoinPool.getCommonPoolParallelism() > 1
+          ? ForkJoinPool.commonPool()
+          : new ForkJoinPool(Math.max(Runtime.getRuntime().availableProcessors(), 2),
+              ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+              null, true);
     }
   }
 
@@ -96,32 +123,13 @@ public final class DelegatingScheduler implements Scheduler {
   }
 
   private static ScheduledExecutorService delayer() {
-    if (DELAYER == null) {
-      synchronized (DelegatingScheduler.class) {
-        if (DELAYER == null) {
-          ScheduledThreadPoolExecutor delayer = new ScheduledThreadPoolExecutor(1, new DelayerThreadFactory());
-          delayer.setRemoveOnCancelPolicy(true);
-          DELAYER = delayer;
-        }
-      }
-    }
-    return DELAYER;
+    return LazyDelayerHolder.DELAYER;
   }
 
   private ExecutorService executorService() {
-    if (executorService != null)
-      return executorService;
-    if (FORK_JOIN_POOL == null) {
-      synchronized (DelegatingScheduler.class) {
-        if (FORK_JOIN_POOL == null) {
-          if (ForkJoinPool.getCommonPoolParallelism() > 1)
-            FORK_JOIN_POOL = ForkJoinPool.commonPool();
-          else
-            FORK_JOIN_POOL = new ForkJoinPool(2);
-        }
-      }
-    }
-    return FORK_JOIN_POOL;
+    return executorService != null
+        ? executorService
+        : LazyForkJoinPoolHolder.FORK_JOIN_POOL;
   }
 
   @Override
@@ -133,7 +141,7 @@ public final class DelegatingScheduler implements Scheduler {
     Callable<?> completingCallable = () -> {
       try {
         if (isForkJoinPool) {
-          // Guard against race with promise.cancel 
+          // Guard against race with promise.cancel
           synchronized (promise) {
             promise.forkJoinPoolThread = Thread.currentThread();
           }
