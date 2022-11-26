@@ -50,8 +50,11 @@ public final class DelegatingScheduler implements Scheduler {
     this.executorService = null;
   }
 
-  public DelegatingScheduler(ExecutorService executor) {
-    this.executorService = executor;
+  public DelegatingScheduler(ExecutorService executor){
+    if (executor != ForkJoinPool.commonPool() || useCommonPool())
+      this.executorService = executor;
+    else // don't use commonPool(): cannot support parallelism @see CompletableFuture#useCommonPool
+      this.executorService = null;
   }
 
   private static final class LazyDelayerHolder {
@@ -75,12 +78,15 @@ public final class DelegatingScheduler implements Scheduler {
     private static final ForkJoinPool FORK_JOIN_POOL = create();
 
     private static ForkJoinPool create(){
-      return ForkJoinPool.getCommonPoolParallelism() > 1
-          ? ForkJoinPool.commonPool()
+      return useCommonPool() ? ForkJoinPool.commonPool()
           : new ForkJoinPool(Math.max(Runtime.getRuntime().availableProcessors(), 2),
               ForkJoinPool.defaultForkJoinWorkerThreadFactory,
               null, true);
     }
+  }
+
+  static boolean useCommonPool () {
+    return ForkJoinPool.getCommonPoolParallelism() > 1;
   }
 
   static final class ScheduledCompletableFuture<V> extends CompletableFuture<V> implements ScheduledFuture<V> {
@@ -159,12 +165,22 @@ public final class DelegatingScheduler implements Scheduler {
       return null;
     };
 
-    if (delay == 0)
+    if (delay <= 0)
       promise.delegate = es.submit(completingCallable);
-    else
-      promise.delegate = delayer().schedule(() -> {
+
+    // use less memory: don't capture variable with commonPool
+    else if (es == LazyForkJoinPoolHolder.FORK_JOIN_POOL)
+      promise.delegate = delayer().schedule(()->{
         // Guard against race with promise.cancel
-        synchronized (promise) {
+        synchronized(promise) {
+          if (!promise.isCancelled())
+            promise.delegate = LazyForkJoinPoolHolder.FORK_JOIN_POOL.submit(completingCallable);
+        }
+      }, delay, unit);
+    else
+      promise.delegate = delayer().schedule(()->{
+        // Guard against race with promise.cancel
+        synchronized(promise) {
           if (!promise.isCancelled())
             promise.delegate = es.submit(completingCallable);
         }
