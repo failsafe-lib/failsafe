@@ -28,6 +28,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.ForkJoinPool.commonPool;
+
 /**
  * A {@link Scheduler} implementation that schedules delays on an internal, common ScheduledExecutorService and executes
  * tasks on either a provided ExecutorService, {@link ForkJoinPool#commonPool()}, or an internal {@link ForkJoinPool}
@@ -45,16 +47,42 @@ public final class DelegatingScheduler implements Scheduler {
   public static final DelegatingScheduler INSTANCE = new DelegatingScheduler();
 
   private final ExecutorService executorService;
+  private final int executorType;
+
+  private static final int EX_FORK_JOIN = 1;
+  private static final int EX_SCHEDULED = 2;
+  private static final int EX_COMMON    = 4;
+  private static final int EX_INTERNAL  = 8;
+
 
   private DelegatingScheduler() {
-    this.executorService = null;
+    this(null, false);
   }
 
-  public DelegatingScheduler(ExecutorService executor){
-    if (executor != ForkJoinPool.commonPool() || useCommonPool())
-      this.executorService = executor;
-    else // don't use commonPool(): cannot support parallelism @see CompletableFuture#useCommonPool
-      this.executorService = null;
+  public DelegatingScheduler(ExecutorService executor) {
+    this(executor, false);
+  }
+
+  public DelegatingScheduler(ExecutorService executor, boolean canUseScheduledExecutorService) {
+    final int type;
+    if (executor == null || executor == commonPool()) {
+      if (ForkJoinPool.getCommonPoolParallelism() > 1) {// @see CompletableFuture#useCommonPool
+        executorService = commonPool();
+        type = EX_COMMON   | EX_FORK_JOIN;
+
+      } else {// don't use commonPool(): cannot support parallelism
+        executorService = null;
+        type = EX_INTERNAL | EX_FORK_JOIN;
+      }
+    } else {
+      executorService = executor;
+      type = executor instanceof ForkJoinPool
+          ? EX_FORK_JOIN
+          : 0;
+    }
+    executorType = canUseScheduledExecutorService && executorService instanceof ScheduledExecutorService
+        ? type | EX_SCHEDULED
+        : type;
   }
 
   private static final class LazyDelayerHolder {
@@ -75,19 +103,12 @@ public final class DelegatingScheduler implements Scheduler {
   }
 
   private static final class LazyForkJoinPoolHolder {
-    private static final ForkJoinPool FORK_JOIN_POOL = create();
-
-    private static ForkJoinPool create(){
-      return useCommonPool() ? ForkJoinPool.commonPool()
-          : new ForkJoinPool(Math.max(Runtime.getRuntime().availableProcessors(), 2),
-              ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-              null, true);
-    }
+    private static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(
+        Math.max(Runtime.getRuntime().availableProcessors(), 2),
+        ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+        null, true/*asyncMode*/);
   }
 
-  static boolean useCommonPool () {
-    return ForkJoinPool.getCommonPoolParallelism() > 1;
-  }
 
   static final class ScheduledCompletableFuture<V> extends CompletableFuture<V> implements ScheduledFuture<V> {
     // Guarded by this
@@ -128,13 +149,14 @@ public final class DelegatingScheduler implements Scheduler {
     }
   }
 
-  private static ScheduledExecutorService delayer() {
-    return LazyDelayerHolder.DELAYER;
+  private ScheduledExecutorService delayer() {
+    return ((executorType & EX_SCHEDULED) == EX_SCHEDULED)
+        ? (ScheduledExecutorService) executorService()
+        : LazyDelayerHolder.DELAYER;
   }
 
   private ExecutorService executorService() {
-    return executorService != null
-        ? executorService
+    return executorService != null ? executorService
         : LazyForkJoinPoolHolder.FORK_JOIN_POOL;
   }
 
@@ -142,50 +164,71 @@ public final class DelegatingScheduler implements Scheduler {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
     ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
-    ExecutorService es = executorService();
-    boolean isForkJoinPool = es instanceof ForkJoinPool;
-    Callable<?> completingCallable = () -> {
-      try {
-        if (isForkJoinPool) {
+    final Callable<?> completingCallable;
+    if ((executorType & EX_FORK_JOIN) == EX_FORK_JOIN) {// but why? Other ExecutorServices also support cancellation
+      completingCallable = () -> {
+        try {
           // Guard against race with promise.cancel
           synchronized (promise) {
             promise.forkJoinPoolThread = Thread.currentThread();
           }
-        }
-        promise.complete(callable.call());
-      } catch (Throwable t) {
-        promise.completeExceptionally(t);
-      } finally {
-        if (isForkJoinPool) {
+          promise.complete(callable.call());
+        } catch (Throwable t) {
+          promise.completeExceptionally(t);
+        } finally {
           synchronized (promise) {
             promise.forkJoinPoolThread = null;
           }
         }
-      }
-      return null;
-    };
+        return null;
+      };
+    } else {// not forkJoin
+      completingCallable = () ->{
+        try {
+          promise.complete(callable.call());
+        } catch (Throwable t) {
+          promise.completeExceptionally(t);
+        }
+        return null;
+      };
+    }
 
-    if (delay <= 0)
-      promise.delegate = es.submit(completingCallable);
+    if (delay <= 0) {
+      promise.delegate = executorService().submit(completingCallable);
+      return promise;
+    }
 
-    // use less memory: don't capture variable with commonPool
-    else if (es == LazyForkJoinPoolHolder.FORK_JOIN_POOL)
-      promise.delegate = delayer().schedule(()->{
+    final ExecutorService es = executorService();
+    final Runnable r;// use less memory: don't capture variable with commonPool
+
+    if ((executorType & EX_COMMON) == EX_COMMON)
+      r = ()->{
+        // Guard against race with promise.cancel
+        synchronized(promise) {
+          if (!promise.isCancelled())
+            promise.delegate = commonPool().submit(completingCallable);
+        }
+      };
+
+    else if ((executorType & EX_INTERNAL) == EX_INTERNAL)
+      r = ()->{
         // Guard against race with promise.cancel
         synchronized(promise) {
           if (!promise.isCancelled())
             promise.delegate = LazyForkJoinPoolHolder.FORK_JOIN_POOL.submit(completingCallable);
         }
-      }, delay, unit);
+      };
+
     else
-      promise.delegate = delayer().schedule(()->{
+      r = ()->{
         // Guard against race with promise.cancel
         synchronized(promise) {
           if (!promise.isCancelled())
             promise.delegate = es.submit(completingCallable);
         }
-      }, delay, unit);
+      };
 
+    promise.delegate = delayer().schedule(r, delay, unit);
     return promise;
   }
 }
