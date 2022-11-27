@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.ForkJoinPool.commonPool;
@@ -76,8 +77,7 @@ public final class DelegatingScheduler implements Scheduler {
       }
     } else {
       executorService = executor;
-      type = executor instanceof ForkJoinPool
-          ? EX_FORK_JOIN
+      type = executor instanceof ForkJoinPool ? EX_FORK_JOIN
           : 0;
     }
     executorType = canUseScheduledExecutorService && executorService instanceof ScheduledExecutorService
@@ -85,16 +85,21 @@ public final class DelegatingScheduler implements Scheduler {
         : type;
   }
 
-  private static final class LazyDelayerHolder {
-    private static final ScheduledThreadPoolExecutor DELAYER = create();
+  DelegatingScheduler (byte flags) {
+    executorService = null;
+    executorType = flags;
+  }//new for tests
 
-    private static ScheduledThreadPoolExecutor create() {
-      ScheduledThreadPoolExecutor delayer = new ScheduledThreadPoolExecutor(1, LazyDelayerHolder::newThread);
-      delayer.setRemoveOnCancelPolicy(true);
-      return delayer;
+  private static final class LazyDelayerHolder extends ScheduledThreadPoolExecutor implements ThreadFactory {
+    private static final ScheduledThreadPoolExecutor DELAYER = new LazyDelayerHolder();
+
+    public LazyDelayerHolder(){
+      super(1);
+      setThreadFactory(this);
+      setRemoveOnCancelPolicy(true);
     }
 
-    public static Thread newThread(Runnable r) {
+    @Override public Thread newThread(Runnable r) {
       Thread t = new Thread(r);
       t.setDaemon(true);
       t.setName("FailsafeDelayScheduler");

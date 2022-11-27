@@ -15,18 +15,26 @@
  */
 package dev.failsafe.internal.util;
 
-import net.jodah.concurrentunit.Waiter;
-import dev.failsafe.testing.Asserts;
 import dev.failsafe.spi.Scheduler;
+import dev.failsafe.testing.Asserts;
+import net.jodah.concurrentunit.Waiter;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test
 public class DelegatingSchedulerTest {
@@ -86,5 +94,79 @@ public class DelegatingSchedulerTest {
       return null;
     }, 0, TimeUnit.MILLISECONDS);
     waiter.await(1000);
+  }
+
+
+  @Test
+  public void testInternalPool() throws TimeoutException, ExecutionException, InterruptedException{
+    DelegatingScheduler ds = new DelegatingScheduler((byte) 8);// internal, not ForkJoin
+
+    Waiter waiter = new Waiter();
+
+    ScheduledFuture<?> sf = ds.schedule(()->{
+      waiter.rethrow(new IOException("OK! testInternalPool"));
+      return 42;
+    }, 5, TimeUnit.MILLISECONDS);
+
+    try {
+      waiter.await(1000);
+      fail();
+    } catch (Throwable e) {
+      assertEquals(e.toString(), "java.io.IOException: OK! testInternalPool");
+    }
+    assertTrue(sf.isDone());
+
+    try {
+      sf.get();
+      fail();
+    } catch (ExecutionException e) {
+      assertEquals(e.toString(), "java.util.concurrent.ExecutionException: java.io.IOException: OK! testInternalPool");
+    }
+  }
+
+  @Test
+  public void testExternalScheduler() throws TimeoutException, ExecutionException, InterruptedException{
+    ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(1);
+    DelegatingScheduler ds = new DelegatingScheduler(stpe, true);
+
+    Waiter waiter = new Waiter();
+
+    ScheduledFuture<?> sf1 = ds.schedule(()->{
+      waiter.rethrow(new IOException("OK! fail 1"));
+      return 42;
+    }, 3, TimeUnit.SECONDS);
+    ScheduledFuture<?> sf2 = ds.schedule(()->{
+      waiter.rethrow(new IOException("OK! fail 2 fast"));
+      return 42;
+    }, 1, TimeUnit.SECONDS);
+    assertEquals(1, sf1.compareTo(sf2));
+    assertEquals(0, sf1.compareTo(sf1));
+    assertTrue(sf1.getDelay(TimeUnit.MILLISECONDS) > 2000);
+
+    try {
+      waiter.await(3200);
+      fail();
+    } catch (Throwable e) {
+      assertEquals(e.toString(), "java.io.IOException: OK! fail 2 fast");
+    }
+    assertTrue(sf2.isDone());
+    Thread.sleep(2500);//3-1 = 2 for slow sf1
+    assertTrue(sf1.isDone());
+
+    try {
+      sf1.get();
+      fail();
+    } catch (ExecutionException e) {
+      assertEquals(e.toString(), "java.util.concurrent.ExecutionException: java.io.IOException: OK! fail 1");
+    }
+    try {
+      sf2.get();
+      fail();
+    } catch (ExecutionException e) {
+      assertEquals(e.toString(), "java.util.concurrent.ExecutionException: java.io.IOException: OK! fail 2 fast");
+    }
+    assertEquals(stpe.shutdownNow().size(), 0);
+
+    assertEquals(-1, sf2.compareTo(sf1));
   }
 }
