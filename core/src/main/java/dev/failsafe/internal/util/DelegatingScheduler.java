@@ -100,9 +100,8 @@ public final class DelegatingScheduler implements Scheduler {
     }
 
     @Override public Thread newThread(Runnable r) {
-      Thread t = new Thread(r);
+      Thread t = new Thread(r, "FailsafeDelayScheduler");
       t.setDaemon(true);
-      t.setName("FailsafeDelayScheduler");
       return t;
     }
   }
@@ -114,30 +113,23 @@ public final class DelegatingScheduler implements Scheduler {
         null, true/*asyncMode*/);
   }
 
-
   static final class ScheduledCompletableFuture<V> extends CompletableFuture<V> implements ScheduledFuture<V> {
     // Guarded by this
     volatile Future<V> delegate;
     // Guarded by this
     Thread forkJoinPoolThread;
-    private final long time;
-
-    ScheduledCompletableFuture(long delay, TimeUnit unit) {
-      this.time = System.nanoTime() + unit.toNanos(delay);
-    }
 
     @Override
-    public long getDelay(TimeUnit unit) {
-      return unit.convert(time - System.nanoTime(), TimeUnit.NANOSECONDS);
+    public long getDelay(TimeUnit unit){
+      Future<V> f = delegate;
+      return f instanceof Delayed ? ((Delayed) f).getDelay(unit)
+          : 0; // we are executed now
     }
 
     @Override
     public int compareTo(Delayed other) {
-      if (other == this) {
+      if (other == this)// ScheduledFuture<?> gives no extra info
         return 0;
-      } else if (other instanceof ScheduledCompletableFuture) {
-        return Long.compare(time, ((ScheduledCompletableFuture<?>) other).time);
-      }
       return Long.compare(getDelay(TimeUnit.NANOSECONDS), other.getDelay(TimeUnit.NANOSECONDS));
     }
 
@@ -152,11 +144,10 @@ public final class DelegatingScheduler implements Scheduler {
       }
       return result;
     }
-  }
+  }//ScheduledCompletableFuture
 
   private ScheduledExecutorService delayer() {
-    return ((executorType & EX_SCHEDULED) == EX_SCHEDULED)
-        ? (ScheduledExecutorService) executorService()
+    return ((executorType & EX_SCHEDULED) == EX_SCHEDULED) ? (ScheduledExecutorService) executorService()
         : LazyDelayerHolder.DELAYER;
   }
 
@@ -165,13 +156,11 @@ public final class DelegatingScheduler implements Scheduler {
         : LazyForkJoinPoolHolder.FORK_JOIN_POOL;
   }
 
-  @Override
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @Override @SuppressWarnings({ "unchecked", "rawtypes" })
   public ScheduledFuture<?> schedule(Callable<?> callable, long delay, TimeUnit unit) {
-    ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>(delay, unit);
-    final Callable<?> completingCallable;
-    if ((executorType & EX_FORK_JOIN) == EX_FORK_JOIN) {// but why? Other ExecutorServices also support cancellation
-      completingCallable = () -> {
+    ScheduledCompletableFuture promise = new ScheduledCompletableFuture<>();
+    final Callable<?> completingCallable = (executorType & EX_FORK_JOIN) == EX_FORK_JOIN
+      ? () -> {
         try {
           // Guard against race with promise.cancel
           synchronized (promise) {
@@ -186,9 +175,8 @@ public final class DelegatingScheduler implements Scheduler {
           }
         }
         return null;
-      };
-    } else {// not forkJoin
-      completingCallable = () ->{
+      }// else not ForkJoin  BTW: but why? Other ExecutorServices also support cancellation
+      : () ->{
         try {
           promise.complete(callable.call());
         } catch (Throwable t) {
@@ -196,7 +184,6 @@ public final class DelegatingScheduler implements Scheduler {
         }
         return null;
       };
-    }
 
     if (delay <= 0) {
       promise.delegate = executorService().submit(completingCallable);
@@ -232,7 +219,6 @@ public final class DelegatingScheduler implements Scheduler {
             promise.delegate = es.submit(completingCallable);
         }
       };
-
     promise.delegate = delayer().schedule(r, delay, unit);
     return promise;
   }
