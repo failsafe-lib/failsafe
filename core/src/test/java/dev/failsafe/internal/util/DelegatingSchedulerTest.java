@@ -132,7 +132,7 @@ public class DelegatingSchedulerTest {
   @Test
   public void testExternalScheduler() throws TimeoutException, ExecutionException, InterruptedException{
     ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(1);
-    DelegatingScheduler ds = new DelegatingScheduler(stpe, true);
+    DelegatingScheduler ds = new DelegatingScheduler(stpe, stpe);
 
     Waiter waiter = new Waiter();
 

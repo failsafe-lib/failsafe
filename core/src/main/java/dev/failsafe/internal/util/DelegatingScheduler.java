@@ -45,49 +45,41 @@ import static java.util.concurrent.ForkJoinPool.commonPool;
  * @author Ben Manes
  */
 public final class DelegatingScheduler implements Scheduler {
-  public static final DelegatingScheduler INSTANCE = new DelegatingScheduler();
+  public static final DelegatingScheduler INSTANCE = new DelegatingScheduler(null,null);
 
   private final ExecutorService executorService;
+  private final ScheduledExecutorService scheduler;
   private final int executorType;
 
   private static final int EX_FORK_JOIN = 1;
-  private static final int EX_SCHEDULED = 2;
   private static final int EX_COMMON    = 4;
   private static final int EX_INTERNAL  = 8;
 
 
-  private DelegatingScheduler() {
-    this(null, false);
-  }
-
   public DelegatingScheduler(ExecutorService executor) {
-    this(executor, false);
+    this(executor, null);
   }
 
-  public DelegatingScheduler(ExecutorService executor, boolean canUseScheduledExecutorService) {
-    final int type;
+  public DelegatingScheduler(ExecutorService executor, ScheduledExecutorService scheduler) {
     if (executor == null || executor == commonPool()) {
       if (ForkJoinPool.getCommonPoolParallelism() > 1) {// @see CompletableFuture#useCommonPool
         executorService = commonPool();
-        type = EX_COMMON   | EX_FORK_JOIN;
+        executorType = EX_COMMON   | EX_FORK_JOIN;
 
       } else {// don't use commonPool(): cannot support parallelism
         executorService = null;
-        type = EX_INTERNAL | EX_FORK_JOIN;
+        executorType = EX_INTERNAL | EX_FORK_JOIN;
       }
     } else {
       executorService = executor;
-      type = executor instanceof ForkJoinPool ? EX_FORK_JOIN
+      executorType = executor instanceof ForkJoinPool ? EX_FORK_JOIN
           : 0;
     }
-    executorType = canUseScheduledExecutorService && executorService instanceof ScheduledExecutorService
-        ? type | EX_SCHEDULED
-        : type;
+    this.scheduler = scheduler;
   }
 
   DelegatingScheduler (byte flags) {
-    executorService = null;
-    executorType = flags;
+    executorService = null;  executorType = flags;  scheduler = null;
   }//new for tests
 
   private static final class LazyDelayerHolder extends ScheduledThreadPoolExecutor implements ThreadFactory {
@@ -123,7 +115,7 @@ public final class DelegatingScheduler implements Scheduler {
     public long getDelay(TimeUnit unit){
       Future<V> f = delegate;
       return f instanceof Delayed ? ((Delayed) f).getDelay(unit)
-          : 0; // we are executed now
+          : 0; // we are executing now
     }
 
     @Override
@@ -147,7 +139,7 @@ public final class DelegatingScheduler implements Scheduler {
   }//ScheduledCompletableFuture
 
   private ScheduledExecutorService delayer() {
-    return ((executorType & EX_SCHEDULED) == EX_SCHEDULED) ? (ScheduledExecutorService) executorService()
+    return scheduler != null ? scheduler
         : LazyDelayerHolder.DELAYER;
   }
 
@@ -190,35 +182,36 @@ public final class DelegatingScheduler implements Scheduler {
       return promise;
     }
 
-    final ExecutorService es = executorService();
-    final Runnable r;// use less memory: don't capture variable with commonPool
+    final Callable<Void> r;// use less memory: don't capture variable with commonPool
 
     if ((executorType & EX_COMMON) == EX_COMMON)
-      r = ()->{
-        // Guard against race with promise.cancel
+      r = ()->{ // Guard against race with promise.cancel
         synchronized(promise) {
           if (!promise.isCancelled())
             promise.delegate = commonPool().submit(completingCallable);
         }
+        return null;
       };
 
     else if ((executorType & EX_INTERNAL) == EX_INTERNAL)
-      r = ()->{
-        // Guard against race with promise.cancel
+      r = ()->{// Guard against race with promise.cancel
         synchronized(promise) {
           if (!promise.isCancelled())
             promise.delegate = LazyForkJoinPoolHolder.FORK_JOIN_POOL.submit(completingCallable);
         }
+        return null;
       };
 
-    else
-      r = ()->{
-        // Guard against race with promise.cancel
-        synchronized(promise) {
+    else {
+      final ExecutorService es = executorService();
+      r = ()->{// Guard against race with promise.cancel
+        synchronized(promise){
           if (!promise.isCancelled())
             promise.delegate = es.submit(completingCallable);
         }
+        return null;
       };
+    }
     promise.delegate = delayer().schedule(r, delay, unit);
     return promise;
   }
