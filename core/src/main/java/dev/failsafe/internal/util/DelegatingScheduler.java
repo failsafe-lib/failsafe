@@ -21,12 +21,12 @@ import java.util.concurrent.*;
 
 /**
  * A {@link Scheduler} implementation that schedules delays on an internal, common ScheduledExecutorService and executes
- * tasks on either a provided ExecutorService, {@link ForkJoinPool#commonPool()}, or an internal {@link ForkJoinPool}
- * instance. If no {@link ExecutorService} is supplied, the {@link ForkJoinPool#commonPool()} will be used, unless the
- * common pool's parallelism is 1, then an internal {@link ForkJoinPool} with parallelism of 2 will be created and
- * used.
+ * tasks on either a provided {@link ExecutorService}, {@link ForkJoinPool#commonPool()}, or an internal
+ * {@link ForkJoinPool} instance. If no {@link ExecutorService} is supplied, the {@link ForkJoinPool#commonPool()} will
+ * be used, unless the common pool's parallelism is 1, then an internal {@link ForkJoinPool} with parallelism of 2 will
+ * be created and used.
  * <p>
- * Supports cancellation of {@link ForkJoinPool} tasks.
+ * Supports cancellation and interruption of {@link ForkJoinPool} tasks.
  * </p>
  *
  * @author Jonathan Halterman

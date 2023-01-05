@@ -169,7 +169,7 @@ class ExecutionImpl<R> implements ExecutionInternal<R> {
     return result;
   }
 
-  /** Called indorectly by users. */
+  /** Called indirectly by users. */
   @Override
   public boolean cancel() {
     boolean cancelled = isCancelled();

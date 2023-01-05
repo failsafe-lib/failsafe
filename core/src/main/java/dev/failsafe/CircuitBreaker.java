@@ -229,7 +229,7 @@ public interface CircuitBreaker<R> extends Policy<R> {
   void recordFailure();
 
   /**
-   * Records an {@code exception} as a success or failure based on the exception configuration.
+   * Records an {@code exception} as a success or failure based on the failure configuration.
    */
   void recordException(Throwable exception);
 
