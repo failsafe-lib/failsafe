@@ -12,6 +12,10 @@
   <artifactId>failsafe-retrofit</artifactId>
   <name>Failsafe Retrofit</name>
 
+  <properties>
+    <java.module.name>${project.groupId}.retrofit</java.module.name>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -51,4 +55,13 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 </project>

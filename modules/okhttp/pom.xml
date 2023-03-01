@@ -12,6 +12,10 @@
   <artifactId>failsafe-okhttp</artifactId>
   <name>Failsafe OkHttp</name>
 
+  <properties>
+    <java.module.name>${project.groupId}.okhttp</java.module.name>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -39,4 +43,13 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 </project>
