@@ -11,11 +11,18 @@
   <artifactId>failsafe</artifactId>
   <name>Failsafe</name>
 
+  <properties>
+    <java.module.name>${project.groupId}.core</java.module.name>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.1.1</version>
         <executions>
           <execution>
             <goals>
