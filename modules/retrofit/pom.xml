@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.failsafe</groupId>
     <artifactId>failsafe-parent</artifactId>
-    <version>3.3.1</version>
+    <version>3.3.2-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
