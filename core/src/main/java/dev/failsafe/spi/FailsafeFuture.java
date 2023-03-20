@@ -81,6 +81,8 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
     ExecutionResult<R> result = ExecutionResult.exception(new CancellationException());
     super.completeExceptionally(result.getException());
     completionHandler.accept(result, newestExecution);
+    newestExecution = null;
+    cancelFunctions = null;
     return cancelResult;
   }
 
@@ -99,6 +101,8 @@ public class FailsafeFuture<R> extends CompletableFuture<R> {
       completed = super.completeExceptionally(exception);
     if (completed)
       completionHandler.accept(result, newestExecution);
+    newestExecution = null;
+    cancelFunctions = null;
     return completed;
   }
 
