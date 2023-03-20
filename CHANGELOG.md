@@ -1,3 +1,10 @@
+# 3.3.1
+
+### Improevments
+
+- Issue #358 - Added full java module descriptors to Failsafe jars.
+- Issue #361 - Released execution references inside Failsafe provided CompletableFutures.
+
 # 3.3.0
 
 ### API Changes
