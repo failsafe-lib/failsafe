@@ -37,8 +37,8 @@ class TimedCircuitStats implements CircuitStats {
   public TimedCircuitStats(int bucketCount, Duration thresholdingPeriod, Clock clock, CircuitStats oldStats) {
     this.clock = clock;
     this.buckets = new Bucket[bucketCount];
+    windowSizeMillis = thresholdingPeriod.toMillis();
     bucketSizeMillis = thresholdingPeriod.toMillis() / buckets.length;
-    windowSizeMillis = bucketSizeMillis * buckets.length;
     for (int i = 0; i < buckets.length; i++)
       buckets[i] = new Bucket();
     this.summary = new Stat();
