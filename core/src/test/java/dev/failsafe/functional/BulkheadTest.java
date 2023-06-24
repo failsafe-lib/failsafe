@@ -60,7 +60,7 @@ public class BulkheadTest extends Testing {
       CheckedRunnable sleep = () -> {
         ignoreExceptions(() ->{
           System.out.println("Running sleep task " + (index + 1));
-          TimeUnit.SECONDS.sleep(1);
+          TimeUnit.MILLISECONDS.sleep(10);
           System.out.println("Finished sleep task " + (index + 1));
         });
       };
