@@ -52,7 +52,7 @@ public class BulkheadTest extends Testing {
   }
 
   public void testPermitAcquiredAfterWaitWithLargeQueue(){
-    Bulkhead<Object> bulkhead = Bulkhead.builder(1).withMaxWaitTime(Duration.ofSeconds(15)).build();
+    Bulkhead<Object> bulkhead = Bulkhead.builder(1).withMaxWaitTime(Duration.ofSeconds(1)).build();
     FailsafeExecutor<Object> exec = Failsafe.with(bulkhead);
     CompletableFuture<Void>[] tasks = new CompletableFuture[10];
     for(int i = 0; i < tasks.length; i++){
