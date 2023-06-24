@@ -18,10 +18,15 @@ package dev.failsafe.functional;
 import dev.failsafe.Bulkhead;
 import dev.failsafe.BulkheadFullException;
 import dev.failsafe.Failsafe;
+import dev.failsafe.FailsafeExecutor;
+import dev.failsafe.function.CheckedRunnable;
 import dev.failsafe.testing.Testing;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests various Bulkhead scenarios.
@@ -44,6 +49,27 @@ public class BulkheadTest extends Testing {
     }, Failsafe.with(bulkhead), ctx -> {
       return "test";
     }, "test");
+  }
+
+  public void testPermitAcquiredAfterWaitWithLargeQueue(){
+    Bulkhead<Object> bulkhead = Bulkhead.builder(1).withMaxWaitTime(Duration.ofSeconds(15)).build();
+    FailsafeExecutor<Object> exec = Failsafe.with(bulkhead);
+    CompletableFuture<Void>[] tasks = new CompletableFuture[10];
+    for(int i = 0; i < tasks.length; i++){
+      int index = i;
+      CheckedRunnable sleep = () -> {
+        ignoreExceptions(() ->{
+          System.out.println("Running sleep task " + (index + 1));
+          TimeUnit.MILLISECONDS.sleep(10);
+          System.out.println("Finished sleep task " + (index + 1));
+        });
+      };
+      CompletableFuture<Void> task = exec.runAsync(sleep);
+      task.whenComplete((r, ex) -> Assert.assertNull(ex));
+      tasks[i] = task;
+    }
+
+    CompletableFuture.allOf(tasks).join();
   }
 
   public void shouldThrowBulkheadFullExceptionAfterPermitsExceeded() {
