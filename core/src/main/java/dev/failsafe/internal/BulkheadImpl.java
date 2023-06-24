@@ -99,8 +99,10 @@ public class BulkheadImpl<R> implements Bulkhead<R> {
     if (permits < maxPermits) {
       permits += 1;
       CompletableFuture<Void> future = futures.pollFirst();
-      if (future != null)
+      if (future != null){
+        permits -= 1;
         future.complete(null);
+      }
     }
   }
 
