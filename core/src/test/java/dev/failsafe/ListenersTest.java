@@ -483,15 +483,17 @@ public class ListenersTest extends Testing {
   }
 
   public void shouldGetElapsedAttemptTime() {
+    Recorder recorder = new Recorder();
     RetryPolicy<Object> retryPolicy = RetryPolicy.builder()
       .withMaxAttempts(3)
       .handleResult(false)
-      .onRetry(e -> assertTrue(e.getElapsedAttemptTime().toMillis() >= 90))
+      .onRetryScheduled(e -> recorder.assertTrue(e.getElapsedAttemptTime().toMillis() >= 90))
       .build();
     Failsafe.with(retryPolicy).get(() -> {
       Thread.sleep(100);
       return false;
     });
+    recorder.throwFailures();
   }
 
   /**
