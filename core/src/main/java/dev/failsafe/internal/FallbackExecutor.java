@@ -40,8 +40,7 @@ public class FallbackExecutor<R> extends PolicyExecutor<R> {
   }
 
   /**
-   * Performs an execution by calling pre-execute else calling the supplier, applying a fallback if it fails, and
-   * calling post-execute.
+   * Performs an execution by applying the {@code innerFn}, applying a fallback if it fails, and calling post-execute.
    */
   @Override
   public Function<SyncExecutionInternal<R>, ExecutionResult<R>> apply(
@@ -70,7 +69,8 @@ public class FallbackExecutor<R> extends PolicyExecutor<R> {
   }
 
   /**
-   * Performs an async execution by calling pre-execute else calling the supplier and doing a post-execute.
+   * Performs an async execution by applying the {@code innerFn}, applying a fallback if it fails, and calling
+   * post-execute.
    */
   @Override
   public Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> applyAsync(
@@ -91,11 +91,13 @@ public class FallbackExecutor<R> extends PolicyExecutor<R> {
       CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
       Callable<R> callable = () -> {
         try {
-          CompletableFuture<R> fallbackFuture = fallback.applyStage(result.getResult(), result.getException(), execution);
+          CompletableFuture<R> fallbackFuture = fallback.applyStage(result.getResult(), result.getException(),
+            execution);
           fallbackFuture.whenComplete((innerResult, exception) -> {
             if (exception instanceof CompletionException)
               exception = exception.getCause();
-            ExecutionResult<R> r = exception == null ? result.withResult(innerResult) : ExecutionResult.exception(exception);
+            ExecutionResult<R> r =
+              exception == null ? result.withResult(innerResult) : ExecutionResult.exception(exception);
             promise.complete(r);
           });
         } catch (Throwable t) {
