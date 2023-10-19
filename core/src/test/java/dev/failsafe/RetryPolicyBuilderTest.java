@@ -99,7 +99,7 @@ public class RetryPolicyBuilderTest extends Asserts {
     assertNull(rpb.config.delayMax);
   }
 
-  public void shouldDeplaceWithBackoffDelay() {
+  public void shouldReplaceWithBackoffDelay() {
     // Replace fixed with backoff delay
     RetryPolicyBuilder<Object> rpb = RetryPolicy.builder()
       .withDelay(Duration.ofMillis(5))
