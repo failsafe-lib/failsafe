@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        java: [ 8, 11, 17 ]
+        java: [ 8, 11, 17, 21 ]
         jdk: ['temurin', 'zulu']
 
     name: Java ${{ matrix.java }} ${{ matrix.jdk }}
