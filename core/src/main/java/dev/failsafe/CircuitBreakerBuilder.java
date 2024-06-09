@@ -271,7 +271,7 @@ public class CircuitBreakerBuilder<R>
    * occur when in a HALF_OPEN state in order to close the circuit, else the circuit is re-opened when a failure
    * occurs.
    *
-   * @param successThreshold The number of consecutive successful executions that must occur in order to open the
+   * @param successThreshold The number of consecutive successful executions that must occur in order to close the
    * circuit
    * @throws IllegalArgumentException if {@code successThreshold} < 1
    * @see CircuitBreakerConfig#getSuccessThreshold()
@@ -285,7 +285,7 @@ public class CircuitBreakerBuilder<R>
    * HALF_OPEN state in order to close the circuit. For example: 5, 10 would close the circuit if 5 out of the last 10
    * executions were successful.
    *
-   * @param successThreshold The number of successful executions that must occur in order to open the circuit
+   * @param successThreshold The number of successful executions that must occur in order to close the circuit
    * @param successThresholdingCapacity The capacity for storing execution results when performing success thresholding
    * @throws IllegalArgumentException if {@code successThreshold} < 1, {@code successThresholdingCapacity} < 1, or
    * {@code successThreshold} > {@code successThresholdingCapacity}
