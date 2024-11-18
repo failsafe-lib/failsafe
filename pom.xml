@@ -170,7 +170,7 @@
             <Implementation-Version>${project.version}</Implementation-Version>
             <Bundle-Name>Failsafe</Bundle-Name>
             <Bundle-SymbolicName>dev.failsafe</Bundle-SymbolicName>
-            <Automatic-Module-Name>dev.failsafe</Automatic-Module-Name>
+            <Automatic-Module-Name>${java.module.name}</Automatic-Module-Name>
             <Export-Package>dev.failsafe*;version=1.0</Export-Package>
             <Import-Package>*</Import-Package>
           </instructions>
