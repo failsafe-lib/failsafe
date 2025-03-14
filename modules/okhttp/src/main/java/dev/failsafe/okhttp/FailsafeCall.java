@@ -96,6 +96,7 @@ public final class FailsafeCall {
   /**
    * Returns a clone of the FailsafeCall.
    */
+  @Override
   public FailsafeCall clone() {
     return new FailsafeCall(failsafe, initialCall.clone());
   }
