@@ -54,6 +54,12 @@
       <version>2.32.0</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>dev.failsafe</groupId>
+          <artifactId>failsafe</artifactId>
+          <version>3.3.3-SNAPSHOT</version>
+          <scope>compile</scope>
+      </dependency>
   </dependencies>
 
   <build>

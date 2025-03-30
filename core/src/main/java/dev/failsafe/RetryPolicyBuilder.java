@@ -31,6 +31,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static dev.failsafe.FailurePredicates.failurePredicateFor;
+import static dev.failsafe.FailurePredicates.resultPredicateFor;
+
 /**
  * Builds {@link RetryPolicy} instances.
  * <ul>
