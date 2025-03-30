@@ -211,4 +211,12 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   public PolicyExecutor<R> toExecutor(int policyIndex) {
     return new CircuitBreakerExecutor<>(this, policyIndex);
   }
+
+  //Moved acquirePermit() from interface to implementation
+  @Override
+  public void acquirePermit() {
+    if (!tryAcquirePermit())
+      throw new CircuitBreakerOpenException(this);
+  }
+
 }
