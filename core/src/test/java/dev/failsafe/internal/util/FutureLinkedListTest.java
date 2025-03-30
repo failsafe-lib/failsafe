@@ -34,11 +34,11 @@ public class FutureLinkedListTest {
     CompletableFuture<Void> f3 = list.add();
 
     // Then
-    assertNull(list.head.previous);
-    assertEquals(list.head.future, f1);
-    assertEquals(list.tail.future, f3);
-    assertEquals(list.head.next.future, f2);
-    assertEquals(list.tail.previous.future, f2);
+    assertNull(list.headNode.previousNode);
+    assertEquals(list.headNode.future, f1);
+    assertEquals(list.tailNode.future, f3);
+    assertEquals(list.headNode.nextNode.future, f2);
+    assertEquals(list.tailNode.previousNode.future, f2);
   }
 
   public void testPollFirst() {
@@ -55,13 +55,13 @@ public class FutureLinkedListTest {
 
     // When / Then
     assertEquals(list.pollFirst(), f1);
-    assertEquals(list.head.future, f2);
-    assertNull(list.head.previous);
+    assertEquals(list.headNode.future, f2);
+    assertNull(list.headNode.previousNode);
     assertEquals(list.pollFirst(), f2);
-    assertEquals(list.head.future, f3);
-    assertNull(list.head.previous);
+    assertEquals(list.headNode.future, f3);
+    assertNull(list.headNode.previousNode);
     assertEquals(list.pollFirst(), f3);
-    assertNull(list.head);
+    assertNull(list.headNode);
     assertNull(list.pollFirst());
   }
 
@@ -74,18 +74,18 @@ public class FutureLinkedListTest {
 
     // When / Then
     f1.complete(null);
-    assertEquals(list.head.future, f2);
-    assertNull(list.head.previous);
-    assertEquals(list.tail.previous.future, f2);
+    assertEquals(list.headNode.future, f2);
+    assertNull(list.headNode.previousNode);
+    assertEquals(list.tailNode.previousNode.future, f2);
 
     f2.complete(null);
-    assertEquals(list.head.future, f3);
-    assertEquals(list.tail.future, f3);
-    assertNull(list.head.previous);
-    assertNull(list.head.next);
+    assertEquals(list.headNode.future, f3);
+    assertEquals(list.tailNode.future, f3);
+    assertNull(list.headNode.previousNode);
+    assertNull(list.headNode.nextNode);
 
     f3.complete(null);
-    assertNull(list.head);
-    assertNull(list.tail);
+    assertNull(list.headNode);
+    assertNull(list.tailNode);
   }
 }
