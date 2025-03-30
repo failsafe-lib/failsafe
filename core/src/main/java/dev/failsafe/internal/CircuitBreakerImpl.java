@@ -155,25 +155,14 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
   protected void transitionTo(State newState, EventListener<CircuitBreakerStateChangedEvent> listener,
-    ExecutionContext<R> context) {
+                              ExecutionContext<R> context) {
     boolean transitioned = false;
     State currentState;
 
     synchronized (this) {
       currentState = getState();
-      if (!getState().equals(newState)) {
-        switch (newState) {
-          case CLOSED:
-            state.set(new ClosedState<>(this));
-            break;
-          case OPEN:
-            Duration computedDelay = computeDelay(context);
-            state.set(new OpenState<>(this, state.get(), computedDelay != null ? computedDelay : config.getDelay()));
-            break;
-          case HALF_OPEN:
-            state.set(new HalfOpenState<>(this));
-            break;
-        }
+      if (!currentState.equals(newState)) {
+        updateStateBasedOn(newState, context);
         transitioned = true;
       }
     }
@@ -185,6 +174,23 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
       }
     }
   }
+
+  // Extracted from the switch block in transitionTo
+  private void updateStateBasedOn(State newState, ExecutionContext<R> context) {
+    switch (newState) {
+      case CLOSED:
+        state.set(new ClosedState<>(this));
+        break;
+      case OPEN:
+        Duration computedDelay = computeDelay(context);
+        state.set(new OpenState<>(this, state.get(), computedDelay != null ? computedDelay : config.getDelay()));
+        break;
+      case HALF_OPEN:
+        state.set(new HalfOpenState<>(this));
+        break;
+    }
+  }
+
 
   /**
    * Records an execution failure.
