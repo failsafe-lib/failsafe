@@ -96,14 +96,30 @@ public class BulkheadImpl<R> implements Bulkhead<R> {
 
   @Override
   public synchronized void releasePermit() {
-    if (permits < maxPermits) {
-      permits += 1;
-      CompletableFuture<Void> future = futures.pollFirst();
-      if (future != null){
-        permits -= 1;
-        future.complete(null);
+      if (permits < maxPermits) {
+          permits += 1;
+          /*
+           * It is possible to get future from the list that already had been completed. This
+           * happens because setting future to 'completed' state happens before (and not
+           * atomically with) removing future from the list. Handle this by pulling futures from
+           * the list until we find one we can complete (or reach the end of the list). Not doing
+           * this may result in 'dandling' messages in the list that are never completed. For some
+           * details see FutureLinkedList.add - how it returns a future that weill remove entry
+           * from the list when it is completed. And also see BulkheadExecutor.preExecuteAsync
+           * that calls acquirePermitAsync and gets that future in response.
+           */
+          while (true) {
+              CompletableFuture<Void> future = futures.pollFirst();
+              if (future == null) {
+                  break;
+              }
+              permits -= 1;
+              if (future.complete(null)) {
+                  break;
+              }
+              permits += 1;
+          }
       }
-    }
   }
 
   @Override
