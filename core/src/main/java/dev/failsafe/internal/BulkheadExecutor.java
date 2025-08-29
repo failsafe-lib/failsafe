@@ -24,6 +24,7 @@ import dev.failsafe.spi.PolicyExecutor;
 import dev.failsafe.spi.Scheduler;
 
 import java.time.Duration;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -62,22 +63,33 @@ public class BulkheadExecutor<R> extends PolicyExecutor<R> {
     CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
     CompletableFuture<Void> acquireFuture = bulkhead.acquirePermitAsync();
     acquireFuture.whenComplete((result, error) -> {
-      // Signal for execution to proceed
-      promise.complete(ExecutionResult.none());
+      if (error instanceof CancellationException) {
+        // Cancellation of acquireFuture future means either cancellation in the scheduler (in which case we probably
+        // do not care about the result too much), or cancellation because we reached maxWaitTime (see below) - in which case
+        // we want to inform the user with BulkheadFullException.
+        promise.complete(ExecutionResult.exception(new BulkheadFullException(bulkhead)));
+      } else {
+        // Signal for execution to proceed
+        promise.complete(ExecutionResult.none());
+      }
     });
 
     if (!promise.isDone()) {
       try {
         // Schedule bulkhead permit timeout
         Future<?> timeoutFuture = scheduler.schedule(() -> {
-          promise.complete(ExecutionResult.exception(new BulkheadFullException(bulkhead)));
+          // Note: we cannot call `promise.complete` here directly. Doing so would result in a following race condition:
+          // * `promise` would be considered failed (i.e. caller would think thar no permit was acquired)
+          // * but some other thread may release permit before we call `acquireFuture.cancel` - resulting in `acquireFuture` being completed
+          // successfully (and permit acquired). But since `promise` is already completed that fact is ignored.
+          // This discrepancy would lead to permits 'leaking'. So instead we make `acquireFuture.whenComplete` be the only way
+          // to complete `promise` and here we just signal to that code that `promise` should return BulkheadFullException.
           acquireFuture.cancel(true);
           return null;
         }, maxWaitTime.toNanos(), TimeUnit.NANOSECONDS);
 
         // Propagate outer cancellations to the promise, bulkhead acquire future, and timeout future
         future.setCancelFn(this, (mayInterrupt, cancelResult) -> {
-          promise.complete(cancelResult);
           acquireFuture.cancel(mayInterrupt);
           timeoutFuture.cancel(mayInterrupt);
         });
