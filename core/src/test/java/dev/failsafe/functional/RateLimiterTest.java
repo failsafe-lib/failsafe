@@ -94,7 +94,7 @@ public class RateLimiterTest extends Testing {
       runAsync(() -> {
         limiter.tryAcquirePermits(50, Duration.ofMinutes(1)); // limiter should now be well over its max permits
       });
-      Thread.sleep(100);
+      Thread.sleep(150);
     }, Failsafe.with(limiter), ctx -> {
     }, RateLimitExceededException.class);
   }
