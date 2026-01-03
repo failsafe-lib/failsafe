@@ -99,6 +99,7 @@ public final class FailsafeCall<R> {
   /**
    * Returns a clone of the FailsafeCall.
    */
+  @Override
   public FailsafeCall<R> clone() {
     return new FailsafeCall<>(failsafe, initialCall.clone());
   }
