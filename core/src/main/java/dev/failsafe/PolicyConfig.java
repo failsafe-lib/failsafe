@@ -28,6 +28,9 @@ public abstract class PolicyConfig<R> {
   volatile EventListener<ExecutionCompletedEvent<R>> successListener;
   volatile EventListener<ExecutionCompletedEvent<R>> failureListener;
 
+  /** Indicates whether exceptions are checked by a configured failure condition */
+  protected boolean exceptionsChecked;
+
   protected PolicyConfig() {
   }
 

@@ -26,12 +26,12 @@ import java.util.concurrent.CompletableFuture;
  * @author Jonathan Halterman
  */
 public final class FutureLinkedList {
-  Node head;
-  Node tail;
+  Node headNode;
+  Node tailNode;
 
   static class Node {
-    Node previous;
-    Node next;
+    Node previousNode;
+    Node nextNode;
     CompletableFuture<Void> future;
   }
 
@@ -44,12 +44,12 @@ public final class FutureLinkedList {
     node.future = new CompletableFuture<>();
     node.future.whenComplete((result, error) -> remove(node));
 
-    if (head == null)
-      head = tail = node;
+    if (headNode == null)
+      headNode = tailNode = node;
     else {
-      tail.next = node;
-      node.previous = tail;
-      tail = node;
+      tailNode.nextNode = node;
+      node.previousNode = tailNode;
+      tailNode = node;
     }
     return node.future;
   }
@@ -58,23 +58,23 @@ public final class FutureLinkedList {
    * Returns and removes the first future in the list, else returns {@code null} if the list is empty.
    */
   public synchronized CompletableFuture<Void> pollFirst() {
-    Node previousHead = head;
-    if (head != null) {
-      head = head.next;
-      if (head != null)
-        head.previous = null;
+    Node previousNodeHead = headNode;
+    if (headNode != null) {
+      headNode = headNode.nextNode;
+      if (headNode != null)
+        headNode.previousNode = null;
     }
-    return previousHead == null ? null : previousHead.future;
+    return previousNodeHead == null ? null : previousNodeHead.future;
   }
 
   private synchronized void remove(Node node) {
-    if (node.previous != null)
-      node.previous.next = node.next;
-    if (node.next != null)
-      node.next.previous = node.previous;
-    if (head == node)
-      head = node.next;
-    if (tail == node)
-      tail = node.previous;
+    if (node.previousNode != null)
+      node.previousNode.nextNode = node.nextNode;
+    if (node.nextNode != null)
+      node.nextNode.previousNode = node.previousNode;
+    if (headNode == node)
+      headNode = node.nextNode;
+    if (tailNode == node)
+      tailNode = node.previousNode;
   }
 }

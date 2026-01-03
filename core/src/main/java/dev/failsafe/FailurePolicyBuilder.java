@@ -23,6 +23,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static dev.failsafe.FailurePredicates.resultPredicateFor;
+import static dev.failsafe.FailurePredicates.*;
+
 /**
  * A Policy that allows configurable conditions to determine whether an execution is a failure.
  * <ul>
@@ -134,54 +137,5 @@ public abstract class FailurePolicyBuilder<S, C extends FailurePolicyConfig<R>, 
     Assert.notNull(resultPredicate, "resultPredicate");
     config.failureConditions.add(resultPredicateFor(resultPredicate));
     return (S) this;
-  }
-
-  /**
-   * Returns a predicate that evaluates whether the {@code result} equals an execution result.
-   */
-  static <R> CheckedBiPredicate<R, Throwable> resultPredicateFor(R result) {
-    return (t, u) -> result == null ? t == null && u == null : Objects.equals(result, t);
-  }
-
-  /**
-   * Returns a predicate that evaluates the {@code failurePredicate} against a failure.
-   */
-  @SuppressWarnings("unchecked")
-  static <R> CheckedBiPredicate<R, Throwable> failurePredicateFor(
-    CheckedPredicate<? extends Throwable> failurePredicate) {
-    return (t, u) -> u != null && ((CheckedPredicate<Throwable>) failurePredicate).test(u);
-  }
-
-  /**
-   * Returns a predicate that evaluates the {@code resultPredicate} against a result, when present.
-   * <p>
-   * Short-circuits to false without invoking {@code resultPredicate}, when result is not present (i.e.
-   * BiPredicate.test(null, Throwable)).
-   */
-  static <R> CheckedBiPredicate<R, Throwable> resultPredicateFor(CheckedPredicate<R> resultPredicate) {
-    return (t, u) -> {
-      if (u == null) {
-        return resultPredicate.test(t);
-      } else {
-        // resultPredicate is only defined over the success type.
-        // It doesn't know how to handle a failure of type Throwable,
-        // so we return false here.
-        return false;
-      }
-    };
-  }
-
-  /**
-   * Returns a predicate that returns whether any of the {@code failures} are assignable from an execution failure.
-   */
-  static <R> CheckedBiPredicate<R, Throwable> failurePredicateFor(List<Class<? extends Throwable>> failures) {
-    return (t, u) -> {
-      if (u == null)
-        return false;
-      for (Class<? extends Throwable> failureType : failures)
-        if (failureType.isAssignableFrom(u.getClass()))
-          return true;
-      return false;
-    };
   }
 }

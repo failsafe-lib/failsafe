@@ -14,8 +14,16 @@
   <properties>
     <java.module.name>${project.groupId}.core</java.module.name>
   </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>7.1.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-  <build>
+    <build>
     <plugins>
       <plugin>
         <groupId>org.moditect</groupId>

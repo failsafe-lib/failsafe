@@ -24,8 +24,11 @@ public final class RandomDelay {
   private RandomDelay() {
   }
 
-  public static long randomDelayInRange(long delayMin, long delayMax, double random) {
-    return (long) (random * (delayMax - delayMin)) + delayMin;
+  // Refactored: Introduce explaining variable
+  public static long randomDelayInRange(long minDelay, long maxDelay, double random) {
+    long delayRange = maxDelay - minDelay;
+    long randomOffset = (long) (delayRange * random);
+    return minDelay + randomOffset;
   }
 
   public static long randomDelay(long delay, long jitter, double random) {
