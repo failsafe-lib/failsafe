@@ -67,6 +67,18 @@ public final class FutureLinkedList {
     return previousHead == null ? null : previousHead.future;
   }
 
+  /*
+   * This looks dodgy: we are 'leaking' reference to the node object via future.whenComplete, so
+   * this can end up being called for a node that has already been removed. This could have caused
+   * problems. But in reality it currently would not because the only way to remove a node is via
+   * pollFirst - i.e. by polling from the head of the list. This means that if node passed to this
+   * function has already been removed it would imply that it's 'previous' field is always null
+   * (it was in the head of the list before removal). And it's 'next' points to current head of
+   * the list, so when we replace node.next.previous with node.previous we always replace null
+   * with null. This whole assumption would break it this list allowed to add from the head of the
+   * list, or remove from the tail or middle. So this is somewhat fragile, but currently seems to
+   * be working fine.
+  */
   private synchronized void remove(Node node) {
     if (node.previous != null)
       node.previous.next = node.next;

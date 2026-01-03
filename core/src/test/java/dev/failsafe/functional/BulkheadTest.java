@@ -25,8 +25,14 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests various Bulkhead scenarios.
@@ -95,5 +101,47 @@ public class BulkheadTest extends Testing {
     // When / Then
     testRunFailure(Failsafe.with(bulkhead), ctx -> {
     }, BulkheadFullException.class);
+  }
+
+  @Test
+  public void testPermitsLeak() throws InterruptedException {
+    // We verify against leak of permits because of a race condition that only happens when maxWaitTime is not zero.
+    Bulkhead<Object> bulkhead = Bulkhead.builder(1).withMaxWaitTime(Duration.ofMillis(1)).build();
+    FailsafeExecutor<Object> failsafe = Failsafe.with(bulkhead);
+
+    AtomicInteger errors = new AtomicInteger();
+    List<Thread> threads = new ArrayList<>();
+    for (int i = 0; i < 30; i++) {
+      threads.add(new Thread(() -> {
+        for (int j = 0; j < 30; j++) {
+          try {
+            failsafe.getStageAsync(() -> {
+              try {
+                Thread.sleep(10);
+              } catch (InterruptedException e) {
+                log(getClass(), "Interrupted sleep", e);
+              }
+              return null;
+            }).join(); // Submit work to the bulkhead
+          } catch (CompletionException e) {
+            errors.incrementAndGet();
+          }
+        }
+      }));
+    }
+
+    // Start and join the threads
+    threads.forEach(Thread::start);
+    for (Thread t : threads) {
+      t.join();
+    }
+
+    // Wait for the executor to finish all work. 250ms is plenty of time to finish the work submitted above.
+    Thread.sleep(250);
+
+    // Make sure this run doesn't fail
+    failsafe.getStageAsync(() -> null).join();
+
+    assertTrue(errors.get() > 0, "Should have some errors because maxWaitTime is very small");
   }
 }
