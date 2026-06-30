@@ -32,6 +32,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static dev.failsafe.Functions.*;
+import static dev.failsafe.FunctionAdapters.*;
 
 /**
  * <p>

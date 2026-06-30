@@ -25,7 +25,7 @@ import dev.failsafe.internal.util.Assert;
 
 import java.util.concurrent.CompletionStage;
 
-import static dev.failsafe.Functions.toFn;
+import static dev.failsafe.FunctionAdapters.toFn;
 
 /**
  * A Policy that handles failures using a fallback function or result.
