@@ -24,6 +24,8 @@ import dev.failsafe.spi.PolicyExecutor;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A {@link CircuitBreaker} implementation.
@@ -34,6 +36,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * @see CircuitBreakerOpenException
  */
 public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R>, DelayablePolicy<R> {
+  private static final Logger LOGGER = Logger.getLogger(CircuitBreakerImpl.class.getName());
+
   private final CircuitBreakerConfig<R> config;
 
   /** Writes guarded by "this" */
@@ -154,26 +158,15 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
   /**
    * Transitions to the {@code newState} if not already in that state and calls any associated event listener.
    */
-  protected void transitionTo(State newState, EventListener<CircuitBreakerStateChangedEvent> listener,
+  protected void transitionTo(State newState, EventListener<CircuitBreakerStateChangedEvent> listener, /*extracted method for solo responsibility-MITI*/
     ExecutionContext<R> context) {
     boolean transitioned = false;
     State currentState;
 
     synchronized (this) {
       currentState = getState();
-      if (!getState().equals(newState)) {
-        switch (newState) {
-          case CLOSED:
-            state.set(new ClosedState<>(this));
-            break;
-          case OPEN:
-            Duration computedDelay = computeDelay(context);
-            state.set(new OpenState<>(this, state.get(), computedDelay != null ? computedDelay : config.getDelay()));
-            break;
-          case HALF_OPEN:
-            state.set(new HalfOpenState<>(this));
-            break;
-        }
+      if (!currentState.equals(newState)) {
+        state.set(createState(newState, context));
         transitioned = true;
       }
     }
@@ -181,8 +174,35 @@ public class CircuitBreakerImpl<R> implements CircuitBreaker<R>, FailurePolicy<R
     if (transitioned && listener != null) {
       try {
         listener.accept(new CircuitBreakerStateChangedEvent(currentState));
-      } catch (Throwable ignore) {
+      } catch (Throwable t) {
+        // PMD: EmptyCatchBlock — previously swallowed silently. A misbehaving state-change
+        // listener should not be invisible; logging preserves "don't propagate to the caller"
+        // semantics while keeping the failure observable for diagnosis.
+        LOGGER.log(Level.WARNING, "CircuitBreaker state-change listener threw an exception", t);
       }
+    }
+  }
+
+  /**
+   * Factory method that builds the {@link CircuitState} implementation corresponding to {@code newState}.
+   * <p>
+   * Extracting this from {@link #transitionTo} resolves the prior non-exhaustive {@code switch} (PMD:
+   * NonExhaustiveSwitch) by making {@link State} coverage explicit and enforced at compile time, and gives
+   * state-construction a single, testable seam independent of transition/locking concerns.
+   *
+   * @throws IllegalArgumentException if {@code newState} is not a recognized transition target
+   */
+  protected CircuitState<R> createState(State newState, ExecutionContext<R> context) {
+    switch (newState) {
+      case CLOSED:
+        return new ClosedState<>(this);
+      case OPEN:
+        Duration computedDelay = computeDelay(context);
+        return new OpenState<>(this, state.get(), computedDelay != null ? computedDelay : config.getDelay());
+      case HALF_OPEN:
+        return new HalfOpenState<>(this);
+      default:
+        throw new IllegalArgumentException("Unexpected circuit breaker state: " + newState);
     }
   }
 

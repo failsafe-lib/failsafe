@@ -1,0 +1,229 @@
+core/src/main/java/dev/failsafe/AsyncExecutionImpl.java:19:	UnnecessaryImport:	Unused import 'dev.failsafe.spi.*'
+core/src/main/java/dev/failsafe/AsyncExecutionImpl.java:45:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/AsyncExecutionImpl.java:56:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/AsyncExecutionImpl.java:148:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/AsyncExecutionImpl.java:153:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/AsyncExecutionImpl.java:156:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Bulkhead.java:92:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/CallImpl.java:25:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/CallImpl.java:40:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/CircuitBreaker.java:121:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/CircuitBreakerConfig.java:50:	UncommentedEmptyConstructor:	Document empty constructor
+core/src/main/java/dev/failsafe/DelayablePolicyConfig.java:34:	UncommentedEmptyConstructor:	Document empty constructor
+core/src/main/java/dev/failsafe/ExecutionImpl.java:43:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:56:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:58:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:60:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:62:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:64:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:66:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:68:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/ExecutionImpl.java:126:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/ExecutionImpl.java:181:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/ExecutionImpl.java:181:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/ExecutionImpl.java:195:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/ExecutionImpl.java:195:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Failsafe.java:29:	UseUtilityClass:	All members are static. Consider adding a private no-args constructor to prevent instantiation.
+core/src/main/java/dev/failsafe/FailsafeException.java:27:	UncommentedEmptyConstructor:	Document empty constructor
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:20:	UnnecessaryImport:	Unused import 'dev.failsafe.function.*'
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:55:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:56:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:57:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:353:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:355:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:413:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:415:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailsafeExecutor.java:417:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailurePolicyBuilder.java:180:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailurePolicyBuilder.java:181:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FailurePolicyBuilder.java:183:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/FallbackConfig.java:45:	UncommentedEmptyConstructor:	Document empty constructor
+core/src/main/java/dev/failsafe/Functions.java:18:	UnnecessaryImport:	Unused import 'dev.failsafe.function.*'
+core/src/main/java/dev/failsafe/Functions.java:20:	UnnecessaryImport:	Unused import 'dev.failsafe.spi.*'
+core/src/main/java/dev/failsafe/Functions.java:31:	UseUtilityClass:	All members are static. Consider adding a private no-args constructor to prevent instantiation.
+core/src/main/java/dev/failsafe/Functions.java:47:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:62:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:84:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:109:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:145:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:149:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:155:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:200:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:202:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:215:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:217:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:251:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:264:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/Functions.java:273:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/Functions.java:275:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/PolicyConfig.java:28:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/PolicyConfig.java:29:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/PolicyConfig.java:31:	UncommentedEmptyConstructor:	Document empty constructor
+core/src/main/java/dev/failsafe/RateLimiter.java:187:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/RetryPolicyConfig.java:58:	UncommentedEmptyConstructor:	Document empty constructor
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:26:	UnnecessaryImport:	Unused import 'java.util.concurrent.atomic.AtomicReference'
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:54:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:81:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:84:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:99:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:193:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/SyncExecutionImpl.java:195:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/event/EventListener.java:33:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/event/EventListener.java:33:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/BulkheadExecutor.java:84:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/BulkheadImpl.java:56:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/internal/BulkheadImpl.java:74:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/BurstyRateLimiterStats.java:68:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/BurstyRateLimiterStats.java:74:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CircuitBreakerImpl.java:18:	UnnecessaryImport:	Unused import 'dev.failsafe.*'
+core/src/main/java/dev/failsafe/internal/CircuitBreakerImpl.java:149:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CircuitBreakerImpl.java:151:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CircuitBreakerImpl.java:165:	NonExhaustiveSwitch:	Switch statements or expressions should be exhaustive, add a default case (or missing enum branches)
+core/src/main/java/dev/failsafe/internal/CircuitBreakerImpl.java:184:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/internal/CircuitBreakerImpl.java:184:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/CircuitState.java:20:	UnnecessaryImport:	Unused import 'dev.failsafe.CircuitBreakerOpenException'
+core/src/main/java/dev/failsafe/internal/CircuitState.java:34:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/CircuitState.java:64:	UncommentedEmptyMethodBody:	Document empty method body
+core/src/main/java/dev/failsafe/internal/CircuitState.java:67:	UncommentedEmptyMethodBody:	Document empty method body
+core/src/main/java/dev/failsafe/internal/CircuitState.java:72:	UncommentedEmptyMethodBody:	Document empty method body
+core/src/main/java/dev/failsafe/internal/CircuitStats.java:28:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CircuitStats.java:38:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CircuitStats.java:40:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/ClosedState.java:53:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/ClosedState.java:62:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/ClosedState.java:64:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:28:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:29:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:30:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:31:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:53:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:54:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:114:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:116:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:123:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:125:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:128:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:130:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/CountingCircuitStats.java:144:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/DefaultCircuitStats.java:7:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:19:	UnnecessaryImport:	Unused import 'dev.failsafe.spi.*'
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:52:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:56:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:62:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:82:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:84:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:86:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:89:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:98:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:103:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:111:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/FallbackExecutor.java:121:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/HalfOpenState.java:87:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/HalfOpenState.java:89:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/HalfOpenState.java:98:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/HalfOpenState.java:100:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RateLimiterExecutor.java:64:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RateLimiterExecutor.java:79:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/RateLimiterImpl.java:57:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RateLimiterImpl.java:75:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RateLimiterImpl.java:77:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:21:	UnnecessaryImport:	Unused import 'dev.failsafe.spi.*'
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:45:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:46:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:48:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:77:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:81:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:85:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:93:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:102:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:110:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:126:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:142:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:164:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:186:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:220:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:237:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:252:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:254:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:275:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:277:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:283:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:289:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:291:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyExecutor.java:300:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyImpl.java:62:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/RetryPolicyImpl.java:63:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/internal/RetryPolicyImpl.java:63:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/SmoothRateLimiterStats.java:59:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/TimedCircuitStats.java:35:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/TimedCircuitStats.java:42:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/TimedCircuitStats.java:117:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/TimedCircuitStats.java:189:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:21:	UnnecessaryImport:	Unused import 'dev.failsafe.spi.*'
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:82:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:87:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:94:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:146:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:163:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/TimeoutExecutor.java:169:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/Assert.java:29:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/Assert.java:34:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/Assert.java:40:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:37:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:38:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:51:	MissingOverride:	The method 'newThread(Runnable)' is missing an @Override annotation.
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:61:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:76:	OverrideBothEqualsAndHashCodeOnComparable:	When implementing Comparable, both equals() and hashCode() should be overridden
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:77:	CompareObjectsWithEquals:	Use equals() to compare object references.
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:90:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:92:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:102:	CloseResource:	Ensure that resources like this ScheduledThreadPoolExecutor object are closed after use
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:113:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:118:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:120:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:131:	CloseResource:	Ensure that resources like this ExecutorService object are closed after use
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:142:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:155:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:157:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/DelegatingScheduler.java:161:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:48:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:48:	AssignmentInOperand:	Avoid assignment to tail in operand
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:65:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:72:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:74:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:75:	CompareObjectsWithEquals:	Use equals() to compare object references.
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:76:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:77:	CompareObjectsWithEquals:	Use equals() to compare object references.
+core/src/main/java/dev/failsafe/internal/util/FutureLinkedList.java:78:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/internal/util/Maths.java:37:	UselessParentheses:	Useless parentheses around `input / interval`.
+core/src/main/java/dev/failsafe/spi/DefaultScheduledFuture.java:43:	OverrideBothEqualsAndHashCodeOnComparable:	When implementing Comparable, both equals() and hashCode() should be overridden
+core/src/main/java/dev/failsafe/spi/DelayablePolicy.java:53:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/spi/DelayablePolicy.java:54:	AvoidInstanceofChecksInCatchClause:	An instanceof check is being performed on the caught exception. Create a separate catch clause for RuntimeException.
+core/src/main/java/dev/failsafe/spi/DelayablePolicy.java:55:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/DelayablePolicy.java:57:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/ExecutionResult.java:209:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/ExecutionResult.java:211:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:75:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:94:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:99:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:101:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:103:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:130:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:153:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:173:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailsafeFuture.java:175:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailurePolicy.java:49:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailurePolicy.java:54:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/FailurePolicy.java:55:	EmptyCatchBlock:	Avoid empty catch blocks
+core/src/main/java/dev/failsafe/spi/FailurePolicy.java:55:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:107:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:109:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:117:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:183:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:194:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:196:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:198:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:205:	UncommentedEmptyMethodBody:	Document empty method body
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:224:	AvoidCatchingGenericException:	Avoid catching Throwable in try-catch block
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:234:	ControlStatementBraces:	This statement should have braces
+core/src/main/java/dev/failsafe/spi/PolicyExecutor.java:239:	ControlStatementBraces:	This statement should have braces
