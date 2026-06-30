@@ -28,9 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import static dev.failsafe.internal.util.RandomDelay.randomDelay;
-import static dev.failsafe.internal.util.RandomDelay.randomDelayInRange;
-
 /**
  * A PolicyExecutor that handles failures according to a {@link RetryPolicy}.
  *
@@ -44,8 +41,8 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
   // Mutable state
   private volatile int failedAttempts;
   private volatile boolean retriesExceeded;
-  /** The last fixed, backoff, random or computed delay time in nanoseconds. */
-  private volatile long lastDelayNanos;
+  /** Extracted: owns the delay-computation pipeline and its state (see RetryDelayCalculator). */
+  private final RetryDelayCalculator<R> delayCalculator;
 
   // Handlers
   private final EventHandler<R> abortHandler;
@@ -63,6 +60,7 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
     this.retriesExceededHandler = EventHandler.ofExecutionCompleted(config.getRetriesExceededListener());
     this.retryHandler = EventHandler.ofExecutionAttempted(config.getRetryListener());
     this.retryScheduledHandler = EventHandler.ofExecutionScheduled(config.getRetryScheduledListener());
+    this.delayCalculator = new RetryDelayCalculator<>(config);
   }
 
   @Override
@@ -220,23 +218,11 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
       failedAttemptHandler.handle(result, context);
 
     failedAttempts++;
-    long delayNanos = lastDelayNanos;
 
-    // Determine the computed delay
-    Duration computedDelay = retryPolicy.computeDelay(context);
-    if (computedDelay != null) {
-      delayNanos = computedDelay.toNanos();
-    } else {
-      // Determine the fixed or random delay
-      delayNanos = getFixedOrRandomDelayNanos(delayNanos);
-      delayNanos = adjustForBackoff(context, delayNanos);
-      lastDelayNanos = delayNanos;
-    }
-
-    if (delayNanos != 0)
-      delayNanos = adjustForJitter(delayNanos);
+    // Determine the delay to use before the next attempt
+    Duration userComputedDelay = retryPolicy.computeDelay(context);
     long elapsedNanos = context.getElapsedTime().toNanos();
-    delayNanos = adjustForMaxDuration(delayNanos, elapsedNanos);
+    long delayNanos = delayCalculator.computeDelayNanos(userComputedDelay, context, elapsedNanos);
 
     // Calculate result
     boolean maxRetriesExceeded = config.getMaxRetries() != -1 && failedAttempts > config.getMaxRetries();
@@ -264,41 +250,5 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
   public CompletableFuture<ExecutionResult<R>> onFailureAsync(ExecutionContext<R> context, ExecutionResult<R> result,
     Scheduler scheduler, FailsafeFuture<R> future) {
     return super.onFailureAsync(context, result.withNotComplete(), scheduler, future);
-  }
-
-  private long getFixedOrRandomDelayNanos(long delayNanos) {
-    Duration delay = config.getDelay();
-    Duration delayMin = config.getDelayMin();
-    Duration delayMax = config.getDelayMax();
-
-    if (delayNanos == 0 && delay != null && !delay.equals(Duration.ZERO))
-      delayNanos = delay.toNanos();
-    else if (delayMin != null && delayMax != null)
-      delayNanos = randomDelayInRange(delayMin.toNanos(), delayMax.toNanos(), Math.random());
-    return delayNanos;
-  }
-
-  private long adjustForBackoff(ExecutionContext<R> context, long delayNanos) {
-    if (context.getAttemptCount() != 1 && config.getMaxDelay() != null)
-      delayNanos = (long) Math.min(delayNanos * config.getDelayFactor(), config.getMaxDelay().toNanos());
-    return delayNanos;
-  }
-
-  private long adjustForJitter(long delayNanos) {
-    if (config.getJitter() != null)
-      delayNanos = randomDelay(delayNanos, config.getJitter().toNanos(), Math.random());
-    else if (config.getJitterFactor() > 0.0)
-      delayNanos = randomDelay(delayNanos, config.getJitterFactor(), Math.random());
-    return delayNanos;
-  }
-
-  private long adjustForMaxDuration(long delayNanos, long elapsedNanos) {
-    if (config.getMaxDuration() != null) {
-      long maxRemainingDelay = config.getMaxDuration().toNanos() - elapsedNanos;
-      delayNanos = Math.min(delayNanos, maxRemainingDelay < 0 ? 0 : maxRemainingDelay);
-      if (delayNanos < 0)
-        delayNanos = 0;
-    }
-    return delayNanos;
   }
 }
