@@ -51,10 +51,14 @@ public class BulkheadImpl<R> implements Bulkhead<R> {
 
   @Override
   public void acquirePermit() throws InterruptedException {
+    CompletableFuture<Void> future = acquirePermitAsync();
     try {
-      acquirePermitAsync().get();
+      future.get();
     } catch (CancellationException | ExecutionException ignore) {
       // Not possible since the future will always be completed with null
+    } catch (InterruptedException e) {
+      abandonWaiter(future);
+      throw e;
     }
   }
 
@@ -77,8 +81,21 @@ public class BulkheadImpl<R> implements Bulkhead<R> {
       future.get(maxWaitTime.toNanos(), TimeUnit.NANOSECONDS);
       return true;
     } catch (CancellationException | ExecutionException | TimeoutException e) {
+      abandonWaiter(future);
       return false;
+    } catch (InterruptedException e) {
+      abandonWaiter(future);
+      throw e;
     }
+  }
+
+  /**
+   * Removes an abandoned {@code waiter} from the queue. If a permit was concurrently granted to the waiter by {@link
+   * #releasePermit()}, the permit is released again so that it's not lost.
+   */
+  private void abandonWaiter(CompletableFuture<Void> waiter) {
+    if (!waiter.complete(null))
+      releasePermit();
   }
 
   /**
