@@ -27,7 +27,6 @@ class TimedCircuitStats implements CircuitStats {
 
   private final Clock clock;
   private final long bucketSizeMillis;
-  private final long windowSizeMillis;
 
   // Mutable state
   final Bucket[] buckets;
@@ -37,7 +36,6 @@ class TimedCircuitStats implements CircuitStats {
   public TimedCircuitStats(int bucketCount, Duration thresholdingPeriod, Clock clock, CircuitStats oldStats) {
     this.clock = clock;
     this.buckets = new Bucket[bucketCount];
-    windowSizeMillis = thresholdingPeriod.toMillis();
     bucketSizeMillis = thresholdingPeriod.toMillis() / buckets.length;
     for (int i = 0; i < buckets.length; i++)
       buckets[i] = new Bucket();
@@ -197,9 +195,7 @@ class TimedCircuitStats implements CircuitStats {
           currentIndex = nextIndex();
           previousBucket = currentBucket;
           currentBucket = buckets[currentIndex];
-          long bucketStartTime = currentBucket.startTimeMillis == -1 ?
-            previousBucket.startTimeMillis + bucketSizeMillis :
-            currentBucket.startTimeMillis + windowSizeMillis;
+          long bucketStartTime = previousBucket.startTimeMillis + bucketSizeMillis;
           summary.remove(currentBucket);
           currentBucket.reset(bucketStartTime);
           bucketsToMove--;
@@ -207,6 +203,7 @@ class TimedCircuitStats implements CircuitStats {
       } else {
         // Reset all buckets
         reset();
+        currentBucket = buckets[currentIndex];
       }
     }
 

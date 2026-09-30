@@ -18,6 +18,7 @@ package dev.failsafe.internal;
 import dev.failsafe.internal.TimedCircuitStats.Bucket;
 import dev.failsafe.internal.TimedCircuitStats.Clock;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -150,6 +151,46 @@ public class TimedCircuitStatsTest extends CircuitStatsTest {
     assertEquals(stats.getSuccessRate(), 0);
     assertEquals(stats.getFailureRate(), 0);
     assertEquals(stats.getExecutionCount(), 0);
+  }
+
+  @DataProvider
+  public Object[][] idlePeriods() {
+    return new Object[][] {
+      { 0, true }, { 1, true }, { 2, true }, { 3, true },
+      { 0, false }, { 1, false }, { 2, false }, { 3, false }
+    };
+  }
+
+  @Test(dataProvider = "idlePeriods")
+  public void testExecutionExpiresAfterIdlePeriod(int previousIndex, boolean failure) {
+    stats = new TimedCircuitStats(4, Duration.ofSeconds(4), clock, null);
+    clock.set(previousIndex * 1000);
+    stats.recordSuccess();
+
+    // The first execution after a full window of inactivity must belong to the new current bucket.
+    clock.set(10000);
+    if (failure)
+      stats.recordFailure();
+    else
+      stats.recordSuccess();
+
+    // Keep the execution for the new window, including when the previously current bucket is visited again.
+    for (int seconds = 0; seconds < 4; seconds++) {
+      clock.set(10000 + seconds * 1000);
+      stats.getCurrentBucket();
+      assertEquals(stats.getExecutionCount(), 1);
+      assertEquals(stats.getFailureCount(), failure ? 1 : 0);
+      assertEquals(stats.getSuccessCount(), failure ? 0 : 1);
+      assertEquals(stats.getFailureRate(), failure ? 100 : 0);
+      assertEquals(stats.getSuccessRate(), failure ? 0 : 100);
+    }
+
+    // Expire it exactly when its own window ends.
+    clock.set(14000);
+    stats.getCurrentBucket();
+    assertEquals(stats.getExecutionCount(), 0);
+    assertEquals(stats.getFailureCount(), 0);
+    assertEquals(stats.getSuccessCount(), 0);
   }
 
   public void testCopyToEqualSizedStats() {

@@ -16,7 +16,10 @@
 package dev.failsafe.internal;
 
 import dev.failsafe.CircuitBreaker;
+import dev.failsafe.internal.TimedCircuitStatsTest.TestClock;
 import org.testng.annotations.Test;
+
+import java.time.Duration;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -81,6 +84,25 @@ public class ClosedStateTest {
     state.recordFailure(null);
 
     // Then
+    assertTrue(breaker.isOpen());
+  }
+
+  public void testFailureThresholdAfterIdlePeriod() {
+    CircuitBreakerImpl<Object> breaker = (CircuitBreakerImpl<Object>) CircuitBreaker.builder()
+      .withFailureThreshold(2, Duration.ofSeconds(4))
+      .build();
+    TestClock clock = new TestClock();
+    breaker.state.get().stats = new TimedCircuitStats(4, Duration.ofSeconds(4), clock, null);
+
+    clock.set(1000);
+    breaker.recordSuccess();
+
+    // The failures after an idle period must both count towards the threshold.
+    clock.set(10000);
+    breaker.recordFailure();
+    assertTrue(breaker.isClosed());
+    clock.set(11000);
+    breaker.recordFailure();
     assertTrue(breaker.isOpen());
   }
 
