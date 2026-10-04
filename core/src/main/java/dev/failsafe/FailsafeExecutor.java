@@ -79,17 +79,18 @@ public class FailsafeExecutor<R> {
    * <pre>
    *   Failsafe.with(fallback).compose(retryPolicy).compose(circuitBreaker);
    * </pre>
-   * </p>
    * This results in the following internal composition when executing a {@code runnable} or {@code supplier} and
    * handling its result:
    * <p>
    * <pre>
    *   Fallback(RetryPolicy(CircuitBreaker(Supplier)))
    * </pre>
-   * </p>
    * This means the {@code CircuitBreaker} is first to evaluate the {@code Supplier}'s result, then the {@code
    * RetryPolicy}, then the {@code Fallback}. Each policy makes its own determination as to whether the result
    * represents a failure. This allows different policies to be used for handling different types of failures.
+   * <p>
+   * The returned executor does not inherit the executor, scheduler, or execution listeners configured on this
+   * executor. Configure these settings on the returned executor after composing policies.
    *
    * @throws NullPointerException if {@code innerPolicy} is null
    * @see #getPolicies()
