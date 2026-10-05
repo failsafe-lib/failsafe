@@ -40,7 +40,9 @@ class SmoothRateLimiterStats extends RateLimiterStats {
   @Override
   public synchronized long acquirePermits(long requestedPermits, Duration maxWaitTime) {
     long currentNanos = stopwatch.elapsedNanos();
-    long requestedPermitNanos = requestedPermits * intervalNanos;
+    long requestedPermitNanos = requestedPermits > Long.MAX_VALUE / intervalNanos
+      ? Long.MAX_VALUE
+      : requestedPermits * intervalNanos;
     long waitNanos;
     long newNextFreePermitNanos;
 

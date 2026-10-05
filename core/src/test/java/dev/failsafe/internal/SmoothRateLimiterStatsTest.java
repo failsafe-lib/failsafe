@@ -25,6 +25,19 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public class SmoothRateLimiterStatsTest extends RateLimiterStatsTest<SmoothRateLimiterStats> {
+  public void shouldRejectOverflowingPermitBatchWithoutConsumingPermits() {
+    SmoothRateLimiterStats stats = createStats(Duration.ofDays(1));
+    assertEquals(stats.acquirePermits(200000, Duration.ZERO), -1L);
+    assertEquals(stats.getNextFreePermitNanos(), 0L);
+    assertEquals(stats.acquirePermits(1, Duration.ZERO), 0L);
+  }
+
+  public void shouldSaturateOverflowingPermitReservation() {
+    SmoothRateLimiterStats stats = createStats(Duration.ofDays(1));
+    assertEquals(stats.acquirePermits(200000, null), Long.MAX_VALUE - Duration.ofDays(1).toNanos());
+    assertEquals(stats.getNextFreePermitNanos(), Long.MAX_VALUE);
+  }
+
   @Override
   SmoothRateLimiterStats createStats() {
     RateLimiterConfig<Object> config = RateLimiter.smoothBuilder(Duration.ofMillis(500)).build().getConfig();
