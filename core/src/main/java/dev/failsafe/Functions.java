@@ -273,7 +273,7 @@ final class Functions {
       throw (RuntimeException) e;
     if (e instanceof Error)
       throw (Error) e;
-    throw new FailsafeException(e);
+    throw new FailsafeExecutionException(e);
   }
 
   static <T, R> CheckedFunction<T, R> toFn(CheckedConsumer<T> consumer) {

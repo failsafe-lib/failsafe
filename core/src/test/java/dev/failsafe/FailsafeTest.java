@@ -15,12 +15,17 @@
  */
 package dev.failsafe;
 
+import dev.failsafe.function.AsyncRunnable;
+import dev.failsafe.function.ContextualSupplier;
 import dev.failsafe.testing.Testing;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.expectThrows;
 
 /**
  * Tests general Failsafe behaviors.
@@ -43,13 +48,60 @@ public class FailsafeTest extends Testing {
   }
 
   /**
-   * Asserts that checked exeptions are wrapped with FailsafeException for sync executions.
+   * Asserts that checked exceptions are wrapped with FailsafeExecutionException for sync executions.
    */
   public void shouldWrapCheckedExceptionsForSyncExecutions() {
     RetryPolicy<Object> retryPolicy = RetryPolicy.builder().withMaxRetries(0).build();
 
     assertThrows(() -> Failsafe.with(retryPolicy).run(() -> {
       throw new TimeoutException();
-    }), FailsafeException.class, TimeoutException.class);
+    }), FailsafeExecutionException.class, TimeoutException.class);
+  }
+
+  public void shouldPreserveCheckedExceptionCause() {
+    TimeoutException cause = new TimeoutException();
+    FailsafeExecutor<Object> executor = Failsafe.with(RetryPolicy.builder().withMaxRetries(0).build());
+
+    FailsafeException failure = expectThrows(FailsafeExecutionException.class, () -> executor.get(() -> {
+      throw cause;
+    }));
+    assertSame(failure.getCause(), cause);
+    Call<Object> call = executor.newCall((ContextualSupplier<Object, Object>) ctx -> {
+      throw cause;
+    });
+    assertSame(expectThrows(FailsafeExecutionException.class, call::execute).getCause(), cause);
+  }
+
+  public void shouldPropagateUncheckedFailuresDirectly() {
+    FailsafeExecutor<Object> executor = Failsafe.with(RetryPolicy.builder().withMaxRetries(0).build());
+    for (Throwable cause : new Throwable[] { new IllegalStateException(), new InternalError(),
+      new BulkheadFullException(Bulkhead.of(1)) }) {
+      assertSame(expectThrows(cause.getClass(), () -> executor.get(() -> {
+        throw cause;
+      })), cause);
+    }
+  }
+
+  public void shouldPreserveAsyncExceptionCause() {
+    FailsafeExecutor<Object> executor = Failsafe.with(RetryPolicy.builder().withMaxRetries(0).build());
+    for (Throwable cause : new Throwable[] { new TimeoutException(), new BulkheadFullException(Bulkhead.of(1)) }) {
+      assertSame(expectThrows(ExecutionException.class, () -> executor.getAsync(() -> {
+        throw cause;
+      }).get()).getCause(), cause);
+    }
+  }
+
+  public void shouldWrapCheckedExceptionsFromExecutor() {
+    TimeoutException cause = new TimeoutException();
+    ContextualSupplier<Object, Object> supplier = ctx -> {
+      throw cause;
+    };
+    assertSame(expectThrows(FailsafeExecutionException.class,
+      () -> Functions.withExecutor(supplier, Runnable::run).get(null)).getCause(), cause);
+    AsyncRunnable<Object> runnable = exec -> {
+      throw cause;
+    };
+    assertSame(expectThrows(FailsafeExecutionException.class,
+      () -> Functions.withExecutor(runnable, Runnable::run).run(null)).getCause(), cause);
   }
 }

@@ -15,7 +15,7 @@
  */
 package dev.failsafe.testing;
 
-import dev.failsafe.FailsafeException;
+import dev.failsafe.FailsafeExecutionException;
 import dev.failsafe.FailsafeExecutor;
 import dev.failsafe.RetryPolicy;
 import dev.failsafe.event.EventListener;
@@ -129,7 +129,7 @@ public class Testing extends Logging {
   }
 
   /**
-   * Unwraps and throws ExecutionException and FailsafeException causes.
+   * Unwraps and throws ExecutionException and FailsafeExecutionException causes.
    */
   public static <T> T unwrapExceptions(CheckedSupplier<T> supplier) {
     try {
@@ -137,7 +137,7 @@ public class Testing extends Logging {
     } catch (ExecutionException e) {
       sneakyThrow(e.getCause());
       return null;
-    } catch (FailsafeException e) {
+    } catch (FailsafeExecutionException e) {
       sneakyThrow(e.getCause() == null ? e : e.getCause());
       return null;
     } catch (RuntimeException | Error e) {
@@ -341,10 +341,10 @@ public class Testing extends Logging {
       resultAssertion.accept(unwrapExceptions(() -> failsafe.onComplete(setCompletedEventFn).get(when)));
     } else {
       assertThrows(() -> failsafe.onComplete(setCompletedEventFn).get(when), t -> {
-        // Insert FailsafeException into expected exceptions if needed
-        if (t instanceof FailsafeException && !FailsafeException.class.equals(expected.get(0))
+        // Insert FailsafeExecutionException into expected exceptions if needed
+        if (t instanceof FailsafeExecutionException && !FailsafeExecutionException.class.equals(expected.get(0))
           && !RuntimeException.class.isAssignableFrom(expected.get(0)))
-          return Lists.of(FailsafeException.class, expectedExInner);
+          return Lists.of(FailsafeExecutionException.class, expectedExInner);
         return expected;
       });
     }

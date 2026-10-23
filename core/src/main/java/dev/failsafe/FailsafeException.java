@@ -16,8 +16,9 @@
 package dev.failsafe;
 
 /**
- * Thrown when a synchronous Failsafe execution fails with an {@link Exception}, wrapping the underlying exception. Use
- * {@link Throwable#getCause()} to learn the cause of the failure.
+ * Base class for exceptions thrown by Failsafe policies and executions.
+ *
+ * @see FailsafeExecutionException
  *
  * @author Jonathan Halterman
  */

@@ -38,7 +38,7 @@ public class InterruptionTest extends Testing {
     Asserts.assertThrows(() -> Failsafe.with(retryNever).run(() -> {
       Thread.sleep(1000);
       fail("Expected interruption");
-    }), FailsafeException.class, InterruptedException.class);
+    }), FailsafeExecutionException.class, InterruptedException.class);
     // Clear interrupt flag
     assertTrue(Thread.interrupted());
   }
@@ -52,7 +52,7 @@ public class InterruptionTest extends Testing {
 
     Asserts.assertThrows(() -> Failsafe.with(rp).run(() -> {
       throw new Exception();
-    }), FailsafeException.class, InterruptedException.class);
+    }), FailsafeExecutionException.class, InterruptedException.class);
     // Clear interrupt flag
     assertTrue(Thread.interrupted());
   }
@@ -70,7 +70,7 @@ public class InterruptionTest extends Testing {
     assertThrows(() -> Failsafe.with(limiter).run(() -> {
       System.out.println("Executing");
       throw new Exception();
-    }), FailsafeException.class, InterruptedException.class);
+    }), FailsafeExecutionException.class, InterruptedException.class);
     // Clear interrupt flag
     assertTrue(Thread.interrupted());
   }
@@ -86,7 +86,7 @@ public class InterruptionTest extends Testing {
     assertThrows(() -> Failsafe.with(bulkhead).run(() -> {
       System.out.println("Executing");
       throw new Exception();
-    }), FailsafeException.class, InterruptedException.class);
+    }), FailsafeExecutionException.class, InterruptedException.class);
 
     // Clear interrupt flag
     assertTrue(Thread.interrupted());
