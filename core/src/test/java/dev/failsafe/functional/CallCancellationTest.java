@@ -43,7 +43,7 @@ public class CallCancellationTest extends Testing {
       if (!interrupt)
         call.execute();
       else
-        assertThrows(call::execute, FailsafeException.class, InterruptedException.class);
+        assertThrows(call::execute, FailsafeExecutionException.class, InterruptedException.class);
 
       waiter.await(1000);
 

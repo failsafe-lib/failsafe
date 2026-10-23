@@ -105,8 +105,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
-   * be used to learn the underlying checked exception.
+   * @throws FailsafeExecutionException if the execution fails with a checked Exception.
+   * {@link FailsafeExecutionException#getCause()} can be used to learn the underlying checked exception.
    */
   public <T extends R> T get(CheckedSupplier<T> supplier) {
     return call(toCtxSupplier(supplier));
@@ -116,8 +116,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code supplier} until a successful result is returned or the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code supplier} is null
-   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
-   * be used to learn the underlying checked exception.
+   * @throws FailsafeExecutionException if the execution fails with a checked Exception.
+   * {@link FailsafeExecutionException#getCause()} can be used to learn the underlying checked exception.
    */
   public <T extends R> T get(ContextualSupplier<T, T> supplier) {
     return call(Assert.notNull(supplier, "supplier"));
@@ -213,8 +213,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
-   * be used to learn the underlying checked exception.
+   * @throws FailsafeExecutionException if the execution fails with a checked Exception.
+   * {@link FailsafeExecutionException#getCause()} can be used to learn the underlying checked exception.
    */
   public void run(CheckedRunnable runnable) {
     call(toCtxSupplier(runnable));
@@ -224,8 +224,8 @@ public class FailsafeExecutor<R> {
    * Executes the {@code runnable} until successful or until the configured policies are exceeded.
    *
    * @throws NullPointerException if the {@code runnable} is null
-   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
-   * be used to learn the underlying checked exception.
+   * @throws FailsafeExecutionException if the execution fails with a checked Exception.
+   * {@link FailsafeExecutionException#getCause()} can be used to learn the underlying checked exception.
    */
   public void run(ContextualRunnable<Void> runnable) {
     call(toCtxSupplier(runnable));

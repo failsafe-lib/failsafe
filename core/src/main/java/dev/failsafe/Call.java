@@ -32,8 +32,8 @@ public interface Call<R> {
   /**
    * Executes the call until a successful result is returned or the configured policies are exceeded.
    *
-   * @throws FailsafeException if the execution fails with a checked Exception. {@link FailsafeException#getCause()} can
-   * be used to learn the underlying checked exception.
+   * @throws FailsafeExecutionException if the execution fails with a checked Exception.
+   * {@link FailsafeExecutionException#getCause()} can be used to learn the underlying checked exception.
    */
   R execute();
 

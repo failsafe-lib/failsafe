@@ -193,7 +193,7 @@ final class SyncExecutionImpl<R> extends ExecutionImpl<R> implements SyncExecuti
         throw (RuntimeException) exception;
       if (exception instanceof Error)
         throw (Error) exception;
-      throw new FailsafeException(exception);
+      throw new FailsafeExecutionException(exception);
     }
     return result.getResult();
   }
