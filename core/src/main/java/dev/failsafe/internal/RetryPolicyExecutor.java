@@ -167,8 +167,17 @@ public class RetryPolicyExecutor<R> extends PolicyExecutor<R> {
 
                       AsyncExecutionInternal<R> retryExecution = execution.copy();
                       future.setExecution(retryExecution);
-                      Callable<Object> retryFn = () -> handleAsync(retryExecution, innerFn, scheduler, future, promise,
-                        previousResultRef);
+                      Callable<Object> retryFn = new Callable<Object>() {
+                        @Override
+                        public Object call() {
+                          return handleAsync(retryExecution, innerFn, scheduler, future, promise, previousResultRef);
+                        }
+
+                        @Override
+                        public String toString() {
+                          return String.valueOf(innerFn);
+                        }
+                      };
                       Future<?> scheduledRetry = scheduler.schedule(retryFn, postResult.getDelay(),
                         TimeUnit.NANOSECONDS);
                       // Cancel prior inner executions, such as pending timeouts

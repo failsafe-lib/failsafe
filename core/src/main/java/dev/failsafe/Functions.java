@@ -38,31 +38,39 @@ final class Functions {
   static <R> Function<SyncExecutionImpl<R>, ExecutionResult<R>> get(ContextualSupplier<R, R> supplier,
     Executor executor) {
 
-    return execution -> {
-      ExecutionResult<R> result;
-      Throwable throwable = null;
-      try {
-        execution.preExecute();
-        result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
-      } catch (Throwable t) {
-        throwable = t;
-        result = ExecutionResult.exception(t);
-      }
-      execution.record(result);
+    return new Function<SyncExecutionImpl<R>, ExecutionResult<R>>() {
+      @Override
+      public ExecutionResult<R> apply(SyncExecutionImpl<R> execution) {
+        ExecutionResult<R> result;
+        Throwable throwable = null;
+        try {
+          execution.preExecute();
+          result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
+        } catch (Throwable t) {
+          throwable = t;
+          result = ExecutionResult.exception(t);
+        }
+        execution.record(result);
 
-      // Guard against race with Timeout interrupting the execution
-      synchronized (execution.getLock()) {
-        execution.setInterruptable(false);
-        if (execution.isInterrupted()) {
-          // Clear interrupt flag if interruption was performed by Failsafe
-          Thread.interrupted();
-          return execution.getResult();
-        } else if (throwable instanceof InterruptedException)
-          // Set interrupt flag if interruption was not performed by Failsafe
-          Thread.currentThread().interrupt();
+        // Guard against race with Timeout interrupting the execution
+        synchronized (execution.getLock()) {
+          execution.setInterruptable(false);
+          if (execution.isInterrupted()) {
+            // Clear interrupt flag if interruption was performed by Failsafe
+            Thread.interrupted();
+            return execution.getResult();
+          } else if (throwable instanceof InterruptedException)
+            // Set interrupt flag if interruption was not performed by Failsafe
+            Thread.currentThread().interrupt();
+        }
+
+        return result;
       }
 
-      return result;
+      @Override
+      public String toString() {
+        return String.valueOf(supplier);
+      }
     };
   }
 
@@ -76,16 +84,24 @@ final class Functions {
     ContextualSupplier<R, R> supplier, Executor executor) {
 
     Assert.notNull(supplier, "supplier");
-    return execution -> {
-      ExecutionResult<R> result;
-      try {
-        execution.preExecute();
-        result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
-      } catch (Throwable t) {
-        result = ExecutionResult.exception(t);
+    return new Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>>() {
+      @Override
+      public CompletableFuture<ExecutionResult<R>> apply(AsyncExecutionInternal<R> execution) {
+        ExecutionResult<R> result;
+        try {
+          execution.preExecute();
+          result = ExecutionResult.success(withExecutor(supplier, executor).get(execution));
+        } catch (Throwable t) {
+          result = ExecutionResult.exception(t);
+        }
+        execution.record(result);
+        return CompletableFuture.completedFuture(result);
       }
-      execution.record(result);
-      return CompletableFuture.completedFuture(result);
+
+      @Override
+      public String toString() {
+        return String.valueOf(supplier);
+      }
     };
   }
 
@@ -113,6 +129,11 @@ final class Functions {
         // Result will be provided later via AsyncExecution.record
         return ExecutionResult.nullFuture();
       }
+
+      @Override
+      public String toString() {
+        return String.valueOf(runnable);
+      }
     };
   }
 
@@ -129,35 +150,43 @@ final class Functions {
     Executor executor) {
 
     Assert.notNull(supplier, "supplier");
-    return execution -> {
-      CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
-      try {
-        execution.preExecute();
-        CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
+    return new Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>>() {
+      @Override
+      public CompletableFuture<ExecutionResult<R>> apply(AsyncExecutionInternal<R> execution) {
+        CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
+        try {
+          execution.preExecute();
+          CompletionStage<? extends R> stage = withExecutor(supplier, executor).get(execution);
 
-        if (stage == null) {
-          ExecutionResult<R> r = ExecutionResult.success(null);
-          execution.record(r);
-          promise.complete(r);
-        } else {
-          // Propagate outer cancellations to the stage
-          if (stage instanceof Future)
-            future.propagateCancellation((Future<R>) stage);
-
-          stage.whenComplete((result, exception) -> {
-            if (exception instanceof CompletionException)
-              exception = exception.getCause();
-            ExecutionResult<R> r = exception == null ? ExecutionResult.success(result) : ExecutionResult.exception(exception);
+          if (stage == null) {
+            ExecutionResult<R> r = ExecutionResult.success(null);
             execution.record(r);
             promise.complete(r);
-          });
+          } else {
+            // Propagate outer cancellations to the stage
+            if (stage instanceof Future)
+              future.propagateCancellation((Future<R>) stage);
+
+            stage.whenComplete((result, exception) -> {
+              if (exception instanceof CompletionException)
+                exception = exception.getCause();
+              ExecutionResult<R> r = exception == null ? ExecutionResult.success(result) : ExecutionResult.exception(exception);
+              execution.record(r);
+              promise.complete(r);
+            });
+          }
+        } catch (Throwable t) {
+          ExecutionResult<R> result = ExecutionResult.exception(t);
+          execution.record(result);
+          promise.complete(result);
         }
-      } catch (Throwable t) {
-        ExecutionResult<R> result = ExecutionResult.exception(t);
-        execution.record(result);
-        promise.complete(result);
+        return promise;
       }
-      return promise;
+
+      @Override
+      public String toString() {
+        return String.valueOf(supplier);
+      }
     };
   }
 
@@ -169,12 +198,20 @@ final class Functions {
    */
   static <R> Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> toExecutionAware(
     Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>> innerFn) {
-    return execution -> {
-      ExecutionResult<R> result = execution.getResult();
-      if (result == null) {
-        return innerFn.apply(execution);
-      } else {
-        return CompletableFuture.completedFuture(result);
+    return new Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>>() {
+      @Override
+      public CompletableFuture<ExecutionResult<R>> apply(AsyncExecutionInternal<R> execution) {
+        ExecutionResult<R> result = execution.getResult();
+        if (result == null) {
+          return innerFn.apply(execution);
+        } else {
+          return CompletableFuture.completedFuture(result);
+        }
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(innerFn);
       }
     };
   }
@@ -190,81 +227,157 @@ final class Functions {
     FailsafeFuture<R> future) {
 
     AtomicBoolean scheduled = new AtomicBoolean();
-    return execution -> {
-      if (scheduled.get()) {
-        return innerFn.apply(execution);
-      } else {
-        CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
-        Callable<Object> callable = () -> innerFn.apply(execution).whenComplete((result, error) -> {
-          if (error != null)
-            promise.completeExceptionally(error);
-          else
-            promise.complete(result);
-        });
+    return new Function<AsyncExecutionInternal<R>, CompletableFuture<ExecutionResult<R>>>() {
+      @Override
+      public CompletableFuture<ExecutionResult<R>> apply(AsyncExecutionInternal<R> execution) {
+        if (scheduled.get()) {
+          return innerFn.apply(execution);
+        } else {
+          CompletableFuture<ExecutionResult<R>> promise = new CompletableFuture<>();
+          Callable<Object> callable = new Callable<Object>() {
+            @Override
+            public Object call() {
+              return innerFn.apply(execution).whenComplete((result, error) -> {
+                if (error != null)
+                  promise.completeExceptionally(error);
+                else
+                  promise.complete(result);
+              });
+            }
 
-        try {
-          scheduled.set(true);
-          Future<?> scheduledFuture = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
+            @Override
+            public String toString() {
+              return String.valueOf(innerFn);
+            }
+          };
 
-          // Propagate outer cancellations to the scheduled innerFn and its promise
-          future.setCancelFn(-1, (mayInterrupt, cancelResult) -> {
-            scheduledFuture.cancel(mayInterrupt);
+          try {
+            scheduled.set(true);
+            Future<?> scheduledFuture = scheduler.schedule(callable, 0, TimeUnit.NANOSECONDS);
 
-            // Cancel a pending promise if the execution attempt has not started
-            if (!execution.isPreExecuted())
-              promise.complete(cancelResult);
-          });
-        } catch (Throwable t) {
-          promise.completeExceptionally(t);
+            // Propagate outer cancellations to the scheduled innerFn and its promise
+            future.setCancelFn(-1, (mayInterrupt, cancelResult) -> {
+              scheduledFuture.cancel(mayInterrupt);
+
+              // Cancel a pending promise if the execution attempt has not started
+              if (!execution.isPreExecuted())
+                promise.complete(cancelResult);
+            });
+          } catch (Throwable t) {
+            promise.completeExceptionally(t);
+          }
+          return promise;
         }
-        return promise;
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(innerFn);
       }
     };
   }
 
   static ContextualSupplier<Void, Void> toCtxSupplier(CheckedRunnable runnable) {
     Assert.notNull(runnable, "runnable");
-    return ctx -> {
-      runnable.run();
-      return null;
+    return new ContextualSupplier<Void, Void>() {
+      @Override
+      public Void get(ExecutionContext<Void> ctx) throws Throwable {
+        runnable.run();
+        return null;
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(runnable);
+      }
     };
   }
 
   static ContextualSupplier<Void, Void> toCtxSupplier(ContextualRunnable<Void> runnable) {
     Assert.notNull(runnable, "runnable");
-    return ctx -> {
-      runnable.run(ctx);
-      return null;
+    return new ContextualSupplier<Void, Void>() {
+      @Override
+      public Void get(ExecutionContext<Void> ctx) throws Throwable {
+        runnable.run(ctx);
+        return null;
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(runnable);
+      }
     };
   }
 
   static <R, T> ContextualSupplier<R, T> toCtxSupplier(CheckedSupplier<T> supplier) {
     Assert.notNull(supplier, "supplier");
-    return ctx -> supplier.get();
+    return new ContextualSupplier<R, T>() {
+      @Override
+      public T get(ExecutionContext<R> ctx) throws Throwable {
+        return supplier.get();
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(supplier);
+      }
+    };
   }
 
   static <R, T> ContextualSupplier<R, T> withExecutor(ContextualSupplier<R, T> supplier, Executor executor) {
-    return executor == null ? supplier : ctx -> {
-      executor.execute(() -> {
-        try {
-          supplier.get(ctx);
-        } catch (Throwable e) {
-          handleExecutorThrowable(e);
-        }
-      });
-      return null;
+    return executor == null ? supplier : new ContextualSupplier<R, T>() {
+      @Override
+      public T get(ExecutionContext<R> ctx) {
+        executor.execute(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              supplier.get(ctx);
+            } catch (Throwable e) {
+              handleExecutorThrowable(e);
+            }
+          }
+
+          @Override
+          public String toString() {
+            return String.valueOf(supplier);
+          }
+        });
+        return null;
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(supplier);
+      }
     };
   }
 
   static <R> AsyncRunnable<R> withExecutor(AsyncRunnable<R> runnable, Executor executor) {
-    return executor == null ? runnable : exec -> {
-      executor.execute(() -> {
-        try {
-          runnable.run(exec);
-        } catch (Throwable e) {
-          handleExecutorThrowable(e);
-        }
-      });
+    return executor == null ? runnable : new AsyncRunnable<R>() {
+      @Override
+      public void run(AsyncExecution<R> exec) {
+        executor.execute(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              runnable.run(exec);
+            } catch (Throwable e) {
+              handleExecutorThrowable(e);
+            }
+          }
+
+          @Override
+          public String toString() {
+            return String.valueOf(runnable);
+          }
+        });
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(runnable);
+      }
     };
   }
 
@@ -277,21 +390,47 @@ final class Functions {
   }
 
   static <T, R> CheckedFunction<T, R> toFn(CheckedConsumer<T> consumer) {
-    return t -> {
-      consumer.accept(t);
-      return null;
+    return new CheckedFunction<T, R>() {
+      @Override
+      public R apply(T t) throws Throwable {
+        consumer.accept(t);
+        return null;
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(consumer);
+      }
     };
   }
 
   static <T, R> CheckedFunction<T, R> toFn(CheckedRunnable runnable) {
-    return t -> {
-      runnable.run();
-      return null;
+    return new CheckedFunction<T, R>() {
+      @Override
+      public R apply(T t) throws Throwable {
+        runnable.run();
+        return null;
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(runnable);
+      }
     };
   }
 
   static <T, R> CheckedFunction<T, R> toFn(CheckedSupplier<? extends R> supplier) {
-    return t -> supplier.get();
+    return new CheckedFunction<T, R>() {
+      @Override
+      public R apply(T t) throws Throwable {
+        return supplier.get();
+      }
+
+      @Override
+      public String toString() {
+        return String.valueOf(supplier);
+      }
+    };
   }
 
   static <T, R> CheckedFunction<T, R> toFn(R result) {
